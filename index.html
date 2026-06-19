@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Training Tracker — Power Apps Build Guide — v2.4 — gallery index + modern toggle audit</title>
+<title>Training Tracker — Power Apps Build Guide — v2.5 — sequencing + grouping clarity audit</title>
 <style>
 :root {
   --bg: #f6efe4;
@@ -514,7 +514,7 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <a class="secondary" href="#phase-1-build-the-sharepoint-lists">Jump to Phase 1</a>
 <button class="secondary" onclick="window.print()">Print / save as PDF</button>
 </div>
-<div class="version-panel"><strong>Current guide version:</strong> v2.4 — gallery index + modern toggle audit<br/><span>If this line does not show v2.4, the work laptop is viewing an older cached copy. Hard refresh with Ctrl+F5.</span><br/><br/><strong>Changed from v2.3:</strong> removed unsupported <code>ThisItem.ItemIndex</code> formulas, changed modern Toggle setup from <code>Default</code> to <code>Checked</code>, and annotated where gallery row-striping formulas must use <code>Email</code> or <code>ID</code>.</div></section>
+<div class="version-panel"><strong>Current guide version:</strong> v2.5 — sequencing + grouping clarity audit<br/><span>If this line does not show v2.5, the work laptop is viewing an older cached copy. Hard refresh with Ctrl+F5.</span><br/><br/><strong>Changed from v2.4:</strong> fixed invalid <code>ScreenTransition.Back</code>, rewrote Phase 8 tab buttons as proper control instructions, moved People/Courses grouping instructions until after those controls exist, and added explicit group membership lists.</div></section>
 <section aria-label="Build phases" class="phase-grid">
 <a class="phase-card" href="#phase-1-build-the-sharepoint-lists"><span>PHASE 1</span><strong>PHASE 1 — Build the SharePoint lists</strong></a>
 <a class="phase-card" href="#phase-2-app-shell-connections-and-app-onstart"><span>PHASE 2</span><strong>PHASE 2 — App shell, connections and App.OnStart</strong></a>
@@ -3017,7 +3017,7 @@ If(
 </tbody></table>
 <h4>icoAdminDashBack — Icon (classic)</h4>
 <table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>
-<tr><td>X</td><td>16</td></tr><tr><td>Y</td><td>24</td></tr><tr><td>Width</td><td>24</td></tr><tr><td>Height</td><td>24</td></tr><tr><td>Icon</td><td><code>Icon.ChevronLeft</code></td></tr><tr><td>Color</td><td><code>RGBA(230,241,251,1)</code></td></tr><tr><td>OnSelect</td><td><code>Navigate(scrMyTraining, ScreenTransition.Back)</code></td></tr>
+<tr><td>X</td><td>16</td></tr><tr><td>Y</td><td>24</td></tr><tr><td>Width</td><td>24</td></tr><tr><td>Height</td><td>24</td></tr><tr><td>Icon</td><td><code>Icon.ChevronLeft</code></td></tr><tr><td>Color</td><td><code>RGBA(230,241,251,1)</code></td></tr><tr><td>OnSelect</td><td><code>Navigate(scrMyTraining, ScreenTransition.Fade)</code></td></tr>
 </tbody></table>
 <h4>lblAdminTitle — Text label</h4>
 <table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>
@@ -3346,18 +3346,51 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 </tbody></table>
 <h4>icoAdminManageBack — Icon (classic)</h4>
 <table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>
-<tr><td>X</td><td>16</td></tr><tr><td>Y</td><td>24</td></tr><tr><td>Width</td><td>24</td></tr><tr><td>Height</td><td>24</td></tr><tr><td>Icon</td><td><code>Icon.ChevronLeft</code></td></tr><tr><td>Color</td><td><code>RGBA(230,241,251,1)</code></td></tr><tr><td>OnSelect</td><td><code>Navigate(scrAdminDash, ScreenTransition.Back)</code></td></tr>
+<tr><td>X</td><td>16</td></tr><tr><td>Y</td><td>24</td></tr><tr><td>Width</td><td>24</td></tr><tr><td>Height</td><td>24</td></tr><tr><td>Icon</td><td><code>Icon.ChevronLeft</code></td></tr><tr><td>Color</td><td><code>RGBA(230,241,251,1)</code></td></tr><tr><td>OnSelect</td><td><code>Navigate(scrAdminDash, ScreenTransition.Fade)</code></td></tr>
 </tbody></table>
 <h4>lblManageTitle — Text label</h4>
 <table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>
 <tr><td>X</td><td>52</td></tr><tr><td>Y</td><td>0</td></tr><tr><td>Width</td><td>600</td></tr><tr><td>Height</td><td>72</td></tr><tr><td>Text</td><td><code>"Manage"</code></td></tr><tr><td>FontSize</td><td>17</td></tr><tr><td>FontWeight</td><td><code>FontWeight.Bold</code></td></tr><tr><td>Color</td><td><code>RGBA(230,241,251,1)</code></td></tr><tr><td>VerticalAlign</td><td><code>VerticalAlign.Middle</code></td></tr><tr><td>Fill</td><td><code>RGBA(0,0,0,0)</code></td></tr><tr><td>BorderThickness</td><td>0</td></tr>
 </tbody></table>
 <h3 id="tab-buttons"><a aria-label="Link to section" class="anchor" href="#tab-buttons">#</a>Tab buttons</h3>
-<ul>
-<li><strong>btnTabPeople</strong> — X=16, Y=88, W=120, H=40, Text=<code>"People"</code>, FontSize=12, BasePaletteColor=<code>If(varTab="People",RGBA(24,95,165,1),RGBA(244,246,248,1))</code>, Color=<code>If(varTab="People",RGBA(255,255,255,1),RGBA(85,85,85,1))</code>, OnSelect=<code>Set(varTab,"People")</code></li>
-<li><strong>btnTabCourses</strong> — X=152, Y=88, W=120, H=40, Text=<code>"Courses"</code>, FontSize=12, BasePaletteColor=<code>If(varTab="Courses",RGBA(24,95,165,1),RGBA(244,246,248,1))</code>, Color=<code>If(varTab="Courses",RGBA(255,255,255,1),RGBA(85,85,85,1))</code>, OnSelect=<code>Set(varTab,"Courses")</code></li>
-</ul>
-<blockquote><p>After building all People controls, select the People controls only and group them as <code>grpPeople</code>. Set <code>grpPeople.Visible = varTab = "People"</code>. After building the Courses controls in Phase 9, group those as <code>grpCourses</code> and set <code>grpCourses.Visible = varTab = "Courses"</code>.</p></blockquote>
+<div class="callout"><strong>v2.5 clarity fix:</strong> create these two controls now. Do not group anything yet. These are the tab selector buttons that stay visible while you switch between People and Courses.</div>
+
+<h4>btnTabPeople — Button (modern)</h4>
+<table>
+<thead><tr><th>Property</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>Type</td><td>Button (modern)</td></tr>
+<tr><td>X</td><td>16</td></tr>
+<tr><td>Y</td><td>88</td></tr>
+<tr><td>Width</td><td>120</td></tr>
+<tr><td>Height</td><td>40</td></tr>
+<tr><td>Text</td><td><code>"People"</code></td></tr>
+<tr><td>FontSize</td><td>12</td></tr>
+<tr><td>BasePaletteColor</td><td><code>If(varTab="People",RGBA(24,95,165,1),RGBA(244,246,248,1))</code></td></tr>
+<tr><td>Color</td><td><code>If(varTab="People",RGBA(255,255,255,1),RGBA(85,85,85,1))</code></td></tr>
+<tr><td>OnSelect</td><td><code>Set(varTab,"People")</code></td></tr>
+</tbody>
+</table>
+
+<h4>btnTabCourses — Button (modern)</h4>
+<table>
+<thead><tr><th>Property</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>Type</td><td>Button (modern)</td></tr>
+<tr><td>X</td><td>152</td></tr>
+<tr><td>Y</td><td>88</td></tr>
+<tr><td>Width</td><td>120</td></tr>
+<tr><td>Height</td><td>40</td></tr>
+<tr><td>Text</td><td><code>"Courses"</code></td></tr>
+<tr><td>FontSize</td><td>12</td></tr>
+<tr><td>BasePaletteColor</td><td><code>If(varTab="Courses",RGBA(24,95,165,1),RGBA(244,246,248,1))</code></td></tr>
+<tr><td>Color</td><td><code>If(varTab="Courses",RGBA(255,255,255,1),RGBA(85,85,85,1))</code></td></tr>
+<tr><td>OnSelect</td><td><code>Set(varTab,"Courses")</code></td></tr>
+</tbody>
+</table>
+
+<div class="callout"><strong>Do not create <code>grpPeople</code> yet.</strong> Build all People controls below first, then the guide gives you the exact group list.</div>
+
 <h3 id="add-person-panel"><a aria-label="Link to section" class="anchor" href="#add-person-panel">#</a>Add person panel</h3>
 <p><strong>recAddPanel</strong> — Button (classic), X=16, Y=144, W=640, H=340, Text=<code>""</code>, DisplayMode=View, Fill=<code>RGBA(255,255,255,1)</code>, BorderColor=<code>RGBA(221,227,234,1)</code>, BorderThickness=1, all radius=8, HoverFill/PressedFill=<code>RGBA(255,255,255,1)</code></p>
 <p><strong>lblAddTitle</strong> — Text label, X=32, Y=156, W=400, H=24, Text=<code>"Add person"</code>, FontSize=13, FontWeight=Bold, Color=<code>RGBA(31,58,95,1)</code>, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0</p>
@@ -3416,6 +3449,38 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 </tr>
 </tbody>
 </table>
+<h3 id="group-people-controls"><a aria-label="Link to section" class="anchor" href="#group-people-controls">#</a>Group People controls — do this after the People controls exist</h3>
+<div class="callout"><strong>v2.5 sequencing fix:</strong> do this only after you have created the Add person panel and the People gallery. Do not include the header or tab buttons in this group.</div>
+
+<p>Select these top-level controls in the tree view and group them as <code>grpPeople</code>:</p>
+<ul>
+<li><code>recAddPanel</code></li>
+<li><code>lblAddTitle</code></li>
+<li><code>cmbNewPerson</code></li>
+<li><code>lblOrManual</code></li>
+<li><code>txtManualEmail</code></li>
+<li><code>btnPullDetails</code></li>
+<li><code>txtManualName</code></li>
+<li><code>drpNewType</code></li>
+<li><code>txtNewManager</code></li>
+<li><code>tglNewAdmin</code></li>
+<li><code>tglHasM365</code></li>
+<li><code>btnAddPerson</code></li>
+<li><code>galPeople</code></li>
+</ul>
+
+<p>How to group:</p>
+<ol>
+<li>In the tree view, select the controls listed above.</li>
+<li>Press <strong>Ctrl+G</strong>, or right-click and choose <strong>Group</strong>.</li>
+<li>Rename the new group to <code>grpPeople</code>.</li>
+<li>Set the group property:</li>
+</ol>
+
+<div class="code-card"><div class="code-toolbar"><span>Power Fx / formula</span><div></div></div><pre><code>grpPeople.Visible = varTab = "People"</code></pre></div>
+
+<div class="callout"><strong>Do not include:</strong> <code>btnTabPeople</code>, <code>btnTabCourses</code>, <code>recAdminManageHeader</code>, <code>icoAdminManageBack</code>, or <code>lblManageTitle</code>. Those must stay visible regardless of selected tab.</div>
+
 <h3 id="formulas-people-tab"><a aria-label="Link to section" class="anchor" href="#formulas-people-tab">#</a>Formulas — People tab</h3>
 <p><strong>btnPullDetails.OnSelect</strong></p>
 <div class="code-card" id="code-18"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-18" type="button">Wrap</button><button class="copy-btn" data-target="code-text-18" type="button">Copy</button></div></div><pre id="code-pre-18"><code id="code-text-18">If(
@@ -3481,7 +3546,7 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 )</code></pre></div>
 <hr/>
 <h1 id="phase-9-scradminmanage-courses-tab"><span class="phase-kicker">Build phase</span><a aria-label="Link to section" class="anchor" href="#phase-9-scradminmanage-courses-tab">#</a>PHASE 9 — scrAdminManage · Courses tab</h1>
-<p>All course controls live in grpCourses on the same screen as People. Set <code>grpCourses.Visible = varTab = "Courses"</code>.</p>
+<p>Build the Courses controls on the same screen as the People controls. <strong>Do not create <code>grpCourses</code> yet.</strong> Build all controls in this phase first, then group them at the end of the controls section using the exact list provided.</p>
 <h3 id="add-course-panel"><a aria-label="Link to section" class="anchor" href="#add-course-panel">#</a>Add course panel</h3>
 <p><strong>recAddCoursePanel</strong> — Button (classic), X=16, Y=144, W=640, H=254, Text=<code>""</code>, DisplayMode=View, Fill=<code>RGBA(255,255,255,1)</code>, BorderColor=<code>RGBA(221,227,234,1)</code>, BorderThickness=1, all radius=8, HoverFill/PressedFill=<code>RGBA(255,255,255,1)</code></p>
 <p><strong>lblAddCourseTitle</strong> — Text label, X=32, Y=156, W=400, H=24, Text=<code>"Add course"</code>, FontSize=13, FontWeight=Bold, Color=<code>RGBA(31,58,95,1)</code>, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0</p>
@@ -3588,6 +3653,40 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 </tr>
 </tbody>
 </table>
+<h3 id="group-courses-controls"><a aria-label="Link to section" class="anchor" href="#group-courses-controls">#</a>Group Courses controls — do this after the Courses controls exist</h3>
+<div class="callout"><strong>v2.5 sequencing fix:</strong> do this only after you have created the Add course panel, edit panel, and course gallery. Do not include the header or tab buttons in this group.</div>
+
+<p>Select these top-level controls in the tree view and group them as <code>grpCourses</code>:</p>
+<ul>
+<li><code>recAddCoursePanel</code></li>
+<li><code>lblAddCourseTitle</code></li>
+<li><code>txtNewCourse</code></li>
+<li><code>cmbNewApplic</code></li>
+<li><code>drpNewRecur</code></li>
+<li><code>btnAddCourse</code></li>
+<li><code>recEditPanel</code></li>
+<li><code>lblEditTitle</code></li>
+<li><code>txtEditCourse</code></li>
+<li><code>cmbEditApplic</code></li>
+<li><code>drpEditRecur</code></li>
+<li><code>btnSaveCourse</code></li>
+<li><code>btnCancelEdit</code></li>
+<li><code>btnArchive</code></li>
+<li><code>galCourses</code></li>
+</ul>
+
+<p>How to group:</p>
+<ol>
+<li>In the tree view, select the controls listed above.</li>
+<li>Press <strong>Ctrl+G</strong>, or right-click and choose <strong>Group</strong>.</li>
+<li>Rename the new group to <code>grpCourses</code>.</li>
+<li>Set the group property:</li>
+</ol>
+
+<div class="code-card"><div class="code-toolbar"><span>Power Fx / formula</span><div></div></div><pre><code>grpCourses.Visible = varTab = "Courses"</code></pre></div>
+
+<div class="callout"><strong>Do not include:</strong> <code>btnTabPeople</code>, <code>btnTabCourses</code>, <code>recAdminManageHeader</code>, <code>icoAdminManageBack</code>, or <code>lblManageTitle</code>. Those must stay visible regardless of selected tab.</div>
+
 <h3 id="formulas-courses-tab"><a aria-label="Link to section" class="anchor" href="#formulas-courses-tab">#</a>Formulas — Courses tab</h3>
 <p><strong>drpNewRecur.Items (paste same formula into drpEditRecur.Items)</strong></p>
 <div class="code-card" id="code-22"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-22" type="button">Wrap</button><button class="copy-btn" data-target="code-text-22" type="button">Copy</button></div></div><pre id="code-pre-22"><code id="code-text-22">Table(
@@ -3865,7 +3964,7 @@ Notify("Report sent — check your inbox in ~30 seconds.", NotificationType.Succ
 </div>
 </details>
 </article>
-<p class="footer">Generated from the uploaded Markdown handoff. Current HTML guide version: v2.4 — gallery index + modern toggle audit. Standalone HTML: no external scripts, fonts, or tracking.</p>
+<p class="footer">Generated from the uploaded Markdown handoff. Current HTML guide version: v2.5 — sequencing + grouping clarity audit. Standalone HTML: no external scripts, fonts, or tracking.</p>
 </main>
 </div>
 <a aria-label="Back to top" class="to-top" href="#top">↑</a>
