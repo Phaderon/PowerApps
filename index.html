@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Training Tracker — Power Apps Build Guide — v2.5 — sequencing + grouping clarity audit</title>
+<title>Training Tracker — Power Apps Build Guide — v2.7 — full control clarity and Power Fx audit</title>
 <style>
 :root {
   --bg: #f6efe4;
@@ -31,6 +31,10 @@
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
 body {
   margin: 0;
   background:
@@ -43,11 +47,12 @@ body {
 a { color: var(--blue); }
 .shell {
   display: grid;
-  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
-  gap: 28px;
+  grid-template-columns: minmax(220px, 290px) minmax(0, 1fr);
+  gap: 22px;
   max-width: 1520px;
   margin: 0 auto;
   padding: 28px;
+  min-width: 0;
 }
 .sidebar {
   position: sticky;
@@ -199,6 +204,8 @@ a { color: var(--blue); }
   border: 1px solid var(--line);
   border-radius: 26px;
   box-shadow: var(--shadow);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .content h1, .content h2, .content h3, .content h4 {
   scroll-margin-top: 24px;
@@ -251,19 +258,48 @@ blockquote {
   color: var(--muted);
 }
 table {
+  display: block;
   width: 100%;
+  max-width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   margin: 18px 0;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: #fffdf8;
+  -webkit-overflow-scrolling: touch;
+}
+thead,
+tbody,
+tr {
+  width: 100%;
+}
+table table {
+  display: table;
+}
+table::-webkit-scrollbar,
+.code-card pre::-webkit-scrollbar {
+  height: 10px;
+}
+table::-webkit-scrollbar-thumb,
+.code-card pre::-webkit-scrollbar-thumb {
+  background: rgba(117,80,27,.35);
+  border-radius: 999px;
 }
 th, td {
   padding: 10px 12px;
   border-bottom: 1px solid var(--line);
   vertical-align: top;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+td code:not(pre code),
+th code:not(pre code) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 tr:last-child td { border-bottom: 0; }
 th {
@@ -287,6 +323,7 @@ code:not(pre code) {
   border: 1px solid rgba(185,133,47,.38);
   background: var(--code-bg);
   box-shadow: 0 16px 32px rgba(23,20,15,.18);
+  max-width: 100%;
 }
 .code-toolbar {
   display:flex;
@@ -315,7 +352,9 @@ code:not(pre code) {
 }
 .code-card pre {
   margin:0;
-  overflow:auto;
+  overflow-x:auto;
+  overflow-y:hidden;
+  max-width: 100%;
   padding: 18px;
   color: var(--code-ink);
   font-family: var(--mono);
@@ -363,6 +402,56 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
   .sidebar { position: relative; top: auto; max-height: 360px; margin-bottom: 16px; }
   .content { padding: 24px 18px; }
   .hero { padding: 24px; }
+}
+@media (max-width: 1180px) {
+  .shell { display:block; padding: 18px; }
+  .sidebar {
+    position: relative;
+    top: auto;
+    max-height: 300px;
+    margin-bottom: 16px;
+  }
+  .toc {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 4px 8px;
+  }
+  .toc-l2,
+  .toc-l3 { padding-left: 9px !important; }
+}
+@media (max-width: 640px) {
+  .shell { padding: 10px; }
+  .hero {
+    padding: 18px;
+    border-radius: 18px;
+  }
+  .hero h1 {
+    font-size: 2rem;
+    letter-spacing: 0;
+  }
+  .content {
+    padding: 18px 12px;
+    border-radius: 18px;
+  }
+  .content h1 {
+    margin-left: 0;
+    margin-right: 0;
+    padding: 18px 14px;
+    border-radius: 16px;
+  }
+  th,
+  td {
+    padding: 9px 10px;
+    font-size: .92rem;
+  }
+  .code-card pre {
+    padding: 14px;
+    font-size: .84rem;
+  }
+  .actions a,
+  .actions button {
+    width: 100%;
+    text-align: center;
+  }
 }
 @media print {
   body { background: white; }
@@ -506,7 +595,7 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <span class="badge">SharePoint Lists</span>
 <span class="badge">Browser guide</span>
 </div>
-<div class="callout"><strong>Updated:</strong> Phase 6 Safe Formula Edition — fixes chain-gallery scope, schema-safe empty collections, Boolean coercion, archive layout, and progress-bar width warnings.</div>
+<div class="callout"><strong>Updated:</strong> v2.7 full control clarity and Power Fx audit - fixes remaining inline control paragraphs, removes literal references to invalid Power Fx patterns, and tightens gallery/formula scope guidance.</div>
 <h1>Training Tracker — Power Apps Build Guide</h1>
 <p>A polished, browser-friendly version of the handoff guide. Code blocks stay intact, have copy buttons, and can be wrapped when you need to read long Power Fx formulas on a narrower screen.</p>
 <div class="actions">
@@ -514,7 +603,7 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <a class="secondary" href="#phase-1-build-the-sharepoint-lists">Jump to Phase 1</a>
 <button class="secondary" onclick="window.print()">Print / save as PDF</button>
 </div>
-<div class="version-panel"><strong>Current guide version:</strong> v2.5 — sequencing + grouping clarity audit<br/><span>If this line does not show v2.5, the work laptop is viewing an older cached copy. Hard refresh with Ctrl+F5.</span><br/><br/><strong>Changed from v2.4:</strong> fixed invalid <code>ScreenTransition.Back</code>, rewrote Phase 8 tab buttons as proper control instructions, moved People/Courses grouping instructions until after those controls exist, and added explicit group membership lists.</div></section>
+<div class="version-panel"><strong>Current guide version:</strong> v2.7 — full control clarity and Power Fx audit<br/><span>If this line does not show v2.7, the work laptop is viewing an older cached copy. Hard refresh with Ctrl+F5.</span><br/><br/><strong>Changed from v2.6:</strong> converted the remaining long inline control paragraphs into property tables, removed literal references to invalid row-index and screen-transition patterns, confirmed modern toggles use <code>Checked</code>, and rechecked nested gallery formulas for explicit aliases or captured row values.</div></section>
 <section aria-label="Build phases" class="phase-grid">
 <a class="phase-card" href="#phase-1-build-the-sharepoint-lists"><span>PHASE 1</span><strong>PHASE 1 — Build the SharePoint lists</strong></a>
 <a class="phase-card" href="#phase-2-app-shell-connections-and-app-onstart"><span>PHASE 2</span><strong>PHASE 2 — App shell, connections and App.OnStart</strong></a>
@@ -530,7 +619,7 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 </section>
 <article class="content">
 <h1 id="training-tracker-power-apps-build-guide"><a aria-label="Link to section" class="anchor" href="#training-tracker-power-apps-build-guide">#</a>Training Tracker — Power Apps Build Guide</h1>
-<h2 id="overview"><a aria-label="Link to section" class="anchor" href="#overview">#</a>OVERVIEW</h2><div class="audit-note" id="audit-note-v23"><strong>v2.3 audit note:</strong> this version was scrubbed for the known Power Fx copy/paste traps <em>and</em> instruction gaps. Any section that previously said “same technique”, “duplicate from prior screen”, or “same formula” has been expanded so you do not have to jump backwards to work out which controls/properties to create.</div><div class="audit-note"><strong>v2.3 clarity scrub:</strong> expanded Phase 6, Phase 7 and Phase 8 headers/card instructions; split the Course Archive formulas so the gallery icon and edit-panel button no longer share a broken formula; removed remaining “same technique” dependency for the admin stat cards.</div>
+<h2 id="overview"><a aria-label="Link to section" class="anchor" href="#overview">#</a>OVERVIEW</h2><div class="audit-note" id="audit-note-v23"><strong>v2.3 audit note:</strong> this version was scrubbed for the known Power Fx copy/paste traps <em>and</em> instruction gaps. Sections that previously depended on earlier examples or unnamed duplicate controls have been expanded so you do not have to jump backwards to work out which controls/properties to create.</div><div class="audit-note"><strong>v2.7 clarity scrub:</strong> Phase 6, Phase 7, Phase 8 and Phase 9 control instructions now use explicit control tables; Course Archive formulas remain split so the gallery icon and edit-panel button use the correct separate formulas.</div>
 <p>A complete, copy-paste-ready build plan for a canvas Power App replacing a manual SharePoint training list. Staff maintain their own training records and certificates. Line managers can view (and optionally upload for) their direct/indirect reports. The training administrator ("Jackie") gets a full compliance dashboard, personnel and course management, and one-click PDF report export.</p>
 <p><strong>Format:</strong> Tablet canvas app, 1366×768. Modern controls enabled.</p>
 <h3 id="what-the-finished-app-does"><a aria-label="Link to section" class="anchor" href="#what-the-finished-app-does">#</a>What the finished app does</h3>
@@ -1671,19 +1760,55 @@ If(
 </tr>
 </tbody>
 </table>
-<p><strong>Now duplicate recCard1, lblStatRequired, lblCapRequired:</strong></p>
-<p><strong>Card 2</strong> — set X=462 on all three duplicates, then:</p>
-<ul>
-<li><code>lblStatInDate.Text</code> = <code>CountRows(Filter(colMyTraining, TrainingStatus = "In Date" || TrainingStatus = "Complete"))</code></li>
-<li><code>lblStatInDate.Color</code> = <code>RGBA(59,109,17,1)</code> (green)</li>
-<li><code>lblCapInDate.Text</code> = <code>"In date"</code></li>
-</ul>
-<p><strong>Card 3</strong> — set X=908 on all three duplicates, then:</p>
-<ul>
-<li><code>lblStatAction.Text</code> = <code>CountRows(Filter(colMyTraining, TrainingStatus = "Expired" || TrainingStatus = "Not Started" || TrainingStatus = "Expiring Soon"))</code></li>
-<li><code>lblStatAction.Color</code> = <code>If(Value(Self.Text) &gt; 0, RGBA(163,45,45,1), RGBA(59,109,17,1))</code> (red when action needed)</li>
-<li><code>lblCapAction.Text</code> = <code>"Need action"</code></li>
-</ul>
+<p><strong>Create Card 2 and Card 3 by duplicating the three Card 1 controls, then rename and set these properties:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Card</th>
+<th>Control</th>
+<th>Type</th>
+<th>Properties to set after duplicating</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Card 2</td>
+<td><code>recCard2</code></td>
+<td>Button (classic)</td>
+<td>X=462, Y=88, Width=430, Height=90, Text=<code>""</code>, DisplayMode=<code>DisplayMode.View</code>, Fill=<code>RGBA(255,255,255,1)</code>, BorderColor=<code>RGBA(221,227,234,1)</code>, BorderThickness=1, all radius=8, HoverFill/PressedFill=<code>RGBA(255,255,255,1)</code>.</td>
+</tr>
+<tr>
+<td>Card 2</td>
+<td><code>lblStatInDate</code></td>
+<td>Label</td>
+<td>X=462, Y=96, Width=430, Height=44, Text=<code>CountRows(Filter(colMyTraining, TrainingStatus = "In Date" || TrainingStatus = "Complete"))</code>, FontSize=28, FontWeight=<code>FontWeight.Bold</code>, Color=<code>RGBA(59,109,17,1)</code>, Align=<code>Align.Center</code>, VerticalAlign=<code>VerticalAlign.Middle</code>, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0.</td>
+</tr>
+<tr>
+<td>Card 2</td>
+<td><code>lblCapInDate</code></td>
+<td>Label</td>
+<td>X=462, Y=144, Width=430, Height=26, Text=<code>"In date"</code>, FontSize=10, Color=<code>RGBA(85,85,85,1)</code>, Align=<code>Align.Center</code>, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0.</td>
+</tr>
+<tr>
+<td>Card 3</td>
+<td><code>recCard3</code></td>
+<td>Button (classic)</td>
+<td>X=908, Y=88, Width=430, Height=90, Text=<code>""</code>, DisplayMode=<code>DisplayMode.View</code>, Fill=<code>RGBA(255,255,255,1)</code>, BorderColor=<code>RGBA(221,227,234,1)</code>, BorderThickness=1, all radius=8, HoverFill/PressedFill=<code>RGBA(255,255,255,1)</code>.</td>
+</tr>
+<tr>
+<td>Card 3</td>
+<td><code>lblStatAction</code></td>
+<td>Label</td>
+<td>X=908, Y=96, Width=430, Height=44, Text=<code>CountRows(Filter(colMyTraining, TrainingStatus = "Expired" || TrainingStatus = "Not Started" || TrainingStatus = "Expiring Soon"))</code>, FontSize=28, FontWeight=<code>FontWeight.Bold</code>, Color=<code>If(Value(Self.Text) &gt; 0, RGBA(163,45,45,1), RGBA(59,109,17,1))</code>, Align=<code>Align.Center</code>, VerticalAlign=<code>VerticalAlign.Middle</code>, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0.</td>
+</tr>
+<tr>
+<td>Card 3</td>
+<td><code>lblCapAction</code></td>
+<td>Label</td>
+<td>X=908, Y=144, Width=430, Height=26, Text=<code>"Need action"</code>, FontSize=10, Color=<code>RGBA(85,85,85,1)</code>, Align=<code>Align.Center</code>, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0.</td>
+</tr>
+</tbody>
+</table>
 <h2 id="section-c-course-gallery"><a aria-label="Link to section" class="anchor" href="#section-c-course-gallery">#</a>Section C — Course gallery</h2>
 <h3 id="galmytraining-gallery-vertical-blank"><a aria-label="Link to section" class="anchor" href="#galmytraining-gallery-vertical-blank">#</a>galMyTraining — Gallery (vertical, blank)</h3>
 <p>Insert → Vertical gallery, blank layout (no pre-added labels).</p>
@@ -2700,7 +2825,7 @@ Back()</code></pre></div>
 <tr><td>X</td><td>52</td></tr><tr><td>Y</td><td>0</td></tr><tr><td>Width</td><td>600</td></tr><tr><td>Height</td><td>72</td></tr><tr><td>Text</td><td><code>"My team"</code></td></tr><tr><td>FontSize</td><td>17</td></tr><tr><td>FontWeight</td><td><code>FontWeight.Bold</code></td></tr><tr><td>Color</td><td><code>RGBA(230,241,251,1)</code></td></tr><tr><td>VerticalAlign</td><td><code>VerticalAlign.Middle</code></td></tr><tr><td>Fill</td><td><code>RGBA(0,0,0,0)</code></td></tr><tr><td>BorderThickness</td><td>0</td></tr>
 </tbody></table>
 <h3 id="galmychain-gallery-vertical-blank"><a aria-label="Link to section" class="anchor" href="#galmychain-gallery-vertical-blank">#</a>galMyChain — Gallery (vertical, blank)</h3>
-<div class="callout"><strong>v2.4 correction:</strong> do not use <code>ThisItem.ItemIndex</code> in this gallery. <code>colMyChain</code> does not include <code>ID</code> or <code>ItemIndex</code>; use <code>Mod(Len(ThisItem.Email),2)</code> for alternating row colours.</div>
+<div class="callout"><strong>v2.7 audit note:</strong> do not use a gallery row-index property in this gallery. <code>colMyChain</code> does not include <code>ID</code> or a row index; use <code>Mod(Len(ThisItem.Email),2)</code> for alternating row colours.</div>
 <table>
 <thead>
 <tr>
@@ -2871,7 +2996,7 @@ Back()</code></pre></div>
     Navigate(scrMyTraining, ScreenTransition.Cover)
 )</code></pre></div>
 <p><strong>scrTeamMember.OnVisible</strong></p>
-<div class="callout"><strong>Important Phase 6 fix:</strong> This formula deliberately initialises <code>colChainL3</code> first, then fills it conditionally. Do not replace that with <code>[]</code> or a single <code>If(...)</code> inside <code>ClearCollect</code>; Power Apps may lose the column types and report <code>P.HasM365Access</code> as an Error instead of a Boolean.</div>
+<div class="callout"><strong>Important Phase 6 fix:</strong> This formula deliberately initialises <code>colChainL3</code> first, then fills it conditionally. Do not replace that with a schema-less empty table literal or a single <code>If(...)</code> inside <code>ClearCollect</code>; Power Apps may lose the column types and report <code>P.HasM365Access</code> as an Error instead of a Boolean.</div>
 <div class="code-card" id="code-12"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-12" type="button">Wrap</button><button class="copy-btn" data-target="code-text-12" type="button">Copy</button></div></div><pre id="code-pre-12"><code id="code-text-12">ClearCollect(colAllPeople, Filter('TT Personnel', Active = true));
 ClearCollect(colAllRecords, 'TT TrainingRecords');
 
@@ -3146,8 +3271,23 @@ If(
 </table>
 <h3 id="drill-down-panel-right-side-appears-when-a-row-is-tapped"><a aria-label="Link to section" class="anchor" href="#drill-down-panel-right-side-appears-when-a-row-is-tapped">#</a>Drill-down panel — right side, appears when a row is tapped</h3>
 <div class="callout"><strong>v2.4 correction:</strong> for modern Toggle controls, use the <code>Checked</code> property for the current/default on-off state in this build.</div>
-<p><strong>recDrillPanel</strong> — Button (classic), X=916, Y=258, W=434, H=510, Text=<code>""</code>, DisplayMode=View, Fill=<code>RGBA(255,255,255,1)</code>, BorderColor=<code>RGBA(221,227,234,1)</code>, BorderThickness=1, all radius=8, HoverFill/PressedFill=<code>RGBA(255,255,255,1)</code>, Visible=<code>!IsBlank(varDrillPerson)</code></p>
-<p>Controls inside (all <code>Visible = !IsBlank(varDrillPerson)</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Type</th>
+<th>Key properties</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>recDrillPanel</td>
+<td>Button (classic)</td>
+<td>X=916,Y=258,W=434,H=510, Text=<code>""</code>, DisplayMode=<code>DisplayMode.View</code>, Fill=<code>RGBA(255,255,255,1)</code>, BorderColor=<code>RGBA(221,227,234,1)</code>, BorderThickness=1, all radius=8, HoverFill/PressedFill=<code>RGBA(255,255,255,1)</code>, Visible=<code>!IsBlank(varDrillPerson)</code></td>
+</tr>
+</tbody>
+</table>
+<p>Controls inside the drill-down panel. Set <code>Visible = !IsBlank(varDrillPerson)</code> on every control in this table:</p>
 <table>
 <thead>
 <tr>
@@ -3237,28 +3377,63 @@ If(
     "Name", SortOrder.Ascending
 )</code></pre></div>
 <p><strong>galCompliance.OnSelect</strong></p>
-<div class="code-card" id="code-15"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-15" type="button">Wrap</button><button class="copy-btn" data-target="code-text-15" type="button">Copy</button></div></div><pre id="code-pre-15"><code id="code-text-15">Set(varDrillPerson, ThisItem);
-ClearCollect(colPersonDetail,
-    ForAll(
-        Filter(colCourses,
-            Status.Value = "Active" &amp;&amp;
-            varDrillPerson.StaffType in ApplicableTo.Value) As C,
-        With({rec: LookUp(colAllRecords,
-                      Lower(PersonEmail) = varDrillPerson.Email &amp;&amp; CourseID = C.ID)},
-        {
-            CourseName: C.Title,
-            DateDone:   rec.DateCompleted,
-            UploadedBy: rec.UploadedByEmail,
-            ExpiresOn:  If(IsBlank(rec.DateCompleted)||C.RecurrenceMonths=0,Blank(),
-                           DateAdd(rec.DateCompleted,C.RecurrenceMonths,TimeUnit.Months)),
-            TrainingStatus:
-                If(IsBlank(rec.DateCompleted),"Not Started",
-                   C.RecurrenceMonths=0,"Complete",
-                   DateAdd(rec.DateCompleted,C.RecurrenceMonths,TimeUnit.Months)&lt;Today(),"Expired",
-                   DateAdd(rec.DateCompleted,C.RecurrenceMonths,TimeUnit.Months)&lt;=DateAdd(Today(),60,TimeUnit.Days),"Expiring Soon",
-                   "In Date"),
-            RecordID: rec.ID
-        })
+<div class="code-card" id="code-15"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-15" type="button">Wrap</button><button class="copy-btn" data-target="code-text-15" type="button">Copy</button></div></div><pre id="code-pre-15"><code id="code-text-15">With(
+    {selectedPerson: ThisItem},
+    Set(varDrillPerson, selectedPerson);
+    ClearCollect(
+        colPersonDetail,
+        ForAll(
+            Filter(
+                colCourses,
+                Status.Value = "Active" &amp;&amp;
+                selectedPerson.StaffType in ApplicableTo.Value
+            ) As C,
+            With(
+                {
+                    rec: LookUp(
+                        colAllRecords,
+                        Lower(PersonEmail) = selectedPerson.Email &amp;&amp;
+                        CourseID = C.ID
+                    )
+                },
+                {
+                    CourseName: C.Title,
+                    DateDone:   rec.DateCompleted,
+                    UploadedBy: rec.UploadedByEmail,
+                    ExpiresOn:  If(
+                                    IsBlank(rec.DateCompleted) ||
+                                    C.RecurrenceMonths = 0,
+                                    Blank(),
+                                    DateAdd(
+                                        rec.DateCompleted,
+                                        C.RecurrenceMonths,
+                                        TimeUnit.Months
+                                    )
+                                ),
+                    TrainingStatus:
+                        If(
+                            IsBlank(rec.DateCompleted),
+                            "Not Started",
+                            C.RecurrenceMonths = 0,
+                            "Complete",
+                            DateAdd(
+                                rec.DateCompleted,
+                                C.RecurrenceMonths,
+                                TimeUnit.Months
+                            ) &lt; Today(),
+                            "Expired",
+                            DateAdd(
+                                rec.DateCompleted,
+                                C.RecurrenceMonths,
+                                TimeUnit.Months
+                            ) &lt;= DateAdd(Today(), 60, TimeUnit.Days),
+                            "Expiring Soon",
+                            "In Date"
+                        ),
+                    RecordID: rec.ID
+                }
+            )
+        )
     )
 )</code></pre></div>
 <p><strong>tglManagerEdit.OnChange</strong></p>
@@ -3392,21 +3567,95 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 <div class="callout"><strong>Do not create <code>grpPeople</code> yet.</strong> Build all People controls below first, then the guide gives you the exact group list.</div>
 
 <h3 id="add-person-panel"><a aria-label="Link to section" class="anchor" href="#add-person-panel">#</a>Add person panel</h3>
-<p><strong>recAddPanel</strong> — Button (classic), X=16, Y=144, W=640, H=340, Text=<code>""</code>, DisplayMode=View, Fill=<code>RGBA(255,255,255,1)</code>, BorderColor=<code>RGBA(221,227,234,1)</code>, BorderThickness=1, all radius=8, HoverFill/PressedFill=<code>RGBA(255,255,255,1)</code></p>
-<p><strong>lblAddTitle</strong> — Text label, X=32, Y=156, W=400, H=24, Text=<code>"Add person"</code>, FontSize=13, FontWeight=Bold, Color=<code>RGBA(31,58,95,1)</code>, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0</p>
-<p><strong>cmbNewPerson</strong> — Combo box (modern), X=32, Y=186, W=590, H=40, Placeholder=<code>"Search M365 directory..."</code>, SelectMultiple=<code>false</code>, IsSearchable=<code>true</code>, FontSize=12, Items=<code>Office365Users.SearchUserV2({searchTerm: cmbNewPerson.SearchText, top: 15}).value</code></p>
-<p><strong>lblOrManual</strong> — Text label, X=32, Y=234, W=590, H=20, Text=<code>"— or enter manually below —"</code>, FontSize=10, Color=<code>RGBA(136,135,128,1)</code>, Align=Center, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0</p>
-<p><strong>txtManualEmail</strong> — Text input (modern), X=32, Y=258, W=430, H=40, Placeholder=<code>"Email address"</code>, FontSize=12</p>
-<p><strong>btnPullDetails</strong> — Button (modern), X=470, Y=258, W=152, H=40, Text=<code>"Pull details"</code>, FontSize=11, BasePaletteColor=<code>RGBA(244,246,248,1)</code>, Color=<code>RGBA(24,95,165,1)</code>, OnSelect: see formula below</p>
-<p><strong>txtManualName</strong> — Text input (modern), X=32, Y=306, W=590, H=40, Placeholder=<code>"Display name"</code>, FontSize=12, Default=<code>locPulledName</code></p>
-<p><strong>drpNewType</strong> — Dropdown (modern), X=32, Y=354, W=284, H=40, Items=<code>["Civil Servant", "Army", "Contractor"]</code>, FontSize=12</p>
-<p><strong>txtNewManager</strong> — Text input (modern), X=326, Y=354, W=296, H=40, Placeholder=<code>"Line manager email (optional)"</code>, FontSize=11</p>
-<p><strong>tglNewAdmin</strong> — Toggle (modern), X=32, Y=404, W=160, H=32, Label=<code>"Is admin"</code>, FontSize=11</p>
-<p><strong>tglHasM365</strong> — Toggle (modern), X=210, Y=404, W=200, H=32, Label=<code>"Has M365 account"</code>, FontSize=11, Checked=<code>true</code></p>
-<p><strong>btnAddPerson</strong> — Button (modern), X=32, Y=444, W=590, H=44, Text=<code>"Add to system"</code>, FontSize=13, FontWeight=Bold, BasePaletteColor=<code>RGBA(24,95,165,1)</code>, OnSelect: see formula below</p>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Type</th>
+<th>Key properties</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>recAddPanel</td>
+<td>Button (classic)</td>
+<td>X=16,Y=144,W=640,H=340, Text=<code>""</code>, DisplayMode=<code>DisplayMode.View</code>, Fill=<code>RGBA(255,255,255,1)</code>, BorderColor=<code>RGBA(221,227,234,1)</code>, BorderThickness=1, all radius=8, HoverFill/PressedFill=<code>RGBA(255,255,255,1)</code></td>
+</tr>
+<tr>
+<td>lblAddTitle</td>
+<td>Text label</td>
+<td>X=32,Y=156,W=400,H=24, Text=<code>"Add person"</code>, FontSize=13, FontWeight=<code>FontWeight.Bold</code>, Color=<code>RGBA(31,58,95,1)</code>, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0</td>
+</tr>
+<tr>
+<td>cmbNewPerson</td>
+<td>Combo box (modern)</td>
+<td>X=32,Y=186,W=590,H=40, Placeholder=<code>"Search M365 directory..."</code>, SelectMultiple=<code>false</code>, IsSearchable=<code>true</code>, FontSize=12, Items=<code>Office365Users.SearchUserV2({searchTerm: cmbNewPerson.SearchText, top: 15}).value</code></td>
+</tr>
+<tr>
+<td>lblOrManual</td>
+<td>Text label</td>
+<td>X=32,Y=234,W=590,H=20, Text=<code>"or enter manually below"</code>, FontSize=10, Color=<code>RGBA(136,135,128,1)</code>, Align=<code>Align.Center</code>, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0</td>
+</tr>
+<tr>
+<td>txtManualEmail</td>
+<td>Text input (modern)</td>
+<td>X=32,Y=258,W=430,H=40, Placeholder=<code>"Email address"</code>, FontSize=12</td>
+</tr>
+<tr>
+<td>btnPullDetails</td>
+<td>Button (modern)</td>
+<td>X=470,Y=258,W=152,H=40, Text=<code>"Pull details"</code>, FontSize=11, BasePaletteColor=<code>RGBA(244,246,248,1)</code>, Color=<code>RGBA(24,95,165,1)</code>, OnSelect: use the formula below</td>
+</tr>
+<tr>
+<td>txtManualName</td>
+<td>Text input (modern)</td>
+<td>X=32,Y=306,W=590,H=40, Placeholder=<code>"Display name"</code>, FontSize=12, Default=<code>locPulledName</code></td>
+</tr>
+<tr>
+<td>drpNewType</td>
+<td>Dropdown (modern)</td>
+<td>X=32,Y=354,W=284,H=40, Items=<code>["Civil Servant", "Army", "Contractor"]</code>, FontSize=12</td>
+</tr>
+<tr>
+<td>txtNewManager</td>
+<td>Text input (modern)</td>
+<td>X=326,Y=354,W=296,H=40, Placeholder=<code>"Line manager email (optional)"</code>, FontSize=11</td>
+</tr>
+<tr>
+<td>tglNewAdmin</td>
+<td>Toggle (modern)</td>
+<td>X=32,Y=404,W=160,H=32, Label=<code>"Is admin"</code>, FontSize=11</td>
+</tr>
+<tr>
+<td>tglHasM365</td>
+<td>Toggle (modern)</td>
+<td>X=210,Y=404,W=200,H=32, Label=<code>"Has M365 account"</code>, FontSize=11, Checked=<code>true</code></td>
+</tr>
+<tr>
+<td>btnAddPerson</td>
+<td>Button (modern)</td>
+<td>X=32,Y=444,W=590,H=44, Text=<code>"Add to system"</code>, FontSize=13, FontWeight=<code>FontWeight.Bold</code>, BasePaletteColor=<code>RGBA(24,95,165,1)</code>, OnSelect: use the formula below</td>
+</tr>
+</tbody>
+</table>
 <h3 id="people-gallery"><a aria-label="Link to section" class="anchor" href="#people-gallery">#</a>People gallery</h3>
-<div class="callout"><strong>v2.4 correction:</strong> this gallery is bound directly to SharePoint personnel rows, so <code>ThisItem.ID</code> is available here. Use <code>Mod(ThisItem.ID,2)</code> for alternating row colours, not <code>ThisItem.ItemIndex</code>.</div>
-<p><strong>galPeople</strong> — Gallery (vertical, blank), X=672, Y=144, W=678, H=624, TemplateSize=60, TemplatePadding=0, ShowScrollbar=true, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0, Items=<code>SortByColumns(Filter('TT Personnel', Active = true), "Title", SortOrder.Ascending)</code></p>
+<div class="callout"><strong>v2.7 audit note:</strong> this gallery is bound directly to SharePoint personnel rows, so <code>ThisItem.ID</code> is available here. Use <code>Mod(ThisItem.ID,2)</code> for alternating row colours.</div>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Type</th>
+<th>Key properties</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>galPeople</td>
+<td>Gallery (vertical, blank)</td>
+<td>X=672,Y=144,W=678,H=624, TemplateSize=60, TemplatePadding=0, ShowScrollbar=<code>true</code>, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0, Items=<code>SortByColumns(Filter('TT Personnel', Active = true), "Title", SortOrder.Ascending)</code></td>
+</tr>
+</tbody>
+</table>
 <p>Inside galPeople template:</p>
 <table>
 <thead>
@@ -3548,15 +3797,65 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 <h1 id="phase-9-scradminmanage-courses-tab"><span class="phase-kicker">Build phase</span><a aria-label="Link to section" class="anchor" href="#phase-9-scradminmanage-courses-tab">#</a>PHASE 9 — scrAdminManage · Courses tab</h1>
 <p>Build the Courses controls on the same screen as the People controls. <strong>Do not create <code>grpCourses</code> yet.</strong> Build all controls in this phase first, then group them at the end of the controls section using the exact list provided.</p>
 <h3 id="add-course-panel"><a aria-label="Link to section" class="anchor" href="#add-course-panel">#</a>Add course panel</h3>
-<p><strong>recAddCoursePanel</strong> — Button (classic), X=16, Y=144, W=640, H=254, Text=<code>""</code>, DisplayMode=View, Fill=<code>RGBA(255,255,255,1)</code>, BorderColor=<code>RGBA(221,227,234,1)</code>, BorderThickness=1, all radius=8, HoverFill/PressedFill=<code>RGBA(255,255,255,1)</code></p>
-<p><strong>lblAddCourseTitle</strong> — Text label, X=32, Y=156, W=400, H=24, Text=<code>"Add course"</code>, FontSize=13, FontWeight=Bold, Color=<code>RGBA(31,58,95,1)</code>, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0</p>
-<p><strong>txtNewCourse</strong> — Text input (modern), X=32, Y=186, W=600, H=40, Placeholder=<code>"Course name"</code>, FontSize=12</p>
-<p><strong>cmbNewApplic</strong> — Combo box (modern, multi-select), X=32, Y=234, W=394, H=40, Items=<code>["Civil Servant", "Army", "Contractor"]</code>, SelectMultiple=<code>true</code>, Placeholder=<code>"Applies to..."</code>, FontSize=12</p>
-<p><strong>drpNewRecur</strong> — Dropdown (modern), X=434, Y=234, W=198, H=40, FontSize=12, Items: see formula below</p>
-<p><strong>btnAddCourse</strong> — Button (modern), X=32, Y=284, W=600, H=44, Text=<code>"Add course"</code>, FontSize=13, FontWeight=Bold, BasePaletteColor=<code>RGBA(24,95,165,1)</code>, OnSelect: see formula</p>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Type</th>
+<th>Key properties</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>recAddCoursePanel</td>
+<td>Button (classic)</td>
+<td>X=16,Y=144,W=640,H=254, Text=<code>""</code>, DisplayMode=<code>DisplayMode.View</code>, Fill=<code>RGBA(255,255,255,1)</code>, BorderColor=<code>RGBA(221,227,234,1)</code>, BorderThickness=1, all radius=8, HoverFill/PressedFill=<code>RGBA(255,255,255,1)</code></td>
+</tr>
+<tr>
+<td>lblAddCourseTitle</td>
+<td>Text label</td>
+<td>X=32,Y=156,W=400,H=24, Text=<code>"Add course"</code>, FontSize=13, FontWeight=<code>FontWeight.Bold</code>, Color=<code>RGBA(31,58,95,1)</code>, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0</td>
+</tr>
+<tr>
+<td>txtNewCourse</td>
+<td>Text input (modern)</td>
+<td>X=32,Y=186,W=600,H=40, Placeholder=<code>"Course name"</code>, FontSize=12</td>
+</tr>
+<tr>
+<td>cmbNewApplic</td>
+<td>Combo box (modern, multi-select)</td>
+<td>X=32,Y=234,W=394,H=40, Items=<code>["Civil Servant", "Army", "Contractor"]</code>, SelectMultiple=<code>true</code>, Placeholder=<code>"Applies to..."</code>, FontSize=12</td>
+</tr>
+<tr>
+<td>drpNewRecur</td>
+<td>Dropdown (modern)</td>
+<td>X=434,Y=234,W=198,H=40, FontSize=12, Items: use the <code>drpNewRecur.Items</code> formula below</td>
+</tr>
+<tr>
+<td>btnAddCourse</td>
+<td>Button (modern)</td>
+<td>X=32,Y=284,W=600,H=44, Text=<code>"Add course"</code>, FontSize=13, FontWeight=<code>FontWeight.Bold</code>, BasePaletteColor=<code>RGBA(24,95,165,1)</code>, OnSelect: use the formula below</td>
+</tr>
+</tbody>
+</table>
 <h3 id="edit-panel-shown-when-vareditcourse-is-set"><a aria-label="Link to section" class="anchor" href="#edit-panel-shown-when-vareditcourse-is-set">#</a>Edit panel — shown when varEditCourse is set</h3>
-<p><strong>recEditPanel</strong> — Button (classic), X=16, Y=144, W=640, H=286, Text=<code>""</code>, DisplayMode=View, Fill=<code>RGBA(255,255,255,1)</code>, BorderColor=<code>RGBA(24,95,165,1)</code>, BorderThickness=2 (blue border = active edit state), all radius=8, HoverFill/PressedFill=<code>RGBA(255,255,255,1)</code>, Visible=<code>!IsBlank(varEditCourse)</code></p>
-<p>Controls inside (all <code>Visible = !IsBlank(varEditCourse)</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Type</th>
+<th>Key properties</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>recEditPanel</td>
+<td>Button (classic)</td>
+<td>X=16,Y=144,W=640,H=286, Text=<code>""</code>, DisplayMode=<code>DisplayMode.View</code>, Fill=<code>RGBA(255,255,255,1)</code>, BorderColor=<code>RGBA(24,95,165,1)</code>, BorderThickness=2, all radius=8, HoverFill/PressedFill=<code>RGBA(255,255,255,1)</code>, Visible=<code>!IsBlank(varEditCourse)</code></td>
+</tr>
+</tbody>
+</table>
+<p>Controls inside the edit panel. Set <code>Visible = !IsBlank(varEditCourse)</code> on every control in this table:</p>
 <table>
 <thead>
 <tr>
@@ -3604,8 +3903,23 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 </tbody>
 </table>
 <h3 id="course-gallery"><a aria-label="Link to section" class="anchor" href="#course-gallery">#</a>Course gallery</h3>
-<div class="callout"><strong>v2.4 correction:</strong> this gallery is bound directly to SharePoint course rows, so <code>ThisItem.ID</code> is available here. Use <code>Mod(ThisItem.ID,2)</code> for alternating row colours, not <code>ThisItem.ItemIndex</code>.</div>
-<p><strong>galCourses</strong> — Gallery (vertical, blank), X=672, Y=144, W=678, H=624, TemplateSize=64, TemplatePadding=0, ShowScrollbar=true, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0, Items=<code>SortByColumns(colCourses, "Status", SortOrder.Descending, "Title", SortOrder.Ascending)</code> (active courses first, then archived, then alpha)</p>
+<div class="callout"><strong>v2.7 audit note:</strong> this gallery is bound directly to SharePoint course rows, so <code>ThisItem.ID</code> is available here. Use <code>Mod(ThisItem.ID,2)</code> for alternating row colours.</div>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Type</th>
+<th>Key properties</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>galCourses</td>
+<td>Gallery (vertical, blank)</td>
+<td>X=672,Y=144,W=678,H=624, TemplateSize=64, TemplatePadding=0, ShowScrollbar=<code>true</code>, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0, Items=<code>SortByColumns(colCourses, "Status", SortOrder.Descending, "Title", SortOrder.Ascending)</code>. This sorts active courses first, then archived courses, then alphabetically.</td>
+</tr>
+</tbody>
+</table>
 <p>Inside galCourses template:</p>
 <table>
 <thead>
@@ -3955,7 +4269,7 @@ Notify("Report sent — check your inbox in ~30 seconds.", NotificationType.Succ
 <li><strong>Sort order</strong>: Always the full enum prefix — <code>SortOrder.Ascending</code> or <code>SortOrder.Descending</code>. Never bare <code>Ascending</code>/<code>Descending</code>.</li>
 <li><strong>Modern vs Classic controls</strong>: This app uses modern controls (Button, Text input, Dropdown, Combo box, Toggle) for most interactive elements, but classic controls for Icon, Gallery, and Edit form (the Attachments card for certificate upload only exists in classic forms). Every control in this guide states explicitly which type to insert — preserve that labelling.</li>
 <li><strong>Modern Text Input placeholder property is <code>Placeholder</code></strong>, not <code>HintText</code> (HintText is the classic-control name only).</li>
-<li><strong>Modern Toggle's value-reading property is <code>.Checked</code></strong>, not <code>.Value</code>. The property that sets the toggle's caption text is <code>Label</code>, not <code>Text</code>. In this build, set the toggle state with <code>Checked</code>; do not hunt for <code>Default</code> if the modern Toggle properties pane does not show it.</li>
+<li><strong>Modern Toggle's value-reading property is <code>.Checked</code></strong>, not <code>.Value</code>. The property that sets the toggle's caption text is <code>Label</code>, not <code>Text</code>. In this build, set the toggle state with <code>Checked</code>.</li>
 <li><strong>Office365Users.UserProfileV2 returns lowercase camelCase fields</strong>: <code>.displayName</code>, <code>.jobTitle</code>, <code>.mail</code> — NOT <code>.DisplayName</code>/<code>.JobTitle</code>/<code>.Mail</code>. This is different from <code>Office365Users.SearchUserV2(...).value</code> which returns PascalCase fields: <code>.DisplayName</code>, <code>.Mail</code>. This inconsistency is a genuine quirk of the Power Apps connectors, not an error — preserve the casing exactly as shown in each formula below.</li>
 <li><strong>Modern Combo box</strong>: <code>SelectMultiple</code> now defaults to <code>true</code> in current Power Apps, so it must be explicitly set to <code>false</code> anywhere single-selection is required (e.g. the people-search combo box).</li>
 <li>All RGBA colour values are written as <code>RGBA(r,g,b,1)</code> rather than <code>ColorValue("#hex")</code> — both work, but RGBA was used throughout for consistency. Keep this format.</li>
@@ -3964,7 +4278,7 @@ Notify("Report sent — check your inbox in ~30 seconds.", NotificationType.Succ
 </div>
 </details>
 </article>
-<p class="footer">Generated from the uploaded Markdown handoff. Current HTML guide version: v2.5 — sequencing + grouping clarity audit. Standalone HTML: no external scripts, fonts, or tracking.</p>
+<p class="footer">Generated from the uploaded Markdown handoff. Current HTML guide version: v2.7 — full control clarity and Power Fx audit. Standalone HTML: no external scripts, fonts, or tracking.</p>
 </main>
 </div>
 <a aria-label="Back to top" class="to-top" href="#top">↑</a>
@@ -4024,7 +4338,7 @@ search.addEventListener('input', () => {
       return NodeFilter.FILTER_ACCEPT;
     }
   });
-  const nodes = [];
+  const nodes = Array();
   while (walker.nextNode()) nodes.push(walker.currentNode);
   const rx = new RegExp(escapeRegExp(q), 'gi');
   nodes.forEach(node => {
