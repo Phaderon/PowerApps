@@ -316,6 +316,28 @@ code:not(pre code) {
   padding: .12em .38em;
   font-size: .9em;
 }
+code:not(pre code).copy-chip,
+td.copy-chip {
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, color .15s ease;
+}
+code:not(pre code).copy-chip:hover,
+td.copy-chip:hover {
+  background: #ead6b9;
+  border-color: var(--brass);
+  box-shadow: inset 0 0 0 1px rgba(185,133,47,.35);
+}
+code:not(pre code).copy-chip:focus,
+td.copy-chip:focus {
+  outline: 2px solid rgba(28,51,82,.45);
+  outline-offset: 2px;
+}
+code:not(pre code).copy-chip.copied,
+td.copy-chip.copied {
+  background: #dff0cf;
+  border-color: #7ca447;
+  color: #264f09;
+}
 .code-card {
   margin: 18px 0 24px;
   border-radius: 17px;
@@ -395,6 +417,27 @@ code:not(pre code) {
   place-items:center;
   text-decoration:none;
   box-shadow: var(--shadow);
+}
+.copy-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(14px);
+  z-index: 20;
+  padding: 9px 13px;
+  border-radius: 999px;
+  background: rgba(28,51,82,.95);
+  color: #fff8ea;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+  font-size: .9rem;
+  font-weight: 750;
+}
+.copy-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; padding: 0 .1em; }
 @media (max-width: 980px) {
@@ -4282,7 +4325,77 @@ Notify("Report sent — check your inbox in ~30 seconds.", NotificationType.Succ
 </main>
 </div>
 <a aria-label="Back to top" class="to-top" href="#top">↑</a>
+<div aria-live="polite" class="copy-toast" id="copyToast" role="status">Copied</div>
 <script>
+const copyToast = document.getElementById('copyToast');
+let copyToastTimer;
+
+function showCopyToast(text) {
+  copyToast.textContent = text || 'Copied';
+  copyToast.classList.add('show');
+  clearTimeout(copyToastTimer);
+  copyToastTimer = setTimeout(() => copyToast.classList.remove('show'), 1200);
+}
+
+async function writeClipboard(text) {
+  if (!text) return false;
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (e) {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.left = '-9999px';
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand('copy');
+    area.remove();
+    return ok;
+  }
+}
+
+function enhanceInlineCopyTargets(root = document) {
+  root.querySelectorAll('code:not(pre code)').forEach(code => {
+    code.classList.add('copy-chip');
+    code.tabIndex = 0;
+    code.title = 'Click to copy';
+  });
+
+  root.querySelectorAll('table tbody tr td:first-child').forEach(cell => {
+    const text = cell.textContent.trim();
+    if (/^[A-Za-z_][A-Za-z0-9_.]*$/.test(text)) {
+      cell.classList.add('copy-chip');
+      cell.tabIndex = 0;
+      cell.title = 'Click to copy';
+    }
+  });
+}
+
+document.addEventListener('click', async event => {
+  const target = event.target.closest('code.copy-chip, td.copy-chip');
+  if (!target || !document.body.contains(target)) return;
+  const text = target.textContent.trim();
+  if (!text) return;
+  const ok = await writeClipboard(text);
+  if (ok) {
+    target.classList.add('copied');
+    showCopyToast(`Copied: ${text.length > 42 ? text.slice(0, 39) + '...' : text}`);
+    setTimeout(() => target.classList.remove('copied'), 900);
+  } else {
+    showCopyToast('Copy failed');
+  }
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  const target = event.target.closest('code.copy-chip, td.copy-chip');
+  if (!target) return;
+  event.preventDefault();
+  target.click();
+});
+
 const copyButtons = document.querySelectorAll('.copy-btn');
 copyButtons.forEach(btn => {
   btn.addEventListener('click', async () => {
@@ -4327,9 +4440,11 @@ const search = document.getElementById('docSearch');
 const content = document.querySelector('.content');
 let original = content.innerHTML;
 function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+enhanceInlineCopyTargets(content);
 search.addEventListener('input', () => {
   const q = search.value.trim();
   content.innerHTML = original;
+  enhanceInlineCopyTargets(content);
   if (q.length < 2) return;
   const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
@@ -4346,6 +4461,7 @@ search.addEventListener('input', () => {
     span.innerHTML = node.nodeValue.replace(rx, m => `<mark class="search-hit">${m}</mark>`);
     node.parentNode.replaceChild(span, node);
   });
+  enhanceInlineCopyTargets(content);
 });
 </script>
 </body>
