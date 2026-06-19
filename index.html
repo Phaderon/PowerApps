@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Training Tracker — Power Apps Build Guide — v2.3 — full-file clarity + Power Fx audit</title>
+<title>Training Tracker — Power Apps Build Guide — v2.4 — gallery index + modern toggle audit</title>
 <style>
 :root {
   --bg: #f6efe4;
@@ -514,7 +514,7 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <a class="secondary" href="#phase-1-build-the-sharepoint-lists">Jump to Phase 1</a>
 <button class="secondary" onclick="window.print()">Print / save as PDF</button>
 </div>
-<div class="version-panel"><strong>Current guide version:</strong> v2.3 — full-file clarity + Power Fx audit<br/><span>If this line does not show v2.3, the work laptop is viewing an older cached copy. Hard refresh with Ctrl+F5.</span></div></section>
+<div class="version-panel"><strong>Current guide version:</strong> v2.4 — gallery index + modern toggle audit<br/><span>If this line does not show v2.4, the work laptop is viewing an older cached copy. Hard refresh with Ctrl+F5.</span><br/><br/><strong>Changed from v2.3:</strong> removed unsupported <code>ThisItem.ItemIndex</code> formulas, changed modern Toggle setup from <code>Default</code> to <code>Checked</code>, and annotated where gallery row-striping formulas must use <code>Email</code> or <code>ID</code>.</div></section>
 <section aria-label="Build phases" class="phase-grid">
 <a class="phase-card" href="#phase-1-build-the-sharepoint-lists"><span>PHASE 1</span><strong>PHASE 1 — Build the SharePoint lists</strong></a>
 <a class="phase-card" href="#phase-2-app-shell-connections-and-app-onstart"><span>PHASE 2</span><strong>PHASE 2 — App shell, connections and App.OnStart</strong></a>
@@ -2700,6 +2700,7 @@ Back()</code></pre></div>
 <tr><td>X</td><td>52</td></tr><tr><td>Y</td><td>0</td></tr><tr><td>Width</td><td>600</td></tr><tr><td>Height</td><td>72</td></tr><tr><td>Text</td><td><code>"My team"</code></td></tr><tr><td>FontSize</td><td>17</td></tr><tr><td>FontWeight</td><td><code>FontWeight.Bold</code></td></tr><tr><td>Color</td><td><code>RGBA(230,241,251,1)</code></td></tr><tr><td>VerticalAlign</td><td><code>VerticalAlign.Middle</code></td></tr><tr><td>Fill</td><td><code>RGBA(0,0,0,0)</code></td></tr><tr><td>BorderThickness</td><td>0</td></tr>
 </tbody></table>
 <h3 id="galmychain-gallery-vertical-blank"><a aria-label="Link to section" class="anchor" href="#galmychain-gallery-vertical-blank">#</a>galMyChain — Gallery (vertical, blank)</h3>
+<div class="callout"><strong>v2.4 correction:</strong> do not use <code>ThisItem.ItemIndex</code> in this gallery. <code>colMyChain</code> does not include <code>ID</code> or <code>ItemIndex</code>; use <code>Mod(Len(ThisItem.Email),2)</code> for alternating row colours.</div>
 <table>
 <thead>
 <tr>
@@ -2763,7 +2764,7 @@ Back()</code></pre></div>
 <tr>
 <td>recRowBG</td>
 <td>Button (classic)</td>
-<td>X=0,Y=0,W=1366,H=63, Text=<code>""</code>, DisplayMode=View, Fill=<code>If(IsOdd(ThisItem.ItemIndex),RGBA(255,255,255,1),RGBA(247,249,252,1))</code>, BorderThickness=0, all radius=0, HoverFill=Self.Fill</td>
+<td>X=0,Y=0,W=1366,H=63, Text=<code>""</code>, DisplayMode=View, Fill=<code>If(Mod(Len(ThisItem.Email),2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1))</code>, BorderThickness=0, all radius=0, HoverFill=Self.Fill</td>
 </tr>
 <tr>
 <td>recIndent</td>
@@ -3104,7 +3105,7 @@ If(
 <tr>
 <td>recRowBG</td>
 <td>Button (classic)</td>
-<td>X=0,Y=0,W=900,H=59, Text=<code>""</code>, DisplayMode=View, Fill=<code>If(IsOdd(ThisItem.ItemIndex),RGBA(255,255,255,1),RGBA(247,249,252,1))</code>, BorderThickness=0, all radius=0, HoverFill=Self.Fill</td>
+<td>X=0,Y=0,W=900,H=59, Text=<code>""</code>, DisplayMode=View, Fill=<code>If(Mod(Len(ThisItem.Email),2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1))</code>, BorderThickness=0, all radius=0, HoverFill=Self.Fill</td>
 </tr>
 <tr>
 <td>lblCompName</td>
@@ -3144,6 +3145,7 @@ If(
 </tbody>
 </table>
 <h3 id="drill-down-panel-right-side-appears-when-a-row-is-tapped"><a aria-label="Link to section" class="anchor" href="#drill-down-panel-right-side-appears-when-a-row-is-tapped">#</a>Drill-down panel — right side, appears when a row is tapped</h3>
+<div class="callout"><strong>v2.4 correction:</strong> for modern Toggle controls, use the <code>Checked</code> property for the current/default on-off state in this build.</div>
 <p><strong>recDrillPanel</strong> — Button (classic), X=916, Y=258, W=434, H=510, Text=<code>""</code>, DisplayMode=View, Fill=<code>RGBA(255,255,255,1)</code>, BorderColor=<code>RGBA(221,227,234,1)</code>, BorderThickness=1, all radius=8, HoverFill/PressedFill=<code>RGBA(255,255,255,1)</code>, Visible=<code>!IsBlank(varDrillPerson)</code></p>
 <p>Controls inside (all <code>Visible = !IsBlank(varDrillPerson)</code>):</p>
 <table>
@@ -3173,7 +3175,7 @@ If(
 <tr>
 <td>tglManagerEdit</td>
 <td>Toggle (modern)</td>
-<td>X=1160,Y=326,W=160,H=28, Default=<code>varDrillPerson.ManagerEdit</code> — OnChange: see formula below</td>
+<td>X=1160,Y=326,W=160,H=28, Checked=<code>varDrillPerson.ManagerEdit</code> — OnChange: see formula below</td>
 </tr>
 <tr>
 <td>icoCloseDrill</td>
@@ -3367,9 +3369,10 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 <p><strong>drpNewType</strong> — Dropdown (modern), X=32, Y=354, W=284, H=40, Items=<code>["Civil Servant", "Army", "Contractor"]</code>, FontSize=12</p>
 <p><strong>txtNewManager</strong> — Text input (modern), X=326, Y=354, W=296, H=40, Placeholder=<code>"Line manager email (optional)"</code>, FontSize=11</p>
 <p><strong>tglNewAdmin</strong> — Toggle (modern), X=32, Y=404, W=160, H=32, Label=<code>"Is admin"</code>, FontSize=11</p>
-<p><strong>tglHasM365</strong> — Toggle (modern), X=210, Y=404, W=200, H=32, Label=<code>"Has M365 account"</code>, FontSize=11, Default=<code>true</code></p>
+<p><strong>tglHasM365</strong> — Toggle (modern), X=210, Y=404, W=200, H=32, Label=<code>"Has M365 account"</code>, FontSize=11, Checked=<code>true</code></p>
 <p><strong>btnAddPerson</strong> — Button (modern), X=32, Y=444, W=590, H=44, Text=<code>"Add to system"</code>, FontSize=13, FontWeight=Bold, BasePaletteColor=<code>RGBA(24,95,165,1)</code>, OnSelect: see formula below</p>
 <h3 id="people-gallery"><a aria-label="Link to section" class="anchor" href="#people-gallery">#</a>People gallery</h3>
+<div class="callout"><strong>v2.4 correction:</strong> this gallery is bound directly to SharePoint personnel rows, so <code>ThisItem.ID</code> is available here. Use <code>Mod(ThisItem.ID,2)</code> for alternating row colours, not <code>ThisItem.ItemIndex</code>.</div>
 <p><strong>galPeople</strong> — Gallery (vertical, blank), X=672, Y=144, W=678, H=624, TemplateSize=60, TemplatePadding=0, ShowScrollbar=true, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0, Items=<code>SortByColumns(Filter('TT Personnel', Active = true), "Title", SortOrder.Ascending)</code></p>
 <p>Inside galPeople template:</p>
 <table>
@@ -3384,7 +3387,7 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 <tr>
 <td>recPeopleRow</td>
 <td>Button (classic)</td>
-<td>X=0,Y=0,W=678,H=59, Text=<code>""</code>, DisplayMode=View, Fill=<code>If(IsOdd(ThisItem.ItemIndex),RGBA(255,255,255,1),RGBA(247,249,252,1))</code>, all radius=0, HoverFill=Self.Fill</td>
+<td>X=0,Y=0,W=678,H=59, Text=<code>""</code>, DisplayMode=View, Fill=<code>If(Mod(ThisItem.ID,2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1))</code>, all radius=0, HoverFill=Self.Fill</td>
 </tr>
 <tr>
 <td>lblPersonName</td>
@@ -3536,6 +3539,7 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 </tbody>
 </table>
 <h3 id="course-gallery"><a aria-label="Link to section" class="anchor" href="#course-gallery">#</a>Course gallery</h3>
+<div class="callout"><strong>v2.4 correction:</strong> this gallery is bound directly to SharePoint course rows, so <code>ThisItem.ID</code> is available here. Use <code>Mod(ThisItem.ID,2)</code> for alternating row colours, not <code>ThisItem.ItemIndex</code>.</div>
 <p><strong>galCourses</strong> — Gallery (vertical, blank), X=672, Y=144, W=678, H=624, TemplateSize=64, TemplatePadding=0, ShowScrollbar=true, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0, Items=<code>SortByColumns(colCourses, "Status", SortOrder.Descending, "Title", SortOrder.Ascending)</code> (active courses first, then archived, then alpha)</p>
 <p>Inside galCourses template:</p>
 <table>
@@ -3550,7 +3554,7 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 <tr>
 <td>recCourseRow</td>
 <td>Button (classic)</td>
-<td>X=0,Y=0,W=678,H=63, Text=<code>""</code>, DisplayMode=View, Fill=<code>If(ThisItem.Status.Value="Archived",RGBA(248,248,248,1),If(IsOdd(ThisItem.ItemIndex),RGBA(255,255,255,1),RGBA(247,249,252,1)))</code>, all radius=0, HoverFill=Self.Fill</td>
+<td>X=0,Y=0,W=678,H=63, Text=<code>""</code>, DisplayMode=View, Fill=<code>If(ThisItem.Status.Value="Archived",RGBA(248,248,248,1),If(Mod(ThisItem.ID,2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1)))</code>, all radius=0, HoverFill=Self.Fill</td>
 </tr>
 <tr>
 <td>lblCrsName</td>
@@ -3852,7 +3856,7 @@ Notify("Report sent — check your inbox in ~30 seconds.", NotificationType.Succ
 <li><strong>Sort order</strong>: Always the full enum prefix — <code>SortOrder.Ascending</code> or <code>SortOrder.Descending</code>. Never bare <code>Ascending</code>/<code>Descending</code>.</li>
 <li><strong>Modern vs Classic controls</strong>: This app uses modern controls (Button, Text input, Dropdown, Combo box, Toggle) for most interactive elements, but classic controls for Icon, Gallery, and Edit form (the Attachments card for certificate upload only exists in classic forms). Every control in this guide states explicitly which type to insert — preserve that labelling.</li>
 <li><strong>Modern Text Input placeholder property is <code>Placeholder</code></strong>, not <code>HintText</code> (HintText is the classic-control name only).</li>
-<li><strong>Modern Toggle's value-reading property is <code>.Checked</code></strong>, not <code>.Value</code>. The property that sets the toggle's caption text is <code>Label</code>, not <code>Text</code>. The property that sets its <em>initial</em> state is <code>Default</code> (this is fine to keep as Default — <code>Checked</code> is the live/output value you read in formulas).</li>
+<li><strong>Modern Toggle's value-reading property is <code>.Checked</code></strong>, not <code>.Value</code>. The property that sets the toggle's caption text is <code>Label</code>, not <code>Text</code>. In this build, set the toggle state with <code>Checked</code>; do not hunt for <code>Default</code> if the modern Toggle properties pane does not show it.</li>
 <li><strong>Office365Users.UserProfileV2 returns lowercase camelCase fields</strong>: <code>.displayName</code>, <code>.jobTitle</code>, <code>.mail</code> — NOT <code>.DisplayName</code>/<code>.JobTitle</code>/<code>.Mail</code>. This is different from <code>Office365Users.SearchUserV2(...).value</code> which returns PascalCase fields: <code>.DisplayName</code>, <code>.Mail</code>. This inconsistency is a genuine quirk of the Power Apps connectors, not an error — preserve the casing exactly as shown in each formula below.</li>
 <li><strong>Modern Combo box</strong>: <code>SelectMultiple</code> now defaults to <code>true</code> in current Power Apps, so it must be explicitly set to <code>false</code> anywhere single-selection is required (e.g. the people-search combo box).</li>
 <li>All RGBA colour values are written as <code>RGBA(r,g,b,1)</code> rather than <code>ColorValue("#hex")</code> — both work, but RGBA was used throughout for consistency. Keep this format.</li>
@@ -3861,7 +3865,7 @@ Notify("Report sent — check your inbox in ~30 seconds.", NotificationType.Succ
 </div>
 </details>
 </article>
-<p class="footer">Generated from the uploaded Markdown handoff. Current HTML guide version: v2.3 — full-file clarity + Power Fx audit. Standalone HTML: no external scripts, fonts, or tracking.</p>
+<p class="footer">Generated from the uploaded Markdown handoff. Current HTML guide version: v2.4 — gallery index + modern toggle audit. Standalone HTML: no external scripts, fonts, or tracking.</p>
 </main>
 </div>
 <a aria-label="Back to top" class="to-top" href="#top">↑</a>
