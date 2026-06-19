@@ -437,8 +437,8 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <a class="toc-l3" href="#galmytraining-items">galMyTraining.Items</a>
 <a class="toc-l3" href="#galmytraining-onselect">galMyTraining.OnSelect</a>
 <a class="toc-l1" href="#phase-5-scrcoursedetail-certificate-upload">PHASE 5 — scrCourseDetail (certificate upload)</a>
-<a class="toc-l3" href="#recheader-button-classic">recHeader — Button (classic)</a>
-<a class="toc-l3" href="#icoback-icon-classic">icoBack — Icon (classic)</a>
+<a class="toc-l3" href="#reccoursedetailheader-button-classic">recCourseDetailHeader — Button (classic)</a>
+<a class="toc-l3" href="#icocoursedetailback-icon-classic">icoCourseDetailBack — Icon (classic)</a>
 <a class="toc-l3" href="#lbldetailtitle-text-label">lblDetailTitle — Text label</a>
 <a class="toc-l3" href="#lbldetailsub-text-label">lblDetailSub — Text label</a>
 <a class="toc-l3" href="#reccard-button-classic-white-card-containing-the-form">recCard — Button (classic) — white card containing the form</a>
@@ -2028,7 +2028,7 @@ If(
 </tr>
 <tr>
   <td>Y</td>
-  <td>742</td>
+  <td>520</td>
 </tr>
 <tr>
   <td>Width</td>
@@ -2079,7 +2079,7 @@ If(
 </tr>
 <tr>
   <td>Y</td>
-  <td>780</td>
+  <td>560</td>
 </tr>
 <tr>
   <td>Width</td>
@@ -2212,7 +2212,8 @@ Navigate(scrCourseDetail, ScreenTransition.Cover)</code></pre></div>
 <h1 id="phase-5-scrcoursedetail-certificate-upload"><span class="phase-kicker">Build phase</span><a class="anchor" href="#phase-5-scrcoursedetail-certificate-upload" aria-label="Link to section">#</a>PHASE 5 — scrCourseDetail (certificate upload)</h1>
 <p>Select <strong>scrCourseDetail</strong>. This screen uses a <strong>classic Edit form</strong> — the Attachments card does not exist in modern forms.</p>
 <p><strong>Screen property:</strong> Fill = <code>RGBA(247,249,252,1)</code></p>
-<h3 id="recheader-button-classic"><a class="anchor" href="#recheader-button-classic" aria-label="Link to section">#</a>recHeader — Button (classic)</h3>
+<blockquote><strong>Name-conflict fix:</strong> use unique names on this screen: <code>recCourseDetailHeader</code> and <code>icoCourseDetailBack</code>. Do not reuse <code>recHeader</code> or <code>icoBack</code> from scrMyTraining.</blockquote>
+<h3 id="reccoursedetailheader-button-classic"><a class="anchor" href="#reccoursedetailheader-button-classic" aria-label="Link to section">#</a>recCourseDetailHeader — Button (classic)</h3>
 <table>
 <thead>
 <tr>
@@ -2263,7 +2264,7 @@ Navigate(scrCourseDetail, ScreenTransition.Cover)</code></pre></div>
 </tr>
 </tbody>
 </table>
-<h3 id="icoback-icon-classic"><a class="anchor" href="#icoback-icon-classic" aria-label="Link to section">#</a>icoBack — Icon (classic)</h3>
+<h3 id="icocoursedetailback-icon-classic"><a class="anchor" href="#icocoursedetailback-icon-classic" aria-label="Link to section">#</a>icoCourseDetailBack — Icon (classic)</h3>
 <table>
 <thead>
 <tr>
@@ -2665,7 +2666,7 @@ Back()</code></pre></div>
 <p>Only reachable via btnMyTeam, which is only visible to users who have at least one direct report in TT Personnel.</p>
 <p><strong>Screen property:</strong> Fill = <code>RGBA(247,249,252,1)</code></p>
 <h3 id="header-controls"><a class="anchor" href="#header-controls" aria-label="Link to section">#</a>Header controls</h3>
-<p>Duplicate recHeader, icoBack from scrCourseDetail. Add:</p>
+<p>Duplicate the header shape/back icon from scrCourseDetail, but rename the copies to <code>recTeamHeader</code> and <code>icoTeamBack</code>. Add:</p>
 <p><strong>lblTeamTitle</strong> — Text label, X=52, Y=0, W=600, H=72, Text=<code>&quot;My team&quot;</code>, FontSize=17, FontWeight=Bold, Color=<code>RGBA(230,241,251,1)</code>, VerticalAlign=Middle, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0</p>
 <h3 id="galmychain-gallery-vertical-blank"><a class="anchor" href="#galmychain-gallery-vertical-blank" aria-label="Link to section">#</a>galMyChain — Gallery (vertical, blank)</h3>
 <table>
@@ -2761,7 +2762,7 @@ Back()</code></pre></div>
 <tr>
   <td>recBarFill</td>
   <td>Button (classic)</td>
-  <td>X=820,Y=36,W=<code>260*If(ThisItem.PersonRequired=0,1,ThisItem.PersonInDate/ThisItem.PersonRequired)</code>,H=10, Text=<code>&quot;&quot;</code>, DisplayMode=View, Fill=<code>If(ThisItem.PersonInDate=ThisItem.PersonRequired,RGBA(99,153,34,1),ThisItem.PersonInDate/Max(ThisItem.PersonRequired,1)&gt;=0.6,RGBA(239,159,39,1),RGBA(226,75,74,1))</code>, all radius=5, HoverFill=Self.Fill</td>
+  <td>X=820,Y=36,W=<code>260*ThisItem.PersonInDate/Max(ThisItem.PersonRequired,1)</code>,H=10, Text=<code>&quot;&quot;</code>, DisplayMode=View, Fill=<code>If(ThisItem.PersonInDate=ThisItem.PersonRequired,RGBA(99,153,34,1),ThisItem.PersonInDate/Max(ThisItem.PersonRequired,1)&gt;=0.6,RGBA(239,159,39,1),RGBA(226,75,74,1))</code>, all radius=5, HoverFill=Self.Fill</td>
 </tr>
 <tr>
   <td>icoChainChevron</td>
@@ -2814,66 +2815,138 @@ ClearCollect(colViewTraining,
 );
 Navigate(scrMyTraining, ScreenTransition.Cover)</code></pre></div>
 <p><strong>scrTeamMember.OnVisible</strong></p>
-<div class="code-card" id="code-12"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" type="button" data-target="code-pre-12">Wrap</button><button class="copy-btn" type="button" data-target="code-text-12">Copy</button></div></div><pre id="code-pre-12"><code id="code-text-12">ClearCollect(colAllPeople, Filter(&#x27;TT Personnel&#x27;, Active = true));
-ClearCollect(colAllRecords, &#x27;TT TrainingRecords&#x27;);
+<div class="code-card" id="code-12"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" type="button" data-target="code-pre-12">Wrap</button><button class="copy-btn" type="button" data-target="code-text-12">Copy</button></div></div><pre id="code-pre-12"><code id="code-text-12">ClearCollect(colAllPeople, Filter('TT Personnel', Active = true));
+ClearCollect(colAllRecords, 'TT TrainingRecords');
 
 ClearCollect(colChainL1,
     Filter(colAllPeople, Lower(LineManagerEmail) = varMyEmail));
+
 ClearCollect(colChainL2,
     Filter(colAllPeople,
         Lower(LineManagerEmail) in ForAll(colChainL1, Lower(Email)).Value));
+
 ClearCollect(colChainL3,
-    If(varChainDepth &gt;= 3,
+    If(
+        varChainDepth &gt;= 3,
         Filter(colAllPeople,
             Lower(LineManagerEmail) in ForAll(colChainL2, Lower(Email)).Value),
-        []));
+        Filter(colAllPeople, false)
+    ));
 
 ClearCollect(colMyChain,
     ForAll(colChainL1 As P,
-        {Email:Lower(P.Email),Name:P.Title,StaffType:P.StaffType.Value,
-         ManagerCanEdit:P.ManagerCanEdit,HasM365:P.HasM365Access,
-         ManagerEmail:Lower(P.LineManagerEmail),ChainLevel:1,IsExpanded:false}));
+        {
+            Email: Lower(P.Email),
+            Name: P.Title,
+            StaffType: P.StaffType.Value,
+            ManagerCanEdit: P.ManagerCanEdit,
+            HasM365: P.HasM365Access,
+            ManagerEmail: Lower(P.LineManagerEmail),
+            ChainLevel: 1,
+            IsExpanded: false
+        }
+    )
+);
+
 Collect(colMyChain,
     ForAll(colChainL2 As P,
-        {Email:Lower(P.Email),Name:P.Title,StaffType:P.StaffType.Value,
-         ManagerCanEdit:P.ManagerCanEdit,HasM365:P.HasM365Access,
-         ManagerEmail:Lower(P.LineManagerEmail),ChainLevel:2,IsExpanded:false}));
-If(varChainDepth &gt;= 3,
+        {
+            Email: Lower(P.Email),
+            Name: P.Title,
+            StaffType: P.StaffType.Value,
+            ManagerCanEdit: P.ManagerCanEdit,
+            HasM365: P.HasM365Access,
+            ManagerEmail: Lower(P.LineManagerEmail),
+            ChainLevel: 2,
+            IsExpanded: false
+        }
+    )
+);
+
+If(
+    varChainDepth &gt;= 3,
     Collect(colMyChain,
         ForAll(colChainL3 As P,
-            {Email:Lower(P.Email),Name:P.Title,StaffType:P.StaffType.Value,
-             ManagerCanEdit:P.ManagerCanEdit,HasM365:P.HasM365Access,
-             ManagerEmail:Lower(P.LineManagerEmail),ChainLevel:3,IsExpanded:false})))</code></pre></div>
+            {
+                Email: Lower(P.Email),
+                Name: P.Title,
+                StaffType: P.StaffType.Value,
+                ManagerCanEdit: P.ManagerCanEdit,
+                HasM365: P.HasM365Access,
+                ManagerEmail: Lower(P.LineManagerEmail),
+                ChainLevel: 3,
+                IsExpanded: false
+            }
+        )
+    )
+)</code></pre></div>
 <p><strong>galMyChain.Items</strong></p>
 <div class="code-card" id="code-13"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" type="button" data-target="code-pre-13">Wrap</button><button class="copy-btn" type="button" data-target="code-text-13">Copy</button></div></div><pre id="code-pre-13"><code id="code-text-13">Filter(
-    AddColumns(colMyChain,
-        PersonRequired, CountRows(
-            Filter(colCourses,
-                Status.Value = &quot;Active&quot; &amp;&amp;
-                ThisRecord.StaffType in ApplicableTo.Value)),
-        PersonInDate, CountRows(
+    AddColumns(
+        colMyChain As P,
+
+        PersonRequired,
+        CountRows(
             Filter(
-                Filter(colCourses,
-                    Status.Value = &quot;Active&quot; &amp;&amp;
-                    ThisRecord.StaffType in ApplicableTo.Value) As C,
-                With({rec: LookUp(colAllRecords,
-                          Lower(PersonEmail) = ThisRecord.Email &amp;&amp; CourseID = C.ID)},
+                colCourses,
+                Status.Value = "Active" &amp;&amp;
+                P.StaffType in ApplicableTo.Value
+            )
+        ),
+
+        PersonInDate,
+        CountRows(
+            Filter(
+                Filter(
+                    colCourses,
+                    Status.Value = "Active" &amp;&amp;
+                    P.StaffType in ApplicableTo.Value
+                ) As C,
+                With(
+                    {
+                        rec: LookUp(
+                            colAllRecords,
+                            Lower(PersonEmail) = P.Email &amp;&amp;
+                            CourseID = C.ID
+                        )
+                    },
                     !IsBlank(rec.DateCompleted) &amp;&amp;
-                    (C.RecurrenceMonths = 0 ||
-                     DateAdd(rec.DateCompleted,C.RecurrenceMonths,TimeUnit.Months) &gt;= Today())
-                )))
-    ),
-    ChainLevel = 1 ||
-    (ChainLevel = 2 &amp;&amp; LookUp(colMyChain,
-        Lower(Email)=Lower(ThisRecord.ManagerEmail),IsExpanded)=true) ||
-    (ChainLevel = 3 &amp;&amp; LookUp(colMyChain,
-        Lower(Email)=Lower(ThisRecord.ManagerEmail),IsExpanded)=true)
+                    (
+                        C.RecurrenceMonths = 0 ||
+                        DateAdd(
+                            rec.DateCompleted,
+                            C.RecurrenceMonths,
+                            TimeUnit.Months
+                        ) &gt;= Today()
+                    )
+                )
+            )
+        )
+    ) As R,
+
+    R.ChainLevel = 1 ||
+    (
+        R.ChainLevel = 2 &amp;&amp;
+        LookUp(
+            colMyChain,
+            Lower(Email) = Lower(R.ManagerEmail),
+            IsExpanded
+        ) = true
+    ) ||
+    (
+        R.ChainLevel = 3 &amp;&amp;
+        LookUp(
+            colMyChain,
+            Lower(Email) = Lower(R.ManagerEmail),
+            IsExpanded
+        ) = true
+    )
 )</code></pre></div>
 <hr />
 <h1 id="phase-7-scradmindash-admin-compliance-dashboard"><span class="phase-kicker">Build phase</span><a class="anchor" href="#phase-7-scradmindash-admin-compliance-dashboard" aria-label="Link to section">#</a>PHASE 7 — scrAdminDash (admin compliance dashboard)</h1>
 <p><strong>Screen property:</strong> Fill = <code>RGBA(247,249,252,1)</code></p>
 <h3 id="header"><a class="anchor" href="#header" aria-label="Link to section">#</a>Header</h3>
-<p>Duplicate recHeader, icoBack (OnSelect = <code>Navigate(scrMyTraining, ScreenTransition.Back)</code>) from a prior screen. Add:</p>
+<p>Duplicate the header shape/back icon from a prior screen, but rename the copies to <code>recAdminDashHeader</code> and <code>icoAdminDashBack</code>. Set the back icon OnSelect = <code>Navigate(scrMyTraining, ScreenTransition.Back)</code>. Add:</p>
 <p><strong>lblAdminTitle</strong> — Text label, X=52, Y=0, W=600, H=72, Text=<code>&quot;Compliance dashboard&quot;</code>, FontSize=17, FontWeight=Bold, Color=<code>RGBA(230,241,251,1)</code>, VerticalAlign=Middle, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0</p>
 <p><strong>btnExportPDF</strong> — Button (modern), X=1186, Y=16, W=164, H=40, Text=<code>&quot;Export PDF&quot;</code>, FontSize=12, BasePaletteColor=<code>RGBA(230,241,251,1)</code>, Color=<code>RGBA(12,68,124,1)</code>, OnSelect: see Phase 10</p>
 <h3 id="four-stat-cards"><a class="anchor" href="#four-stat-cards" aria-label="Link to section">#</a>Four stat cards</h3>
@@ -3142,7 +3215,7 @@ ClearCollect(colCompliance,
 <h1 id="phase-8-scradminmanage-people-tab"><span class="phase-kicker">Build phase</span><a class="anchor" href="#phase-8-scradminmanage-people-tab" aria-label="Link to section">#</a>PHASE 8 — scrAdminManage · People tab</h1>
 <p><strong>Screen property:</strong> Fill = <code>RGBA(247,249,252,1)</code>
 <strong>OnVisible:</strong> <code>If(!varIsAdmin, Navigate(scrMyTraining, ScreenTransition.None)); If(IsBlank(varTab), Set(varTab, &quot;People&quot;)); ClearCollect(colCourses, 'TT Courses')</code></p>
-<p>Duplicate the header (recHeader, icoBack, lblAdminTitle) from scrAdminDash. Change lblAdminTitle.Text to <code>&quot;Manage&quot;</code>.</p>
+<p>Duplicate the header from scrAdminDash, but rename the copies to <code>recAdminManageHeader</code>, <code>icoAdminManageBack</code>, and <code>lblManageTitle</code>. Set <code>lblManageTitle.Text</code> to <code>&quot;Manage&quot;</code>.</p>
 <h3 id="tab-buttons"><a class="anchor" href="#tab-buttons" aria-label="Link to section">#</a>Tab buttons</h3>
 <ul>
 <li><strong>btnTabPeople</strong> — X=16, Y=88, W=120, H=40, Text=<code>&quot;People&quot;</code>, FontSize=12, BasePaletteColor=<code>If(varTab=&quot;People&quot;,RGBA(24,95,165,1),RGBA(244,246,248,1))</code>, Color=<code>If(varTab=&quot;People&quot;,RGBA(255,255,255,1),RGBA(85,85,85,1))</code>, OnSelect=<code>Set(varTab,&quot;People&quot;)</code></li>
