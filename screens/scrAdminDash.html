@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Power Apps — scrAdminDash</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 32px 16px;
+    }
+    .kicker { font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #64748b; }
+    h1 { font-size: 1.8rem; font-weight: 700; color: #c7d2fe; letter-spacing: -.02em; }
+    .meta { font-size: .85rem; color: #475569; }
+    .btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    button {
+      padding: 13px 32px;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+    }
+    button:hover { opacity: .88; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    .btn-copy { background: #4f46e5; color: #fff; }
+    .btn-back { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    #status {
+      font-size: .85rem;
+      color: #475569;
+      min-height: 1.2em;
+      transition: color .2s;
+    }
+    #status.ok { color: #22c55e; }
+    #status.err { color: #ef4444; }
+    .instructions {
+      max-width: 480px;
+      text-align: center;
+      font-size: .82rem;
+      color: #475569;
+      line-height: 1.7;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 16px 20px;
+      background: #0d1117;
+    }
+    .instructions strong { color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <p class="kicker">Power Apps · Training Tracker · Screen 6 of 7</p>
+  <h1>scrAdminDash</h1>
+  <p class="meta">Full screen YAML — bugs fixed, colours polished</p>
+  <div class="btn-row">
+    <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
+    <a href="../"><button class="btn-back" type="button">← Guide library</button></a>
+  </div>
+  <p id="status">Ready to copy</p>
+  <div class="instructions">
+    <strong>How to paste into Power Apps Studio</strong><br>
+    Open the app → in the Tree View, click the screen you want to replace →
+    press <strong>Ctrl+A</strong> to select all controls → <strong>Delete</strong> →
+    then <strong>Ctrl+V</strong> to paste the new screen.
+    Or right-click the screen name → <em>Paste</em>.
+  </div>
+
+  <script>
+const yaml = `Screens:
+  scrAdminDash:
+    Properties:
+      Fill: =RGBA(247,249,252,1)
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      OnVisible: |-
+        =ClearCollect(colAllPeople, Filter('TT Personnel', Active = true));
+        ClearCollect(colAllRecords, 'TT TrainingRecords');
+        ClearCollect(colCourses, 'TT Courses');
+
+        ClearCollect(
+            colCompliance,
+            ForAll(
+                colAllPeople As P,
+                With(
+                    {
+                        req: Filter(
+                            colCourses,
+                            Status.Value = "Active" &&
+                            P.StaffType.Value in ApplicableTo.Value
+                        )
+                    },
+                    With(
+                        {
+                            okCount: CountRows(
+                                Filter(
+                                    req As C,
+                                    With(
+                                        {
+                                            rec: LookUp(
+                                                colAllRecords,
+                                                Lower(PersonEmail) = Lower(P.Email) &&
+                                                CourseID = C.ID
+                                            )
+                                        },
+                                        !IsBlank(rec.DateCompleted) &&
+                                        (
+                                            C.RecurrenceMonths = 0 ||
+                                            DateAdd(rec.DateCompleted, C.RecurrenceMonths, TimeUnit.Months) >= Today()
+                                        )
+                                    )
+                                )
+                            )
+                        },
+                        {
+                            PersonID:      P.ID,
+                            Name:          P.Title,
+                            Email:         Lower(P.Email),
+                            StaffType:     P.StaffType.Value,
+                            LineManager:   P.LineManagerEmail,
+                            ManagerEdit:   Coalesce(P.ManagerCanEdit, false),
+                            Required:      CountRows(req),
+                            InDate:        okCount,
+                            Outstanding:   CountRows(req) - okCount,
+                            CompliancePct: If(
+                                               CountRows(req) = 0,
+                                               100,
+                                               Round(100 * okCount / Max(CountRows(req), 1), 0)
+                                           )
+                        }
+                    )
+                )
+            )
+        )
+    Children:
+      - recAdminDashHeader:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            BorderThickness: =0
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(24,95,165,1)
+            Font: =Font.'Open Sans'
+            Height: =72
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(24,95,165,1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(24,95,165,1)
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Text: =
+            Width: =1366
+      - icoAdminDashBack:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(230,241,251,1)
+            Height: =24
+            Icon: =Icon.ChevronLeft
+            OnSelect: =Navigate(scrMyTraining, ScreenTransition.None)
+            Width: =24
+            X: =16
+            Y: =24
+      - lblAdminTitle:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(230,241,251,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =72
+            Size: =17
+            Text: ="Compliance dashboard"
+            Width: =600
+            X: =52
+      - btnExportPDF:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =RGBA(46,110,145,1)
+            Color: =RGBA(255,255,255,1)
+            Height: =40
+            Size: =12
+            Text: ="Export PDF"
+            Width: =164
+            X: =1186
+            Y: =16
+      - recAdminCardStaff:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(221,227,234,1)
+            BorderThickness: =1
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255,255,255,1)
+            Font: =Font.'Open Sans'
+            Height: =90
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255,255,255,1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(255,255,255,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            Text: =
+            Width: =321
+            X: =16
+            Y: =88
+      - recAdminCardFullyIn:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(221,227,234,1)
+            BorderThickness: =1
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255,255,255,1)
+            Font: =Font.'Open Sans'
+            Height: =90
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255,255,255,1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(255,255,255,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            Text: =
+            Width: =321
+            X: =349
+            Y: =88
+      - recAdminCardPct:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(221,227,234,1)
+            BorderThickness: =1
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255,255,255,1)
+            Font: =Font.'Open Sans'
+            Height: =90
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255,255,255,1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(255,255,255,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            Text: =
+            Width: =321
+            X: =682
+            Y: =88
+      - recAdminCardOutstanding:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(221,227,234,1)
+            BorderThickness: =1
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255,255,255,1)
+            Font: =Font.'Open Sans'
+            Height: =90
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255,255,255,1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(255,255,255,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            Text: =
+            Width: =321
+            X: =1015
+            Y: =88
+      - lblStatStaff:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(31,58,95,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            Size: =28
+            Text: =CountRows(colCompliance)
+            Width: =321
+            X: =16
+            Y: =96
+      - lblStatFullyIn:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(31,58,95,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            Size: =28
+            Text: =CountRows(Filter(colCompliance, Outstanding = 0))
+            Width: =321
+            X: =349
+            Y: =96
+      - lblStatPct:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(31,58,95,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            Size: =28
+            Text: =Round(100*CountRows(Filter(colCompliance,Outstanding=0))/Max(CountRows(colCompliance),1),0) & "%"
+            Width: =321
+            X: =682
+            Y: =96
+      - lblStatOutstand:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(31,58,95,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            Size: =28
+            Text: =Sum(colCompliance, Outstanding)
+            Width: =321
+            X: =1015
+            Y: =96
+      - lblCapOutstand:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(85,85,85,1)
+            Font: =Font.'Open Sans'
+            Height: =26
+            Size: =10
+            Text: ="Items outstanding"
+            Width: =321
+            X: =1015
+            Y: =144
+      - lblCapPct:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(85,85,85,1)
+            Font: =Font.'Open Sans'
+            Height: =26
+            Size: =10
+            Text: ="% compliant"
+            Width: =321
+            X: =682
+            Y: =144
+      - lblCapFullyIn:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(85,85,85,1)
+            Font: =Font.'Open Sans'
+            Height: =26
+            Size: =10
+            Text: ="Fully in date"
+            Width: =321
+            X: =349
+            Y: =144
+      - lblCapStaff:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(85,85,85,1)
+            Font: =Font.'Open Sans'
+            Height: =26
+            Size: =10
+            Text: ="Staff tracked"
+            Width: =321
+            X: =16
+            Y: =144
+      - txtAdminSearch:
+          Control: ModernTextInput@1.1.0
+          Properties:
+            Height: =40
+            Placeholder: ="Search staff..."
+            Size: =12
+            Width: =500
+            X: =16
+            Y: =202
+      - drpTypeFilter:
+          Control: ModernDropdown@1.0.1
+          Properties:
+            Default: ="All"
+            Height: =40
+            ItemDisplayText: =ThisItem.Value
+            Items: =["All", "Civil Servant", "Army", "Contractor"]
+            Size: =12
+            Width: =200
+            X: =532
+            Y: =202
+      - galCompliance:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =510
+            Items: |-
+              =SortByColumns(
+                  Filter(colCompliance,
+                      (drpTypeFilter.Selected.Value = "All" ||
+                       StaffType = drpTypeFilter.Selected.Value) &&
+                      (IsBlank(txtAdminSearch.Text) ||
+                       Lower(txtAdminSearch.Text) in Lower(Name))
+                  ),
+                  "CompliancePct", SortOrder.Ascending,
+                  "Name", SortOrder.Ascending
+              )
+            OnSelect: |-
+              =Set(varDrillPerson, ThisItem);
+              ClearCollect(colPersonDetail,
+                  ForAll(
+                      Filter(colCourses,
+                          Status.Value = "Active" &&
+                          varDrillPerson.StaffType in ApplicableTo.Value) As C,
+                      With({rec: LookUp(colAllRecords,
+                                    Lower(PersonEmail) = varDrillPerson.Email && CourseID = C.ID)},
+                      {
+                          CourseName: C.Title,
+                          DateDone:   rec.DateCompleted,
+                          UploadedBy: rec.UploadedByEmail,
+                          ExpiresOn:  If(IsBlank(rec.DateCompleted)||C.RecurrenceMonths=0,Blank(),
+                                         DateAdd(rec.DateCompleted,C.RecurrenceMonths,TimeUnit.Months)),
+                          TrainingStatus:
+                              If(IsBlank(rec.DateCompleted),"Not Started",
+                                 C.RecurrenceMonths=0,"Complete",
+                                 DateAdd(rec.DateCompleted,C.RecurrenceMonths,TimeUnit.Months)<Today(),"Expired",
+                                 DateAdd(rec.DateCompleted,C.RecurrenceMonths,TimeUnit.Months)<=DateAdd(Today(),60,TimeUnit.Days),"Expiring Soon",
+                                 "In Date"),
+                          RecordID: rec.ID
+                      })
+                  )
+              )
+            TemplatePadding: =0
+            TemplateSize: =60
+            Width: =900
+            Y: =258
+          Children:
+            - icoChevronCom:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(170,187,204,1)
+                  Height: =24
+                  Icon: =Icon.ChevronRight
+                  OnSelect: =Select(Parent)
+                  Width: =24
+                  X: =864
+                  Y: =18
+            - lblCompPct:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =If(ThisItem.CompliancePct=100,RGBA(59,109,17,1),ThisItem.CompliancePct>=60,RGBA(133,79,11,1),RGBA(163,45,45,1))
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Bold
+                  Height: =42
+                  OnSelect: =Select(Parent)
+                  Size: =18
+                  Text: =ThisItem.CompliancePct & "%"
+                  Width: =60
+                  X: =588
+                  Y: =8
+            - recBarFillCom:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =ColorFade(Self.Fill, -15%)
+                  Color: =RGBA(255, 255, 255, 1)
+                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                  DisplayMode: =DisplayMode.View
+                  Fill: =If(ThisItem.CompliancePct=100,RGBA(99,153,34,1),ThisItem.CompliancePct>=60,RGBA(239,159,39,1),RGBA(226,75,74,1))
+                  Font: =Font.'Open Sans'
+                  Height: =10
+                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+                  HoverColor: =RGBA(255, 255, 255, 1)
+                  HoverFill: =Self.Fill
+                  OnSelect: =Select(Parent)
+                  PressedBorderColor: =Self.Fill
+                  PressedColor: =Self.Fill
+                  PressedFill: =Self.Color
+                  RadiusBottomLeft: =5
+                  RadiusBottomRight: =5
+                  RadiusTopLeft: =5
+                  RadiusTopRight: =5
+                  Text: =
+                  Width: =200*ThisItem.CompliancePct/100
+                  X: =380
+                  Y: =34
+            - recBarBackCom:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =ColorFade(Self.Fill, -15%)
+                  Color: =RGBA(255, 255, 255, 1)
+                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                  DisplayMode: =DisplayMode.View
+                  Fill: =RGBA(221,227,234,1)
+                  Font: =Font.'Open Sans'
+                  Height: =10
+                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+                  HoverColor: =RGBA(255, 255, 255, 1)
+                  HoverFill: =Self.Fill
+                  OnSelect: =Select(Parent)
+                  PressedBorderColor: =Self.Fill
+                  PressedColor: =Self.Fill
+                  PressedFill: =Self.Color
+                  RadiusBottomLeft: =5
+                  RadiusBottomRight: =5
+                  RadiusTopLeft: =5
+                  RadiusTopRight: =5
+                  Text: =
+                  Width: =200
+                  X: =380
+                  Y: =34
+            - lblCompSummary:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Font: =Font.'Open Sans'
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =11
+                  Text: =ThisItem.InDate & " of " & ThisItem.Required & " in date"
+                  Width: =200
+                  X: =380
+                  Y: =8
+            - lblCompType:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(136,135,128,1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  OnSelect: =Select(Parent)
+                  Size: =10
+                  Text: =ThisItem.StaffType
+                  Width: =200
+                  X: =16
+                  Y: =32
+            - lblCompName:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(31,58,95,1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Text: =ThisItem.Name
+                  Width: =360
+                  X: =16
+                  Y: =8
+            - recRowBGCom:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =ColorFade(Self.Fill, -15%)
+                  BorderThickness: =0
+                  Color: =RGBA(255, 255, 255, 1)
+                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                  DisplayMode: =DisplayMode.View
+                  Fill: =If(Mod(Len(ThisItem.Email),2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1))
+                  Font: =Font.'Open Sans'
+                  Height: =59
+                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+                  HoverColor: =RGBA(255, 255, 255, 1)
+                  HoverFill: =Self.Fill
+                  OnSelect: =Select(Parent)
+                  PressedBorderColor: =Self.Fill
+                  PressedColor: =Self.Fill
+                  PressedFill: =Self.Color
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Text: =
+                  Width: =900
+      - recDrillPanel:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(221,227,234,1)
+            BorderThickness: =1
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255,255,255,1)
+            Font: =Font.'Open Sans'
+            Height: =510
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255,255,255,1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(255,255,255,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            Text: =
+            Visible: =!IsBlank(varDrillPerson)
+            Width: =434
+            X: =916
+            Y: =258
+      - lblDrillName:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(31,58,95,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =15
+            Text: =varDrillPerson.Name
+            Width: =360
+            X: =932
+            Y: =274
+      - lblDrillType:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(136,135,128,1)
+            Font: =Font.'Open Sans'
+            Height: =20
+            Size: =10
+            Text: =varDrillPerson.StaffType
+            Width: =360
+            X: =932
+            Y: =304
+      - lblDrillMgrLbl:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(85,85,85,1)
+            Font: =Font.'Open Sans'
+            Height: =20
+            Size: =10
+            Text: ="Line manager can upload:"
+            Width: =220
+            X: =932
+            Y: =330
+      - tglManagerEdit:
+          Control: Toggle@1.1.5
+          Properties:
+            Checked: =varDrillPerson.ManagerEdit
+            Height: =28
+            Label: =" "
+            OnCheck: |-
+              =Patch('TT Personnel',
+                  LookUp('TT Personnel', ID = varDrillPerson.PersonID),
+                  {ManagerCanEdit: tglManagerEdit.Checked}
+              );
+              Set(varDrillPerson, Patch(varDrillPerson, {ManagerEdit: tglManagerEdit.Checked}));
+              Notify(varDrillPerson.Name &
+                  If(tglManagerEdit.Checked,
+                      "'s line manager can now upload on their behalf.",
+                      "'s line manager can no longer upload."),
+                  NotificationType.Success)
+            OnUncheck: |-
+              =Patch('TT Personnel',
+                  LookUp('TT Personnel', ID = varDrillPerson.PersonID),
+                  {ManagerCanEdit: tglManagerEdit.Checked}
+              );
+              Set(varDrillPerson, Patch(varDrillPerson, {ManagerEdit: tglManagerEdit.Checked}));
+              Notify(varDrillPerson.Name &
+                  If(tglManagerEdit.Checked,
+                      "'s line manager can now upload on their behalf.",
+                      "'s line manager can no longer upload."),
+                  NotificationType.Success)
+            Width: =160
+            X: =1160
+            Y: =326
+      - icoCloseDrill:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(170,187,204,1)
+            Height: =20
+            Icon: =Icon.CancelBadge
+            OnSelect: =Set(varDrillPerson,Blank())
+            Width: =20
+            X: =1318
+            Y: =270
+      - galPersonDetail:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =394
+            Items: =colPersonDetail
+            TemplateSize: =52
+            Width: =434
+            X: =916
+            Y: =358
+          Children:
+            - btnDetailPill:
+                Control: ModernButton@1.0.0
+                Properties:
+                  BasePaletteColor: =Switch(ThisItem.TrainingStatus,"Expired",RGBA(252,235,235,1),"Expiring Soon",RGBA(250,238,218,1),"Not Started",RGBA(241,239,232,1),"Complete",RGBA(230,241,251,1),RGBA(234,243,222,1))
+                  Color: =Switch(ThisItem.TrainingStatus,"Expired",RGBA(121,31,31,1),"Expiring Soon",RGBA(99,56,6,1),"Not Started",RGBA(68,68,65,1),"Complete",RGBA(12,68,124,1),RGBA(39,80,10,1))
+                  DisplayMode: =DisplayMode.View
+                  Height: =28
+                  OnSelect: =Select(Parent)
+                  Size: =9
+                  Text: =ThisItem.TrainingStatus
+                  Width: =110
+                  X: =320
+                  Y: =12
+            - lblDetailDate:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(136,135,128,1)
+                  Font: =Font.'Open Sans'
+                  Height: =16
+                  OnSelect: =Select(Parent)
+                  Size: =9
+                  Text: =If(IsBlank(ThisItem.DateDone),"Not completed",Text(ThisItem.DateDone,"dd mmm yyyy") & If(!IsBlank(ThisItem.UploadedBy)," (via " & ThisItem.UploadedBy & ")",""))
+                  Width: =300
+                  X: =14
+                  Y: =30
+            - lblDetailCourse:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(31,58,95,1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  OnSelect: =Select(Parent)
+                  Size: =11
+                  Text: =ThisItem.CourseName
+                  Width: =300
+                  X: =14
+                  Y: =8
+            - recDetailStatus:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =ColorFade(Self.Fill, -15%)
+                  BorderThickness: =0
+                  Color: =RGBA(255, 255, 255, 1)
+                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                  DisplayMode: =DisplayMode.View
+                  Fill: =Switch(ThisItem.TrainingStatus,"Expired",RGBA(226,75,74,1),"Expiring Soon",RGBA(239,159,39,1),"Not Started",RGBA(136,135,128,1),"Complete",RGBA(55,138,221,1),RGBA(99,153,34,1))
+                  Font: =Font.'Open Sans'
+                  Height: =52
+                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+                  HoverColor: =RGBA(255, 255, 255, 1)
+                  HoverFill: =Self.Fill
+                  OnSelect: =Select(Parent)
+                  PressedBorderColor: =Self.Fill
+                  PressedColor: =Self.Fill
+                  PressedFill: =Self.Color
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Text: =
+                  Width: =5
+      - tmrAdminDash:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =ColorFade(Self.BorderColor, 70%)
+            DisabledColor: =ColorFade(Self.Fill, 90%)
+            DisabledFill: =ColorFade(Self.Fill, 70%)
+            Duration: =1
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnTimerEnd: =If(!varIsAdmin, Navigate(scrMyTraining, ScreenTransition.None))
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Visible: =false
+            X: =40
+            Y: =40
+      - btnExportPDF_1:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =RGBA(8, 222, 8, 1)
+            Color: =RGBA(255, 255, 255, 1)
+            Height: =40
+            OnSelect: =Navigate(scrAdminManage, ScreenTransition.Cover)
+            Size: =11
+            Text: ="Manage courses & people"
+            Width: =180
+            X: =986
+            Y: =16
+`;
+
+function copyYAML() {
+  const crlf = yaml.replace(/\r?\n/g, '\r\n');
+  navigator.clipboard.writeText(crlf).then(() => {
+    const s = document.getElementById('status');
+    s.textContent = 'Copied! Paste into Power Apps Studio with Ctrl+V.';
+    s.className = 'ok';
+    setTimeout(() => { s.textContent = 'Ready to copy'; s.className = ''; }, 3000);
+  }).catch(() => {
+    const s = document.getElementById('status');
+    s.textContent = 'Copy failed — try a different browser.';
+    s.className = 'err';
+  });
+}
+  </script>
+</body>
+</html>

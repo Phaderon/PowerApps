@@ -2,82 +2,898 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PowerApps – scrAdminManage</title>
+  <title>Power Apps — scrAdminManage</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #0f0f1a;
-      color: #e8e8f0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      gap: 20px;
+      gap: 18px;
+      padding: 32px 16px;
     }
-    h1 { font-size: 1.4rem; font-weight: 400; color: #a0a0c0; }
-    .name { font-size: 1.1rem; font-weight: 600; color: #c8b8ff; }
+    .kicker { font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #64748b; }
+    h1 { font-size: 1.8rem; font-weight: 700; color: #c7d2fe; letter-spacing: -.02em; }
+    .meta { font-size: .85rem; color: #475569; }
+    .btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
     button {
-      padding: 14px 36px;
-      font-size: 1.1rem;
-      background: #7c4dff;
-      color: white;
+      padding: 13px 32px;
+      font-size: 1rem;
+      font-weight: 700;
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: opacity .15s, transform .1s;
     }
-    button:hover { background: #6a3de8; }
-    button:active { background: #5830cc; }
+    button:hover { opacity: .88; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    .btn-copy { background: #4f46e5; color: #fff; }
+    .btn-back { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
     #status {
-      font-size: 0.9rem;
-      color: #888;
+      font-size: .85rem;
+      color: #475569;
       min-height: 1.2em;
-      transition: color 0.2s;
+      transition: color .2s;
     }
-    #status.ok { color: #4caf7d; }
-    #status.err { color: #e85555; }
-    .info {
-      font-size: 0.8rem;
-      color: #555;
-      margin-top: 8px;
+    #status.ok { color: #22c55e; }
+    #status.err { color: #ef4444; }
+    .instructions {
+      max-width: 480px;
       text-align: center;
-      line-height: 1.6;
+      font-size: .82rem;
+      color: #475569;
+      line-height: 1.7;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 16px 20px;
+      background: #0d1117;
     }
+    .instructions strong { color: #94a3b8; }
   </style>
 </head>
 <body>
-  <h1>PowerApps Screen</h1>
-  <div class="name">scrAdminManage</div>
-  <button onclick="copyYAML()">Copy YAML to Clipboard</button>
-  <div id="status">Click to copy — PowerApps-ready (CRLF, UTF-8)</div>
-  <div class="info">
-    After copying, open PowerApps Studio &rarr; select a screen &rarr; Ctrl+V<br>
-    or use the paste button in the tree view.
+  <p class="kicker">Power Apps · Training Tracker · Screen 7 of 7</p>
+  <h1>scrAdminManage</h1>
+  <p class="meta">Full screen YAML — bugs fixed, colours polished</p>
+  <div class="btn-row">
+    <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
+    <a href="../"><button class="btn-back" type="button">← Guide library</button></a>
   </div>
-  <script>
-    const yaml = "Screens:\r\n  scrAdminManage:\r\n    Properties:\r\n      Fill: =RGBA(247,249,252,1)\r\n      OnVisible: |-\r\n        =If(!varIsAdmin, Navigate(scrMyTraining, ScreenTransition.None));\r\n        If(IsBlank(varTab), Set(varTab, \"People\"));\r\n        ClearCollect(colCourses, 'TT Courses')\r\n    Children:\r\n      - recAdminManageHeader:\r\n          Control: Classic/Button@2.2.0\r\n          Properties:\r\n            BorderColor: =ColorFade(Self.Fill, -15%)\r\n            BorderThickness: =0\r\n            Color: =RGBA(255, 255, 255, 1)\r\n            DisabledBorderColor: =RGBA(166, 166, 166, 1)\r\n            DisplayMode: =DisplayMode.View\r\n            Fill: =RGBA(24,95,165,1)\r\n            Font: =Font.'Open Sans'\r\n            Height: =72\r\n            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)\r\n            HoverColor: =RGBA(255, 255, 255, 1)\r\n            HoverFill: =RGBA(24,95,165,1)\r\n            PressedBorderColor: =Self.Fill\r\n            PressedColor: =Self.Fill\r\n            PressedFill: =RGBA(24,95,165,1)\r\n            RadiusBottomLeft: =0\r\n            RadiusBottomRight: =0\r\n            RadiusTopLeft: =0\r\n            RadiusTopRight: =0\r\n            Text: =\r\n            Width: =1366\r\n            X: =0\r\n            Y: =0\r\n      - icoAdminManageBack:\r\n          Control: Classic/Icon@2.5.0\r\n          Properties:\r\n            BorderColor: =RGBA(0, 18, 107, 1)\r\n            Color: =RGBA(230,241,251,1)\r\n            Height: =24\r\n            Icon: =Icon.ChevronLeft\r\n            OnSelect: =Navigate(scrAdminDash, ScreenTransition.Fade)\r\n            Width: =24\r\n            X: =16\r\n            Y: =24\r\n      - lblManageTitle:\r\n          Control: Label@2.5.1\r\n          Properties:\r\n            BorderColor: =RGBA(0, 18, 107, 1)\r\n            BorderThickness: =0\r\n            Color: =RGBA(230,241,251,1)\r\n            Fill: =RGBA(0,0,0,0)\r\n            Font: =Font.'Open Sans'\r\n            FontWeight: =FontWeight.Bold\r\n            Height: =72\r\n            Size: =17\r\n            Text: =\"Manage\"\r\n            VerticalAlign: =VerticalAlign.Middle\r\n            Width: =600\r\n            X: =52\r\n            Y: =0\r\n      - btnTabPeople:\r\n          Control: ModernButton@1.0.0\r\n          Properties:\r\n            BasePaletteColor: =If(varTab=\"People\",RGBA(24,95,165,1),RGBA(244,246,248,1))\r\n            Color: =If(varTab=\"People\",RGBA(255,255,255,1),RGBA(85,85,85,1))\r\n            Height: =40\r\n            OnSelect: =Set(varTab,\"People\")\r\n            Size: =12\r\n            Text: =\"People\"\r\n            Width: =120\r\n            X: =16\r\n            Y: =88\r\n      - btnTabCourses:\r\n          Control: ModernButton@1.0.0\r\n          Properties:\r\n            BasePaletteColor: =If(varTab=\"Courses\",RGBA(24,95,165,1),RGBA(244,246,248,1))\r\n            Color: =If(varTab=\"Courses\",RGBA(255,255,255,1),RGBA(85,85,85,1))\r\n            Height: =40\r\n            OnSelect: =Set(varTab,\"Courses\")\r\n            Size: =12\r\n            Text: =\"Courses\"\r\n            Width: =120\r\n            X: =152\r\n            Y: =88\r\n      - recAddPanel:\r\n          Control: Classic/Button@2.2.0\r\n          Properties:\r\n            BorderColor: =RGBA(221,227,234,1)\r\n            BorderThickness: =1\r\n            Color: =RGBA(255, 255, 255, 1)\r\n            DisabledBorderColor: =RGBA(166, 166, 166, 1)\r\n            DisplayMode: =DisplayMode.View\r\n            Fill: =RGBA(255,255,255,1)\r\n            Font: =Font.'Open Sans'\r\n            Height: =340\r\n            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)\r\n            HoverColor: =RGBA(255, 255, 255, 1)\r\n            HoverFill: =RGBA(255,255,255,1)\r\n            PressedBorderColor: =Self.Fill\r\n            PressedColor: =Self.Fill\r\n            PressedFill: =RGBA(255,255,255,1)\r\n            RadiusBottomLeft: =8\r\n            RadiusBottomRight: =8\r\n            RadiusTopLeft: =8\r\n            RadiusTopRight: =8\r\n            Text: =\r\n            Visible: =varTab = \"People\"\r\n            Width: =640\r\n            X: =16\r\n            Y: =144\r\n      - lblAddTitle:\r\n          Control: Label@2.5.1\r\n          Properties:\r\n            BorderColor: =RGBA(0, 18, 107, 1)\r\n            BorderThickness: =0\r\n            Color: =RGBA(31,58,95,1)\r\n            Fill: =RGBA(0,0,0,0)\r\n            Font: =Font.'Open Sans'\r\n            FontWeight: =FontWeight.Bold\r\n            Height: =24\r\n            Size: =13\r\n            Text: =\"Add person\"\r\n            Visible: =varTab = \"People\"\r\n            Width: =400\r\n            X: =32\r\n            Y: =156\r\n      - cmbNewPerson:\r\n          Control: ModernCombobox@1.1.0\r\n          Properties:\r\n            Height: =40\r\n            InputTextPlaceholder: =\"Search M365 directory...\"\r\n            IsSearchable: =true\r\n            ItemDisplayText: =ThisItem.DisplayName\r\n            Items: |-\r\n              =Office365Users.SearchUserV2({searchTerm: cmbNewPerson.SearchText, top: 15}).value\r\n            SelectMultiple: =false\r\n            Size: =12\r\n            Visible: =varTab = \"People\"\r\n            Width: =590\r\n            X: =32\r\n            Y: =186\r\n      - lblOrManual:\r\n          Control: Label@2.5.1\r\n          Properties:\r\n            Align: =Align.Center\r\n            BorderColor: =RGBA(0, 18, 107, 1)\r\n            BorderThickness: =0\r\n            Color: =RGBA(136,135,128,1)\r\n            Fill: =RGBA(0,0,0,0)\r\n            Font: =Font.'Open Sans'\r\n            Height: =20\r\n            Size: =10\r\n            Text: =\"or enter manually below\"\r\n            Visible: =varTab = \"People\"\r\n            Width: =590\r\n            X: =32\r\n            Y: =234\r\n      - txtManualEmail:\r\n          Control: ModernTextInput@1.1.0\r\n          Properties:\r\n            Height: =40\r\n            Placeholder: =\"Email address\"\r\n            Size: =12\r\n            Visible: =varTab = \"People\"\r\n            Width: =430\r\n            X: =32\r\n            Y: =258\r\n      - btnPullDetails:\r\n          Control: ModernButton@1.0.0\r\n          Properties:\r\n            BasePaletteColor: =RGBA(244,246,248,1)\r\n            Color: =RGBA(24,95,165,1)\r\n            Height: =40\r\n            OnSelect: |-\r\n              =If(\r\n                  !IsBlank(txtManualEmail.Text),\r\n                  With(\r\n                      {profile: Office365Users.UserProfileV2(Trim(txtManualEmail.Text))},\r\n                      If(!IsBlank(profile.displayName),\r\n                          UpdateContext({locPulledName: profile.displayName});\r\n                          Notify(\"Details pulled from M365.\", NotificationType.Success),\r\n                          Notify(\"No M365 account found - fill in manually.\",\r\n                                 NotificationType.Warning)\r\n                      )\r\n                  ),\r\n                  Notify(\"Enter an email address first.\", NotificationType.Warning)\r\n              )\r\n            Size: =11\r\n            Text: =\"Pull details\"\r\n            Visible: =varTab = \"People\"\r\n            Width: =152\r\n            X: =470\r\n            Y: =258\r\n      - txtManualName:\r\n          Control: ModernTextInput@1.1.0\r\n          Properties:\r\n            Default: =locPulledName\r\n            Height: =40\r\n            Placeholder: =\"Display name\"\r\n            Size: =12\r\n            Visible: =varTab = \"People\"\r\n            Width: =590\r\n            X: =32\r\n            Y: =306\r\n      - drpNewType:\r\n          Control: ModernDropdown@1.0.1\r\n          Properties:\r\n            Height: =40\r\n            Items: =[\"Civil Servant\", \"Army\", \"Contractor\"]\r\n            Size: =12\r\n            Visible: =varTab = \"People\"\r\n            Width: =284\r\n            X: =32\r\n            Y: =354\r\n      - txtNewManager:\r\n          Control: ModernTextInput@1.1.0\r\n          Properties:\r\n            Height: =40\r\n            Placeholder: =\"Line manager email (optional)\"\r\n            Size: =11\r\n            Visible: =varTab = \"People\"\r\n            Width: =296\r\n            X: =326\r\n            Y: =354\r\n      - tglNewAdmin:\r\n          Control: Toggle@1.1.5\r\n          Properties:\r\n            Height: =32\r\n            Label: =\"Is admin\"\r\n            Visible: =varTab = \"People\"\r\n            Width: =160\r\n            X: =32\r\n            Y: =404\r\n      - tglHasM365:\r\n          Control: Toggle@1.1.5\r\n          Properties:\r\n            Checked: =true\r\n            Height: =32\r\n            Label: =\"Has M365 account\"\r\n            Visible: =varTab = \"People\"\r\n            Width: =200\r\n            X: =210\r\n            Y: =404\r\n      - btnAddPerson:\r\n          Control: ModernButton@1.0.0\r\n          Properties:\r\n            BasePaletteColor: =RGBA(24,95,165,1)\r\n            Height: =44\r\n            OnSelect: |-\r\n              =With(\r\n                  {\r\n                      newEmail: Lower(If(!IsBlank(cmbNewPerson.Selected.Mail),\r\n                                         cmbNewPerson.Selected.Mail, Trim(txtManualEmail.Text))),\r\n                      newName:  If(!IsBlank(cmbNewPerson.Selected.DisplayName),\r\n                                   cmbNewPerson.Selected.DisplayName, Trim(txtManualName.Text)),\r\n                      newType:  drpNewType.Selected.Value,\r\n                      newHasM365: tglHasM365.Checked,\r\n                      newManager: Lower(Trim(txtNewManager.Text))\r\n                  },\r\n                  If(\r\n                      IsBlank(newEmail) || IsBlank(newName),\r\n                      Notify(\"Email and name are required.\", NotificationType.Warning),\r\n\r\n                      !IsBlank(LookUp('TT Personnel', Lower(Email) = newEmail)),\r\n                      Patch('TT Personnel',\r\n                          LookUp('TT Personnel', Lower(Email) = newEmail),\r\n                          {Active: true});\r\n                      Notify(\"Already in system - reactivated.\", NotificationType.Warning),\r\n\r\n                      Patch('TT Personnel', Defaults('TT Personnel'),\r\n                          {Title:newName, Email:newEmail, StaffType:{Value:newType},\r\n                           IsAdmin:tglNewAdmin.Checked, Active:true,\r\n                           HasM365Access:newHasM365, LineManagerEmail:newManager,\r\n                           ManagerCanEdit:false}\r\n                      );\r\n                      Notify(newName & \" added.\", NotificationType.Success);\r\n                      Reset(cmbNewPerson); Reset(txtManualEmail); Reset(txtManualName);\r\n                      Reset(drpNewType); Reset(tglNewAdmin); Reset(tglHasM365); Reset(txtNewManager)\r\n                  )\r\n              )\r\n            Size: =13\r\n            Text: =\"Add to system\"\r\n            Visible: =varTab = \"People\"\r\n            Width: =590\r\n            X: =32\r\n            Y: =444\r\n      - galPeople:\r\n          Control: Gallery@2.15.0\r\n          Variant: Vertical\r\n          Properties:\r\n            BorderColor: =RGBA(0, 18, 107, 1)\r\n            BorderThickness: =0\r\n            Fill: =RGBA(0,0,0,0)\r\n            Height: =624\r\n            Items: =SortByColumns(Filter('TT Personnel', Active = true), \"Title\", SortOrder.Ascending)\r\n            ShowScrollbar: =true\r\n            TemplatePadding: =0\r\n            TemplateSize: =60\r\n            Visible: =varTab = \"People\"\r\n            Width: =678\r\n            X: =672\r\n            Y: =144\r\n          Children:\r\n            - recPeopleRow:\r\n                Control: Classic/Button@2.2.0\r\n                Properties:\r\n                  BorderColor: =ColorFade(Self.Fill, -15%)\r\n                  BorderThickness: =0\r\n                  Color: =RGBA(255, 255, 255, 1)\r\n                  DisabledBorderColor: =RGBA(166, 166, 166, 1)\r\n                  DisplayMode: =DisplayMode.View\r\n                  Fill: =If(Mod(ThisItem.ID,2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1))\r\n                  Font: =Font.'Open Sans'\r\n                  Height: =59\r\n                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)\r\n                  HoverColor: =RGBA(255, 255, 255, 1)\r\n                  HoverFill: =Self.Fill\r\n                  PressedBorderColor: =Self.Fill\r\n                  PressedColor: =Self.Fill\r\n                  PressedFill: =Self.Fill\r\n                  RadiusBottomLeft: =0\r\n                  RadiusBottomRight: =0\r\n                  RadiusTopLeft: =0\r\n                  RadiusTopRight: =0\r\n                  Text: =\r\n                  Width: =678\r\n                  X: =0\r\n                  Y: =0\r\n            - lblPersonName:\r\n                Control: Label@2.5.1\r\n                Properties:\r\n                  BorderColor: =RGBA(0, 18, 107, 1)\r\n                  Color: =RGBA(31,58,95,1)\r\n                  Fill: =RGBA(0,0,0,0)\r\n                  Font: =Font.'Open Sans'\r\n                  FontWeight: =FontWeight.Semibold\r\n                  Height: =22\r\n                  Size: =13\r\n                  Text: =ThisItem.Title\r\n                  Width: =320\r\n                  X: =16\r\n                  Y: =8\r\n            - lblPersonEmail:\r\n                Control: Label@2.5.1\r\n                Properties:\r\n                  BorderColor: =RGBA(0, 18, 107, 1)\r\n                  Color: =RGBA(136,135,128,1)\r\n                  Fill: =RGBA(0,0,0,0)\r\n                  Font: =Font.'Open Sans'\r\n                  Height: =16\r\n                  Size: =9\r\n                  Text: =ThisItem.Email\r\n                  Width: =320\r\n                  X: =16\r\n                  Y: =32\r\n            - drpRowType:\r\n                Control: ModernDropdown@1.0.1\r\n                Properties:\r\n                  Default: =ThisItem.StaffType.Value\r\n                  Height: =32\r\n                  Items: =[\"Civil Servant\",\"Army\",\"Contractor\"]\r\n                  OnChange: |-\r\n                    =Patch('TT Personnel', ThisItem,\r\n                        {StaffType: {Value: Self.Selected.Value}});\r\n                    Notify(ThisItem.Title & \" is now \" & Self.Selected.Value & \".\",\r\n                           NotificationType.Success)\r\n                  Size: =10\r\n                  Width: =170\r\n                  X: =346\r\n                  Y: =14\r\n            - lblAdminBadge:\r\n                Control: Label@2.5.1\r\n                Properties:\r\n                  Align: =Align.Center\r\n                  BorderColor: =RGBA(0, 18, 107, 1)\r\n                  BorderThickness: =0\r\n                  Color: =RGBA(60,52,137,1)\r\n                  Fill: =RGBA(238,237,254,1)\r\n                  Font: =Font.'Open Sans'\r\n                  Height: =28\r\n                  Size: =9\r\n                  Text: =\"Admin\"\r\n                  Visible: =ThisItem.IsAdmin\r\n                  Width: =60\r\n                  X: =526\r\n                  Y: =16\r\n            - icoRemove:\r\n                Control: Classic/Icon@2.5.0\r\n                Properties:\r\n                  BorderColor: =RGBA(0, 18, 107, 1)\r\n                  Color: =If(varConfirmRemove=ThisItem.ID,RGBA(226,75,74,1),RGBA(170,187,204,1))\r\n                  Height: =24\r\n                  Icon: =Icon.Trash\r\n                  OnSelect: |-\r\n                    =If(\r\n                        varConfirmRemove = ThisItem.ID,\r\n                        Patch('TT Personnel', ThisItem, {Active: false});\r\n                        Set(varConfirmRemove, Blank());\r\n                        Notify(ThisItem.Title & \" deactivated. Records and certificates kept.\",\r\n                               NotificationType.Success),\r\n                        Set(varConfirmRemove, ThisItem.ID);\r\n                        Notify(\"Tap the bin again to confirm removing \" &\r\n                               ThisItem.Title & \".\", NotificationType.Warning)\r\n                    )\r\n                  Width: =24\r\n                  X: =600\r\n                  Y: =18\r\n      - recAddCoursePanel:\r\n          Control: Classic/Button@2.2.0\r\n          Properties:\r\n            BorderColor: =RGBA(221,227,234,1)\r\n            BorderThickness: =1\r\n            Color: =RGBA(255, 255, 255, 1)\r\n            DisabledBorderColor: =RGBA(166, 166, 166, 1)\r\n            DisplayMode: =DisplayMode.View\r\n            Fill: =RGBA(255,255,255,1)\r\n            Font: =Font.'Open Sans'\r\n            Height: =254\r\n            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)\r\n            HoverColor: =RGBA(255, 255, 255, 1)\r\n            HoverFill: =RGBA(255,255,255,1)\r\n            PressedBorderColor: =Self.Fill\r\n            PressedColor: =Self.Fill\r\n            PressedFill: =RGBA(255,255,255,1)\r\n            RadiusBottomLeft: =8\r\n            RadiusBottomRight: =8\r\n            RadiusTopLeft: =8\r\n            RadiusTopRight: =8\r\n            Text: =\r\n            Visible: =varTab = \"Courses\"\r\n            Width: =640\r\n            X: =16\r\n            Y: =144\r\n      - lblAddCourseTitle:\r\n          Control: Label@2.5.1\r\n          Properties:\r\n            BorderColor: =RGBA(0, 18, 107, 1)\r\n            BorderThickness: =0\r\n            Color: =RGBA(31,58,95,1)\r\n            Fill: =RGBA(0,0,0,0)\r\n            Font: =Font.'Open Sans'\r\n            FontWeight: =FontWeight.Bold\r\n            Height: =24\r\n            Size: =13\r\n            Text: =\"Add course\"\r\n            Visible: =varTab = \"Courses\"\r\n            Width: =400\r\n            X: =32\r\n            Y: =156\r\n      - txtNewCourse:\r\n          Control: ModernTextInput@1.1.0\r\n          Properties:\r\n            Height: =40\r\n            Placeholder: =\"Course name\"\r\n            Size: =12\r\n            Visible: =varTab = \"Courses\"\r\n            Width: =600\r\n            X: =32\r\n            Y: =186\r\n      - cmbNewApplic:\r\n          Control: ModernCombobox@1.1.0\r\n          Properties:\r\n            Height: =40\r\n            InputTextPlaceholder: =\"Applies to...\"\r\n            ItemDisplayText: =ThisItem.Value\r\n            Items: =[\"Civil Servant\", \"Army\", \"Contractor\"]\r\n            SelectMultiple: =true\r\n            Size: =12\r\n            Visible: =varTab = \"Courses\"\r\n            Width: =394\r\n            X: =32\r\n            Y: =234\r\n      - drpNewRecur:\r\n          Control: ModernDropdown@1.0.1\r\n          Properties:\r\n            Height: =40\r\n            ItemDisplayText: =ThisItem.Label\r\n            Items: |-\r\n              =Table(\r\n                  {Label: \"One-off (never expires)\", Months: 0},\r\n                  {Label: \"Every 6 months\",          Months: 6},\r\n                  {Label: \"Every year\",              Months: 12},\r\n                  {Label: \"Every 18 months\",         Months: 18},\r\n                  {Label: \"Every 2 years\",           Months: 24},\r\n                  {Label: \"Every 3 years\",           Months: 36}\r\n              )\r\n            Size: =12\r\n            Visible: =varTab = \"Courses\"\r\n            Width: =198\r\n            X: =434\r\n            Y: =234\r\n      - btnAddCourse:\r\n          Control: ModernButton@1.0.0\r\n          Properties:\r\n            BasePaletteColor: =RGBA(24,95,165,1)\r\n            Height: =44\r\n            OnSelect: |-\r\n              =If(\r\n                  IsBlank(txtNewCourse.Text) || CountRows(cmbNewApplic.SelectedItems) = 0,\r\n                  Notify(\"Course needs a name and at least one staff type.\",\r\n                         NotificationType.Warning),\r\n                  Patch('TT Courses', Defaults('TT Courses'),\r\n                      {\r\n                          Title:            Trim(txtNewCourse.Text),\r\n                          ApplicableTo:     ForAll(cmbNewApplic.SelectedItems As T, {Value: T.Value}),\r\n                          RecurrenceMonths: drpNewRecur.Selected.Months,\r\n                          Status:           {Value: \"Active\"}\r\n                      }\r\n                  );\r\n                  Notify(\"Course added.\", NotificationType.Success);\r\n                  Reset(txtNewCourse); Reset(cmbNewApplic); Reset(drpNewRecur);\r\n                  ClearCollect(colCourses, 'TT Courses')\r\n              )\r\n            Size: =13\r\n            Text: =\"Add course\"\r\n            Visible: =varTab = \"Courses\"\r\n            Width: =600\r\n            X: =32\r\n            Y: =284\r\n      - recEditPanel:\r\n          Control: Classic/Button@2.2.0\r\n          Properties:\r\n            BorderColor: =RGBA(24,95,165,1)\r\n            BorderThickness: =2\r\n            Color: =RGBA(255, 255, 255, 1)\r\n            DisabledBorderColor: =RGBA(166, 166, 166, 1)\r\n            DisplayMode: =DisplayMode.View\r\n            Fill: =RGBA(255,255,255,1)\r\n            Font: =Font.'Open Sans'\r\n            Height: =286\r\n            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)\r\n            HoverColor: =RGBA(255, 255, 255, 1)\r\n            HoverFill: =RGBA(255,255,255,1)\r\n            PressedBorderColor: =Self.Fill\r\n            PressedColor: =Self.Fill\r\n            PressedFill: =RGBA(255,255,255,1)\r\n            RadiusBottomLeft: =8\r\n            RadiusBottomRight: =8\r\n            RadiusTopLeft: =8\r\n            RadiusTopRight: =8\r\n            Text: =\r\n            Visible: =varTab = \"Courses\" && !IsBlank(varEditCourse)\r\n            Width: =640\r\n            X: =16\r\n            Y: =144\r\n      - lblEditTitle:\r\n          Control: Label@2.5.1\r\n          Properties:\r\n            BorderColor: =RGBA(0, 18, 107, 1)\r\n            BorderThickness: =0\r\n            Color: =RGBA(24,95,165,1)\r\n            Fill: =RGBA(0,0,0,0)\r\n            Font: =Font.'Open Sans'\r\n            FontWeight: =FontWeight.Bold\r\n            Height: =24\r\n            Size: =13\r\n            Text: =\"Edit course\"\r\n            Visible: =varTab = \"Courses\" && !IsBlank(varEditCourse)\r\n            Width: =400\r\n            X: =32\r\n            Y: =156\r\n      - txtEditCourse:\r\n          Control: ModernTextInput@1.1.0\r\n          Properties:\r\n            Default: =varEditCourse.Title\r\n            Height: =40\r\n            Size: =12\r\n            Visible: =varTab = \"Courses\" && !IsBlank(varEditCourse)\r\n            Width: =600\r\n            X: =32\r\n            Y: =186\r\n      - cmbEditApplic:\r\n          Control: ModernCombobox@1.1.0\r\n          Properties:\r\n            DefaultSelectedItems: =varEditCourse.ApplicableTo\r\n            Height: =40\r\n            ItemDisplayText: =ThisItem.Value\r\n            Items: =[\"Civil Servant\",\"Army\",\"Contractor\"]\r\n            SelectMultiple: =true\r\n            Visible: =varTab = \"Courses\" && !IsBlank(varEditCourse)\r\n            Width: =394\r\n            X: =32\r\n            Y: =234\r\n      - drpEditRecur:\r\n          Control: ModernDropdown@1.0.1\r\n          Properties:\r\n            Height: =40\r\n            ItemDisplayText: =ThisItem.Label\r\n            Items: |-\r\n              =Table(\r\n                  {Label: \"One-off (never expires)\", Months: 0},\r\n                  {Label: \"Every 6 months\",          Months: 6},\r\n                  {Label: \"Every year\",              Months: 12},\r\n                  {Label: \"Every 18 months\",         Months: 18},\r\n                  {Label: \"Every 2 years\",           Months: 24},\r\n                  {Label: \"Every 3 years\",           Months: 36}\r\n              )\r\n            Size: =12\r\n            Visible: =varTab = \"Courses\" && !IsBlank(varEditCourse)\r\n            Width: =198\r\n            X: =434\r\n            Y: =234\r\n      - btnSaveCourse:\r\n          Control: ModernButton@1.0.0\r\n          Properties:\r\n            BasePaletteColor: =RGBA(24,95,165,1)\r\n            Height: =44\r\n            OnSelect: |-\r\n              =Patch('TT Courses', varEditCourse,\r\n                  {\r\n                      Title:            Trim(txtEditCourse.Text),\r\n                      ApplicableTo:     ForAll(cmbEditApplic.SelectedItems As T, {Value: T.Value}),\r\n                      RecurrenceMonths: drpEditRecur.Selected.Months\r\n                  }\r\n              );\r\n              Notify(\"Course updated. Expiry dates recalculate automatically.\",\r\n                     NotificationType.Success);\r\n              ClearCollect(colCourses, 'TT Courses');\r\n              Set(varEditCourse, Blank())\r\n            Size: =13\r\n            Text: =\"Save changes\"\r\n            Visible: =varTab = \"Courses\" && !IsBlank(varEditCourse)\r\n            Width: =290\r\n            X: =32\r\n            Y: =282\r\n      - btnCancelEdit:\r\n          Control: ModernButton@1.0.0\r\n          Properties:\r\n            BasePaletteColor: =RGBA(244,246,248,1)\r\n            Color: =RGBA(85,85,85,1)\r\n            Height: =44\r\n            OnSelect: =Set(varEditCourse,Blank())\r\n            Visible: =varTab = \"Courses\" && !IsBlank(varEditCourse)\r\n            Width: =150\r\n            X: =330\r\n            Y: =282\r\n      - btnArchive:\r\n          Control: ModernButton@1.0.0\r\n          Properties:\r\n            BasePaletteColor: =RGBA(255,240,240,1)\r\n            Color: =RGBA(163,45,45,1)\r\n            Height: =44\r\n            OnSelect: |-\r\n              =If(\r\n                  varConfirmArchive = varEditCourse.ID,\r\n                  Patch('TT Courses', varEditCourse, {Status: {Value: \"Archived\"}});\r\n                  Set(varConfirmArchive, Blank());\r\n                  Set(varEditCourse, Blank());\r\n                  ClearCollect(colCourses, 'TT Courses');\r\n                  Notify(\"Course archived. Records and certificates kept forever.\", NotificationType.Success),\r\n                  Set(varConfirmArchive, varEditCourse.ID);\r\n                  Notify(\"Press Archive again to confirm.\", NotificationType.Warning)\r\n              )\r\n            Text: =\"Archive\"\r\n            Visible: =varTab = \"Courses\" && !IsBlank(varEditCourse)\r\n            Width: =144\r\n            X: =488\r\n            Y: =282\r\n      - galCourses:\r\n          Control: Gallery@2.15.0\r\n          Variant: Vertical\r\n          Properties:\r\n            BorderColor: =RGBA(0, 18, 107, 1)\r\n            BorderThickness: =0\r\n            Fill: =RGBA(0,0,0,0)\r\n            Height: =624\r\n            Items: =SortByColumns(colCourses, \"Status\", SortOrder.Descending, \"Title\", SortOrder.Ascending)\r\n            ShowScrollbar: =true\r\n            TemplatePadding: =0\r\n            TemplateSize: =64\r\n            Visible: =varTab = \"Courses\"\r\n            Width: =678\r\n            X: =672\r\n            Y: =144\r\n          Children:\r\n            - recCourseRow:\r\n                Control: Classic/Button@2.2.0\r\n                Properties:\r\n                  BorderColor: =ColorFade(Self.Fill, -15%)\r\n                  BorderThickness: =0\r\n                  Color: =RGBA(255, 255, 255, 1)\r\n                  DisabledBorderColor: =RGBA(166, 166, 166, 1)\r\n                  DisplayMode: =DisplayMode.View\r\n                  Fill: =If(ThisItem.Status.Value=\"Archived\",RGBA(248,248,248,1),If(Mod(ThisItem.ID,2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1)))\r\n                  Font: =Font.'Open Sans'\r\n                  Height: =63\r\n                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)\r\n                  HoverColor: =RGBA(255, 255, 255, 1)\r\n                  HoverFill: =Self.Fill\r\n                  PressedBorderColor: =Self.Fill\r\n                  PressedColor: =Self.Fill\r\n                  PressedFill: =Self.Fill\r\n                  RadiusBottomLeft: =0\r\n                  RadiusBottomRight: =0\r\n                  RadiusTopLeft: =0\r\n                  RadiusTopRight: =0\r\n                  Text: =\r\n                  Width: =678\r\n                  X: =0\r\n                  Y: =0\r\n            - lblCrsName:\r\n                Control: Label@2.5.1\r\n                Properties:\r\n                  BorderColor: =RGBA(0, 18, 107, 1)\r\n                  Color: =If(ThisItem.Status.Value=\"Archived\",RGBA(170,170,170,1),RGBA(31,58,95,1))\r\n                  Fill: =RGBA(0,0,0,0)\r\n                  Font: =Font.'Open Sans'\r\n                  FontWeight: =FontWeight.Semibold\r\n                  Height: =22\r\n                  Size: =12\r\n                  Text: =ThisItem.Title\r\n                  Width: =380\r\n                  X: =16\r\n                  Y: =8\r\n            - lblCrsDetail:\r\n                Control: Label@2.5.1\r\n                Properties:\r\n                  BorderColor: =RGBA(0, 18, 107, 1)\r\n                  Color: =RGBA(136,135,128,1)\r\n                  Fill: =RGBA(0,0,0,0)\r\n                  Font: =Font.'Open Sans'\r\n                  Height: =18\r\n                  Size: =9\r\n                  Text: =Switch(ThisItem.RecurrenceMonths,0,\"One-off\",12,\"Every year\",24,\"Every 2 years\",\"Every \" & ThisItem.RecurrenceMonths & \" months\") & \"  \u00b7  \" & Concat(ThisItem.ApplicableTo, Value & \", \")\r\n                  Width: =380\r\n                  X: =16\r\n                  Y: =32\r\n            - lblArchivedBadge:\r\n                Control: Label@2.5.1\r\n                Properties:\r\n                  Align: =Align.Center\r\n                  BorderColor: =RGBA(0, 18, 107, 1)\r\n                  BorderThickness: =0\r\n                  Color: =RGBA(68,68,65,1)\r\n                  Fill: =RGBA(241,239,232,1)\r\n                  Font: =Font.'Open Sans'\r\n                  Height: =26\r\n                  Size: =9\r\n                  Text: =\"Archived\"\r\n                  Visible: =ThisItem.Status.Value = \"Archived\"\r\n                  Width: =76\r\n                  X: =404\r\n                  Y: =18\r\n            - icoEditCourse:\r\n                Control: Classic/Icon@2.5.0\r\n                Properties:\r\n                  BorderColor: =RGBA(0, 18, 107, 1)\r\n                  Color: =RGBA(24,95,165,1)\r\n                  Height: =24\r\n                  Icon: =Icon.Edit\r\n                  OnSelect: =Set(varEditCourse,ThisItem)\r\n                  Visible: =ThisItem.Status.Value = \"Active\"\r\n                  Width: =24\r\n                  X: =500\r\n                  Y: =20\r\n            - icoArchiveCourse:\r\n                Control: Classic/Icon@2.5.0\r\n                Properties:\r\n                  BorderColor: =RGBA(0, 18, 107, 1)\r\n                  Color: =If(varConfirmArchive=ThisItem.ID,RGBA(226,75,74,1),RGBA(170,187,204,1))\r\n                  Height: =24\r\n                  Icon: =Icon.Trash\r\n                  OnSelect: |-\r\n                    =If(\r\n                        varConfirmArchive = ThisItem.ID,\r\n                        Patch('TT Courses', ThisItem, {Status: {Value: \"Archived\"}});\r\n                        Set(varConfirmArchive, Blank());\r\n                        ClearCollect(colCourses, 'TT Courses');\r\n                        Notify(\"Course archived. Records and certificates kept forever.\", NotificationType.Success),\r\n                        Set(varConfirmArchive, ThisItem.ID);\r\n                        Notify(\"Tap the bin again to confirm archiving \" & ThisItem.Title & \".\", NotificationType.Warning)\r\n                    )\r\n                  Visible: =ThisItem.Status.Value = \"Active\"\r\n                  Width: =24\r\n                  X: =534\r\n                  Y: =20\r\n            - icoRestoreCourse:\r\n                Control: Classic/Icon@2.5.0\r\n                Properties:\r\n                  BorderColor: =RGBA(0, 18, 107, 1)\r\n                  Color: =RGBA(24,95,165,1)\r\n                  Height: =24\r\n                  Icon: =Icon.Redo\r\n                  OnSelect: |-\r\n                    =Patch('TT Courses', ThisItem, {Status: {Value: \"Active\"}});\r\n                    ClearCollect(colCourses, 'TT Courses');\r\n                    Notify(\"Course restored to the mandatory list.\", NotificationType.Success)\r\n                  Visible: =ThisItem.Status.Value = \"Archived\"\r\n                  Width: =24\r\n                  X: =534\r\n                  Y: =20\r\n";
+  <p id="status">Ready to copy</p>
+  <div class="instructions">
+    <strong>How to paste into Power Apps Studio</strong><br>
+    Open the app → in the Tree View, click the screen you want to replace →
+    press <strong>Ctrl+A</strong> to select all controls → <strong>Delete</strong> →
+    then <strong>Ctrl+V</strong> to paste the new screen.
+    Or right-click the screen name → <em>Paste</em>.
+  </div>
 
-    async function copyYAML() {
-      const status = document.getElementById('status');
-      try {
-        await navigator.clipboard.writeText(yaml);
-        status.textContent = '✓ Copied! Paste into PowerApps Studio now.';
-        status.className = 'ok';
-        setTimeout(() => {
-          status.textContent = 'Click to copy again';
-          status.className = '';
-        }, 4000);
-      } catch (e) {
-        status.textContent = 'Clipboard blocked — select the text below and copy manually.';
-        status.className = 'err';
-        const pre = document.createElement('pre');
-        pre.style = 'font-size:9px;max-height:200px;overflow:auto;background:#1a1a2e;padding:8px;border-radius:6px;text-align:left;';
-        pre.textContent = yaml;
-        document.body.appendChild(pre);
-      }
-    }
+  <script>
+const yaml = `Screens:
+  scrAdminManage:
+    Properties:
+      Fill: =RGBA(247,249,252,1)
+      OnVisible: |-
+        =If(IsBlank(varTab), Set(varTab, "People"));
+        ClearCollect(colCourses, 'TT Courses')
+    Children:
+      - recAdminManageHeader:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            BorderThickness: =0
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(24,95,165,1)
+            Font: =Font.'Open Sans'
+            Height: =72
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(24,95,165,1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(24,95,165,1)
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Text: =
+            Width: =1366
+      - icoAdminManageBack:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(230,241,251,1)
+            Height: =24
+            Icon: =Icon.ChevronLeft
+            OnSelect: =Navigate(scrAdminDash, ScreenTransition.Fade)
+            Width: =24
+            X: =16
+            Y: =24
+      - lblManageTitle:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(230,241,251,1)
+            Fill: =RGBA(0,0,0,0)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =72
+            Size: =17
+            Text: ="Manage"
+            Width: =600
+            X: =52
+      - btnTabPeople:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =If(varTab="People",RGBA(24,95,165,1),RGBA(220,230,245,1))
+            Color: =If(varTab="People", RGBA(255,255,255,1), RGBA(24,95,165,1))
+            Height: =40
+            OnSelect: =Set(varTab,"People")
+            Size: =12
+            Text: ="People"
+            Width: =120
+            X: =16
+            Y: =88
+      - btnTabCourses:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =If(varTab="Courses",RGBA(24,95,165,1),RGBA(220,230,245,1))
+            Color: =If(varTab="Courses", RGBA(255,255,255,1), RGBA(24,95,165,1))
+            Height: =40
+            OnSelect: =Set(varTab,"Courses")
+            Size: =12
+            Text: ="Courses"
+            Width: =120
+            X: =152
+            Y: =88
+      - recAddPanel:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(221,227,234,1)
+            BorderThickness: =1
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255,255,255,1)
+            Font: =Font.'Open Sans'
+            Height: =340
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255,255,255,1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(255,255,255,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            Text: =
+            Visible: =varTab = "People"
+            Width: =640
+            X: =16
+            Y: =144
+      - lblAddTitle:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(31,58,95,1)
+            Fill: =RGBA(0,0,0,0)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =24
+            Text: ="Add person"
+            Visible: =varTab = "People"
+            Width: =400
+            X: =32
+            Y: =156
+      - cmbNewPerson:
+          Control: ModernCombobox@1.1.0
+          Properties:
+            Height: =40
+            InputTextPlaceholder: ="Search M365 directory..."
+            ItemDisplayText: =ThisItem.DisplayName
+            Items: |-
+              =Office365Users.SearchUserV2({searchTerm: cmbNewPerson.SearchText, top: 15}).value
+            SelectMultiple: =false
+            Size: =12
+            Visible: =varTab = "People"
+            Width: =590
+            X: =32
+            Y: =186
+      - lblOrManual:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(136,135,128,1)
+            Fill: =RGBA(0,0,0,0)
+            Font: =Font.'Open Sans'
+            Height: =20
+            Size: =10
+            Text: ="or enter manually below"
+            Visible: =varTab = "People"
+            Width: =590
+            X: =32
+            Y: =234
+      - txtManualEmail:
+          Control: ModernTextInput@1.1.0
+          Properties:
+            Height: =40
+            Placeholder: ="Email address"
+            Size: =12
+            Visible: =varTab = "People"
+            Width: =430
+            X: =32
+            Y: =258
+      - btnPullDetails:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =RGBA(46,110,145,1)
+            Color: =RGBA(255, 255, 255, 1)
+            Height: =40
+            OnSelect: |-
+              =If(
+                  !IsBlank(txtManualEmail.Text),
+                  With(
+                      {profile: Office365Users.UserProfileV2(Trim(txtManualEmail.Text))},
+                      If(!IsBlank(profile.displayName),
+                          UpdateContext({locPulledName: profile.displayName});
+                          Notify("Details pulled from M365.", NotificationType.Success),
+                          Notify("No M365 account found - fill in manually.",
+                                 NotificationType.Warning)
+                      )
+                  ),
+                  Notify("Enter an email address first.", NotificationType.Warning)
+              )
+            Size: =11
+            Text: ="Pull details"
+            Visible: =varTab = "People"
+            Width: =152
+            X: =470
+            Y: =258
+      - txtManualName:
+          Control: ModernTextInput@1.1.0
+          Properties:
+            Default: =locPulledName
+            Height: =40
+            Placeholder: ="Display name"
+            Size: =12
+            Visible: =varTab = "People"
+            Width: =590
+            X: =32
+            Y: =306
+      - drpNewType:
+          Control: ModernDropdown@1.0.1
+          Properties:
+            Height: =40
+            ItemDisplayText: =ThisItem.Value
+            Items: =["Civil Servant", "Army", "Contractor"]
+            Size: =12
+            Visible: =varTab = "People"
+            Width: =284
+            X: =32
+            Y: =354
+      - txtNewManager:
+          Control: ModernTextInput@1.1.0
+          Properties:
+            Height: =40
+            Placeholder: ="Line manager email (optional)"
+            Size: =11
+            Visible: =varTab = "People"
+            Width: =296
+            X: =326
+            Y: =354
+      - tglNewAdmin:
+          Control: Toggle@1.1.5
+          Properties:
+            Height: =32
+            Label: ="Is admin"
+            Visible: =varTab = "People"
+            Width: =160
+            X: =32
+            Y: =404
+      - tglHasM365:
+          Control: Toggle@1.1.5
+          Properties:
+            Checked: =true
+            Height: =32
+            Label: ="Has M365 account"
+            Visible: =varTab = "People"
+            Width: =200
+            X: =210
+            Y: =404
+      - btnAddPerson:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =RGBA(24,95,165,1)
+            Height: =44
+            OnSelect: |-
+              =With(
+                  {
+                      newEmail: Lower(If(!IsBlank(cmbNewPerson.Selected.Mail),
+                                         cmbNewPerson.Selected.Mail, Trim(txtManualEmail.Text))),
+                      newName:  If(!IsBlank(cmbNewPerson.Selected.DisplayName),
+                                   cmbNewPerson.Selected.DisplayName, Trim(txtManualName.Text)),
+                      newType:  drpNewType.Selected.Value,
+                      newHasM365: tglHasM365.Checked,
+                      newManager: Lower(Trim(txtNewManager.Text))
+                  },
+                  If(
+                      IsBlank(newEmail) || IsBlank(newName),
+                      Notify("Email and name are required.", NotificationType.Warning),
+
+                      !IsBlank(LookUp('TT Personnel', Lower(Email) = newEmail)),
+                      Patch('TT Personnel',
+                          LookUp('TT Personnel', Lower(Email) = newEmail),
+                          {Active: true});
+                      Notify("Already in system - reactivated.", NotificationType.Warning),
+
+                      Patch('TT Personnel', Defaults('TT Personnel'),
+                          {Title:newName, Email:newEmail, StaffType:{Value:newType},
+                           IsAdmin:tglNewAdmin.Checked, Active:true,
+                           HasM365Access:newHasM365, LineManagerEmail:newManager,
+                           ManagerCanEdit:false}
+                      );
+                      Notify(newName & " added.", NotificationType.Success);
+                      Reset(cmbNewPerson); Reset(txtManualEmail); Reset(txtManualName);
+                      Reset(drpNewType); Reset(tglNewAdmin); Reset(tglHasM365); Reset(txtNewManager)
+                  )
+              )
+            Size: =13
+            Text: ="Add to system"
+            Visible: =varTab = "People"
+            Width: =590
+            X: =32
+            Y: =444
+      - galPeople:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Fill: =RGBA(0,0,0,0)
+            Height: =624
+            Items: =SortByColumns(Filter('TT Personnel', Active = true), "Title", SortOrder.Ascending)
+            TemplatePadding: =0
+            TemplateSize: =60
+            Visible: =varTab = "People"
+            Width: =678
+            X: =672
+            Y: =144
+          Children:
+            - recPeopleRow:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =ColorFade(Self.Fill, -15%)
+                  BorderThickness: =0
+                  Color: =RGBA(255, 255, 255, 1)
+                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                  DisplayMode: =DisplayMode.View
+                  Fill: =If(Mod(ThisItem.ID,2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1))
+                  Font: =Font.'Open Sans'
+                  Height: =59
+                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+                  HoverColor: =RGBA(255, 255, 255, 1)
+                  HoverFill: =Self.Fill
+                  PressedBorderColor: =Self.Fill
+                  PressedColor: =Self.Fill
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Text: =
+                  Width: =678
+            - lblPersonName:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(31,58,95,1)
+                  Fill: =RGBA(0,0,0,0)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =22
+                  Text: =ThisItem.Title
+                  Width: =320
+                  X: =16
+                  Y: =8
+            - lblPersonEmail:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(136,135,128,1)
+                  Fill: =RGBA(0,0,0,0)
+                  Font: =Font.'Open Sans'
+                  Height: =16
+                  Size: =9
+                  Text: =ThisItem.Email
+                  Width: =320
+                  X: =16
+                  Y: =32
+            - drpRowType:
+                Control: ModernDropdown@1.0.1
+                Properties:
+                  Default: =ThisItem.StaffType.Value
+                  ItemDisplayText: =ThisItem.Value
+                  Items: =["Civil Servant","Army","Contractor"]
+                  OnChange: |-
+                    =Patch('TT Personnel', ThisItem,
+                        {StaffType: {Value: Self.Selected.Value}});
+                    Notify(ThisItem.Title & " is now " & Self.Selected.Value & ".",
+                           NotificationType.Success)
+                  Size: =10
+                  Width: =170
+                  X: =346
+                  Y: =14
+            - lblAdminBadge:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(60,52,137,1)
+                  Fill: =RGBA(238,237,254,1)
+                  Font: =Font.'Open Sans'
+                  Height: =28
+                  Size: =9
+                  Text: ="Admin"
+                  Visible: =ThisItem.IsAdmin
+                  Width: =60
+                  X: =526
+                  Y: =16
+            - icoRemove:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =If(varConfirmRemove=ThisItem.ID,RGBA(226,75,74,1),RGBA(170,187,204,1))
+                  Height: =24
+                  Icon: =Icon.Trash
+                  OnSelect: |-
+                    =If(
+                        varConfirmRemove = ThisItem.ID,
+                        Patch('TT Personnel', ThisItem, {Active: false});
+                        Set(varConfirmRemove, Blank());
+                        Notify(ThisItem.Title & " deactivated. Records and certificates kept.",
+                               NotificationType.Success),
+                        Set(varConfirmRemove, ThisItem.ID);
+                        Notify("Tap the bin again to confirm removing " &
+                               ThisItem.Title & ".", NotificationType.Warning)
+                    )
+                  Width: =24
+                  X: =600
+                  Y: =18
+      - recAddCoursePanel:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(221,227,234,1)
+            BorderThickness: =1
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255,255,255,1)
+            Font: =Font.'Open Sans'
+            Height: =254
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255,255,255,1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(255,255,255,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            Text: =
+            Visible: =varTab = "Courses" && IsBlank(varEditCourse)
+            Width: =640
+            X: =16
+            Y: =144
+      - lblAddCourseTitle:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(31,58,95,1)
+            Fill: =RGBA(0,0,0,0)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =24
+            Text: ="Add course"
+            Visible: =varTab = "Courses" && IsBlank(varEditCourse)
+            Width: =400
+            X: =32
+            Y: =156
+      - txtNewCourse:
+          Control: ModernTextInput@1.1.0
+          Properties:
+            Height: =40
+            Placeholder: ="Course name"
+            Size: =12
+            Visible: =varTab = "Courses" && IsBlank(varEditCourse)
+            Width: =600
+            X: =32
+            Y: =186
+      - cmbNewApplic:
+          Control: ModernCombobox@1.1.0
+          Properties:
+            Height: =40
+            InputTextPlaceholder: ="Applies to..."
+            ItemDisplayText: =ThisItem.Value
+            Items: =["Civil Servant", "Army", "Contractor"]
+            Size: =12
+            Visible: =varTab = "Courses" && IsBlank(varEditCourse)
+            Width: =394
+            X: =32
+            Y: =234
+      - drpNewRecur:
+          Control: ModernDropdown@1.0.1
+          Properties:
+            Height: =40
+            ItemDisplayText: =ThisItem.Label
+            Items: |-
+              =Table(
+                  {Label: "One-off (never expires)", Months: 0},
+                  {Label: "Every 6 months",          Months: 6},
+                  {Label: "Every year",              Months: 12},
+                  {Label: "Every 18 months",         Months: 18},
+                  {Label: "Every 2 years",           Months: 24},
+                  {Label: "Every 3 years",           Months: 36}
+              )
+            Size: =12
+            Visible: =varTab = "Courses" && IsBlank(varEditCourse)
+            Width: =198
+            X: =434
+            Y: =234
+      - btnAddCourse:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =RGBA(24,95,165,1)
+            Height: =44
+            OnSelect: |-
+              =If(
+                  IsBlank(txtNewCourse.Text) || CountRows(cmbNewApplic.SelectedItems) = 0,
+                  Notify("Course needs a name and at least one staff type.",
+                         NotificationType.Warning),
+                  Patch('TT Courses', Defaults('TT Courses'),
+                      {
+                          Title:            Trim(txtNewCourse.Text),
+                          ApplicableTo:     ForAll(cmbNewApplic.SelectedItems As T, {Value: T.Value}),
+                          RecurrenceMonths: drpNewRecur.Selected.Months,
+                          Status:           {Value: "Active"}
+                      }
+                  );
+                  Notify("Course added.", NotificationType.Success);
+                  Reset(txtNewCourse); Reset(cmbNewApplic); Reset(drpNewRecur);
+                  ClearCollect(colCourses, 'TT Courses')
+              )
+            Size: =13
+            Text: ="Add course"
+            Visible: =varTab = "Courses" && IsBlank(varEditCourse)
+            Width: =600
+            X: =32
+            Y: =284
+      - recEditPanel:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(24,95,165,1)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255,255,255,1)
+            Font: =Font.'Open Sans'
+            Height: =286
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255,255,255,1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(255,255,255,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            Text: =
+            Visible: =varTab = "Courses" && !IsBlank(varEditCourse)
+            Width: =640
+            X: =16
+            Y: =144
+      - lblEditTitle:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(24,95,165,1)
+            Fill: =RGBA(0,0,0,0)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =24
+            Text: ="Edit course"
+            Visible: =varTab = "Courses" && !IsBlank(varEditCourse)
+            Width: =400
+            X: =32
+            Y: =156
+      - txtEditCourse:
+          Control: ModernTextInput@1.1.0
+          Properties:
+            Default: =varEditCourse.Title
+            Height: =40
+            Size: =12
+            Visible: =varTab = "Courses" && !IsBlank(varEditCourse)
+            Width: =600
+            X: =32
+            Y: =186
+      - cmbEditApplic:
+          Control: ModernCombobox@1.1.0
+          Properties:
+            DefaultSelectedItems: =varEditCourse.ApplicableTo
+            Height: =40
+            ItemDisplayText: =ThisItem.Value
+            Items: =["Civil Servant","Army","Contractor"]
+            Visible: =varTab = "Courses" && !IsBlank(varEditCourse)
+            Width: =394
+            X: =32
+            Y: =234
+      - drpEditRecur:
+          Control: ModernDropdown@1.0.1
+          Properties:
+            Default: |-
+              =LookUp(
+                  Table(
+                      {Label: "One-off (never expires)", Months: 0},
+                      {Label: "Every 6 months",          Months: 6},
+                      {Label: "Every year",              Months: 12},
+                      {Label: "Every 18 months",         Months: 18},
+                      {Label: "Every 2 years",           Months: 24},
+                      {Label: "Every 3 years",           Months: 36}
+                  ),
+                  Months = varEditCourse.RecurrenceMonths
+              )
+            Height: =40
+            ItemDisplayText: =ThisItem.Label
+            Items: |-
+              =Table(
+                  {Label: "One-off (never expires)", Months: 0},
+                  {Label: "Every 6 months",          Months: 6},
+                  {Label: "Every year",              Months: 12},
+                  {Label: "Every 18 months",         Months: 18},
+                  {Label: "Every 2 years",           Months: 24},
+                  {Label: "Every 3 years",           Months: 36}
+              )
+            Size: =12
+            Visible: =varTab = "Courses" && !IsBlank(varEditCourse)
+            Width: =198
+            X: =434
+            Y: =234
+      - btnSaveCourse:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =RGBA(24,95,165,1)
+            Height: =44
+            OnSelect: |-
+              =Patch('TT Courses', varEditCourse,
+                  {
+                      Title:            Trim(txtEditCourse.Text),
+                      ApplicableTo:     ForAll(cmbEditApplic.SelectedItems As T, {Value: T.Value}),
+                      RecurrenceMonths: drpEditRecur.Selected.Months
+                  }
+              );
+              Notify("Course updated. Expiry dates recalculate automatically.",
+                     NotificationType.Success);
+              ClearCollect(colCourses, 'TT Courses');
+              Set(varEditCourse, Blank())
+            Size: =13
+            Text: ="Save changes"
+            Visible: =varTab = "Courses" && !IsBlank(varEditCourse)
+            Width: =290
+            X: =32
+            Y: =282
+      - btnCancelEdit:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =RGBA(108,117,125,1)
+            Color: =RGBA(255,255,255,1)
+            Height: =44
+            OnSelect: =Set(varEditCourse,Blank())
+            Text: ="Cancel"
+            Visible: =varTab = "Courses" && !IsBlank(varEditCourse)
+            Width: =150
+            X: =330
+            Y: =282
+      - btnArchive:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =RGBA(163,45,45,1)
+            Color: =RGBA(255,255,255,1)
+            Height: =44
+            OnSelect: |-
+              =If(
+                  varConfirmArchive = varEditCourse.ID,
+                  Patch('TT Courses', varEditCourse, {Status: {Value: "Archived"}});
+                  Set(varConfirmArchive, Blank());
+                  Set(varEditCourse, Blank());
+                  ClearCollect(colCourses, 'TT Courses');
+                  Notify("Course archived. Records and certificates kept forever.", NotificationType.Success),
+                  Set(varConfirmArchive, varEditCourse.ID);
+                  Notify("Press Archive again to confirm.", NotificationType.Warning)
+              )
+            Text: ="Archive"
+            Visible: =varTab = "Courses" && !IsBlank(varEditCourse)
+            Width: =144
+            X: =488
+            Y: =282
+      - galCourses:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Fill: =RGBA(0,0,0,0)
+            Height: =624
+            Items: |-
+              =SortByColumns(
+                  AddColumns(colCourses, StatusKey, If(Status.Value = "Active", 1, 2)),
+                  "StatusKey", SortOrder.Ascending,
+                  "Title", SortOrder.Ascending
+              )
+            TemplatePadding: =0
+            TemplateSize: =64
+            Visible: =varTab = "Courses"
+            Width: =678
+            X: =672
+            Y: =144
+          Children:
+            - recCourseRow:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =ColorFade(Self.Fill, -15%)
+                  BorderThickness: =0
+                  Color: =RGBA(255, 255, 255, 1)
+                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                  DisplayMode: =DisplayMode.View
+                  Fill: =If(ThisItem.Status.Value="Archived",RGBA(248,248,248,1),If(Mod(ThisItem.ID,2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1)))
+                  Font: =Font.'Open Sans'
+                  Height: =63
+                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+                  HoverColor: =RGBA(255, 255, 255, 1)
+                  HoverFill: =Self.Fill
+                  PressedBorderColor: =Self.Fill
+                  PressedColor: =Self.Fill
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Text: =
+                  Width: =678
+            - lblCrsName:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =If(ThisItem.Status.Value="Archived",RGBA(170,170,170,1),RGBA(31,58,95,1))
+                  Fill: =RGBA(0,0,0,0)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =22
+                  Size: =12
+                  Text: =ThisItem.Title
+                  Width: =380
+                  X: =16
+                  Y: =8
+            - lblCrsDetail:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(136,135,128,1)
+                  Fill: =RGBA(0,0,0,0)
+                  Font: =Font.'Open Sans'
+                  Height: =18
+                  Size: =9
+                  Text: =Switch(ThisItem.RecurrenceMonths,0,"One-off",12,"Every year",24,"Every 2 years","Every " & ThisItem.RecurrenceMonths & " months") & "  ·  " & Concat(ThisItem.ApplicableTo, Value & ", ")
+                  Width: =380
+                  X: =16
+                  Y: =32
+            - lblArchivedBadge:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(68,68,65,1)
+                  Fill: =RGBA(241,239,232,1)
+                  Font: =Font.'Open Sans'
+                  Height: =26
+                  Size: =9
+                  Text: ="Archived"
+                  Visible: =ThisItem.Status.Value = "Archived"
+                  Width: =76
+                  X: =404
+                  Y: =18
+            - icoEditCourse:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(24,95,165,1)
+                  Height: =24
+                  Icon: =Icon.Edit
+                  OnSelect: =Set(varEditCourse,ThisItem)
+                  Visible: =ThisItem.Status.Value = "Active"
+                  Width: =24
+                  X: =500
+                  Y: =20
+            - icoArchiveCourse:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =If(varConfirmArchive=ThisItem.ID,RGBA(226,75,74,1),RGBA(170,187,204,1))
+                  Height: =24
+                  Icon: =Icon.Trash
+                  OnSelect: |-
+                    =If(
+                        varConfirmArchive = ThisItem.ID,
+                        Patch('TT Courses', ThisItem, {Status: {Value: "Archived"}});
+                        Set(varConfirmArchive, Blank());
+                        ClearCollect(colCourses, 'TT Courses');
+                        Notify("Course archived. Records and certificates kept forever.", NotificationType.Success),
+                        Set(varConfirmArchive, ThisItem.ID);
+                        Notify("Tap the bin again to confirm archiving " & ThisItem.Title & ".", NotificationType.Warning)
+                    )
+                  Visible: =ThisItem.Status.Value = "Active"
+                  Width: =24
+                  X: =534
+                  Y: =20
+            - icoRestoreCourse:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(24,95,165,1)
+                  Height: =24
+                  Icon: =Icon.Redo
+                  OnSelect: |-
+                    =Patch('TT Courses', ThisItem, {Status: {Value: "Active"}});
+                    ClearCollect(colCourses, 'TT Courses');
+                    Notify("Course restored to the mandatory list.", NotificationType.Success)
+                  Visible: =ThisItem.Status.Value = "Archived"
+                  Width: =24
+                  X: =534
+                  Y: =20
+      - tmrAdminDash_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =ColorFade(Self.BorderColor, 70%)
+            DisabledColor: =ColorFade(Self.Fill, 90%)
+            DisabledFill: =ColorFade(Self.Fill, 70%)
+            Duration: =1
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnTimerEnd: =If(!varIsAdmin, Navigate(scrMyTraining, ScreenTransition.None))
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Visible: =false
+            X: =40
+            Y: =40
+`;
+
+function copyYAML() {
+  const crlf = yaml.replace(/\r?\n/g, '\r\n');
+  navigator.clipboard.writeText(crlf).then(() => {
+    const s = document.getElementById('status');
+    s.textContent = 'Copied! Paste into Power Apps Studio with Ctrl+V.';
+    s.className = 'ok';
+    setTimeout(() => { s.textContent = 'Ready to copy'; s.className = ''; }, 3000);
+  }).catch(() => {
+    const s = document.getElementById('status');
+    s.textContent = 'Copy failed — try a different browser.';
+    s.className = 'err';
+  });
+}
   </script>
 </body>
 </html>

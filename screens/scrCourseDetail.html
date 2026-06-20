@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Power Apps — scrCourseDetail</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 32px 16px;
+    }
+    .kicker { font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #64748b; }
+    h1 { font-size: 1.8rem; font-weight: 700; color: #c7d2fe; letter-spacing: -.02em; }
+    .meta { font-size: .85rem; color: #475569; }
+    .btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    button {
+      padding: 13px 32px;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+    }
+    button:hover { opacity: .88; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    .btn-copy { background: #4f46e5; color: #fff; }
+    .btn-back { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    #status {
+      font-size: .85rem;
+      color: #475569;
+      min-height: 1.2em;
+      transition: color .2s;
+    }
+    #status.ok { color: #22c55e; }
+    #status.err { color: #ef4444; }
+    .instructions {
+      max-width: 480px;
+      text-align: center;
+      font-size: .82rem;
+      color: #475569;
+      line-height: 1.7;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 16px 20px;
+      background: #0d1117;
+    }
+    .instructions strong { color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <p class="kicker">Power Apps · Training Tracker · Screen 4 of 7</p>
+  <h1>scrCourseDetail</h1>
+  <p class="meta">Full screen YAML — bugs fixed, colours polished</p>
+  <div class="btn-row">
+    <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
+    <a href="../"><button class="btn-back" type="button">← Guide library</button></a>
+  </div>
+  <p id="status">Ready to copy</p>
+  <div class="instructions">
+    <strong>How to paste into Power Apps Studio</strong><br>
+    Open the app → in the Tree View, click the screen you want to replace →
+    press <strong>Ctrl+A</strong> to select all controls → <strong>Delete</strong> →
+    then <strong>Ctrl+V</strong> to paste the new screen.
+    Or right-click the screen name → <em>Paste</em>.
+  </div>
+
+  <script>
+const yaml = `Screens:
+  scrCourseDetail:
+    Properties:
+      Fill: =RGBA(247,249,252,1)
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+    Children:
+      - recHeaderCD:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            BorderThickness: =0
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(24,95,165,1)
+            Font: =Font.'Open Sans'
+            Height: =72
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(24,95,165,1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(24,95,165,1)
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Text: =
+            Width: =1366
+      - icoBack:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(230,241,251,1)
+            Height: =24
+            Icon: =Icon.ChevronLeft
+            OnSelect: =Back()
+            Width: =24
+            X: =16
+            Y: =24
+      - lblDetailTitle:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(230,241,251,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Size: =16
+            Text: =varCourse.CourseName
+            Width: =900
+            X: =52
+            Y: =4
+      - lblDetailSub:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(181,212,244,1)
+            Font: =Font.'Open Sans'
+            Height: =24
+            Size: =11
+            Text: =varCourse.RecurText & If(IsBlank(varCourse.ExpiresOn), "", " · current certificate expires " & Text(varCourse.ExpiresOn, "dd mmm yyyy"))
+            Width: =900
+            X: =52
+            Y: =44
+      - recCard:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(221,227,234,1)
+            BorderThickness: =1
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255,255,255,1)
+            Font: =Font.'Open Sans'
+            Height: =560
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255,255,255,1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(255,255,255,1)
+            RadiusBottomLeft: =12
+            RadiusBottomRight: =12
+            RadiusTopLeft: =12
+            RadiusTopRight: =12
+            Text: =
+            Width: =800
+            X: =283
+            Y: =96
+      - lblReplaceWarn:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(99,56,6,1)
+            Fill: =RGBA(250,238,218,1)
+            Font: =Font.'Open Sans'
+            Height: =44
+            PaddingBottom: =8
+            PaddingLeft: =10
+            PaddingRight: =10
+            PaddingTop: =8
+            Size: =10
+            Text: ="A certificate is already attached. Remove the old file with the × first, then add the new one, then press Save."
+            Visible: =!IsBlank(varRecord) && CountRows(varRecord.Attachments) > 0
+            Width: =736
+            X: =315
+            Y: =116
+      - frmCert:
+          Control: Form@2.4.4
+          Variant: Classic
+          Layout: Vertical
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            DataSource: ='TT TrainingRecords'
+            Height: =340
+            Item: =varRecord
+            OnFailure: |-
+              =Notify("Save failed: " & frmCert.Error, NotificationType.Error)
+            OnSuccess: |-
+              =Notify("Training record saved.", NotificationType.Success);
+              Back()
+            Width: =736
+            X: =315
+            Y: =172
+          Children:
+            - DateCompleted_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ClassicDateEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="DateCompleted"
+                  DisplayName: ="Date of completion"
+                  Required: =false
+                  Update: =DataCardValue1.SelectedDate
+                  Width: =266
+                  X: =0
+                  Y: =0
+                Children:
+                  - DataCardKey1:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldName
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =34
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        Wrap: =false
+                        X: =30
+                        Y: =10
+                  - DataCardValue1:
+                      Control: Classic/DatePicker@2.6.0
+                      MetadataKey: FieldValue
+                      Properties:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        DefaultDate: =Parent.Default
+                        DisplayMode: =Parent.DisplayMode
+                        EndYear: =Year(Today())+100
+                        Font: =Font.'Open Sans'
+                        IconBackground: =RGBA(56, 96, 178, 1)
+                        IconFill: =RGBA(255, 255, 255, 1)
+                        IsEditable: =true
+                        PaddingBottom: =0
+                        PaddingLeft: =If(Self.DisplayMode = DisplayMode.Edit, 5, 0)
+                        StartYear: =1899
+                        Tooltip: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardKey1.Y + DataCardKey1.Height + 5
+                  - ErrorMessage1:
+                      Control: Label@2.5.1
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(168, 0, 0, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =10
+                        Live: =Live.Assertive
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =14
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardValue1.Y + DataCardValue1.Height
+                  - StarVisible1:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =DataCardKey1.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey1.Y
+            - Attachments_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ClassicAttachmentsEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="{Attachments}"
+                  Default: =ThisItem.Attachments
+                  DisplayName: ="Certificate"
+                  Height: =250
+                  Required: =false
+                  Update: =DataCardValue2.Attachments
+                  Width: =266
+                  X: =1
+                  Y: =0
+                Children:
+                  - DataCardKey2:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldName
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =34
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        Wrap: =false
+                        X: =30
+                        Y: =10
+                  - DataCardValue2:
+                      Control: Attachments@2.3.0
+                      MetadataKey: FieldValue
+                      Properties:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        DisplayMode: =Parent.DisplayMode
+                        Font: =Font.'Open Sans'
+                        Height: =250
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        ItemColor: =RGBA(255, 255, 255, 1)
+                        ItemFill: =RGBA(56, 96, 178, 1)
+                        ItemHoverFill: =RGBA(186, 202, 226, 1)
+                        Items: =Parent.Default
+                        PaddingBottom: =5
+                        PaddingLeft: =If(Self.DisplayMode = DisplayMode.Edit, 5, 0)
+                        PaddingRight: =5
+                        PaddingTop: =5
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =RGBA(0, 18, 107, 1)
+                        Tooltip: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardKey2.Y + DataCardKey2.Height + 5
+                  - ErrorMessage2:
+                      Control: Label@2.5.1
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(168, 0, 0, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =10
+                        Live: =Live.Assertive
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =14
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardValue2.Y + DataCardValue2.Height
+                  - StarVisible2:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =DataCardKey2.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey2.Y
+      - btnSaveCert:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =RGBA(24,95,165,1)
+            Color: =RGBA(255,255,255,1)
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            OnSelect: |-
+              =Patch('TT TrainingRecords', varRecord,
+                  {UploadedByEmail: If(varViewingForSelf, "", varMyEmail)}
+              );
+              SubmitForm(frmCert)
+            Size: =13
+            Text: ="Save record"
+            Width: =356
+            X: =315
+            Y: =528
+      - btnCancelCert:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =RGBA(108,117,125,1)
+            Color: =RGBA(255,255,255,1)
+            Height: =44
+            OnSelect: =ResetForm(frmCert); Back()
+            Size: =13
+            Text: ="Cancel"
+            Width: =372
+            X: =679
+            Y: =528
+`;
+
+function copyYAML() {
+  const crlf = yaml.replace(/\r?\n/g, '\r\n');
+  navigator.clipboard.writeText(crlf).then(() => {
+    const s = document.getElementById('status');
+    s.textContent = 'Copied! Paste into Power Apps Studio with Ctrl+V.';
+    s.className = 'ok';
+    setTimeout(() => { s.textContent = 'Ready to copy'; s.className = ''; }, 3000);
+  }).catch(() => {
+    const s = document.getElementById('status');
+    s.textContent = 'Copy failed — try a different browser.';
+    s.className = 'err';
+  });
+}
+  </script>
+</body>
+</html>
