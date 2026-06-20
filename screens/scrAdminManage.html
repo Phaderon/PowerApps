@@ -419,7 +419,7 @@ const yaml = `Screens:
             - drpRowType:
                 Control: ModernDropdown@1.0.1
                 Properties:
-                  Default: =ThisItem.StaffType.Value
+                  DefaultSelectedItems: ={Value: ThisItem.StaffType.Value}
                   ItemDisplayText: =ThisItem.Value
                   Items: =["Civil Servant","Army","Contractor"]
                   OnChange: |-
@@ -639,7 +639,7 @@ const yaml = `Screens:
       - drpEditRecur:
           Control: ModernDropdown@1.0.1
           Properties:
-            Default: |-
+            DefaultSelectedItems: |-
               =LookUp(
                   Table(
                       {Label: "One-off (never expires)", Months: 0},
