@@ -780,47 +780,48 @@ Navigate(scrMyTraining, ScreenTransition.Cover)</pre>
       <div class="section-header">
         <div class="section-num amber">12</div>
         <div>
-          <h2>ModernDropdown not pre-selecting saved value</h2>
-          <p style="margin:0;color:var(--muted);">scrAdminManage · drpEditRecur · drpRowType · Default</p>
+          <h2>ModernDropdowns not pre-selecting saved values</h2>
+          <p style="margin:0;color:var(--muted);">scrAdminManage · drpRowType · drpEditPersonType · drpEditRecur · Default</p>
         </div>
       </div>
 
       <div class="callout callout-why">
-        <strong>Why the dropdown looks blank</strong>
-        ModernDropdown uses a <code>Default</code> property that takes a record value like <code>&#123;Value: "something"&#125;</code>. That syntax contains <code>: </code> which Power Apps' YAML parser misreads as a mapping — so it can't be set via YAML paste. Set it directly in Studio instead.
+        <strong>Why the dropdowns look blank</strong>
+        ModernDropdown's <code>Default</code> property takes a record like <code>&#123;Value: "Civil Servant"&#125;</code>. That curly-brace syntax breaks Power Apps' own YAML parser when included in a paste, so the Default is intentionally left out of the YAML. You set these three formulas once directly in Studio after pasting — they stay saved to the app.
       </div>
 
-      <h3 style="margin-top:1.5rem;">drpEditRecur — recurrence when editing a course</h3>
-      <p>Click <strong>drpEditRecur</strong> → formula bar → select the <strong>Default</strong> property. Type:</p>
+      <p style="margin-bottom:1rem;">For each one: click the control in the Tree View → click the formula bar → switch the property dropdown (top-left of formula bar) to <strong>Default</strong> → type the formula.</p>
 
-      <div class="code-wrap">
-        <span class="code-label">Default · drpEditRecur</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre>LookUp(
-    Table(
-        {Label: "One-off (never expires)", Months: 0},
-        {Label: "Every 6 months",          Months: 6},
-        {Label: "Every year",              Months: 12},
-        {Label: "Every 18 months",         Months: 18},
-        {Label: "Every 2 years",           Months: 24},
-        {Label: "Every 3 years",           Months: 36}
-    ),
-    Months = varEditCourse.RecurrenceMonths
-)</pre>
-      </div>
-
-      <h3 style="margin-top:1.5rem;">drpRowType — staff type in the People list</h3>
-      <p>If you want to use ModernDropdown (not Classic) for drpRowType, click it in the gallery → formula bar → <strong>Default</strong> property. Type:</p>
+      <h3 style="margin-top:1rem;">1 · drpRowType — staff type shown in the People list rows</h3>
+      <p>This control is inside the <code>galPeople</code> gallery template. Click into the gallery, then click <strong>drpRowType</strong>.</p>
 
       <div class="code-wrap">
         <span class="code-label">Default · drpRowType</span>
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre>{Value: ThisItem.StaffType.Value}</pre>
+        <pre>={Value: ThisItem.StaffType.Value}</pre>
       </div>
 
-      <div class="callout callout-warning">
-        <strong>Classic/DropDown is fine too</strong>
-        The YAML screens use <code>Classic/DropDown</code> for drpRowType because it lets you write <code>Default: =ThisItem.StaffType.Value</code> as a plain string — no record syntax, no YAML parse error. The only difference is the visual style. If you prefer the ModernDropdown look, apply the formula above directly in Studio.
+      <h3 style="margin-top:1.5rem;">2 · drpEditPersonType — staff type in the Edit person panel</h3>
+      <p>This control is at screen level (not inside a gallery). Click <strong>drpEditPersonType</strong> directly in the Tree View.</p>
+
+      <div class="code-wrap">
+        <span class="code-label">Default · drpEditPersonType</span>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+        <pre>={Value: varEditPerson.StaffType.Value}</pre>
+      </div>
+
+      <h3 style="margin-top:1.5rem;">3 · drpEditRecur — recurrence when editing a course</h3>
+      <p>This control is at screen level. Click <strong>drpEditRecur</strong> in the Tree View.</p>
+
+      <div class="code-wrap">
+        <span class="code-label">Default · drpEditRecur</span>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+        <pre>=LookUp(drpEditRecur.Items, Months = varEditCourse.RecurrenceMonths)</pre>
+      </div>
+
+      <div class="callout callout-warning" style="margin-top:1.5rem;">
+        <strong>You only need to do this once</strong>
+        Power Apps saves these formulas to the app when you hit Save. They survive future YAML pastes of other screens. If you ever repaste scrAdminManage itself, you'll need to re-enter these three — that's the only exception.
       </div>
     </section>
 

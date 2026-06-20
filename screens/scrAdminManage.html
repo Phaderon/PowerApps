@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 7 of 7</p>
   <h1>scrAdminManage</h1>
-  <p class="meta">v1.7 &mdash; Edit person panel + Sort fix + drpEditRecur Classic/DropDown · 20 Jun 2026</p>
+  <p class="meta">v1.8 &mdash; All ModernDropdowns + edit person panel + Sort fix · 20 Jun 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -31,7 +31,8 @@
   <p id="status">Ready to copy</p>
   <div class="instructions">
     <strong>How to paste into Power Apps Studio</strong><br>
-    Tree View &rarr; click screen &rarr; Ctrl+A &rarr; Delete &rarr; Ctrl+V.
+    Tree View &rarr; click screen &rarr; Ctrl+A &rarr; Delete &rarr; Ctrl+V.<br><br>
+    <strong>After pasting:</strong> see Fix 12 on the Fixes page for the three Default formulas to set manually.
   </div>
   <script>
 const yaml = `Screens:
@@ -378,10 +379,11 @@ const yaml = `Screens:
             X: =32
             Y: =210
       - drpEditPersonType:
-          Control: Classic/DropDown@2.3.2
+          Control: ModernDropdown@1.0.1
           Properties:
-            Default: =varEditPerson.StaffType.Value
+            ItemDisplayText: =ThisItem.Value
             Items: =["Civil Servant", "Army", "Contractor"]
+            Size: =12
             Visible: =varTab = "People" && !IsBlank(varEditPerson)
             Width: =284
             X: =32
@@ -519,9 +521,9 @@ const yaml = `Screens:
                   X: =16
                   Y: =32
             - drpRowType:
-                Control: Classic/DropDown@2.3.2
+                Control: ModernDropdown@1.0.1
                 Properties:
-                  Default: =ThisItem.StaffType.Value
+                  ItemDisplayText: =ThisItem.Value
                   Items: =["Civil Servant","Army","Contractor"]
                   OnChange: |-
                     =Patch('TT Personnel', ThisItem,
@@ -750,21 +752,20 @@ const yaml = `Screens:
             X: =32
             Y: =234
       - drpEditRecur:
-          Control: Classic/DropDown@2.3.2
+          Control: ModernDropdown@1.0.1
           Properties:
-            Default: |-
-              =Switch(varEditCourse.RecurrenceMonths,
-                  0,  "One-off (never expires)",
-                  6,  "Every 6 months",
-                  12, "Every year",
-                  18, "Every 18 months",
-                  24, "Every 2 years",
-                  36, "Every 3 years",
-                  "Every year"
-              )
+            Height: =40
+            ItemDisplayText: =ThisItem.Label
             Items: |-
-              =["One-off (never expires)", "Every 6 months", "Every year",
-                "Every 18 months", "Every 2 years", "Every 3 years"]
+              =Table(
+                  {Label: "One-off (never expires)", Months: 0},
+                  {Label: "Every 6 months",          Months: 6},
+                  {Label: "Every year",              Months: 12},
+                  {Label: "Every 18 months",         Months: 18},
+                  {Label: "Every 2 years",           Months: 24},
+                  {Label: "Every 3 years",           Months: 36}
+              )
+            Size: =12
             Visible: =varTab = "Courses" && !IsBlank(varEditCourse)
             Width: =198
             X: =434
@@ -779,14 +780,7 @@ const yaml = `Screens:
                   {
                       Title:            Trim(txtEditCourse.Text),
                       ApplicableTo:     ForAll(cmbEditApplic.SelectedItems As T, {Value: T.Value}),
-                      RecurrenceMonths: Switch(drpEditRecur.Selected.Value,
-                                            "One-off (never expires)", 0,
-                                            "Every 6 months",          6,
-                                            "Every year",              12,
-                                            "Every 18 months",         18,
-                                            "Every 2 years",           24,
-                                            "Every 3 years",           36,
-                                            0)
+                      RecurrenceMonths: drpEditRecur.Selected.Months
                   }
               );
               Notify("Course updated. Expiry dates recalculate automatically.",
