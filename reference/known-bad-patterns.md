@@ -39,5 +39,7 @@ These are mistakes that must not reappear in this guide family.
 - Long property lists that mix actual changes with default values without marking which are defaults.
 - Repeating fresh-control defaults from `powerapps-control-defaults.md` as if the user must manually change them.
 - Repeating `Fill=RGBA(0,0,0,0)` on normal Label controls as if it must be manually changed.
+- Repeating `BorderThickness=0` on normal Label controls as if it must be manually changed.
 - Treating a property omitted from the fresh-control export as a guaranteed literal default value.
+- Control rows that say only "see formula below" when the formula can be placed in a collapsed copyable block beside the control.
 - Any instruction that depends on visual guessing rather than exact control names and properties.

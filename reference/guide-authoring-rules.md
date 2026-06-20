@@ -40,8 +40,17 @@ Rules:
 - Use Microsoft Learn defaults where documented, but do not invent defaults when the docs do not state them.
 - Use `powerapps-control-defaults.md` for observed fresh-control defaults from the user's editor. Treat omitted properties as "not serialized on fresh insert", not as proof of a literal value.
 - Do not list `Fill=RGBA(0,0,0,0)` for normal Label controls unless it is marked `leave default` or `default/safety check`.
+- Do not list `BorderThickness=0` for normal Label controls unless it is marked `leave default` or `default/safety check`.
 - Classic visual workarounds may still list apparent defaults when they prevent common mistakes, for example keeping `HoverFill` and `PressedFill` locked to `Fill` on classic Button panel backgrounds.
 - For future app guides, prefer a two-column wording: `Set these` and `Leave/default check`.
+
+## Inline Formula Standard
+
+When a control row needs an `OnSelect`, `Items`, `OnChange`, or similar formula, place a collapsed copyable formula block directly beside or immediately below that control's properties. A separate formula section may remain for scanning, but the builder should not have to scroll away from the control row to copy the formula.
+
+## Row Tracking Standard
+
+Interactive guide tables should mark the row currently being worked on when the builder clicks a copyable pill or formula copy button. The active row should be clearly highlighted, previously copied rows should be visually muted, and each marked row should include a small clear button for accidental clicks.
 
 ## GitHub Pages Layout
 

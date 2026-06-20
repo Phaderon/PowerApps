@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Training Tracker — Power Apps Build Guide — v2.7 — full control clarity and Power Fx audit</title>
+<title>Training Tracker — Power Apps Build Guide — v2.8 — inline formulas and row tracking</title>
 <style>
 :root {
   --bg: #f6efe4;
@@ -367,6 +367,39 @@ td.copy-chip.copied {
   border-color: #7ca447;
   color: #264f09;
 }
+tr.copy-current td {
+  background: #e6f5d8 !important;
+  box-shadow: inset 0 1px 0 rgba(99,153,34,.22), inset 0 -1px 0 rgba(99,153,34,.22);
+}
+tr.copy-done td {
+  background: #f5eedf !important;
+  color: #6b6256;
+}
+tr.copy-current td:last-child,
+tr.copy-done td:last-child {
+  position: relative;
+  padding-right: 42px;
+}
+.row-clear-btn {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(117,80,27,.35);
+  border-radius: 999px;
+  background: rgba(255,255,255,.86);
+  color: #75501b;
+  cursor: pointer;
+  font-weight: 900;
+  line-height: 1;
+}
+.row-clear-btn:hover,
+.row-clear-btn:focus {
+  background: #fff8ea;
+  outline: 2px solid rgba(28,51,82,.25);
+  outline-offset: 1px;
+}
 .code-card {
   margin: 18px 0 24px;
   border-radius: 17px;
@@ -414,6 +447,54 @@ td.copy-chip.copied {
   tab-size: 2;
 }
 .code-card pre.wrap { white-space: pre-wrap; word-break: break-word; }
+.inline-formula {
+  margin: 10px 0 0;
+  border: 1px solid rgba(185,133,47,.34);
+  border-radius: 12px;
+  background: rgba(255,250,241,.86);
+  overflow: hidden;
+}
+.inline-formula summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  cursor: pointer;
+  color: var(--blue);
+  font-weight: 800;
+}
+.inline-formula summary::marker { content: ""; }
+.inline-formula summary::-webkit-details-marker { display: none; }
+.inline-formula .formula-title::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 7px;
+  color: var(--brass-dark);
+  transition: transform .15s ease;
+}
+.inline-formula[open] .formula-title::before { transform: rotate(90deg); }
+.inline-formula .code-card {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid rgba(185,133,47,.3);
+  border-radius: 0;
+  box-shadow: none;
+}
+.inline-formula .code-toolbar {
+  background: #2e261c;
+}
+.inline-formula .copy-btn {
+  flex: 0 0 auto;
+  border: 1px solid rgba(185,133,47,.45);
+  background: #fff8ea;
+  color: var(--blue);
+  border-radius: 8px;
+  padding: 5px 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: .82rem;
+}
 .source-notes {
   margin-top: 24px;
   padding: 18px;
@@ -667,7 +748,7 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <span class="badge">SharePoint Lists</span>
 <span class="badge">Browser guide</span>
 </div>
-<div class="callout"><strong>Updated:</strong> v2.7 full control clarity and Power Fx audit - fixes remaining inline control paragraphs, removes literal references to invalid Power Fx patterns, and tightens gallery/formula scope guidance.</div>
+<div class="callout"><strong>Updated:</strong> v2.8 inline formulas and row tracking - control rows with non-trivial formulas now include collapsed copyable formula blocks beside the control. Clicking a copyable pill or formula copy button marks the active table row green and fades previously copied rows.</div>
 <h1>Training Tracker — Power Apps Build Guide</h1>
 <p>A polished, browser-friendly version of the handoff guide. Code blocks stay intact, have copy buttons, and can be wrapped when you need to read long Power Fx formulas on a narrower screen.</p>
 <div class="actions">
@@ -676,7 +757,7 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <a class="secondary" href="#phase-1-build-the-sharepoint-lists">Jump to Phase 1</a>
 <button class="secondary" onclick="window.print()">Print / save as PDF</button>
 </div>
-<div class="version-panel"><strong>Current guide version:</strong> v2.7 — full control clarity and Power Fx audit<br/><span>If this line does not show v2.7, the work laptop is viewing an older cached copy. Hard refresh with Ctrl+F5.</span><br/><br/><strong>Changed from v2.6:</strong> converted the remaining long inline control paragraphs into property tables, removed literal references to invalid row-index and screen-transition patterns, confirmed modern toggles use <code>Checked</code>, and rechecked nested gallery formulas for explicit aliases or captured row values.</div></section>
+<div class="version-panel"><strong>Current guide version:</strong> v2.8 — inline formulas and row tracking<br/><span>If this line does not show v2.8, the work laptop is viewing an older cached copy. Hard refresh with Ctrl+F5.</span><br/><br/><strong>Changed from v2.7:</strong> added collapsed copyable formula blocks directly beside controls that need Items, OnSelect or OnChange formulas, split course archive formulas into separate gallery/edit-panel copy blocks, recorded Label Fill/BorderThickness default guidance, and added copied-row highlighting so the active property row is easier to follow.</div></section>
 <section aria-label="Build phases" class="phase-grid">
 <a class="phase-card" href="#phase-1-build-the-sharepoint-lists"><span>PHASE 1</span><strong>PHASE 1 — Build the SharePoint lists</strong></a>
 <a class="phase-card" href="#phase-2-app-shell-connections-and-app-onstart"><span>PHASE 2</span><strong>PHASE 2 — App shell, connections and App.OnStart</strong></a>
@@ -1395,6 +1476,10 @@ Set(varPillGrey,     RGBA(241,239,232,1)); Set(varPillGreyTxt,  RGBA(68,68,65,1)
 <td>BasePaletteColor</td>
 <td><code>RGBA(24,95,165,1)</code></td>
 </tr>
+<tr>
+<td>OnSelect</td>
+<td><details class="inline-formula" data-inline-formula="code-text-3"><summary><span class="formula-title">btnRetry.OnSelect</span><button class="copy-btn" data-target="code-text-3" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
+</tr>
 </tbody>
 </table>
 <h3 id="formula-btnretry-onselect"><a aria-label="Link to section" class="anchor" href="#formula-btnretry-onselect">#</a>Formula — btnRetry.OnSelect</h3>
@@ -2033,7 +2118,12 @@ If(
 </tr>
 <tr>
 <td>Items</td>
-<td>(set in formulas section below)</td>
+<td>Use <code>galMyTraining.Items</code>.
+<details class="inline-formula" data-inline-formula="code-text-5"><summary><span class="formula-title">galMyTraining.Items</span><button class="copy-btn" data-target="code-text-5" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
+</tr>
+<tr>
+<td>OnSelect</td>
+<td><details class="inline-formula" data-inline-formula="code-text-6"><summary><span class="formula-title">galMyTraining.OnSelect</span><button class="copy-btn" data-target="code-text-6" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 </tbody>
 </table>
@@ -2922,6 +3012,10 @@ Navigate(scrCourseDetail, ScreenTransition.Cover)</code></pre></div>
 <td>BasePaletteColor</td>
 <td><code>RGBA(24,95,165,1)</code></td>
 </tr>
+<tr>
+<td>OnSelect</td>
+<td><details class="inline-formula" data-inline-formula="code-text-7"><summary><span class="formula-title">btnSaveCert.OnSelect</span><button class="copy-btn" data-target="code-text-7" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
+</tr>
 </tbody>
 </table>
 <h3 id="btncancelcert-button-modern"><a aria-label="Link to section" class="anchor" href="#btncancelcert-button-modern">#</a>btnCancelCert — Button (modern)</h3>
@@ -3049,7 +3143,8 @@ Back()</code></pre></div>
 </tr>
 <tr>
 <td>Items</td>
-<td>(see formula below)</td>
+<td>Use <code>galMyChain.Items</code>.
+<details class="inline-formula" data-inline-formula="code-text-13"><summary><span class="formula-title">galMyChain.Items</span><button class="copy-btn" data-target="code-text-13" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 </tbody>
 </table>
@@ -3067,7 +3162,8 @@ Back()</code></pre></div>
 <tr>
 <td>recRowBG</td>
 <td>Button (classic)</td>
-<td>X=0,Y=0,W=1366,H=63, Text=<code>""</code>, DisplayMode=DisplayMode.View, Fill=<code>If(Mod(Len(ThisItem.Email),2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1))</code>, BorderThickness=0, all radius=0, HoverFill=Self.Fill</td>
+<td>X=0,Y=0,W=1366,H=63, Text=<code>""</code>, DisplayMode=DisplayMode.View, Fill=<code>If(Mod(Len(ThisItem.Email),2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1))</code>, BorderThickness=0, all radius=0, HoverFill=Self.Fill
+<details class="inline-formula" data-inline-formula="code-text-11"><summary><span class="formula-title">recRowBG.OnSelect</span><button class="copy-btn" data-target="code-text-11" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 <tr>
 <td>recIndent</td>
@@ -3102,7 +3198,8 @@ Back()</code></pre></div>
 <tr>
 <td>icoChainChevron</td>
 <td>Icon (classic)</td>
-<td>X=1100,Y=20,W=24,H=24, Icon=<code>If(LookUp(colMyChain,Lower(Email)=Lower(ThisItem.Email),IsExpanded),Icon.ChevronDown,Icon.ChevronRight)</code>, Color=<code>RGBA(170,187,204,1)</code>, Visible=<code>CountRows(Filter(colMyChain,Lower(ManagerEmail)=Lower(ThisItem.Email)))&gt;0</code></td>
+<td>X=1100,Y=20,W=24,H=24, Icon=<code>If(LookUp(colMyChain,Lower(Email)=Lower(ThisItem.Email),IsExpanded),Icon.ChevronDown,Icon.ChevronRight)</code>, Color=<code>RGBA(170,187,204,1)</code>, Visible=<code>CountRows(Filter(colMyChain,Lower(ManagerEmail)=Lower(ThisItem.Email)))&gt;0</code>
+<details class="inline-formula" data-inline-formula="code-text-10"><summary><span class="formula-title">icoChainChevron.OnSelect</span><button class="copy-btn" data-target="code-text-10" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 </tbody>
 </table>
@@ -3329,7 +3426,8 @@ If(
 </tbody></table>
 <h4>btnExportPDF — Button (modern)</h4>
 <table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>
-<tr><td>X</td><td>1186</td></tr><tr><td>Y</td><td>16</td></tr><tr><td>Width</td><td>164</td></tr><tr><td>Height</td><td>40</td></tr><tr><td>Text</td><td><code>"Export PDF"</code></td></tr><tr><td>FontSize</td><td>12</td></tr><tr><td>BasePaletteColor</td><td><code>RGBA(230,241,251,1)</code></td></tr><tr><td>Color</td><td><code>RGBA(12,68,124,1)</code></td></tr><tr><td>OnSelect</td><td>Set later in Phase 10: <code>btnExportPDF.OnSelect</code></td></tr>
+<tr><td>X</td><td>1186</td></tr><tr><td>Y</td><td>16</td></tr><tr><td>Width</td><td>164</td></tr><tr><td>Height</td><td>40</td></tr><tr><td>Text</td><td><code>"Export PDF"</code></td></tr><tr><td>FontSize</td><td>12</td></tr><tr><td>BasePaletteColor</td><td><code>RGBA(230,241,251,1)</code></td></tr><tr><td>Color</td><td><code>RGBA(12,68,124,1)</code></td></tr><tr><td>OnSelect</td><td>Set later in Phase 10 after the flow is connected.
+<details class="inline-formula" data-inline-formula="code-text-27"><summary><span class="formula-title">btnExportPDF.OnSelect</span><button class="copy-btn" data-target="code-text-27" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td></tr>
 </tbody></table>
 <h3 id="four-stat-cards"><a aria-label="Link to section" class="anchor" href="#four-stat-cards">#</a>Four stat cards</h3>
 <p><strong>Build four new stat card groups on <code>scrAdminDash</code>.</strong> Do not go back to Phase 4. Each stat card is made from <strong>one classic Button</strong> used as the white rounded card background, plus <strong>two Text labels</strong> sitting on top of it.</p>
@@ -3395,7 +3493,9 @@ If(
 <h3 id="drptypefilter-dropdown-modern"><a aria-label="Link to section" class="anchor" href="#drptypefilter-dropdown-modern">#</a>drpTypeFilter — Dropdown (modern)</h3>
 <p>X=532, Y=202, W=200, H=40, Items=<code>["All", "Civil Servant", "Army", "Contractor"]</code>, FontSize=12</p>
 <h3 id="galcompliance-gallery-vertical-blank"><a aria-label="Link to section" class="anchor" href="#galcompliance-gallery-vertical-blank">#</a>galCompliance — Gallery (vertical, blank)</h3>
-<p>X=0, Y=258, W=900, H=510, TemplateSize=60, TemplatePadding=0, ShowScrollbar=true, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0, Items: see formula below</p>
+<p>X=0, Y=258, W=900, H=510, TemplateSize=60, TemplatePadding=0, ShowScrollbar=true, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0.</p>
+<details class="inline-formula" data-inline-formula="code-text-14"><summary><span class="formula-title">galCompliance.Items</span><button class="copy-btn" data-target="code-text-14" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details>
+<details class="inline-formula" data-inline-formula="code-text-15"><summary><span class="formula-title">galCompliance.OnSelect</span><button class="copy-btn" data-target="code-text-15" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details>
 <p>Inside galCompliance template:</p>
 <div class="layer-note"><strong>Layer order:</strong> <code>recRowBG</code> is the row background and must sit behind every label/icon in the template. <code>recBarBack</code> is the progress-bar background and must sit behind <code>recBarFill</code>.</div>
 <table>
@@ -3495,7 +3595,8 @@ If(
 <tr>
 <td>tglManagerEdit</td>
 <td>Toggle (modern)</td>
-<td>X=1160,Y=326,W=160,H=28, Checked=<code>varDrillPerson.ManagerEdit</code> — OnChange: see formula below</td>
+<td>X=1160,Y=326,W=160,H=28, Checked=<code>varDrillPerson.ManagerEdit</code>
+<details class="inline-formula" data-inline-formula="code-text-16"><summary><span class="formula-title">tglManagerEdit.OnChange</span><button class="copy-btn" data-target="code-text-16" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 <tr>
 <td>icoCloseDrill</td>
@@ -3785,7 +3886,8 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 <tr>
 <td>btnPullDetails</td>
 <td>Button (modern)</td>
-<td>X=470,Y=258,W=152,H=40, Text=<code>"Pull details"</code>, FontSize=11, BasePaletteColor=<code>RGBA(244,246,248,1)</code>, Color=<code>RGBA(24,95,165,1)</code>, OnSelect: use the formula below</td>
+<td>X=470,Y=258,W=152,H=40, Text=<code>"Pull details"</code>, FontSize=11, BasePaletteColor=<code>RGBA(244,246,248,1)</code>, Color=<code>RGBA(24,95,165,1)</code>
+<details class="inline-formula" data-inline-formula="code-text-18"><summary><span class="formula-title">btnPullDetails.OnSelect</span><button class="copy-btn" data-target="code-text-18" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 <tr>
 <td>txtManualName</td>
@@ -3815,7 +3917,8 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 <tr>
 <td>btnAddPerson</td>
 <td>Button (modern)</td>
-<td>X=32,Y=444,W=590,H=44, Text=<code>"Add to system"</code>, FontSize=13, FontWeight=<code>FontWeight.Bold</code>, BasePaletteColor=<code>RGBA(24,95,165,1)</code>, OnSelect: use the formula below</td>
+<td>X=32,Y=444,W=590,H=44, Text=<code>"Add to system"</code>, FontSize=13, FontWeight=<code>FontWeight.Bold</code>, BasePaletteColor=<code>RGBA(24,95,165,1)</code>
+<details class="inline-formula" data-inline-formula="code-text-19"><summary><span class="formula-title">btnAddPerson.OnSelect</span><button class="copy-btn" data-target="code-text-19" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 </tbody>
 </table>
@@ -3865,7 +3968,8 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 <tr>
 <td>drpRowType</td>
 <td>Dropdown (modern)</td>
-<td>X=346,Y=14,W=170,H=32, Items=<code>["Civil Servant","Army","Contractor"]</code>, Default=<code>ThisItem.StaffType.Value</code>, FontSize=10 — OnChange: see formula</td>
+<td>X=346,Y=14,W=170,H=32, Items=<code>["Civil Servant","Army","Contractor"]</code>, Default=<code>ThisItem.StaffType.Value</code>, FontSize=10
+<details class="inline-formula" data-inline-formula="code-text-20"><summary><span class="formula-title">drpRowType.OnChange</span><button class="copy-btn" data-target="code-text-20" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 <tr>
 <td>lblAdminBadge</td>
@@ -3875,7 +3979,8 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 <tr>
 <td>icoRemove</td>
 <td>Icon (classic)</td>
-<td>X=600,Y=18,W=24,H=24, Icon=<code>Icon.Trash</code>, Color=<code>If(varConfirmRemove=ThisItem.ID,RGBA(226,75,74,1),RGBA(170,187,204,1))</code> — OnSelect: see formula</td>
+<td>X=600,Y=18,W=24,H=24, Icon=<code>Icon.Trash</code>, Color=<code>If(varConfirmRemove=ThisItem.ID,RGBA(226,75,74,1),RGBA(170,187,204,1))</code>
+<details class="inline-formula" data-inline-formula="code-text-21"><summary><span class="formula-title">icoRemove.OnSelect</span><button class="copy-btn" data-target="code-text-21" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 </tbody>
 </table>
@@ -4011,12 +4116,14 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 <tr>
 <td>drpNewRecur</td>
 <td>Dropdown (modern)</td>
-<td>X=434,Y=234,W=198,H=40, FontSize=12, Items: use the <code>drpNewRecur.Items</code> formula below, ItemDisplayText=<code>ThisItem.Label</code></td>
+<td>X=434,Y=234,W=198,H=40, FontSize=12, Items: use <code>drpNewRecur.Items</code>, ItemDisplayText=<code>ThisItem.Label</code>
+<details class="inline-formula" data-inline-formula="code-text-22"><summary><span class="formula-title">drpNewRecur.Items</span><button class="copy-btn" data-target="code-text-22" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 <tr>
 <td>btnAddCourse</td>
 <td>Button (modern)</td>
-<td>X=32,Y=284,W=600,H=44, Text=<code>"Add course"</code>, FontSize=13, FontWeight=<code>FontWeight.Bold</code>, BasePaletteColor=<code>RGBA(24,95,165,1)</code>, OnSelect: use the formula below</td>
+<td>X=32,Y=284,W=600,H=44, Text=<code>"Add course"</code>, FontSize=13, FontWeight=<code>FontWeight.Bold</code>, BasePaletteColor=<code>RGBA(24,95,165,1)</code>
+<details class="inline-formula" data-inline-formula="code-text-23"><summary><span class="formula-title">btnAddCourse.OnSelect</span><button class="copy-btn" data-target="code-text-23" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 </tbody>
 </table>
@@ -4069,12 +4176,14 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 <tr>
 <td>drpEditRecur</td>
 <td>Dropdown (modern)</td>
-<td>Use the same <code>Table(...)</code> formula shown in <code>drpNewRecur.Items</code> below. Set ItemDisplayText=<code>ThisItem.Label</code>.</td>
+<td>Use the same <code>Table(...)</code> formula as <code>drpNewRecur.Items</code>. Set ItemDisplayText=<code>ThisItem.Label</code>.
+<details class="inline-formula" data-inline-formula="code-text-22"><summary><span class="formula-title">drpEditRecur.Items</span><button class="copy-btn" data-target="code-text-22" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 <tr>
 <td>btnSaveCourse</td>
 <td>Button (modern)</td>
-<td>X=32,Y=282,W=290,H=44, Text=<code>"Save changes"</code>, FontSize=13, BasePaletteColor=<code>RGBA(24,95,165,1)</code>, OnSelect: see formula</td>
+<td>X=32,Y=282,W=290,H=44, Text=<code>"Save changes"</code>, FontSize=13, BasePaletteColor=<code>RGBA(24,95,165,1)</code>
+<details class="inline-formula" data-inline-formula="code-text-24"><summary><span class="formula-title">btnSaveCourse.OnSelect</span><button class="copy-btn" data-target="code-text-24" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 <tr>
 <td>btnCancelEdit</td>
@@ -4084,7 +4193,8 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 <tr>
 <td>btnArchive</td>
 <td>Button (modern)</td>
-<td>X=488,Y=282,W=144,H=44, Text=<code>"Archive"</code>, BasePaletteColor=<code>RGBA(255,240,240,1)</code>, Color=<code>RGBA(163,45,45,1)</code>, OnSelect: see formula</td>
+<td>X=488,Y=282,W=144,H=44, Text=<code>"Archive"</code>, BasePaletteColor=<code>RGBA(255,240,240,1)</code>, Color=<code>RGBA(163,45,45,1)</code>
+<details class="inline-formula" data-inline-formula="code-text-28"><summary><span class="formula-title">btnArchive.OnSelect</span><button class="copy-btn" data-target="code-text-28" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 </tbody>
 </table>
@@ -4145,12 +4255,14 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 <tr>
 <td>icoArchiveCourse</td>
 <td>Icon (classic)</td>
-<td>X=534,Y=20,W=24,H=24, Icon=<code>Icon.Trash</code>, Color=<code>If(varConfirmArchive=ThisItem.ID,RGBA(226,75,74,1),RGBA(170,187,204,1))</code>, Visible=<code>ThisItem.Status.Value="Active"</code>, OnSelect: see formula</td>
+<td>X=534,Y=20,W=24,H=24, Icon=<code>Icon.Trash</code>, Color=<code>If(varConfirmArchive=ThisItem.ID,RGBA(226,75,74,1),RGBA(170,187,204,1))</code>, Visible=<code>ThisItem.Status.Value="Active"</code>
+<details class="inline-formula" data-inline-formula="code-text-25"><summary><span class="formula-title">icoArchiveCourse.OnSelect</span><button class="copy-btn" data-target="code-text-25" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 <tr>
 <td>icoRestoreCourse</td>
 <td>Icon (classic)</td>
-<td>X=534,Y=20,W=24,H=24, Icon=<code>Icon.Redo</code>, Color=<code>RGBA(24,95,165,1)</code>, Visible=<code>ThisItem.Status.Value="Archived"</code>, OnSelect: see formula</td>
+<td>X=534,Y=20,W=24,H=24, Icon=<code>Icon.Redo</code>, Color=<code>RGBA(24,95,165,1)</code>, Visible=<code>ThisItem.Status.Value="Archived"</code>
+<details class="inline-formula" data-inline-formula="code-text-26"><summary><span class="formula-title">icoRestoreCourse.OnSelect</span><button class="copy-btn" data-target="code-text-26" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 </tbody>
 </table>
@@ -4231,9 +4343,8 @@ Notify("Course updated. Expiry dates recalculate automatically.",
        NotificationType.Success);
 ClearCollect(colCourses, 'TT Courses');
 Set(varEditCourse, Blank())</code></pre></div>
-<p><strong>icoArchiveCourse.OnSelect and btnArchive.OnSelect</strong> — use the matching block below. Do not paste the edit-panel formula into the gallery icon.</p>
-<div class="code-card" id="code-25"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-25" type="button">Wrap</button><button class="copy-btn" data-target="code-text-25" type="button">Copy</button></div></div><pre id="code-pre-25"><code id="code-text-25">// Use this formula for icoArchiveCourse.OnSelect inside galCourses
-If(
+<p><strong>icoArchiveCourse.OnSelect</strong> — use this only for the gallery archive icon.</p>
+<div class="code-card" id="code-25"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-25" type="button">Wrap</button><button class="copy-btn" data-target="code-text-25" type="button">Copy</button></div></div><pre id="code-pre-25"><code id="code-text-25">If(
     varConfirmArchive = ThisItem.ID,
     Patch('TT Courses', ThisItem, {Status: {Value: "Archived"}});
     Set(varConfirmArchive, Blank());
@@ -4241,10 +4352,9 @@ If(
     Notify("Course archived. Records and certificates kept forever.", NotificationType.Success),
     Set(varConfirmArchive, ThisItem.ID);
     Notify("Tap the bin again to confirm archiving " &amp; ThisItem.Title &amp; ".", NotificationType.Warning)
-)
-
-// Use this formula for btnArchive.OnSelect in the edit panel
-If(
+)</code></pre></div>
+<p><strong>btnArchive.OnSelect</strong> — use this only for the edit-panel Archive button.</p>
+<div class="code-card" id="code-28"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-28" type="button">Wrap</button><button class="copy-btn" data-target="code-text-28" type="button">Copy</button></div></div><pre id="code-pre-28"><code id="code-text-28">If(
     varConfirmArchive = varEditCourse.ID,
     Patch('TT Courses', varEditCourse, {Status: {Value: "Archived"}});
     Set(varConfirmArchive, Blank());
@@ -4472,7 +4582,7 @@ Notify("Report sent — check your inbox in ~30 seconds.", NotificationType.Succ
 </div>
 </details>
 </article>
-<p class="footer">Generated from the uploaded Markdown handoff. Current HTML guide version: v2.7 — full control clarity and Power Fx audit. Standalone HTML: no external scripts, fonts, or tracking.</p>
+<p class="footer">Generated from the uploaded Markdown handoff. Current HTML guide version: v2.8 — inline formulas and row tracking. Standalone HTML: no external scripts, fonts, or tracking.</p>
 </main>
 </div>
 <a aria-label="Back to top" class="to-top" href="#top">↑</a>
@@ -4524,6 +4634,50 @@ function enhanceInlineCopyTargets(root = document) {
   });
 }
 
+function clearRowMarker(row) {
+  if (!row) return;
+  row.classList.remove('copy-current', 'copy-done');
+  row.querySelectorAll('.row-clear-btn').forEach(btn => btn.remove());
+}
+
+function ensureRowClearButton(row) {
+  const lastCell = row ? row.querySelector('td:last-child') : null;
+  if (!lastCell || lastCell.querySelector('.row-clear-btn')) return;
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'row-clear-btn';
+  btn.setAttribute('aria-label', 'Clear row marker');
+  btn.title = 'Clear row marker';
+  btn.textContent = 'x';
+  lastCell.appendChild(btn);
+}
+
+function markCopiedRow(element) {
+  const row = element ? element.closest('tr') : null;
+  if (!row || !document.body.contains(row)) return;
+
+  document.querySelectorAll('tr.copy-current').forEach(active => {
+    if (active !== row) {
+      active.classList.remove('copy-current');
+      active.classList.add('copy-done');
+      ensureRowClearButton(active);
+    }
+  });
+
+  row.classList.remove('copy-done');
+  row.classList.add('copy-current');
+  ensureRowClearButton(row);
+}
+
+document.addEventListener('click', event => {
+  const clear = event.target.closest('.row-clear-btn');
+  if (!clear) return;
+  event.preventDefault();
+  event.stopPropagation();
+  clearRowMarker(clear.closest('tr'));
+});
+
 document.addEventListener('click', async event => {
   const target = event.target.closest('code.copy-chip, td.copy-chip');
   if (!target || !document.body.contains(target)) return;
@@ -4531,6 +4685,7 @@ document.addEventListener('click', async event => {
   if (!text) return;
   const ok = await writeClipboard(text);
   if (ok) {
+    markCopiedRow(target);
     target.classList.add('copied');
     showCopyToast(`Copied: ${text.length > 42 ? text.slice(0, 39) + '...' : text}`);
     setTimeout(() => target.classList.remove('copied'), 900);
@@ -4547,30 +4702,76 @@ document.addEventListener('keydown', event => {
   target.click();
 });
 
-const copyButtons = document.querySelectorAll('.copy-btn');
-copyButtons.forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const target = document.getElementById(btn.dataset.target);
-    const text = target ? target.innerText : '';
-    try {
-      await navigator.clipboard.writeText(text);
-      const old = btn.textContent;
-      btn.textContent = 'Copied';
-      setTimeout(() => btn.textContent = old, 1200);
-    } catch (e) {
-      btn.textContent = 'Select manually';
-      setTimeout(() => btn.textContent = 'Copy', 1600);
-    }
-  });
+document.addEventListener('click', async event => {
+  const btn = event.target.closest('.copy-btn');
+  if (!btn || !document.body.contains(btn)) return;
+  event.preventDefault();
+  event.stopPropagation();
+
+  const target = document.getElementById(btn.dataset.target);
+  const text = target ? target.innerText : '';
+  const ok = await writeClipboard(text);
+  const old = btn.textContent;
+  if (ok) {
+    markCopiedRow(btn);
+    btn.textContent = 'Copied';
+    showCopyToast('Copied formula');
+    setTimeout(() => btn.textContent = old, 1200);
+  } else {
+    btn.textContent = 'Select manually';
+    showCopyToast('Copy failed');
+    setTimeout(() => btn.textContent = old, 1600);
+  }
 });
 
-document.querySelectorAll('.wrap-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const pre = document.getElementById(btn.dataset.target);
-    if (!pre) return;
-    pre.classList.toggle('wrap');
-    btn.textContent = pre.classList.contains('wrap') ? 'No wrap' : 'Wrap';
-  });
+document.querySelectorAll('[data-inline-formula]').forEach((details, index) => {
+  const source = document.getElementById(details.dataset.inlineFormula);
+  const body = details.querySelector('.inline-formula-body');
+  if (!source || !body) return;
+
+  const preId = `inline-formula-pre-${index + 1}`;
+  const code = document.createElement('code');
+  code.textContent = source.innerText;
+
+  const pre = document.createElement('pre');
+  pre.id = preId;
+  pre.appendChild(code);
+
+  const wrap = document.createElement('button');
+  wrap.className = 'wrap-btn';
+  wrap.dataset.target = preId;
+  wrap.type = 'button';
+  wrap.textContent = 'Wrap';
+
+  const actions = document.createElement('div');
+  actions.appendChild(wrap);
+
+  const title = document.createElement('span');
+  title.textContent = 'Power Fx / formula';
+
+  const toolbar = document.createElement('div');
+  toolbar.className = 'code-toolbar';
+  toolbar.appendChild(title);
+  toolbar.appendChild(actions);
+
+  const card = document.createElement('div');
+  card.className = 'code-card';
+  card.appendChild(toolbar);
+  card.appendChild(pre);
+
+  body.appendChild(card);
+});
+
+document.addEventListener('click', event => {
+  const btn = event.target.closest('.wrap-btn');
+  if (!btn || !document.body.contains(btn)) return;
+  event.preventDefault();
+  event.stopPropagation();
+
+  const pre = document.getElementById(btn.dataset.target);
+  if (!pre) return;
+  pre.classList.toggle('wrap');
+  btn.textContent = pre.classList.contains('wrap') ? 'No wrap' : 'Wrap';
 });
 
 const links = [...document.querySelectorAll('.toc a')];

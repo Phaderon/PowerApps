@@ -75,6 +75,8 @@ Use Microsoft Learn defaults where documented. If Microsoft Learn does not docum
 
 Fresh Label controls in the user's live editor do not need `Fill=RGBA(0,0,0,0)` set manually when the goal is a normal transparent label over the screen/card background. The defaults lab did not serialize `Fill` for a fresh standalone Label, and the user confirmed the live editor already shows the intended default state. Future guide rows should omit label `Fill=RGBA(0,0,0,0)` unless transparency is a safety-critical reminder, in which case label it `leave default` or `default/safety check`.
 
+Fresh Label controls in the user's live editor also default to `BorderThickness=0`. The defaults lab did not serialize `BorderThickness` for a fresh standalone Label, and the user confirmed the live editor shows `0`. Do not make `BorderThickness=0` a manual Label step unless it is a labelled safety check.
+
 ## Sort Order Enum
 
 Use:
