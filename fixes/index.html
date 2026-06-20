@@ -415,7 +415,12 @@ pre {
 
       <p>The fix is a hidden <strong>Timer</strong> control. The timer fires automatically 1 millisecond after the screen loads, then the Navigate call goes inside the timer's <code>OnTimerEnd</code> instead of <code>OnVisible</code>. The screen loads first, then the timer fires, then the navigation happens — no loop.</p>
 
-      <h3 id="fix1-steps" style="margin:22px 0 14px;color:var(--blue);">Step-by-step — do this once per affected screen</h3>
+      <div class="callout callout-warning">
+        <strong>Important — one timer per screen</strong>
+        You need to add a <strong>separate timer to each of the three screens</strong>: scrStart, scrAdminDash, and scrAdminManage. A timer only works on the screen it lives on. Follow steps 1–6 three times — once on each screen — then paste the correct formula for that screen in step 5.
+      </div>
+
+      <h3 id="fix1-steps" style="margin:22px 0 14px;color:var(--blue);">Step-by-step — repeat on each of the three screens</h3>
 
       <div class="steps">
         <div class="step">
@@ -479,8 +484,8 @@ pre {
       </div>
 
       <!-- scrStart -->
-      <div class="screen-divider" id="fix1-scrstart">scrStart — OnTimerEnd formula</div>
-      <p>Paste this into <code>tmrNav → OnTimerEnd</code> on <strong>scrStart</strong>. Then make sure <code>scrStart → OnVisible</code> is empty (or has no Navigate lines).</p>
+      <div class="screen-divider" id="fix1-scrstart">Screen 1 of 3 — scrStart</div>
+      <p>Go to <strong>scrStart</strong>. Add a timer there following steps 1–6 above. In step 5, paste this formula into that timer's <code>OnTimerEnd</code>. Then delete the Navigate lines from <code>scrStart → OnVisible</code>.</p>
       <div class="code-wrap">
         <span class="code-label">OnTimerEnd · scrStart</span>
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
@@ -492,8 +497,8 @@ pre {
       </div>
 
       <!-- scrAdminDash -->
-      <div class="screen-divider" id="fix1-admindash">scrAdminDash — OnTimerEnd formula</div>
-      <p>Paste this into <code>tmrNav → OnTimerEnd</code> on <strong>scrAdminDash</strong>. The <code>ClearCollect</code> calls stay in <code>OnVisible</code> — don't touch them.</p>
+      <div class="screen-divider" id="fix1-admindash">Screen 2 of 3 — scrAdminDash</div>
+      <p>Go to <strong>scrAdminDash</strong>. Add a second, separate timer to this screen following steps 1–6. In step 5, paste this formula into that timer's <code>OnTimerEnd</code>. The <code>ClearCollect</code> calls already in <code>OnVisible</code> stay exactly where they are — only the Navigate line gets removed.</p>
       <div class="code-wrap">
         <span class="code-label">OnTimerEnd · scrAdminDash</span>
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
@@ -501,8 +506,8 @@ pre {
       </div>
 
       <!-- scrAdminManage -->
-      <div class="screen-divider" id="fix1-adminmanage">scrAdminManage — OnTimerEnd formula</div>
-      <p>Paste this into <code>tmrNav → OnTimerEnd</code> on <strong>scrAdminManage</strong>. Again, all <code>ClearCollect</code> and other lines stay in <code>OnVisible</code>.</p>
+      <div class="screen-divider" id="fix1-adminmanage">Screen 3 of 3 — scrAdminManage</div>
+      <p>Go to <strong>scrAdminManage</strong>. Add a third, separate timer to this screen following steps 1–6. In step 5, paste this formula into that timer's <code>OnTimerEnd</code>. All <code>ClearCollect</code> and other lines stay in <code>OnVisible</code> — only the Navigate line gets removed.</p>
       <div class="code-wrap">
         <span class="code-label">OnTimerEnd · scrAdminManage</span>
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
