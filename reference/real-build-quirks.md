@@ -30,11 +30,28 @@ Any classic Button used as a visual background must sit behind the controls it s
 
 In guide tables, place background controls before the controls that sit on top of them, and add a highlighted layer note when the order matters. If a background covers labels, inputs, icons or buttons in Power Apps, use Send to back or move it to the bottom/back of that screen, group, or gallery template before continuing.
 
+For user-facing build guides, do not rely on table order alone. If a panel background appears first in a properties table, add a "Recommended build order" note that tells the builder to either:
+
+- build the visible controls first, then create/send the panel background to the back, or
+- build the panel first, then send it to the back after the visible controls are added.
+
 For progress bars, the background bar must sit behind the fill bar:
 
 ```text
 recBarBack behind recBarFill
 ```
+
+## Temporary Formula Errors
+
+Power Apps can show red-line formula errors while the builder is still partway through a phase and referenced controls, variables, or collections do not exist yet.
+
+Future guides must call this out explicitly near the formula. Use this wording pattern:
+
+```text
+Temporary red-line note: this formula may complain until [control/collection/variable] exists. Finish this phase first, then recheck.
+```
+
+If a formula still red-lines after every control and formula in that phase is complete, treat it as a real issue.
 
 ## Sort Order Enum
 

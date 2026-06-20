@@ -66,9 +66,21 @@ Rules:
 
 - Put the background control first in the table for that panel/template.
 - Add a highlighted layer note before the table when order matters.
+- Use "Recommended build order" wording when table order could make the builder leave a background on top of visible controls.
 - State what must sit on top of it.
 - For progress bars, explicitly say the background bar sits behind the fill bar.
 - If a future guide has a tree/grouping section, include the background control in the group list but make clear it must be sent behind the visible controls.
+
+## Temporary Error Standard
+
+If a formula might red-line because a referenced control, collection, variable, flow, or data source is created later in the same phase, add a note directly before that formula.
+
+The note must say:
+
+- what may red-line,
+- what missing thing causes it,
+- when to recheck it,
+- and when to treat it as a real error.
 
 ## Landing Page Rule
 

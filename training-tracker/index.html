@@ -680,6 +680,7 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <p><strong>Format:</strong> Tablet canvas app, 1366×768. Modern controls enabled.</p>
 <h3 id="layer-order-checklist"><a aria-label="Link to section" class="anchor" href="#layer-order-checklist">#</a>Layer order checklist</h3>
 <div class="layer-note"><strong>Use this if something disappears behind a panel.</strong> Background controls should be created first, then labels/inputs/icons/buttons should sit on top. If a background covers later controls, use Send to back or move it to the bottom/back of that screen, group, or gallery template.</div>
+<div class="layer-note"><strong>Practical build rule:</strong> when a table lists a background panel first, do not treat that as "leave it on top." Either build the visible controls first and then create/send the background panel to the back, or build the panel first and immediately Send to back after the visible controls are added.</div>
 <table>
 <thead>
 <tr>
@@ -776,6 +777,8 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 </tr>
 </tbody>
 </table>
+<h3 id="temporary-red-line-errors"><a aria-label="Link to section" class="anchor" href="#temporary-red-line-errors">#</a>Temporary red-line errors</h3>
+<div class="layer-note"><strong>Do not panic if a formula red-lines before the whole phase is built.</strong> A formula can show an error while a referenced control, collection or variable has not been created yet. When that is expected, the guide now calls it out. If a formula still red-lines after all controls and formulas in that phase are complete, then treat it as a real issue.</div>
 <h3 id="what-the-finished-app-does"><a aria-label="Link to section" class="anchor" href="#what-the-finished-app-does">#</a>What the finished app does</h3>
 <table>
 <thead>
@@ -3723,7 +3726,7 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 <div class="callout"><strong>Do not create <code>grpPeople</code> yet.</strong> Build all People controls below first, then the guide gives you the exact group list.</div>
 
 <h3 id="add-person-panel"><a aria-label="Link to section" class="anchor" href="#add-person-panel">#</a>Add person panel</h3>
-<div class="layer-note"><strong>Layer order:</strong> <code>recAddPanel</code> is the white panel background. It must sit behind every Add person control. If it appears on top, use Send to back, or move it to the bottom/back of the Add person controls in the tree before grouping.</div>
+<div class="layer-note"><strong>Recommended build order:</strong> create the visible Add person controls, then create <code>recAddPanel</code> and immediately Send to back. If you already created <code>recAddPanel</code> first, that is fine, but send it behind every Add person control before grouping.</div>
 <table>
 <thead>
 <tr>
@@ -3954,7 +3957,7 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 <h1 id="phase-9-scradminmanage-courses-tab"><span class="phase-kicker">Build phase</span><a aria-label="Link to section" class="anchor" href="#phase-9-scradminmanage-courses-tab">#</a>PHASE 9 — scrAdminManage · Courses tab</h1>
 <p>Build the Courses controls on the same screen as the People controls. <strong>Do not create <code>grpCourses</code> yet.</strong> Build all controls in this phase first, then group them at the end of the controls section using the exact list provided.</p>
 <h3 id="add-course-panel"><a aria-label="Link to section" class="anchor" href="#add-course-panel">#</a>Add course panel</h3>
-<div class="layer-note"><strong>Layer order:</strong> <code>recAddCoursePanel</code> is the white panel background. It must sit behind the Add course title, inputs, dropdowns, combo box and button. If it covers them, send it to the back before grouping.</div>
+<div class="layer-note"><strong>Recommended build order:</strong> create the visible Add course controls, then create <code>recAddCoursePanel</code> and immediately Send to back. If it already exists, send it behind the Add course title, inputs, dropdowns, combo box and button before grouping.</div>
 <table>
 <thead>
 <tr>
@@ -3997,7 +4000,7 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 </tbody>
 </table>
 <h3 id="edit-panel-shown-when-vareditcourse-is-set"><a aria-label="Link to section" class="anchor" href="#edit-panel-shown-when-vareditcourse-is-set">#</a>Edit panel — shown when varEditCourse is set</h3>
-<div class="layer-note"><strong>Layer order:</strong> <code>recEditPanel</code> is the edit panel background. It must sit behind all edit-panel controls. Keep it behind <code>txtEditCourse</code>, <code>cmbEditApplic</code>, <code>drpEditRecur</code> and the edit buttons.</div>
+<div class="layer-note"><strong>Recommended build order:</strong> create the edit-panel controls first, then create <code>recEditPanel</code> and immediately Send to back. If you already created <code>recEditPanel</code> first, send it behind <code>txtEditCourse</code>, <code>cmbEditApplic</code>, <code>drpEditRecur</code> and the edit buttons before continuing.</div>
 <table>
 <thead>
 <tr>
@@ -4162,6 +4165,7 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 <div class="callout"><strong>Do not include:</strong> <code>btnTabPeople</code>, <code>btnTabCourses</code>, <code>recAdminManageHeader</code>, <code>icoAdminManageBack</code>, or <code>lblManageTitle</code>. Those must stay visible regardless of selected tab.</div>
 
 <h3 id="formulas-courses-tab"><a aria-label="Link to section" class="anchor" href="#formulas-courses-tab">#</a>Formulas — Courses tab</h3>
+<div class="layer-note"><strong>Temporary red-line note:</strong> the recurrence dropdown formulas depend on <code>drpNewRecur</code> and <code>drpEditRecur</code> existing with the <code>Table(...)</code> Items formula and <code>ItemDisplayText=ThisItem.Label</code>. If a save formula complains before both dropdowns are configured, finish this section first and recheck afterwards.</div>
 <p><strong>drpNewRecur.Items (paste same formula into drpEditRecur.Items)</strong></p>
 <div class="code-card" id="code-22"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-22" type="button">Wrap</button><button class="copy-btn" data-target="code-text-22" type="button">Copy</button></div></div><pre id="code-pre-22"><code id="code-text-22">Table(
     {Label: "One-off (never expires)", Months: 0},
@@ -4426,6 +4430,7 @@ Notify("Report sent — check your inbox in ~30 seconds.", NotificationType.Succ
 <ul>
 <li><strong>Rounded corners</strong>: Power Apps rectangles have NO radius property. Every "card" or "rounded panel" in this guide is built using a <strong>classic Button control</strong> with <code>Text=""</code>, <code>DisplayMode=DisplayMode.View</code>, <code>HoverFill</code> and <code>PressedFill</code> locked to match <code>Fill</code> (to prevent hover-darkening), and then <code>RadiusTopLeft</code>/<code>RadiusTopRight</code>/<code>RadiusBottomLeft</code>/<code>RadiusBottomRight</code> set normally. Never suggest using Insert → Rectangle for anything that needs rounded corners.</li>
 <li><strong>Layer order matters</strong>: any classic Button used as a card, panel, row background, indentation strip, or progress-bar background must sit behind the controls it visually supports. If it covers labels, inputs, icons or buttons, use Send to back or move it to the bottom/back of that screen/group/gallery template before continuing.</li>
+<li><strong>Temporary formula errors</strong>: some formulas can show red lines until the referenced controls, collections or variables later in the same phase exist. If the guide marks an error as temporary, finish that phase before troubleshooting it. If it still red-lines after the phase is complete, treat it as real.</li>
 <li><strong>List names</strong>: All three SharePoint list names contain spaces and must be wrapped in single quotes in every formula: <code>'TT Personnel'</code>, <code>'TT Courses'</code>, <code>'TT TrainingRecords'</code>. This is not optional and not a style choice — Power Fx requires it for any identifier containing a space.</li>
 <li><strong>Sort order</strong>: Always the full enum prefix — <code>SortOrder.Ascending</code> or <code>SortOrder.Descending</code>. Never bare <code>Ascending</code>/<code>Descending</code>.</li>
 <li><strong>DateAdd day filters</strong>: in this tenant/editor, the expiring-soon filters accepted <code>"Days"</code> as the day unit. Preserve that exact quoted value in the Training Tracker formulas unless the live editor is rechecked.</li>

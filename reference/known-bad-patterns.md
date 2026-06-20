@@ -34,4 +34,5 @@ These are mistakes that must not reappear in this guide family.
 - “Use the same technique.”
 - Long inline control paragraphs that hide exact properties.
 - Background/card/panel/gallery-row controls without a layer-order note when they can cover other controls.
+- Formulas that may temporarily red-line without a reassurance note explaining what later control/collection/variable resolves it.
 - Any instruction that depends on visual guessing rather than exact control names and properties.
