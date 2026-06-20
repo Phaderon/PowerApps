@@ -269,6 +269,23 @@ blockquote {
 .layer-note strong {
   color: #7a4b00;
 }
+.temp-error-note {
+  margin: 18px 0;
+  padding: 14px 18px;
+  border: 2px solid #b3261e;
+  border-left-width: 8px;
+  border-radius: 12px;
+  background: #ffe9e7;
+  color: #6f1d17;
+}
+.temp-error-note strong {
+  display: inline-flex;
+  margin-right: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #b3261e;
+  color: #fff8f6;
+}
 table {
   display: block;
   width: 100%;
@@ -4001,6 +4018,7 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 </table>
 <h3 id="edit-panel-shown-when-vareditcourse-is-set"><a aria-label="Link to section" class="anchor" href="#edit-panel-shown-when-vareditcourse-is-set">#</a>Edit panel — shown when varEditCourse is set</h3>
 <div class="layer-note"><strong>Recommended build order:</strong> create the edit-panel controls first, then create <code>recEditPanel</code> and immediately Send to back. If you already created <code>recEditPanel</code> first, send it behind <code>txtEditCourse</code>, <code>cmbEditApplic</code>, <code>drpEditRecur</code> and the edit buttons before continuing.</div>
+<div class="temp-error-note"><strong>Temporary error</strong><code>varEditCourse</code> may red-line here because it is created later when <code>icoEditCourse.OnSelect</code> runs <code>Set(varEditCourse,ThisItem)</code> inside <code>galCourses</code>. Keep using <code>Visible = !IsBlank(varEditCourse)</code>; recheck after the Course gallery edit icon formula is added.</div>
 <table>
 <thead>
 <tr>
@@ -4018,6 +4036,8 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 </tbody>
 </table>
 <p>Controls inside the edit panel. Set <code>Visible = !IsBlank(varEditCourse)</code> on every control in this table:</p>
+<div class="temp-error-note"><strong>Temporary error</strong>The same <code>varEditCourse</code> warning applies to these controls, especially <code>txtEditCourse.Default</code> and <code>cmbEditApplic.DefaultSelectedItems</code>. These formulas are expected to settle once <code>varEditCourse</code> is set from the course row edit icon.</div>
+<div class="layer-note"><strong>Grouping note:</strong> the guide groups the whole Courses tab as <code>grpCourses</code> at the end. You may optionally group the edit-panel controls later for a tidier tree, but do it after the controls work and the layer order is correct. Grouping does not normally change control names, but nested groups can make selection and send-to-back/front work more confusing while building.</div>
 <table>
 <thead>
 <tr>

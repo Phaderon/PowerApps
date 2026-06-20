@@ -82,6 +82,18 @@ The note must say:
 - when to recheck it,
 - and when to treat it as a real error.
 
+## Grouping Standard
+
+Use groups for meaningful sections, especially tab bodies and repeated screen sections. Do not over-group during initial build instructions.
+
+When recommending a group:
+
+- say why the group exists,
+- list exactly which controls go into it,
+- state any controls that must not be included,
+- keep layer-order warnings visible,
+- and mention if grouping should happen after visible controls are working.
+
 ## Landing Page Rule
 
 When adding a new guide, add exactly one new card to root `index.html`:

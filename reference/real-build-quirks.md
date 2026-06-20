@@ -53,6 +53,18 @@ Temporary red-line note: this formula may complain until [control/collection/var
 
 If a formula still red-lines after every control and formula in that phase is complete, treat it as a real issue.
 
+## Grouping Controls
+
+Groups are useful for clear sections such as tab bodies (`grpPeople`, `grpCourses`) and can make the tree tidier.
+
+Use them carefully:
+
+- Group after the controls work and layer order is correct.
+- Do not let grouping hide which background control must sit behind visible controls.
+- Grouping normally preserves control names, so formulas like `txtEditCourse.Text` still work.
+- Avoid unnecessary nested groups during the first build because they can make selection and send-to-back/front operations harder to follow.
+- If a group controls visibility, still make sure the guide explains which variable drives it and whether that variable may temporarily red-line.
+
 ## Sort Order Enum
 
 Use:
