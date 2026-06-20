@@ -23,15 +23,15 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 7 of 7</p>
   <h1>scrAdminManage</h1>
-  <p class="meta">v1.6 — StatusKey quoted in AddColumns</p>
+  <p class="meta">v1.7 &mdash; Edit person panel + Sort fix + drpEditRecur Classic/DropDown · 20 Jun 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
-    <a href="../"><button class="btn-back" type="button">← Guide library</button></a>
+    <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
   </div>
   <p id="status">Ready to copy</p>
   <div class="instructions">
     <strong>How to paste into Power Apps Studio</strong><br>
-    Tree View → click screen → Ctrl+A → Delete → Ctrl+V.
+    Tree View &rarr; click screen &rarr; Ctrl+A &rarr; Delete &rarr; Ctrl+V.
   </div>
   <script>
 const yaml = `Screens:
@@ -135,7 +135,7 @@ const yaml = `Screens:
             RadiusTopLeft: =8
             RadiusTopRight: =8
             Text: =
-            Visible: =varTab = "People"
+            Visible: =varTab = "People" && IsBlank(varEditPerson)
             Width: =640
             X: =16
             Y: =144
@@ -149,7 +149,7 @@ const yaml = `Screens:
             FontWeight: =FontWeight.Bold
             Height: =24
             Text: ="Add person"
-            Visible: =varTab = "People"
+            Visible: =varTab = "People" && IsBlank(varEditPerson)
             Width: =400
             X: =32
             Y: =156
@@ -163,7 +163,7 @@ const yaml = `Screens:
               =Office365Users.SearchUserV2({searchTerm: cmbNewPerson.SearchText, top: 15}).value
             SelectMultiple: =false
             Size: =12
-            Visible: =varTab = "People"
+            Visible: =varTab = "People" && IsBlank(varEditPerson)
             Width: =590
             X: =32
             Y: =186
@@ -178,7 +178,7 @@ const yaml = `Screens:
             Height: =20
             Size: =10
             Text: ="or enter manually below"
-            Visible: =varTab = "People"
+            Visible: =varTab = "People" && IsBlank(varEditPerson)
             Width: =590
             X: =32
             Y: =234
@@ -188,7 +188,7 @@ const yaml = `Screens:
             Height: =40
             Placeholder: ="Email address"
             Size: =12
-            Visible: =varTab = "People"
+            Visible: =varTab = "People" && IsBlank(varEditPerson)
             Width: =430
             X: =32
             Y: =258
@@ -214,7 +214,7 @@ const yaml = `Screens:
               )
             Size: =11
             Text: ="Pull details"
-            Visible: =varTab = "People"
+            Visible: =varTab = "People" && IsBlank(varEditPerson)
             Width: =152
             X: =470
             Y: =258
@@ -225,7 +225,7 @@ const yaml = `Screens:
             Height: =40
             Placeholder: ="Display name"
             Size: =12
-            Visible: =varTab = "People"
+            Visible: =varTab = "People" && IsBlank(varEditPerson)
             Width: =590
             X: =32
             Y: =306
@@ -236,7 +236,7 @@ const yaml = `Screens:
             ItemDisplayText: =ThisItem.Value
             Items: =["Civil Servant", "Army", "Contractor"]
             Size: =12
-            Visible: =varTab = "People"
+            Visible: =varTab = "People" && IsBlank(varEditPerson)
             Width: =284
             X: =32
             Y: =354
@@ -246,7 +246,7 @@ const yaml = `Screens:
             Height: =40
             Placeholder: ="Line manager email (optional)"
             Size: =11
-            Visible: =varTab = "People"
+            Visible: =varTab = "People" && IsBlank(varEditPerson)
             Width: =296
             X: =326
             Y: =354
@@ -255,7 +255,7 @@ const yaml = `Screens:
           Properties:
             Height: =32
             Label: ="Is admin"
-            Visible: =varTab = "People"
+            Visible: =varTab = "People" && IsBlank(varEditPerson)
             Width: =160
             X: =32
             Y: =404
@@ -265,7 +265,7 @@ const yaml = `Screens:
             Checked: =true
             Height: =32
             Label: ="Has M365 account"
-            Visible: =varTab = "People"
+            Visible: =varTab = "People" && IsBlank(varEditPerson)
             Width: =200
             X: =210
             Y: =404
@@ -308,10 +308,152 @@ const yaml = `Screens:
               )
             Size: =13
             Text: ="Add to system"
-            Visible: =varTab = "People"
+            Visible: =varTab = "People" && IsBlank(varEditPerson)
             Width: =590
             X: =32
             Y: =444
+      - recEditPersonPanel:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(24,95,165,1)
+            BorderThickness: =1
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255,255,255,1)
+            Font: =Font.'Open Sans'
+            Height: =330
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255,255,255,1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(255,255,255,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            Text: =
+            Visible: =varTab = "People" && !IsBlank(varEditPerson)
+            Width: =640
+            X: =16
+            Y: =144
+      - lblEditPersonTitle:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(24,95,165,1)
+            Fill: =RGBA(0,0,0,0)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =24
+            Text: ="Edit person"
+            Visible: =varTab = "People" && !IsBlank(varEditPerson)
+            Width: =400
+            X: =32
+            Y: =156
+      - lblEditPersonEmail:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(136,135,128,1)
+            Fill: =RGBA(0,0,0,0)
+            Font: =Font.'Open Sans'
+            Height: =20
+            Size: =10
+            Text: =varEditPerson.Email
+            Visible: =varTab = "People" && !IsBlank(varEditPerson)
+            Width: =590
+            X: =32
+            Y: =184
+      - txtEditPersonName:
+          Control: ModernTextInput@1.1.0
+          Properties:
+            Default: =varEditPerson.Title
+            Height: =40
+            Placeholder: ="Display name"
+            Size: =12
+            Visible: =varTab = "People" && !IsBlank(varEditPerson)
+            Width: =590
+            X: =32
+            Y: =210
+      - drpEditPersonType:
+          Control: Classic/DropDown@2.3.2
+          Properties:
+            Default: =varEditPerson.StaffType.Value
+            Items: =["Civil Servant", "Army", "Contractor"]
+            Visible: =varTab = "People" && !IsBlank(varEditPerson)
+            Width: =284
+            X: =32
+            Y: =258
+      - txtEditPersonManager:
+          Control: ModernTextInput@1.1.0
+          Properties:
+            Default: =varEditPerson.LineManagerEmail
+            Height: =40
+            Placeholder: ="Line manager email (optional)"
+            Size: =11
+            Visible: =varTab = "People" && !IsBlank(varEditPerson)
+            Width: =296
+            X: =326
+            Y: =258
+      - tglEditAdmin:
+          Control: Toggle@1.1.5
+          Properties:
+            Default: =varEditPerson.IsAdmin
+            Height: =32
+            Label: ="Is admin"
+            Visible: =varTab = "People" && !IsBlank(varEditPerson)
+            Width: =160
+            X: =32
+            Y: =308
+      - tglEditM365:
+          Control: Toggle@1.1.5
+          Properties:
+            Default: =varEditPerson.HasM365Access
+            Height: =32
+            Label: ="Has M365 account"
+            Visible: =varTab = "People" && !IsBlank(varEditPerson)
+            Width: =200
+            X: =210
+            Y: =308
+      - btnSavePerson:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =RGBA(24,95,165,1)
+            Height: =44
+            OnSelect: |-
+              =Patch('TT Personnel', varEditPerson,
+                  {
+                      Title:            Trim(txtEditPersonName.Text),
+                      StaffType:        {Value: drpEditPersonType.Selected.Value},
+                      LineManagerEmail: Lower(Trim(txtEditPersonManager.Text)),
+                      IsAdmin:          tglEditAdmin.Checked,
+                      HasM365Access:    tglEditM365.Checked
+                  }
+              );
+              Refresh('TT Personnel');
+              Set(varEditPerson, Blank());
+              Notify(Trim(txtEditPersonName.Text) & " updated.", NotificationType.Success)
+            Size: =13
+            Text: ="Save changes"
+            Visible: =varTab = "People" && !IsBlank(varEditPerson)
+            Width: =440
+            X: =32
+            Y: =356
+      - btnCancelEditPerson:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =RGBA(108,117,125,1)
+            Color: =RGBA(255,255,255,1)
+            Height: =44
+            OnSelect: =Set(varEditPerson, Blank())
+            Size: =13
+            Text: ="Cancel"
+            Visible: =varTab = "People" && !IsBlank(varEditPerson)
+            Width: =140
+            X: =480
+            Y: =356
       - galPeople:
           Control: Gallery@2.15.0
           Variant: Vertical
@@ -360,7 +502,7 @@ const yaml = `Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =22
                   Text: =ThisItem.Title
-                  Width: =320
+                  Width: =300
                   X: =16
                   Y: =8
             - lblPersonEmail:
@@ -373,7 +515,7 @@ const yaml = `Screens:
                   Height: =16
                   Size: =9
                   Text: =ThisItem.Email
-                  Width: =320
+                  Width: =300
                   X: =16
                   Y: =32
             - drpRowType:
@@ -389,7 +531,7 @@ const yaml = `Screens:
                     Notify(ThisItem.Title & " is now " & drpRowType.Selected.Value & ".",
                            NotificationType.Success)
                   Width: =170
-                  X: =346
+                  X: =326
                   Y: =14
             - lblAdminBadge:
                 Control: Label@2.5.1
@@ -404,8 +546,19 @@ const yaml = `Screens:
                   Text: ="Admin"
                   Visible: =ThisItem.IsAdmin
                   Width: =60
-                  X: =526
+                  X: =504
                   Y: =16
+            - icoEditPerson:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(24,95,165,1)
+                  Height: =24
+                  Icon: =Icon.Edit
+                  OnSelect: =Set(varEditPerson, ThisItem)
+                  Width: =24
+                  X: =580
+                  Y: =18
             - icoRemove:
                 Control: Classic/Icon@2.5.0
                 Properties:
@@ -425,7 +578,7 @@ const yaml = `Screens:
                                ThisItem.Title & ".", NotificationType.Warning)
                     )
                   Width: =24
-                  X: =600
+                  X: =616
                   Y: =18
       - recAddCoursePanel:
           Control: Classic/Button@2.2.0
@@ -597,20 +750,21 @@ const yaml = `Screens:
             X: =32
             Y: =234
       - drpEditRecur:
-          Control: ModernDropdown@1.0.1
+          Control: Classic/DropDown@2.3.2
           Properties:
-            Height: =40
-            ItemDisplayText: =ThisItem.Label
-            Items: |-
-              =Table(
-                  {Label: "One-off (never expires)", Months: 0},
-                  {Label: "Every 6 months",          Months: 6},
-                  {Label: "Every year",              Months: 12},
-                  {Label: "Every 18 months",         Months: 18},
-                  {Label: "Every 2 years",           Months: 24},
-                  {Label: "Every 3 years",           Months: 36}
+            Default: |-
+              =Switch(varEditCourse.RecurrenceMonths,
+                  0,  "One-off (never expires)",
+                  6,  "Every 6 months",
+                  12, "Every year",
+                  18, "Every 18 months",
+                  24, "Every 2 years",
+                  36, "Every 3 years",
+                  "Every year"
               )
-            Size: =12
+            Items: |-
+              =["One-off (never expires)", "Every 6 months", "Every year",
+                "Every 18 months", "Every 2 years", "Every 3 years"]
             Visible: =varTab = "Courses" && !IsBlank(varEditCourse)
             Width: =198
             X: =434
@@ -625,7 +779,14 @@ const yaml = `Screens:
                   {
                       Title:            Trim(txtEditCourse.Text),
                       ApplicableTo:     ForAll(cmbEditApplic.SelectedItems As T, {Value: T.Value}),
-                      RecurrenceMonths: drpEditRecur.Selected.Months
+                      RecurrenceMonths: Switch(drpEditRecur.Selected.Value,
+                                            "One-off (never expires)", 0,
+                                            "Every 6 months",          6,
+                                            "Every year",              12,
+                                            "Every 18 months",         18,
+                                            "Every 2 years",           24,
+                                            "Every 3 years",           36,
+                                            0)
                   }
               );
               Notify("Course updated. Expiry dates recalculate automatically.",
@@ -680,10 +841,10 @@ const yaml = `Screens:
             Fill: =RGBA(0,0,0,0)
             Height: =624
             Items: |-
-              =SortByColumns(
-                  AddColumns(colCourses, "StatusKey", If(Status.Value = "Active", 1, 2)),
-                  "StatusKey", SortOrder.Ascending,
-                  "Title", SortOrder.Ascending
+              =Sort(
+                  Sort(colCourses, Title, SortOrder.Ascending),
+                  Status.Value,
+                  SortOrder.Ascending
               )
             TemplatePadding: =0
             TemplateSize: =64
@@ -829,16 +990,14 @@ const yaml = `Screens:
             Y: =40
 `;
 function copyYAML() {
-  const crlf = yaml.replace(/\r?\n/g, '\r\n');
+  const crlf = yaml.replace(/\n/g, '\r\n');
   navigator.clipboard.writeText(crlf).then(() => {
     const s = document.getElementById('status');
-    s.textContent = 'Copied!';
+    s.textContent = 'Copied! Paste into Power Apps Studio now.';
     s.className = 'ok';
-    setTimeout(() => { s.textContent = 'Ready to copy'; s.className = ''; }, 3000);
+    setTimeout(() => { s.textContent = 'Ready to copy'; s.className = ''; }, 4000);
   }).catch(() => {
-    const s = document.getElementById('status');
-    s.textContent = 'Copy failed.';
-    s.className = 'err';
+    document.getElementById('status').textContent = 'Copy failed — try a different browser.';
   });
 }
   </script>
