@@ -380,7 +380,7 @@ h1 {
 async function copyCard(screen, btn) {
   const orig = btn.textContent;
   try {
-    const res = await fetch(`screens/${screen}.html`);
+    const res = await fetch(`screens/${screen}.html?v=${Date.now()}`);
     const text = await res.text();
     const match = text.match(/const yaml = `([\s\S]*?)`;[\s\n]*function copyYAML/);
     if (!match) throw new Error('YAML block not found');
