@@ -376,7 +376,8 @@ pre {
       <a class="toc-l2" href="#fix2-why">Why it errors</a>
       <a class="toc-l2" href="#fix2-formula">Replacement formula</a>
       <a class="toc-l1" href="#warn1">Warning — Delegation</a>
-      <a class="toc-l1" href="#note1">Note — Gray buttons</a>
+      <a class="toc-l1" href="#note1">Fix — Gray buttons</a>
+      <a class="toc-l2" href="#note1">5 affected buttons</a>
     </nav>
     <a class="back-link" href="../">← Guide library</a>
   </aside>
@@ -587,40 +588,95 @@ pre {
         <div class="section-num" style="background:linear-gradient(145deg,#555,#333);">~</div>
         <div>
           <h2>Gray buttons with gray text</h2>
-          <p style="margin:0;color:var(--muted);">Visual only — no formula changes needed</p>
+          <p style="margin:0;color:var(--muted);">5 buttons across multiple screens — same fix each time</p>
         </div>
       </div>
 
-      <div class="warn-label">⚠ Visual issue — fix by eye</div>
-      <p>Some buttons have a gray background with gray text, making them invisible. This is a styling issue only — no formula errors involved.</p>
+      <div class="warn-label">⚠ Visual issue — same root cause on every button</div>
+
+      <div class="callout callout-why">
+        <strong>Why it happened</strong>
+        Every "secondary" button in the guide (Cancel, Show archive, inactive tabs) was given <code>BasePaletteColor=RGBA(244,246,248,1)</code> (very light gray) and <code>Color=RGBA(85,85,85,1)</code> (medium gray text). In practice these render as gray-on-gray and the text disappears. The fix is the same for all five: change <code>Color</code> to <code>RGBA(31,58,95,1)</code> (the app's dark navy), which gives proper contrast against the light gray background.
+      </div>
+
+      <h3 style="margin:22px 0 14px;color:var(--blue);">The 5 affected buttons</h3>
+
+      <table class="prop-table">
+        <thead>
+          <tr><th>Screen</th><th>Button</th><th>What to change</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>scrMyTraining</td>
+            <td>"Show archive / Hide archive" button</td>
+            <td>Change <code>Color</code> to <code>RGBA(31,58,95,1)</code></td>
+          </tr>
+          <tr>
+            <td>scrCourseDetail</td>
+            <td>Cancel button (bottom of cert upload form)</td>
+            <td>Change <code>Color</code> to <code>RGBA(31,58,95,1)</code></td>
+          </tr>
+          <tr>
+            <td>scrAdminManage</td>
+            <td>btnTabPeople — <strong>inactive state only</strong></td>
+            <td>Change the second value in the If: <code>If(varTab="People", RGBA(255,255,255,1), <mark>RGBA(31,58,95,1)</mark>)</code></td>
+          </tr>
+          <tr>
+            <td>scrAdminManage</td>
+            <td>btnTabCourses — <strong>inactive state only</strong></td>
+            <td>Change the second value in the If: <code>If(varTab="Courses", RGBA(255,255,255,1), <mark>RGBA(31,58,95,1)</mark>)</code></td>
+          </tr>
+          <tr>
+            <td>scrAdminManage</td>
+            <td>Cancel button (bottom of edit course panel)</td>
+            <td>Change <code>Color</code> to <code>RGBA(31,58,95,1)</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 style="margin:22px 0 14px;color:var(--blue);">How to apply the fix</h3>
 
       <div class="steps">
         <div class="step">
           <div class="step-num">1</div>
           <div class="step-body">
             <strong>Select the button in the Tree View</strong>
-            <p>Click the affected button. Check the right panel — you'll see Fill and Color fields under General.</p>
+            <p>Click the button by name. For the tab buttons, you'll be editing a formula — use the property dropdown and select <strong>Color</strong>.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-num">2</div>
           <div class="step-body">
-            <strong>Set the Fill colour</strong>
-            <p>Under <strong>Fill</strong>, set a visible background. The app's primary blue is <code>#1c3352</code> — or use the colour picker to pick any clear colour.</p>
+            <strong>For simple buttons (Show archive, both Cancel buttons)</strong>
+            <p>In the right panel under <strong>Color</strong>, replace the value with <code>RGBA(31,58,95,1)</code>. The button text will turn dark navy and become clearly readable against the light gray background.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-num">3</div>
           <div class="step-body">
-            <strong>Set the text colour</strong>
-            <p>Under <strong>Color</strong> (text colour), set it to white <code>#FFFFFF</code> so it's readable against the new background.</p>
+            <strong>For tab buttons (btnTabPeople, btnTabCourses)</strong>
+            <p>The Color property is a formula. Set the property dropdown to <strong>Color</strong> and replace the whole formula with the corrected version — only the second RGBA value changes:</p>
           </div>
         </div>
       </div>
 
+      <div class="screen-divider">btnTabPeople — Color (corrected)</div>
+      <div class="code-wrap">
+        <span class="code-label">Color · btnTabPeople</span>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+        <pre id="code-tabpeople-color">If(varTab="People", RGBA(255,255,255,1), RGBA(31,58,95,1))</pre>
+      </div>
+
+      <div class="screen-divider">btnTabCourses — Color (corrected)</div>
+      <div class="code-wrap">
+        <span class="code-label">Color · btnTabCourses</span>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+        <pre id="code-tabcourses-color">If(varTab="Courses", RGBA(255,255,255,1), RGBA(31,58,95,1))</pre>
+      </div>
+
       <div class="callout callout-ok">
-        <strong>Why it happened</strong>
-        Default button colours inherit from a theme or were set explicitly to gray at some point. No formula is involved, so this is purely a visual fix applied in the right panel.
+        <strong>One button that looks similar but is actually fine</strong>
+        The "Pull details" button also uses <code>BasePaletteColor=RGBA(244,246,248,1)</code> but its <code>Color</code> is <code>RGBA(24,95,165,1)</code> (blue) — blue text on light gray is readable. Leave that one as-is.
       </div>
     </section>
 
