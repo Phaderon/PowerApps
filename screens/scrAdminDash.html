@@ -34,24 +34,13 @@
     button:active { transform: translateY(0); }
     .btn-copy { background: #4f46e5; color: #fff; }
     .btn-back { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
-    #status {
-      font-size: .85rem;
-      color: #475569;
-      min-height: 1.2em;
-      transition: color .2s;
-    }
+    #status { font-size: .85rem; color: #475569; min-height: 1.2em; transition: color .2s; }
     #status.ok { color: #22c55e; }
     #status.err { color: #ef4444; }
     .instructions {
-      max-width: 480px;
-      text-align: center;
-      font-size: .82rem;
-      color: #475569;
-      line-height: 1.7;
-      border: 1px solid #1e293b;
-      border-radius: 12px;
-      padding: 16px 20px;
-      background: #0d1117;
+      max-width: 480px; text-align: center; font-size: .82rem; color: #475569;
+      line-height: 1.7; border: 1px solid #1e293b; border-radius: 12px;
+      padding: 16px 20px; background: #0d1117;
     }
     .instructions strong { color: #94a3b8; }
   </style>
@@ -70,9 +59,7 @@
     Open the app → in the Tree View, click the screen you want to replace →
     press <strong>Ctrl+A</strong> to select all controls → <strong>Delete</strong> →
     then <strong>Ctrl+V</strong> to paste the new screen.
-    Or right-click the screen name → <em>Paste</em>.
   </div>
-
   <script>
 const yaml = `Screens:
   scrAdminDash:
@@ -433,7 +420,8 @@ const yaml = `Screens:
             Items: |-
               =SortByColumns(
                   Filter(colCompliance,
-                      (drpTypeFilter.Selected.Value = "All" ||
+                      (IsBlank(drpTypeFilter.Selected.Value) ||
+                       drpTypeFilter.Selected.Value = "All" ||
                        StaffType = drpTypeFilter.Selected.Value) &&
                       (IsBlank(txtAdminSearch.Text) ||
                        Lower(txtAdminSearch.Text) in Lower(Name))
@@ -827,7 +815,6 @@ const yaml = `Screens:
             X: =986
             Y: =16
 `;
-
 function copyYAML() {
   const crlf = yaml.replace(/\r?\n/g, '\r\n');
   navigator.clipboard.writeText(crlf).then(() => {

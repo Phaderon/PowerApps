@@ -182,6 +182,35 @@ h1 {
   color: var(--brass-dark);
   font-weight: 850;
 }
+.card-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+  align-self: end;
+}
+.btn-copy-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--blue);
+  color: #fff;
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .15s, background .2s;
+  white-space: nowrap;
+}
+.btn-copy-card:hover { opacity: .85; }
+.btn-copy-card.ok { background: #2d6a4f; }
+.btn-copy-card.err { background: #a32d2d; }
 .footer {
   margin: 22px 0 0;
   color: var(--muted);
@@ -241,9 +270,9 @@ h1 {
         <h2>scrStart</h2>
         <p>Loading screen with timer-based navigation. Routes to scrNoRecord or scrMyTraining based on whether the user has a Personnel record.</p>
       </div>
-      <div>
+      <div class="card-actions">
         <div class="guide-meta"><span class="pill">Screen 1 of 7</span><span class="pill">Fixed</span></div>
-        <span class="open-row">Copy YAML <span aria-hidden="true">→</span></span>
+        <button class="btn-copy-card" onclick="event.stopPropagation();event.preventDefault();copyCard('scrStart',this)">Copy YAML</button>
       </div>
     </a>
     <a class="guide-card" href="screens/scrNoRecord.html">
@@ -252,9 +281,9 @@ h1 {
         <h2>scrNoRecord</h2>
         <p>Shown when the logged-in user has no Personnel record. Displays a message and a retry button.</p>
       </div>
-      <div>
+      <div class="card-actions">
         <div class="guide-meta"><span class="pill">Screen 2 of 7</span><span class="pill">Fixed</span></div>
-        <span class="open-row">Copy YAML <span aria-hidden="true">→</span></span>
+        <button class="btn-copy-card" onclick="event.stopPropagation();event.preventDefault();copyCard('scrNoRecord',this)">Copy YAML</button>
       </div>
     </a>
     <a class="guide-card" href="screens/scrMyTraining.html">
@@ -263,9 +292,9 @@ h1 {
         <h2>scrMyTraining</h2>
         <p>Main user screen. Shows training status, in-date vs outstanding courses, archive toggle. Fixed: archive overlap, team member view overwrote own data.</p>
       </div>
-      <div>
+      <div class="card-actions">
         <div class="guide-meta"><span class="pill">Screen 3 of 7</span><span class="pill">Fixed</span></div>
-        <span class="open-row">Copy YAML <span aria-hidden="true">→</span></span>
+        <button class="btn-copy-card" onclick="event.stopPropagation();event.preventDefault();copyCard('scrMyTraining',this)">Copy YAML</button>
       </div>
     </a>
     <a class="guide-card" href="screens/scrCourseDetail.html">
@@ -274,9 +303,9 @@ h1 {
         <h2>scrCourseDetail</h2>
         <p>Course detail and certificate upload form. Fixed: Cancel button colour polished.</p>
       </div>
-      <div>
+      <div class="card-actions">
         <div class="guide-meta"><span class="pill">Screen 4 of 7</span><span class="pill">Fixed</span></div>
-        <span class="open-row">Copy YAML <span aria-hidden="true">→</span></span>
+        <button class="btn-copy-card" onclick="event.stopPropagation();event.preventDefault();copyCard('scrCourseDetail',this)">Copy YAML</button>
       </div>
     </a>
     <a class="guide-card" href="screens/scrTeamMember.html">
@@ -285,20 +314,20 @@ h1 {
         <h2>scrTeamMember</h2>
         <p>Line manager view of their team chain. Fixed: gallery rows were 0px tall (invisible). Fixed: clicking a team member showed manager's own data instead.</p>
       </div>
-      <div>
+      <div class="card-actions">
         <div class="guide-meta"><span class="pill">Screen 5 of 7</span><span class="pill">Fixed</span></div>
-        <span class="open-row">Copy YAML <span aria-hidden="true">→</span></span>
+        <button class="btn-copy-card" onclick="event.stopPropagation();event.preventDefault();copyCard('scrTeamMember',this)">Copy YAML</button>
       </div>
     </a>
     <a class="guide-card" href="screens/scrAdminDash.html">
       <div class="guide-top">
         <span class="guide-kicker">YAML · Ready to paste</span>
         <h2>scrAdminDash</h2>
-        <p>Compliance dashboard. Fixed: type filter had no Default so gallery showed nothing. Fixed: toggle showed "Label". Fixed: case-insensitive search.</p>
+        <p>Compliance dashboard. Fixed: gallery filter now handles unselected dropdown. Fixed: toggle showed "Label". Fixed: case-insensitive search.</p>
       </div>
-      <div>
+      <div class="card-actions">
         <div class="guide-meta"><span class="pill">Screen 6 of 7</span><span class="pill">Fixed</span></div>
-        <span class="open-row">Copy YAML <span aria-hidden="true">→</span></span>
+        <button class="btn-copy-card" onclick="event.stopPropagation();event.preventDefault();copyCard('scrAdminDash',this)">Copy YAML</button>
       </div>
     </a>
     <a class="guide-card" href="screens/scrAdminManage.html">
@@ -307,9 +336,9 @@ h1 {
         <h2>scrAdminManage</h2>
         <p>People &amp; Courses management. Fixed: StaffType dropdown blank, recurrence dropdown blank, Cancel showed "Button", add/edit panels overlapped.</p>
       </div>
-      <div>
+      <div class="card-actions">
         <div class="guide-meta"><span class="pill">Screen 7 of 7</span><span class="pill">Fixed</span></div>
-        <span class="open-row">Copy YAML <span aria-hidden="true">→</span></span>
+        <button class="btn-copy-card" onclick="event.stopPropagation();event.preventDefault();copyCard('scrAdminManage',this)">Copy YAML</button>
       </div>
     </a>
     <a class="guide-card" href="fixes/">
@@ -346,5 +375,29 @@ h1 {
 
   <p class="footer">Standalone GitHub Pages index. No external scripts, fonts or tracking.</p>
 </main>
+<script>
+async function copyCard(screen, btn) {
+  const orig = btn.textContent;
+  try {
+    const res = await fetch(`screens/${screen}.html`);
+    const text = await res.text();
+    const match = text.match(/const yaml = `([\s\S]*?)`;[\s\n]*function copyYAML/);
+    if (!match) throw new Error('YAML block not found');
+    let yaml = match[1]
+      .replace(/\\`/g, '`')
+      .replace(/\\\$\{/g, '${')
+      .replace(/\\\\/g, '\\');
+    const crlf = yaml.replace(/\r?\n/g, '\r\n');
+    await navigator.clipboard.writeText(crlf);
+    btn.textContent = 'Copied!';
+    btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('ok'); }, 2500);
+  } catch(e) {
+    btn.textContent = 'Failed';
+    btn.classList.add('err');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('err'); }, 2500);
+  }
+}
+</script>
 </body>
 </html>
