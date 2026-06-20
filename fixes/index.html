@@ -376,6 +376,8 @@ pre {
       <a class="toc-l1" href="#fix8">Fix 8 — Edit panel overlaps add panel</a>
       <a class="toc-l1" href="#fix9">Fix 9 — Team chain gallery invisible</a>
       <a class="toc-l1" href="#fix10">Fix 10 — Team member shows own data</a>
+      <a class="toc-l1" href="#fix11">Fix 11 — Courses gallery StatusKey error</a>
+      <a class="toc-l1" href="#fix12">Fix 12 — Recurrence dropdown blank (ModernDropdown)</a>
     </nav>
     <a class="back-link" href="../">← Guide library</a>
   </aside>
@@ -549,7 +551,12 @@ pre {
         <code>drpEditRecur</code> has no <code>Default</code> set at all. When you open a course to edit, the recurrence dropdown has no way to know which option to pre-select, so it shows blank. If you save without touching it, it saves the recurrence as 0 and corrupts the course record.
       </div>
 
-      <p>Select <strong>drpEditRecur</strong> on scrAdminManage. Add this <code>Default</code> formula — it looks up the matching row in the options table based on the current course's saved recurrence months:</p>
+      <div class="callout callout-warning" style="margin-bottom:12px;">
+        <strong>Set this directly in Studio — do not paste it via YAML</strong>
+        The <code>Default</code> formula contains <code>{Label: ..., Months: ...}</code> syntax which breaks Power Apps' own YAML parser. Click <strong>drpEditRecur</strong> in the Tree View, switch the formula bar to the <strong>Default</strong> property, and type the formula directly there.
+      </div>
+
+      <p>Select <strong>drpEditRecur</strong> on scrAdminManage. Set the <code>Default</code> property directly in Studio — it looks up the matching row in the options table based on the current course's saved recurrence months:</p>
 
       <div class="code-wrap">
         <span class="code-label">Default · drpEditRecur</span>
@@ -726,6 +733,94 @@ Navigate(scrMyTraining, ScreenTransition.Cover)</pre>
       <div class="callout callout-warning">
         <strong>Also set varViewingForSelf back to true on the back button</strong>
         When the user taps back from scrMyTraining to scrTeamMember (or to their own home screen), set <code>varViewingForSelf</code> back to <code>true</code> so their own data loads correctly next time they visit scrMyTraining directly.
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         FIX 11 — Courses gallery StatusKey error
+    ═══════════════════════════════════════════════════════ -->
+    <section class="section" id="fix11">
+      <div class="section-header">
+        <div class="section-num red">11</div>
+        <div>
+          <h2>Courses gallery errors: "StatusKey does not exist"</h2>
+          <p style="margin:0;color:var(--muted);">scrAdminManage · galCourses · Items</p>
+        </div>
+      </div>
+
+      <div class="callout callout-why">
+        <strong>Why it errors</strong>
+        <code>AddColumns(colCourses, StatusKey, ...)</code> without quotes makes Power Apps look for an existing column called StatusKey — which doesn't exist. Adding quotes (<code>"StatusKey"</code>) causes a different error ("Expected identifier name") due to a quirk in how Power Apps parses computed column names in this context. The fix is to drop <code>AddColumns</code> entirely and use nested <code>Sort</code> calls instead.
+      </div>
+
+      <p>Click <strong>galCourses</strong> in the Tree View. Switch the formula bar to the <strong>Items</strong> property and replace the entire formula with this:</p>
+
+      <div class="code-wrap">
+        <span class="code-label">Items · galCourses</span>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+        <pre>Sort(
+    Sort(colCourses, Title, SortOrder.Ascending),
+    Status.Value,
+    SortOrder.Ascending
+)</pre>
+      </div>
+
+      <p>The inner <code>Sort</code> orders courses A–Z by title. The outer <code>Sort</code> groups Active courses before Inactive ("Active" &lt; "Inactive" alphabetically). Same visual result as the original sort — no <code>AddColumns</code> required.</p>
+
+      <div class="callout callout-warning">
+        <strong>Same pattern in scrMyTraining and scrTeamMember</strong>
+        If you see a similar error mentioning <code>SortKey</code> (scrMyTraining · galMyTraining) or <code>PersonRequired</code> / <code>PersonInDate</code> (scrTeamMember · galMyChain), repaste those screens from the Screens tab — the YAML files for those screens already use the correct quoted syntax.
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         FIX 12 — ModernDropdown Default set directly in Studio
+    ═══════════════════════════════════════════════════════ -->
+    <section class="section" id="fix12">
+      <div class="section-header">
+        <div class="section-num amber">12</div>
+        <div>
+          <h2>ModernDropdown not pre-selecting saved value</h2>
+          <p style="margin:0;color:var(--muted);">scrAdminManage · drpEditRecur · drpRowType · Default</p>
+        </div>
+      </div>
+
+      <div class="callout callout-why">
+        <strong>Why the dropdown looks blank</strong>
+        ModernDropdown uses a <code>Default</code> property that takes a record value like <code>&#123;Value: "something"&#125;</code>. That syntax contains <code>: </code> which Power Apps' YAML parser misreads as a mapping — so it can't be set via YAML paste. Set it directly in Studio instead.
+      </div>
+
+      <h3 style="margin-top:1.5rem;">drpEditRecur — recurrence when editing a course</h3>
+      <p>Click <strong>drpEditRecur</strong> → formula bar → select the <strong>Default</strong> property. Type:</p>
+
+      <div class="code-wrap">
+        <span class="code-label">Default · drpEditRecur</span>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+        <pre>LookUp(
+    Table(
+        {Label: "One-off (never expires)", Months: 0},
+        {Label: "Every 6 months",          Months: 6},
+        {Label: "Every year",              Months: 12},
+        {Label: "Every 18 months",         Months: 18},
+        {Label: "Every 2 years",           Months: 24},
+        {Label: "Every 3 years",           Months: 36}
+    ),
+    Months = varEditCourse.RecurrenceMonths
+)</pre>
+      </div>
+
+      <h3 style="margin-top:1.5rem;">drpRowType — staff type in the People list</h3>
+      <p>If you want to use ModernDropdown (not Classic) for drpRowType, click it in the gallery → formula bar → <strong>Default</strong> property. Type:</p>
+
+      <div class="code-wrap">
+        <span class="code-label">Default · drpRowType</span>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+        <pre>{Value: ThisItem.StaffType.Value}</pre>
+      </div>
+
+      <div class="callout callout-warning">
+        <strong>Classic/DropDown is fine too</strong>
+        The YAML screens use <code>Classic/DropDown</code> for drpRowType because it lets you write <code>Default: =ThisItem.StaffType.Value</code> as a plain string — no record syntax, no YAML parse error. The only difference is the visual style. If you prefer the ModernDropdown look, apply the formula above directly in Studio.
       </div>
     </section>
 
