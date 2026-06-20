@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 7 of 7</p>
   <h1>scrAdminManage</h1>
-  <p class="meta">v1.5 — StaffType dropdown fixed: Classic/DropDown, Default + local patch</p>
+  <p class="meta">v1.6 — StatusKey quoted in AddColumns</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">← Guide library</button></a>
@@ -681,7 +681,7 @@ const yaml = `Screens:
             Height: =624
             Items: |-
               =SortByColumns(
-                  AddColumns(colCourses, StatusKey, If(Status.Value = "Active", 1, 2)),
+                  AddColumns(colCourses, "StatusKey", If(Status.Value = "Active", 1, 2)),
                   "StatusKey", SortOrder.Ascending,
                   "Title", SortOrder.Ascending
               )
