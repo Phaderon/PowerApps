@@ -406,8 +406,6 @@ const yaml = `Screens:
             - drpRowType:
                 Control: ModernDropdown@1.0.1
                 Properties:
-                  DefaultSelectedItems: |-
-                    ={Value: ThisItem.StaffType.Value}
                   ItemDisplayText: =ThisItem.Value
                   Items: =["Civil Servant","Army","Contractor"]
                   OnChange: |-
@@ -627,18 +625,6 @@ const yaml = `Screens:
       - drpEditRecur:
           Control: ModernDropdown@1.0.1
           Properties:
-            DefaultSelectedItems: |-
-              =LookUp(
-                  Table(
-                      {Label: "One-off (never expires)", Months: 0},
-                      {Label: "Every 6 months",          Months: 6},
-                      {Label: "Every year",              Months: 12},
-                      {Label: "Every 18 months",         Months: 18},
-                      {Label: "Every 2 years",           Months: 24},
-                      {Label: "Every 3 years",           Months: 36}
-                  ),
-                  Months = varEditCourse.RecurrenceMonths
-              )
             Height: =40
             ItemDisplayText: =ThisItem.Label
             Items: |-
