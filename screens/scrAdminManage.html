@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 7 of 7</p>
   <h1>scrAdminManage</h1>
-  <p class="meta">v1.8 &mdash; All ModernDropdowns + edit person panel + Sort fix · 20 Jun 2026</p>
+  <p class="meta">v1.9 &mdash; Toggle Checked fix + all ModernDropdowns + edit person panel · 20 Jun 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -402,7 +402,7 @@ const yaml = `Screens:
       - tglEditAdmin:
           Control: Toggle@1.1.5
           Properties:
-            Default: =varEditPerson.IsAdmin
+            Checked: =varEditPerson.IsAdmin
             Height: =32
             Label: ="Is admin"
             Visible: =varTab = "People" && !IsBlank(varEditPerson)
@@ -412,7 +412,7 @@ const yaml = `Screens:
       - tglEditM365:
           Control: Toggle@1.1.5
           Properties:
-            Default: =varEditPerson.HasM365Access
+            Checked: =varEditPerson.HasM365Access
             Height: =32
             Label: ="Has M365 account"
             Visible: =varTab = "People" && !IsBlank(varEditPerson)
