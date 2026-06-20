@@ -42,6 +42,7 @@ Rules:
 - Do not list `Fill=RGBA(0,0,0,0)` for normal Label controls unless it is marked `leave default` or `default/safety check`.
 - Do not list `BorderThickness=0` for normal Label controls unless it is marked `leave default` or `default/safety check`.
 - Do not list `SelectMultiple=true` for modern Combo box controls unless it is marked `leave default` or `default/safety check`; set `SelectMultiple=false` explicitly for single-select Combo boxes.
+- Do not list `ItemDisplayText=ThisItem.Value` for modern Combo box controls using simple value tables unless it is marked `leave default` or `default/safety check`; set `ItemDisplayText` explicitly when the row shape needs another field.
 - Classic visual workarounds may still list apparent defaults when they prevent common mistakes, for example keeping `HoverFill` and `PressedFill` locked to `Fill` on classic Button panel backgrounds.
 - For future app guides, prefer a two-column wording: `Set these` and `Leave/default check`.
 

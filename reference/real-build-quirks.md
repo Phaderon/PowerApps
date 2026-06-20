@@ -100,12 +100,13 @@ Do not normalize this to bare `Days`. Do not change it to `TimeUnit.Days` in thi
 
 ## Modern Combo Box
 
-Modern Combo box rows need display and placeholder fields made explicit:
+Modern Combo box rows need placeholder fields made explicit:
 
 ```powerfx
 InputTextPlaceholder="Applies to..."
-ItemDisplayText=ThisItem.Value
 ```
+
+In the user's live editor, modern Combo box `ItemDisplayText=ThisItem.Value` is already the default. Do not make `ItemDisplayText=ThisItem.Value` a manual step for simple value tables unless it is labelled `leave default` or `default/safety check`.
 
 For Office365Users search results:
 
@@ -114,6 +115,8 @@ ItemDisplayText=ThisItem.DisplayName
 ```
 
 Do not use `Placeholder` for modern Combo box.
+
+Still set `ItemDisplayText` explicitly when the `Items` row shape does not display from a `Value` field, for example Office365Users search rows.
 
 In the user's live editor, modern Combo box `SelectMultiple=true` is already the default. Do not make `SelectMultiple=true` a manual step unless it is labelled `leave default` or `default/safety check`. For single-select Combo boxes, set `SelectMultiple=false` explicitly.
 

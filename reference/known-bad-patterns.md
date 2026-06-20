@@ -7,7 +7,7 @@ These are mistakes that must not reappear in this guide family.
 ## Control Properties
 
 - Modern Combo box with `Placeholder`. Use `InputTextPlaceholder`.
-- Modern Combo box without `ItemDisplayText`. Use the field that exists in `Items`, for example `ThisItem.Value` for simple value tables or `ThisItem.DisplayName` for Office365Users search rows.
+- Modern Combo box with record-shaped `Items` and no explicit `ItemDisplayText`. Use the field that exists in `Items`, for example `ThisItem.DisplayName` for Office365Users search rows.
 - Modern Text input with `HintText`. Use `Placeholder`.
 - Modern Toggle read as `.Value`. Use `.Checked`.
 - Modern Toggle caption set with `Text`. Use `Label`.
@@ -41,6 +41,7 @@ These are mistakes that must not reappear in this guide family.
 - Repeating `Fill=RGBA(0,0,0,0)` on normal Label controls as if it must be manually changed.
 - Repeating `BorderThickness=0` on normal Label controls as if it must be manually changed.
 - Repeating `SelectMultiple=true` on modern Combo box controls as if it must be manually changed.
+- Repeating `ItemDisplayText=ThisItem.Value` on modern Combo box simple value tables as if it must be manually changed.
 - Treating a property omitted from the fresh-control export as a guaranteed literal default value.
 - Control rows that say only "see formula below" when the formula can be placed in a collapsed copyable block beside the control.
 - Any instruction that depends on visual guessing rather than exact control names and properties.

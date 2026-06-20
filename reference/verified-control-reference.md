@@ -57,13 +57,14 @@ Verified key properties:
 Do not use:
 
 - `Placeholder` for modern Combo box. Use `InputTextPlaceholder`.
-- Missing `ItemDisplayText`. Simple value tables usually use `ThisItem.Value`; Office365Users search rows in this guide use `ThisItem.DisplayName`.
+- Missing `ItemDisplayText` when `Items` is record-shaped and the display field is not `Value`. Office365Users search rows in this guide use `ThisItem.DisplayName`.
 - `Default` for multi-select preselection. Use `DefaultSelectedItems`.
 - `.Selected` when `SelectMultiple=true` and the formula needs all values. Use `.SelectedItems`.
 
 Known build note:
 
 - In the user's current Power Apps editor, `SelectMultiple=true` is the default for modern Combo box. Set `SelectMultiple=false` explicitly for single-selection Combo boxes.
+- In the user's current Power Apps editor, `ItemDisplayText=ThisItem.Value` is the default for modern Combo box simple value tables. Do not list it as a manual step unless it is a labelled default/safety check.
 - `ItemDisplayText` must match the shape of `Items`. `ThisItem.Value` only works when `Items` is a simple value table or SharePoint choice-style table with a `Value` field.
 
 ## Modern Dropdown
