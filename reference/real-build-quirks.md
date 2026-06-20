@@ -73,6 +73,8 @@ Guide rows should focus on properties that must be changed. If a default value i
 
 Use Microsoft Learn defaults where documented. If Microsoft Learn does not document a default for a property/control, do not claim one from memory.
 
+Fresh Label controls in the user's live editor do not need `Fill=RGBA(0,0,0,0)` set manually when the goal is a normal transparent label over the screen/card background. The defaults lab did not serialize `Fill` for a fresh standalone Label, and the user confirmed the live editor already shows the intended default state. Future guide rows should omit label `Fill=RGBA(0,0,0,0)` unless transparency is a safety-critical reminder, in which case label it `leave default` or `default/safety check`.
+
 ## Sort Order Enum
 
 Use:

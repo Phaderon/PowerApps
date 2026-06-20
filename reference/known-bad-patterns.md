@@ -38,5 +38,6 @@ These are mistakes that must not reappear in this guide family.
 - Grouping instructions that hide layer-order requirements or fail to list exactly which controls are included/excluded.
 - Long property lists that mix actual changes with default values without marking which are defaults.
 - Repeating fresh-control defaults from `powerapps-control-defaults.md` as if the user must manually change them.
+- Repeating `Fill=RGBA(0,0,0,0)` on normal Label controls as if it must be manually changed.
 - Treating a property omitted from the fresh-control export as a guaranteed literal default value.
 - Any instruction that depends on visual guessing rather than exact control names and properties.

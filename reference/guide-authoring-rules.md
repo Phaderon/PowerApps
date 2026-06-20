@@ -39,6 +39,7 @@ Rules:
 - If a default value is listed for reassurance, label it as `leave default` or `default/safety check`.
 - Use Microsoft Learn defaults where documented, but do not invent defaults when the docs do not state them.
 - Use `powerapps-control-defaults.md` for observed fresh-control defaults from the user's editor. Treat omitted properties as "not serialized on fresh insert", not as proof of a literal value.
+- Do not list `Fill=RGBA(0,0,0,0)` for normal Label controls unless it is marked `leave default` or `default/safety check`.
 - Classic visual workarounds may still list apparent defaults when they prevent common mistakes, for example keeping `HoverFill` and `PressedFill` locked to `Fill` on classic Button panel backgrounds.
 - For future app guides, prefer a two-column wording: `Set these` and `Leave/default check`.
 
