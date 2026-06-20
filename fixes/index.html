@@ -367,11 +367,15 @@ pre {
     </div>
     <nav class="toc" aria-label="On this page">
       <a class="toc-l1" href="#fix1">Fix 1 — Missing Manage button</a>
-      <a class="toc-l2" href="#fix1-props">Button properties</a>
       <a class="toc-l1" href="#fix2">Fix 2 — Search does nothing</a>
-      <a class="toc-l2" href="#fix2-formula">Items formula</a>
       <a class="toc-l1" href="#fix3">Fix 3 — Gallery shows nothing</a>
-      <a class="toc-l2" href="#fix3-formulafix">Replace OnVisible</a>
+      <a class="toc-l1" href="#fix4">Fix 4 — StaffType dropdown blank</a>
+      <a class="toc-l1" href="#fix5">Fix 5 — Recurrence dropdown blank</a>
+      <a class="toc-l1" href="#fix6">Fix 6 — Cancel button says "Button"</a>
+      <a class="toc-l1" href="#fix7">Fix 7 — Toggle says "Label"</a>
+      <a class="toc-l1" href="#fix8">Fix 8 — Edit panel overlaps add panel</a>
+      <a class="toc-l1" href="#fix9">Fix 9 — Team chain gallery invisible</a>
+      <a class="toc-l1" href="#fix10">Fix 10 — Team member shows own data</a>
     </nav>
     <a class="back-link" href="../">← Guide library</a>
   </aside>
@@ -478,80 +482,250 @@ pre {
         <div class="section-num amber">3</div>
         <div>
           <h2>Compliance gallery shows nothing</h2>
-          <p style="margin:0;color:var(--muted);">scrAdminDash · OnVisible</p>
+          <p style="margin:0;color:var(--muted);">scrAdminDash · drpTypeFilter · Default</p>
         </div>
       </div>
 
-      <div class="warn-label">Formula issue — not an admin or data problem</div>
+      <div class="error-label">Root cause found</div>
 
       <div class="callout callout-why">
-        <strong>Why it's empty</strong>
-        The OnVisible loads staff with <code>Filter('TT Personnel', Active = true)</code>. This only works if the Active column is a <strong>Yes/No (boolean)</strong> column in SharePoint. If it was created as a Choice, text, or any other type, the comparison <code>Active = true</code> never matches anything — regardless of what value is stored — and <code>colAllPeople</code> comes back empty. Empty people list = empty compliance collection = empty gallery.
+        <strong>Why it's empty — nothing to do with your data</strong>
+        <code>drpTypeFilter</code> has no <code>Default</code> property set. When the screen loads, the dropdown's selected value is blank. The gallery Items filter checks <code>drpTypeFilter.Selected.Value = "All"</code> — blank does not equal "All", so that condition is false. The second condition (<code>StaffType = drpTypeFilter.Selected.Value</code>) checks if StaffType equals blank — also false for everyone. Every single row gets filtered out. Your 2 people are in <code>colCompliance</code>, they're just being hidden by the type filter every time the screen loads.
       </div>
 
-      <p>The fix is to remove the Active filter entirely. Replace the entire <strong>scrAdminDash → OnVisible</strong> with this. Everyone in TT Personnel will show in the dashboard.</p>
+      <p>Select <strong>drpTypeFilter</strong> on scrAdminDash. Add this one property:</p>
 
-      <div class="code-wrap" id="fix3-formulafix">
-        <span class="code-label">OnVisible · scrAdminDash</span>
+      <table class="prop-table">
+        <thead><tr><th>Property</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Default</td><td><code>"All"</code></td></tr>
+        </tbody>
+      </table>
+
+      <p>That's the entire fix. The gallery will now show everyone on load, and the filter still works when you pick a specific staff type.</p>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         FIX 4 — StaffType dropdown blank in people list
+    ═══════════════════════════════════════════════════════ -->
+    <section class="section" id="fix4">
+      <div class="section-header">
+        <div class="section-num amber">4</div>
+        <div>
+          <h2>StaffType dropdown blank in people list</h2>
+          <p style="margin:0;color:var(--muted);">scrAdminManage · galPeople · drpRowType · Default</p>
+        </div>
+      </div>
+
+      <div class="callout callout-why">
+        <strong>Why it's blank</strong>
+        <code>drpRowType.Default</code> is set to <code>ThisItem.StaffType</code>. In SharePoint, StaffType is a Choice column — so <code>ThisItem.StaffType</code> returns a <strong>record</strong> like <code>{Value: "Civil Servant"}</code>, not a plain string. The dropdown Items list is a plain string array, so passing a record as Default finds no match and shows blank. The value IS there, it just can't be pre-selected with a record.
+      </div>
+
+      <p>Select <strong>drpRowType</strong> inside <code>galPeople</code>. Change <code>Default</code> to:</p>
+
+      <table class="prop-table">
+        <thead><tr><th>Property</th><th>Current</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>Default</td><td><code>ThisItem.StaffType</code></td><td><code>ThisItem.StaffType.Value</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         FIX 5 — Recurrence dropdown blank when editing a course
+    ═══════════════════════════════════════════════════════ -->
+    <section class="section" id="fix5">
+      <div class="section-header">
+        <div class="section-num amber">5</div>
+        <div>
+          <h2>Recurrence dropdown blank when editing a course</h2>
+          <p style="margin:0;color:var(--muted);">scrAdminManage · drpEditRecur · Default</p>
+        </div>
+      </div>
+
+      <div class="callout callout-why">
+        <strong>Why it's blank</strong>
+        <code>drpEditRecur</code> has no <code>Default</code> set at all. When you open a course to edit, the recurrence dropdown has no way to know which option to pre-select, so it shows blank. If you save without touching it, it saves the recurrence as 0 and corrupts the course record.
+      </div>
+
+      <p>Select <strong>drpEditRecur</strong> on scrAdminManage. Add this <code>Default</code> formula — it looks up the matching row in the options table based on the current course's saved recurrence months:</p>
+
+      <div class="code-wrap">
+        <span class="code-label">Default · drpEditRecur</span>
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre>ClearCollect(colAllPeople, 'TT Personnel');
-ClearCollect(colAllRecords, 'TT TrainingRecords');
-ClearCollect(colCourses, 'TT Courses');
-
-ClearCollect(
-    colCompliance,
-    ForAll(
-        colAllPeople As P,
-        With(
-            {
-                req: Filter(
-                    colCourses,
-                    Status.Value = "Active" &&
-                    P.StaffType.Value in ApplicableTo.Value
-                )
-            },
-            With(
-                {
-                    okCount: CountRows(
-                        Filter(
-                            req As C,
-                            With(
-                                {
-                                    rec: LookUp(
-                                        colAllRecords,
-                                        Lower(PersonEmail) = Lower(P.Email) &&
-                                        CourseID = C.ID
-                                    )
-                                },
-                                !IsBlank(rec.DateCompleted) &&
-                                (
-                                    C.RecurrenceMonths = 0 ||
-                                    DateAdd(rec.DateCompleted, C.RecurrenceMonths, TimeUnit.Months) >= Today()
-                                )
-                            )
-                        )
-                    )
-                },
-                {
-                    PersonID:      P.ID,
-                    Name:          P.Title,
-                    Email:         Lower(P.Email),
-                    StaffType:     P.StaffType.Value,
-                    LineManager:   P.LineManagerEmail,
-                    ManagerEdit:   Coalesce(P.ManagerCanEdit, false),
-                    Required:      CountRows(req),
-                    InDate:        okCount,
-                    Outstanding:   CountRows(req) - okCount,
-                    CompliancePct: If(
-                                       CountRows(req) = 0,
-                                       100,
-                                       Round(100 * okCount / Max(CountRows(req), 1), 0)
-                                   )
-                }
-            )
-        )
-    )
+        <pre>LookUp(
+    Table(
+        {Label: "One-off (never expires)", Months: 0},
+        {Label: "Every 6 months",          Months: 6},
+        {Label: "Every year",              Months: 12},
+        {Label: "Every 18 months",         Months: 18},
+        {Label: "Every 2 years",           Months: 24},
+        {Label: "Every 3 years",           Months: 36}
+    ),
+    Months = varEditCourse.RecurrenceMonths
 )</pre>
+      </div>
+
+      <div class="callout callout-warning">
+        <strong>The table in Default must exactly match the table in Items</strong>
+        If you've added or removed options from <code>drpEditRecur.Items</code>, update this table to match — same Label text, same Months values, same order.
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         FIX 6 — Cancel button shows "Button"
+    ═══════════════════════════════════════════════════════ -->
+    <section class="section" id="fix6">
+      <div class="section-header">
+        <div class="section-num" style="background:linear-gradient(145deg,#555,#333);">6</div>
+        <div>
+          <h2>Cancel button shows "Button"</h2>
+          <p style="margin:0;color:var(--muted);">scrAdminManage · btnCancelEdit · Text</p>
+        </div>
+      </div>
+
+      <p>The <code>Text</code> property was never set on <code>btnCancelEdit</code>. Modern buttons default to showing "Button" when Text is missing.</p>
+
+      <table class="prop-table">
+        <thead><tr><th>Property</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Text</td><td><code>"Cancel"</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         FIX 7 — Toggle says "Label"
+    ═══════════════════════════════════════════════════════ -->
+    <section class="section" id="fix7">
+      <div class="section-header">
+        <div class="section-num" style="background:linear-gradient(145deg,#555,#333);">7</div>
+        <div>
+          <h2>Toggle says "Label" next to it</h2>
+          <p style="margin:0;color:var(--muted);">scrAdminDash · tglManagerEdit · Label</p>
+        </div>
+      </div>
+
+      <p>Power Apps Toggle controls have a built-in <code>Label</code> property that renders text to the right of the toggle. When not set, it defaults to the word "Label". Since <code>lblDrillMgrLbl</code> already handles the description, suppress the built-in label with a space:</p>
+
+      <table class="prop-table">
+        <thead><tr><th>Property</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Label</td><td><code>" "</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         FIX 8 — Edit panel overlaps add panel
+    ═══════════════════════════════════════════════════════ -->
+    <section class="section" id="fix8">
+      <div class="section-header">
+        <div class="section-num red">8</div>
+        <div>
+          <h2>Edit course panel overlaps Add course panel</h2>
+          <p style="margin:0;color:var(--muted);">scrAdminManage · Courses tab · Visible conditions</p>
+        </div>
+      </div>
+
+      <div class="callout callout-why">
+        <strong>Why they overlap</strong>
+        Both panels sit at the same Y position. The edit panel correctly hides when <code>varEditCourse</code> is blank. But the add panel's <code>Visible</code> is just <code>varTab = "Courses"</code> — it never hides when the edit panel is open. Both are visible at the same time and stack on top of each other.
+      </div>
+
+      <p>For every control in the <strong>Add course</strong> panel, change <code>Visible</code> from <code>varTab = "Courses"</code> to:</p>
+
+      <div class="code-wrap">
+        <span class="code-label">Visible — all Add course controls</span>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+        <pre>varTab = "Courses" && IsBlank(varEditCourse)</pre>
+      </div>
+
+      <p>Controls to update — set the same Visible on all of these:</p>
+      <table class="prop-table">
+        <thead><tr><th>Control</th></tr></thead>
+        <tbody>
+          <tr><td><code>recAddCoursePanel</code></td></tr>
+          <tr><td><code>lblAddCourseTitle</code></td></tr>
+          <tr><td><code>txtNewCourse</code></td></tr>
+          <tr><td><code>cmbNewApplic</code></td></tr>
+          <tr><td><code>drpNewRecur</code></td></tr>
+          <tr><td><code>btnAddCourse</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         FIX 9 — Team chain gallery invisible
+    ═══════════════════════════════════════════════════════ -->
+    <section class="section" id="fix9">
+      <div class="section-header">
+        <div class="section-num red">9</div>
+        <div>
+          <h2>Team member chain gallery invisible</h2>
+          <p style="margin:0;color:var(--muted);">scrTeamMember · galMyChain · TemplateSize</p>
+        </div>
+      </div>
+
+      <div class="callout callout-why">
+        <strong>Why it's invisible</strong>
+        <code>galMyChain.TemplateSize</code> is set to <code>0</code>. Every row has zero height so nothing renders — the gallery exists and has data but is completely collapsed. The child controls are built correctly at their pixel positions, they just can't be seen.
+      </div>
+
+      <table class="prop-table">
+        <thead><tr><th>Property</th><th>Current</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>TemplateSize</td><td><code>0</code></td><td><code>64</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         FIX 10 — Team member view shows your own data
+    ═══════════════════════════════════════════════════════ -->
+    <section class="section" id="fix10">
+      <div class="section-header">
+        <div class="section-num red">10</div>
+        <div>
+          <h2>Clicking a team member shows your own training</h2>
+          <p style="margin:0;color:var(--muted);">scrTeamMember · galMyChain · recRowBG · OnSelect</p>
+        </div>
+      </div>
+
+      <div class="callout callout-why">
+        <strong>Why it shows the wrong person</strong>
+        When you tap a team member, <code>recRowBG.OnSelect</code> builds <code>colViewTraining</code> and then navigates to <code>scrMyTraining</code>. But <code>scrMyTraining.OnVisible</code> runs immediately on arrival and completely rebuilds <code>colMyTraining</code> using <strong>your own email</strong> (<code>varMyEmail</code>) — wiping out <code>colViewTraining</code> before the gallery ever reads it. The screen then shows your own training.
+      </div>
+
+      <p>Two changes needed:</p>
+
+      <p><strong>Step 1</strong> — Update <code>recRowBG.OnSelect</code> in <code>galMyChain</code>. Find the Navigate call at the end and replace it. The full OnSelect should end with:</p>
+
+      <div class="code-wrap">
+        <span class="code-label">recRowBG.OnSelect — end of formula (replace Navigate line)</span>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+        <pre>ClearCollect(colMyTraining, colViewTraining);
+ClearCollect(colMyRecords, colViewRecords);
+Set(varViewingForSelf, false);
+Navigate(scrMyTraining, ScreenTransition.Cover)</pre>
+      </div>
+
+      <p><strong>Step 2</strong> — Guard <code>scrMyTraining.OnVisible</code> so it only rebuilds training data when viewing your own record. Wrap the existing ClearCollect block:</p>
+
+      <div class="code-wrap">
+        <span class="code-label">scrMyTraining.OnVisible — wrap existing data load</span>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+        <pre>If(
+    varViewingForSelf,
+    ClearCollect(colMyRecords, Filter('TT TrainingRecords', Lower(PersonEmail) = varMyEmail));
+    // ... rest of your existing ClearCollect calls go here, unchanged
+)</pre>
+      </div>
+
+      <div class="callout callout-warning">
+        <strong>Also set varViewingForSelf back to true on the back button</strong>
+        When the user taps back from scrMyTraining to scrTeamMember (or to their own home screen), set <code>varViewingForSelf</code> back to <code>true</code> so their own data loads correctly next time they visit scrMyTraining directly.
       </div>
     </section>
 
