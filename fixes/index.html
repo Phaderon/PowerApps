@@ -371,9 +371,7 @@ pre {
       <a class="toc-l1" href="#fix2">Fix 2 — Search does nothing</a>
       <a class="toc-l2" href="#fix2-formula">Items formula</a>
       <a class="toc-l1" href="#fix3">Fix 3 — Gallery shows nothing</a>
-      <a class="toc-l2" href="#fix3-sharepointfix">Option A: fix in SharePoint</a>
-      <a class="toc-l2" href="#fix3-formulafix">Option B: fix the formula</a>
-      <a class="toc-l1" href="#fix4">Fix 4 — Manage button wrong colour</a>
+      <a class="toc-l2" href="#fix3-formulafix">Replace OnVisible</a>
     </nav>
     <a class="back-link" href="../">← Guide library</a>
   </aside>
@@ -480,48 +478,21 @@ pre {
         <div class="section-num amber">3</div>
         <div>
           <h2>Compliance gallery shows nothing</h2>
-          <p style="margin:0;color:var(--muted);">scrAdminDash · OnVisible · TT Personnel</p>
+          <p style="margin:0;color:var(--muted);">scrAdminDash · OnVisible</p>
         </div>
       </div>
 
-      <div class="warn-label">Data issue — nothing to do with admin status</div>
+      <div class="warn-label">Formula issue — not an admin or data problem</div>
 
       <div class="callout callout-why">
         <strong>Why it's empty</strong>
-        The screen's OnVisible loads people with <code>Filter('TT Personnel', Active = true)</code>. SharePoint boolean columns default to <strong>No / false</strong> when a record is created. If nobody has had their Active column explicitly ticked to Yes, <code>colAllPeople</code> is empty — so <code>colCompliance</code> is empty — so the gallery shows nothing. Admin status is irrelevant; it's purely the Active column.
+        The OnVisible loads staff with <code>Filter('TT Personnel', Active = true)</code>. This only works if the Active column is a <strong>Yes/No (boolean)</strong> column in SharePoint. If it was created as a Choice, text, or any other type, the comparison <code>Active = true</code> never matches anything — regardless of what value is stored — and <code>colAllPeople</code> comes back empty. Empty people list = empty compliance collection = empty gallery.
       </div>
 
-      <h3 id="fix3-sharepointfix" style="margin:22px 0 10px;color:var(--blue);">Option A — Fix the data in SharePoint (recommended)</h3>
-      <p>This is the right long-term fix. Active is a meaningful field that controls who appears in compliance reports.</p>
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-body">
-            <strong>Open your TT Personnel SharePoint list</strong>
-            <p>Go to your SharePoint site → Lists → TT Personnel (or however you named it).</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <div class="step-body">
-            <strong>Edit each person's row</strong>
-            <p>Click the row → Edit → find the <strong>Active</strong> column → tick it to <strong>Yes</strong> → Save. Do this for yourself and every person who should appear in the compliance dashboard.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-body">
-            <strong>Go back into the app and refresh</strong>
-            <p>Navigate away from scrAdminDash and back again to re-trigger OnVisible. The gallery should now show everyone with Active = Yes.</p>
-          </div>
-        </div>
-      </div>
+      <p>The fix is to remove the Active filter entirely. Replace the entire <strong>scrAdminDash → OnVisible</strong> with this. Everyone in TT Personnel will show in the dashboard.</p>
 
-      <h3 id="fix3-formulafix" style="margin:26px 0 10px;color:var(--blue);">Option B — Remove the Active filter from the formula</h3>
-      <p>If you don't want to manage Active at all, change the first line of <strong>scrAdminDash → OnVisible</strong> to load everyone from TT Personnel unconditionally. Replace the entire OnVisible with this:</p>
-
-      <div class="code-wrap">
-        <span class="code-label">OnVisible · scrAdminDash (Active filter removed)</span>
+      <div class="code-wrap" id="fix3-formulafix">
+        <span class="code-label">OnVisible · scrAdminDash</span>
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
         <pre>ClearCollect(colAllPeople, 'TT Personnel');
 ClearCollect(colAllRecords, 'TT TrainingRecords');
@@ -582,38 +553,6 @@ ClearCollect(
     )
 )</pre>
       </div>
-
-      <div class="callout callout-warning">
-        <strong>Option B trade-off</strong>
-        Everyone in TT Personnel will appear in the dashboard regardless of whether they're still active. Fine for now, but you'll want to add Active filtering back once you're managing staff properly and have people leaving.
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         FIX 4 — Manage button wrong colour
-    ═══════════════════════════════════════════════════════ -->
-    <section class="section" id="fix4">
-      <div class="section-header">
-        <div class="section-num" style="background:linear-gradient(145deg,#555,#333);">4</div>
-        <div>
-          <h2>Manage button has wrong colour</h2>
-          <p style="margin:0;color:var(--muted);">btnExportPDF_1 · scrAdminDash</p>
-        </div>
-      </div>
-
-      <div class="warn-label">Visual only</div>
-
-      <p>The Manage courses &amp; people button currently has <code>BasePaletteColor = RGBA(8,222,8,1)</code> — a very bright green. It should match the Export PDF button next to it (light blue background, dark blue text).</p>
-
-      <p>Select <strong>btnExportPDF_1</strong> in the Tree View on scrAdminDash and set:</p>
-
-      <table class="prop-table">
-        <thead><tr><th>Property</th><th>Value</th></tr></thead>
-        <tbody>
-          <tr><td>BasePaletteColor</td><td><code>RGBA(230,241,251,1)</code></td></tr>
-          <tr><td>Color</td><td><code>RGBA(12,68,124,1)</code></td></tr>
-        </tbody>
-      </table>
     </section>
 
   </main>
