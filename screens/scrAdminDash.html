@@ -403,7 +403,8 @@ const yaml = `Screens:
       - drpTypeFilter:
           Control: ModernDropdown@1.0.1
           Properties:
-            DefaultSelectedItems: ={Value: "All"}
+            DefaultSelectedItems: |-
+              ={Value: "All"}
             Height: =40
             ItemDisplayText: =ThisItem.Value
             Items: =["All", "Civil Servant", "Army", "Contractor"]
