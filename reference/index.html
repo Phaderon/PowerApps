@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Power Apps Reference Pack</title>
+<style>
+:root {
+  --bg: #f6efe4;
+  --paper: #fffaf1;
+  --ink: #2b2118;
+  --muted: #725f4d;
+  --line: #dfcdb3;
+  --line-strong: #c5a56d;
+  --brass: #b9852f;
+  --brass-dark: #75501b;
+  --blue: #1c3352;
+  --blue-soft: #e7eef7;
+  --shadow: 0 18px 45px rgba(49, 34, 20, .12);
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(185,133,47,.18), transparent 28rem),
+    linear-gradient(180deg, #fbf5eb 0%, var(--bg) 48%, #efe1cf 100%);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.6;
+}
+a { color: var(--blue); }
+.page {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: 28px;
+}
+.back {
+  display: inline-flex;
+  margin-bottom: 16px;
+  color: var(--brass-dark);
+  font-weight: 850;
+  text-decoration: none;
+}
+.hero, .card {
+  border: 1px solid var(--line);
+  background: rgba(255,250,241,.92);
+  box-shadow: var(--shadow);
+}
+.hero {
+  padding: 38px;
+  border-radius: 24px;
+}
+.eyebrow {
+  display: inline-flex;
+  margin-bottom: 12px;
+  border: 1px solid rgba(185,133,47,.35);
+  background: rgba(185,133,47,.12);
+  color: var(--brass-dark);
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: .76rem;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+h1 {
+  margin: 0;
+  color: var(--blue);
+  font-size: clamp(2.2rem, 7vw, 4.8rem);
+  line-height: 1;
+}
+.intro {
+  max-width: 760px;
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 1.08rem;
+}
+.grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+.card {
+  display: grid;
+  min-height: 180px;
+  padding: 20px;
+  border-radius: 18px;
+  text-decoration: none;
+}
+.card:hover, .card:focus {
+  border-color: var(--line-strong);
+  outline: none;
+}
+.card h2 {
+  margin: 0;
+  color: var(--blue);
+  font-size: 1.2rem;
+}
+.card p {
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+.open {
+  align-self: end;
+  margin-top: 18px;
+  color: var(--brass-dark);
+  font-weight: 850;
+}
+.note {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+@media (max-width: 720px) {
+  .page { padding: 12px; }
+  .hero { padding: 24px 18px; border-radius: 18px; }
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <a class="back" href="../">← Guide library</a>
+  <section class="hero">
+    <span class="eyebrow">Verified Foundation</span>
+    <h1>Power Apps reference pack</h1>
+    <p class="intro">Source-linked local notes, guide authoring rules, and audit checks for building future Power Apps guide pages without guessing control properties or formula patterns.</p>
+  </section>
+
+  <section class="grid" aria-label="Reference documents">
+    <a class="card" href="powerapps-bible.md">
+      <div>
+        <h2>PowerApps Bible</h2>
+        <p>Entry point for the local Microsoft docs mirror, searchable index, curated quirks and audit workflow.</p>
+      </div>
+      <span class="open">Open markdown →</span>
+    </a>
+    <a class="card" href="verified-control-reference.md">
+      <div>
+        <h2>Verified control reference</h2>
+        <p>Modern and classic controls used by the guide style, including exact property traps.</p>
+      </div>
+      <span class="open">Open markdown →</span>
+    </a>
+    <a class="card" href="real-build-quirks.md">
+      <div>
+        <h2>Real build quirks</h2>
+        <p>Live-editor corrections from Training Tracker, including quoted lists, sort enums, day filters and Combo box display text.</p>
+      </div>
+      <span class="open">Open markdown →</span>
+    </a>
+    <a class="card" href="powerfx-patterns.md">
+      <div>
+        <h2>Power Fx patterns</h2>
+        <p>Formula patterns for sorting, filtering, patching, collections, navigation and record scope.</p>
+      </div>
+      <span class="open">Open markdown →</span>
+    </a>
+    <a class="card" href="sharepoint-office365users.md">
+      <div>
+        <h2>SharePoint and Office365Users</h2>
+        <p>List naming, choice fields, multi-choice shape, SharePoint IDs and connector casing notes.</p>
+      </div>
+      <span class="open">Open markdown →</span>
+    </a>
+    <a class="card" href="guide-authoring-rules.md">
+      <div>
+        <h2>Guide authoring rules</h2>
+        <p>The workflow every future guide should follow before being published.</p>
+      </div>
+      <span class="open">Open markdown →</span>
+    </a>
+    <a class="card" href="future-guide-template.md">
+      <div>
+        <h2>Future guide template</h2>
+        <p>Required sections, control table shape and landing-page card template.</p>
+      </div>
+      <span class="open">Open markdown →</span>
+    </a>
+    <a class="card" href="known-bad-patterns.md">
+      <div>
+        <h2>Known bad patterns</h2>
+        <p>Recurring wrong properties, formulas and vague guide-writing patterns to block.</p>
+      </div>
+      <span class="open">Open markdown →</span>
+    </a>
+  </section>
+
+  <div class="note">
+    Update the source mirror with <code>tools/update-msdocs.sh</code>, build the index with <code>python3 tools/index-msdocs.py --rebuild</code>, and run <code>python3 tools/audit-guide.py training-tracker/index.html</code> before publishing guide edits.
+  </div>
+</main>
+</body>
+</html>

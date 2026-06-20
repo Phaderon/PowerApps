@@ -1,0 +1,6 @@
+.sources/
+.cache/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
