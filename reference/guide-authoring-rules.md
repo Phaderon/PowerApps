@@ -21,11 +21,12 @@ If something is uncertain, mark it as unverified and do not publish it as a buil
 3. Choose controls from `verified-control-reference.md`.
 4. For every control table row, include exact control type: modern or classic.
 5. For every property in a row, verify that the property belongs to that control family.
-6. For formulas, use `powerfx-patterns.md` and source-linked Microsoft Learn pages.
-7. Add any new verified fact to this reference pack.
-8. Run `python3 tools/audit-guide.py path/to/index.html`.
-9. Run `git diff --check`.
-10. Preview locally and test responsive layout and copy buttons.
+6. Check `powerapps-control-defaults.md` before listing default visual properties.
+7. For formulas, use `powerfx-patterns.md` and source-linked Microsoft Learn pages.
+8. Add any new verified fact to this reference pack.
+9. Run `python3 tools/audit-guide.py path/to/index.html`.
+10. Run `git diff --check`.
+11. Preview locally and test responsive layout and copy buttons.
 
 ## Defaults Standard
 
@@ -37,6 +38,7 @@ Rules:
 - Do not make the builder hunt for default values unless the property is safety-critical.
 - If a default value is listed for reassurance, label it as `leave default` or `default/safety check`.
 - Use Microsoft Learn defaults where documented, but do not invent defaults when the docs do not state them.
+- Use `powerapps-control-defaults.md` for observed fresh-control defaults from the user's editor. Treat omitted properties as "not serialized on fresh insert", not as proof of a literal value.
 - Classic visual workarounds may still list apparent defaults when they prevent common mistakes, for example keeping `HoverFill` and `PressedFill` locked to `Fill` on classic Button panel backgrounds.
 - For future app guides, prefer a two-column wording: `Set these` and `Leave/default check`.
 

@@ -7,6 +7,7 @@ Before creating or editing Power Apps guides in this repo, read:
 - `reference/real-build-quirks.md`
 - `reference/guide-authoring-rules.md`
 - `reference/verified-control-reference.md`
+- `reference/powerapps-control-defaults.md`
 - `reference/known-bad-patterns.md`
 
 Load these when relevant:
@@ -15,7 +16,7 @@ Load these when relevant:
 - SharePoint or Office365Users: `reference/sharepoint-office365users.md`
 - New guide structure: `reference/future-guide-template.md`
 
-Accuracy rule: do not invent Power Apps properties, connector fields, or formula behavior. Use the local reference pack, current Microsoft Learn pages, or confirmed live-editor behavior supplied by the user. If a fact is newly verified, add it to the reference pack before using it as a final guide instruction.
+Accuracy rule: do not invent Power Apps properties, connector fields, formula behavior, or default values. Use the local reference pack, current Microsoft Learn pages, lab-derived fresh-control defaults, or confirmed live-editor behavior supplied by the user. If a fact is newly verified, add it to the reference pack before using it as a final guide instruction.
 
 When accuracy matters, search the local Microsoft docs mirror first:
 

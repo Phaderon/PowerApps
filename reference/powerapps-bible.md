@@ -19,6 +19,7 @@ This is the entry point for the local Power Apps knowledge base.
 3. Curated local reference pack under `reference/`
    - Human-friendly rules.
    - Real build quirks from the Training Tracker app.
+   - Lab-derived fresh-control defaults from the live Power Apps editor.
    - Corrections discovered while building future guides.
 
 4. Audit tooling under `tools/`
@@ -34,6 +35,7 @@ Do not write guide instructions from memory when the property, connector field, 
 - Layer order matters: background/card/panel/gallery-row controls must sit behind the controls they support.
 - Temporary red-line formula errors must be called out when a later control, collection, or variable resolves them.
 - Property tables should distinguish required changes from default/safety-check values.
+- Use `powerapps-control-defaults.md` before adding visual/default property lists to guide rows.
 - Sort order must use full enum names, for example `SortOrder.Ascending`, not bare `Ascending`.
 - Modern Combo box hint text uses `InputTextPlaceholder`, not `Placeholder`.
 - Modern Combo box display text must be explicit with `ItemDisplayText`.
@@ -50,8 +52,18 @@ python3 tools/index-msdocs.py "SortOrder.Ascending"
 python3 tools/index-msdocs.py "Office365Users SearchUserV2"
 python3 tools/index-msdocs.py "DateDiff TimeUnit Days"
 python3 tools/index-msdocs.py "Patch SharePoint choice Value"
+python3 tools/index-msdocs.py "ModernCombobox fresh-control defaults"
 ```
 
 ## Start Here For Quirks
 
 Read `real-build-quirks.md` before changing formulas or control rows in Training Tracker.
+
+## Refresh Lab Defaults
+
+If the user exports a new untouched defaults lab, copy it into `.sources/default-lab/` and run:
+
+```bash
+python3 tools/generate-control-defaults.py
+python3 tools/index-msdocs.py --rebuild
+```

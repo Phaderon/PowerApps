@@ -15,6 +15,7 @@ This is not a copied mirror of Microsoft Learn. It is a practical local referenc
 - `powerapps-bible.md` - entry point for the local Microsoft docs mirror, search index, curated quirks, and audit workflow.
 - `real-build-quirks.md` - live Power Apps editor fixes discovered while building Training Tracker.
 - `verified-control-reference.md` - modern/classic controls currently used by the guide style.
+- `powerapps-control-defaults.md` - lab-derived fresh-control serialized defaults from the user's Power Apps editor.
 - `powerfx-patterns.md` - formula patterns, source links, and traps.
 - `sharepoint-office365users.md` - SharePoint field-shape and Office365Users connector notes.
 - `guide-authoring-rules.md` - required workflow for future guide creation.
@@ -24,6 +25,8 @@ This is not a copied mirror of Microsoft Learn. It is a practical local referenc
 ## Rule
 
 If a future guide needs a control, connector, or formula pattern that is not in this pack, verify it from Microsoft Learn or live Power Apps behavior first. Add the result here before using it in the guide.
+
+Use `powerapps-control-defaults.md` before writing long property lists. Do not ask the builder to change properties that are already fresh-control defaults unless the row labels them as `leave default` or `default/safety check`.
 
 ## Local Microsoft Docs Mirror
 
