@@ -65,6 +65,14 @@ Use them carefully:
 - Avoid unnecessary nested groups during the first build because they can make selection and send-to-back/front operations harder to follow.
 - If a group controls visibility, still make sure the guide explains which variable drives it and whether that variable may temporarily red-line.
 
+## Default Values
+
+Do not make the builder waste time hunting for properties that are already correct by default.
+
+Guide rows should focus on properties that must be changed. If a default value is included because it is a useful safety check, label it clearly as default/safety check.
+
+Use Microsoft Learn defaults where documented. If Microsoft Learn does not document a default for a property/control, do not claim one from memory.
+
 ## Sort Order Enum
 
 Use:

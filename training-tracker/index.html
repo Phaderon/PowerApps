@@ -1406,6 +1406,7 @@ If(
 )</code></pre></div>
 <hr/>
 <h1 id="phase-4-scrmytraining-personal-training-dashboard"><span class="phase-kicker">Build phase</span><a aria-label="Link to section" class="anchor" href="#phase-4-scrmytraining-personal-training-dashboard">#</a>PHASE 4 — scrMyTraining (personal training dashboard)</h1>
+<div class="temp-error-note"><strong>Temporary errors</strong>Several controls in this phase use <code>colMyTraining</code>, <code>colMyArchive</code>, <code>varShowArchive</code>, <code>varCourse</code> and <code>varRecord</code>. These may red-line until you paste <code>scrMyTraining.OnVisible</code> in Section E and add the gallery row <code>OnSelect</code> formula. Build the controls, then finish Section E before troubleshooting those errors.</div>
 <p>Select <strong>scrMyTraining</strong>. Build all controls first in the order shown, then set all formulas at the end of this section.</p>
 <p><strong>Screen property:</strong> Fill = <code>RGBA(247,249,252,1)</code></p>
 <h2 id="section-a-header-bar"><a aria-label="Link to section" class="anchor" href="#section-a-header-bar">#</a>Section A — Header bar</h2>
@@ -2530,6 +2531,7 @@ If(
 Navigate(scrCourseDetail, ScreenTransition.Cover)</code></pre></div>
 <hr/>
 <h1 id="phase-5-scrcoursedetail-certificate-upload"><span class="phase-kicker">Build phase</span><a aria-label="Link to section" class="anchor" href="#phase-5-scrcoursedetail-certificate-upload">#</a>PHASE 5 — scrCourseDetail (certificate upload)</h1>
+<div class="temp-error-note"><strong>Temporary errors</strong>This screen depends on <code>varCourse</code>, <code>varRecord</code> and <code>varViewingForSelf</code>, which are set by the course row <code>OnSelect</code> in Phase 4 before navigating here. If the certificate form or labels red-line while building this screen directly, finish the Phase 4 row-select formula and then recheck.</div>
 <p>Select <strong>scrCourseDetail</strong>. This screen uses a <strong>classic Edit form</strong> — the Attachments card does not exist in modern forms.</p>
 <p><strong>Screen property:</strong> Fill = <code>RGBA(247,249,252,1)</code></p>
 <h3 id="recheader-button-classic"><a aria-label="Link to section" class="anchor" href="#recheader-button-classic">#</a>recHeader — Button (classic)</h3>
@@ -2982,6 +2984,7 @@ Back()</code></pre></div>
 <div class="code-card" id="code-9"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-9" type="button">Wrap</button><button class="copy-btn" data-target="code-text-9" type="button">Copy</button></div></div><pre id="code-pre-9"><code id="code-text-9">Notify("Save failed: " &amp; frmCert.Error, NotificationType.Error)</code></pre></div>
 <hr/>
 <h1 id="phase-6-scrteammember-line-manager-chain-view"><span class="phase-kicker">Build phase</span><a aria-label="Link to section" class="anchor" href="#phase-6-scrteammember-line-manager-chain-view">#</a>PHASE 6 — scrTeamMember (line manager chain view)</h1>
+<div class="temp-error-note"><strong>Temporary errors</strong>The gallery and row controls in this phase use <code>colMyChain</code>, <code>colViewTraining</code>, <code>varViewingPerson</code> and related collections. These are built by <code>scrTeamMember.OnVisible</code> and by the row-body <code>OnSelect</code>. Red lines are expected until those formulas are pasted.</div>
 <p>Only reachable via btnMyTeam, which is only visible to users who have at least one direct report in TT Personnel.</p>
 <p><strong>Screen property:</strong> Fill = <code>RGBA(247,249,252,1)</code></p>
 <h3 id="header-controls"><a aria-label="Link to section" class="anchor" href="#header-controls">#</a>Header controls</h3>
@@ -3308,6 +3311,7 @@ If(
 )</code></pre></div>
 <hr/>
 <h1 id="phase-7-scradmindash-admin-compliance-dashboard"><span class="phase-kicker">Build phase</span><a aria-label="Link to section" class="anchor" href="#phase-7-scradmindash-admin-compliance-dashboard">#</a>PHASE 7 — scrAdminDash (admin compliance dashboard)</h1>
+<div class="temp-error-note"><strong>Temporary errors</strong>Admin dashboard controls use <code>colCompliance</code>, <code>varDrillPerson</code> and <code>colPersonDetail</code>. <code>colCompliance</code> is created by <code>scrAdminDash.OnVisible</code>; <code>varDrillPerson</code> and <code>colPersonDetail</code> are created when selecting a compliance row. Finish the formula section before troubleshooting those red lines.</div>
 <p><strong>Screen property:</strong> Fill = <code>RGBA(247,249,252,1)</code></p>
 <h3 id="header"><a aria-label="Link to section" class="anchor" href="#header">#</a>Header</h3>
 <p><strong>Create these controls directly on <code>scrAdminDash</code>.</strong> Do not reuse existing names from other screens.</p>
@@ -4274,6 +4278,7 @@ Notify("Course restored to the mandatory list.", NotificationType.Success)</code
 <li>It appears in the formula bar as <code>ExportTrainingReport.Run(...)</code>.</li>
 </ol>
 <h3 id="btnexportpdf-onselect"><a aria-label="Link to section" class="anchor" href="#btnexportpdf-onselect">#</a>btnExportPDF.OnSelect</h3>
+<div class="temp-error-note"><strong>Temporary error</strong><code>ExportTrainingReport.Run(...)</code> will red-line until the Power Automate flow is created, saved and added to this app from the Power Automate pane. Build and connect the flow first, then paste this formula.</div>
 <div class="code-card" id="code-27"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-27" type="button">Wrap</button><button class="copy-btn" data-target="code-text-27" type="button">Copy</button></div></div><pre id="code-pre-27"><code id="code-text-27">Set(varHTML,
     "&lt;html&gt;&lt;head&gt;&lt;style&gt;" &amp;
     "body{font-family:Segoe UI,Arial,sans-serif;margin:24px;}" &amp;

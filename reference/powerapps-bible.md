@@ -33,6 +33,7 @@ Do not write guide instructions from memory when the property, connector field, 
 - SharePoint list names with spaces must be wrapped in single quotes, for example `'TT Personnel'`.
 - Layer order matters: background/card/panel/gallery-row controls must sit behind the controls they support.
 - Temporary red-line formula errors must be called out when a later control, collection, or variable resolves them.
+- Property tables should distinguish required changes from default/safety-check values.
 - Sort order must use full enum names, for example `SortOrder.Ascending`, not bare `Ascending`.
 - Modern Combo box hint text uses `InputTextPlaceholder`, not `Placeholder`.
 - Modern Combo box display text must be explicit with `ItemDisplayText`.

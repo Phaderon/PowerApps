@@ -27,6 +27,19 @@ If something is uncertain, mark it as unverified and do not publish it as a buil
 9. Run `git diff --check`.
 10. Preview locally and test responsive layout and copy buttons.
 
+## Defaults Standard
+
+Future guides should separate required changes from defaults.
+
+Rules:
+
+- Put non-default or behavior-critical properties in the main "Key properties" list.
+- Do not make the builder hunt for default values unless the property is safety-critical.
+- If a default value is listed for reassurance, label it as `leave default` or `default/safety check`.
+- Use Microsoft Learn defaults where documented, but do not invent defaults when the docs do not state them.
+- Classic visual workarounds may still list apparent defaults when they prevent common mistakes, for example keeping `HoverFill` and `PressedFill` locked to `Fill` on classic Button panel backgrounds.
+- For future app guides, prefer a two-column wording: `Set these` and `Leave/default check`.
+
 ## GitHub Pages Layout
 
 The root `index.html` is a guide library menu. Each guide lives in its own child folder with an `index.html`.
