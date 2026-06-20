@@ -63,7 +63,7 @@ Do not use:
 
 Known build note:
 
-- In current Power Apps, `SelectMultiple` may default to true. Set `SelectMultiple=false` explicitly for single-selection Combo boxes.
+- In the user's current Power Apps editor, `SelectMultiple=true` is the default for modern Combo box. Set `SelectMultiple=false` explicitly for single-selection Combo boxes.
 - `ItemDisplayText` must match the shape of `Items`. `ThisItem.Value` only works when `Items` is a simple value table or SharePoint choice-style table with a `Value` field.
 
 ## Modern Dropdown

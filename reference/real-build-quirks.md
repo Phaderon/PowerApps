@@ -100,10 +100,9 @@ Do not normalize this to bare `Days`. Do not change it to `TimeUnit.Days` in thi
 
 ## Modern Combo Box
 
-Modern Combo box rows need all of these made explicit:
+Modern Combo box rows need display and placeholder fields made explicit:
 
 ```powerfx
-SelectMultiple=true
 InputTextPlaceholder="Applies to..."
 ItemDisplayText=ThisItem.Value
 ```
@@ -115,6 +114,8 @@ ItemDisplayText=ThisItem.DisplayName
 ```
 
 Do not use `Placeholder` for modern Combo box.
+
+In the user's live editor, modern Combo box `SelectMultiple=true` is already the default. Do not make `SelectMultiple=true` a manual step unless it is labelled `leave default` or `default/safety check`. For single-select Combo boxes, set `SelectMultiple=false` explicitly.
 
 ## Modern Dropdown With Table Items
 
