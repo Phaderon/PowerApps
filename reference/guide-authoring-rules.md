@@ -58,6 +58,18 @@ Reuse the Training Tracker guide style unless there is a clear reason not to:
 - Responsive split-screen behavior with no page-level horizontal overflow.
 - Critical technical notes near the bottom for hard-won build quirks.
 
+## Layer Order Standard
+
+When a control is a visual background, card, panel, row fill, indentation strip, or progress-bar background, the guide must say so before the user builds on top of it.
+
+Rules:
+
+- Put the background control first in the table for that panel/template.
+- Add a highlighted layer note before the table when order matters.
+- State what must sit on top of it.
+- For progress bars, explicitly say the background bar sits behind the fill bar.
+- If a future guide has a tree/grouping section, include the background control in the group list but make clear it must be sent behind the visible controls.
+
 ## Landing Page Rule
 
 When adding a new guide, add exactly one new card to root `index.html`:
@@ -66,4 +78,3 @@ When adding a new guide, add exactly one new card to root `index.html`:
 - Card description should state app purpose and data sources.
 - Pills should include platform, data source, and guide status.
 - Link should point to the child folder, e.g. `new-guide/`.
-

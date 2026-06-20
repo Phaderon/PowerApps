@@ -16,6 +16,26 @@ Power Fx formulas must wrap SharePoint list names containing spaces in single qu
 
 Do not write unquoted list names in formulas.
 
+## Layer Order
+
+Layer order is a build requirement, not a cosmetic note.
+
+Any classic Button used as a visual background must sit behind the controls it supports:
+
+- card backgrounds
+- panel backgrounds
+- gallery row backgrounds
+- indentation strips
+- progress-bar backgrounds
+
+In guide tables, place background controls before the controls that sit on top of them, and add a highlighted layer note when the order matters. If a background covers labels, inputs, icons or buttons in Power Apps, use Send to back or move it to the bottom/back of that screen, group, or gallery template before continuing.
+
+For progress bars, the background bar must sit behind the fill bar:
+
+```text
+recBarBack behind recBarFill
+```
+
 ## Sort Order Enum
 
 Use:

@@ -257,6 +257,18 @@ blockquote {
   border-radius: 12px;
   color: var(--muted);
 }
+.layer-note {
+  margin: 18px 0;
+  padding: 14px 18px;
+  border: 2px solid #c6861f;
+  border-left-width: 8px;
+  border-radius: 12px;
+  background: #fff1c7;
+  color: #5a3b07;
+}
+.layer-note strong {
+  color: #7a4b00;
+}
 table {
   display: block;
   width: 100%;
@@ -666,6 +678,104 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <h2 id="overview"><a aria-label="Link to section" class="anchor" href="#overview">#</a>OVERVIEW</h2><div class="audit-note" id="audit-note-v23"><strong>v2.3 audit note:</strong> this version was scrubbed for the known Power Fx copy/paste traps <em>and</em> instruction gaps. Sections that previously depended on earlier examples or unnamed duplicate controls have been expanded so you do not have to jump backwards to work out which controls/properties to create.</div><div class="audit-note"><strong>v2.7 clarity scrub:</strong> Phase 6, Phase 7, Phase 8 and Phase 9 control instructions now use explicit control tables; Course Archive formulas remain split so the gallery icon and edit-panel button use the correct separate formulas.</div>
 <p>A complete, copy-paste-ready build plan for a canvas Power App replacing a manual SharePoint training list. Staff maintain their own training records and certificates. Line managers can view (and optionally upload for) their direct/indirect reports. The training administrator ("Jackie") gets a full compliance dashboard, personnel and course management, and one-click PDF report export.</p>
 <p><strong>Format:</strong> Tablet canvas app, 1366×768. Modern controls enabled.</p>
+<h3 id="layer-order-checklist"><a aria-label="Link to section" class="anchor" href="#layer-order-checklist">#</a>Layer order checklist</h3>
+<div class="layer-note"><strong>Use this if something disappears behind a panel.</strong> Background controls should be created first, then labels/inputs/icons/buttons should sit on top. If a background covers later controls, use Send to back or move it to the bottom/back of that screen, group, or gallery template.</div>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Control(s) to search</th>
+<th>Required layer order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase 3 — scrNoRecord</td>
+<td><code>recBackground</code></td>
+<td>Full-screen background. Keep behind all text, icon and button controls on the screen.</td>
+</tr>
+<tr>
+<td>Phase 4 — scrMyTraining</td>
+<td><code>recHeader</code>, <code>recCard1</code>, <code>recCard2</code>, <code>recCard3</code></td>
+<td>Header/card backgrounds. Keep each behind the labels, buttons and content placed over that area.</td>
+</tr>
+<tr>
+<td>Phase 4 — scrMyTraining</td>
+<td><code>recInitialsBG</code>, <code>lblInitials</code></td>
+<td><code>recInitialsBG</code> is the circle background. <code>lblInitials</code> must sit on top.</td>
+</tr>
+<tr>
+<td>Phase 4 — scrMyTraining</td>
+<td><code>recStatusBar</code>, <code>recRowDivider</code></td>
+<td>Gallery row decoration. Keep behind row text, pills and action controls.</td>
+</tr>
+<tr>
+<td>Phase 5 — scrCourseDetail</td>
+<td><code>recHeader</code>, <code>recCard</code></td>
+<td>Header/card backgrounds. Keep behind the upload form controls and labels.</td>
+</tr>
+<tr>
+<td>Phase 6 — scrTeamMember</td>
+<td><code>recTeamHeader</code></td>
+<td>Header background. Keep behind the back icon/title controls.</td>
+</tr>
+<tr>
+<td>Phase 6 — scrTeamMember</td>
+<td><code>recRowBG</code>, <code>recIndent</code>, <code>recBarBack</code>, <code>recBarFill</code></td>
+<td>In the gallery template: <code>recRowBG</code> and <code>recIndent</code> sit behind row labels/icons. <code>recBarBack</code> sits behind <code>recBarFill</code>.</td>
+</tr>
+<tr>
+<td>Phase 7 — scrAdminDash</td>
+<td><code>recAdminDashHeader</code></td>
+<td>Header background. Keep behind the admin title/back controls.</td>
+</tr>
+<tr>
+<td>Phase 7 — scrAdminDash</td>
+<td><code>recAdminCardStaff</code>, <code>recAdminCardFullyIn</code>, <code>recAdminCardPct</code>, <code>recAdminCardOutstanding</code></td>
+<td>Stat card backgrounds. Keep behind their large number label and caption label.</td>
+</tr>
+<tr>
+<td>Phase 7 — scrAdminDash</td>
+<td><code>recRowBG</code>, <code>recBarBack</code>, <code>recBarFill</code></td>
+<td>In <code>galCompliance</code>: <code>recRowBG</code> sits behind labels/icons. <code>recBarBack</code> sits behind <code>recBarFill</code>.</td>
+</tr>
+<tr>
+<td>Phase 7 — scrAdminDash</td>
+<td><code>recDrillPanel</code></td>
+<td>Drill-down side panel background. Keep behind the drill-down labels, toggle and detail gallery.</td>
+</tr>
+<tr>
+<td>Phase 8 — scrAdminManage People</td>
+<td><code>recAdminManageHeader</code></td>
+<td>Header background. Keep behind tab buttons, title and back icon.</td>
+</tr>
+<tr>
+<td>Phase 8 — scrAdminManage People</td>
+<td><code>recAddPanel</code></td>
+<td>Add person panel background. Keep behind the title, people search, manual inputs, toggles and Add button.</td>
+</tr>
+<tr>
+<td>Phase 8 — scrAdminManage People</td>
+<td><code>recPeopleRow</code></td>
+<td>People gallery row background. Keep behind person labels, dropdown, admin pill and remove icon.</td>
+</tr>
+<tr>
+<td>Phase 9 — scrAdminManage Courses</td>
+<td><code>recAddCoursePanel</code></td>
+<td>Add course panel background. Keep behind the title, course input, combo box, recurrence dropdown and Add button.</td>
+</tr>
+<tr>
+<td>Phase 9 — scrAdminManage Courses</td>
+<td><code>recEditPanel</code></td>
+<td>Edit course panel background. Keep behind edit input, combo box, recurrence dropdown and edit buttons.</td>
+</tr>
+<tr>
+<td>Phase 9 — scrAdminManage Courses</td>
+<td><code>recCourseRow</code></td>
+<td>Course gallery row background. Keep behind course labels, status pill and edit/archive/reactivate icons.</td>
+</tr>
+</tbody>
+</table>
 <h3 id="what-the-finished-app-does"><a aria-label="Link to section" class="anchor" href="#what-the-finished-app-does">#</a>What the finished app does</h3>
 <table>
 <thead>
@@ -2921,6 +3031,7 @@ Back()</code></pre></div>
 </tbody>
 </table>
 <p>Inside the gallery template:</p>
+<div class="layer-note"><strong>Layer order:</strong> <code>recRowBG</code> and <code>recIndent</code> are row background pieces and must stay behind the row labels/icons. <code>recBarBack</code> must sit behind <code>recBarFill</code>. If any background covers text, send that background control to the back inside the gallery template.</div>
 <table>
 <thead>
 <tr>
@@ -3262,6 +3373,7 @@ If(
 <h3 id="galcompliance-gallery-vertical-blank"><a aria-label="Link to section" class="anchor" href="#galcompliance-gallery-vertical-blank">#</a>galCompliance — Gallery (vertical, blank)</h3>
 <p>X=0, Y=258, W=900, H=510, TemplateSize=60, TemplatePadding=0, ShowScrollbar=true, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0, Items: see formula below</p>
 <p>Inside galCompliance template:</p>
+<div class="layer-note"><strong>Layer order:</strong> <code>recRowBG</code> is the row background and must sit behind every label/icon in the template. <code>recBarBack</code> is the progress-bar background and must sit behind <code>recBarFill</code>.</div>
 <table>
 <thead>
 <tr>
@@ -3611,6 +3723,7 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 <div class="callout"><strong>Do not create <code>grpPeople</code> yet.</strong> Build all People controls below first, then the guide gives you the exact group list.</div>
 
 <h3 id="add-person-panel"><a aria-label="Link to section" class="anchor" href="#add-person-panel">#</a>Add person panel</h3>
+<div class="layer-note"><strong>Layer order:</strong> <code>recAddPanel</code> is the white panel background. It must sit behind every Add person control. If it appears on top, use Send to back, or move it to the bottom/back of the Add person controls in the tree before grouping.</div>
 <table>
 <thead>
 <tr>
@@ -3841,6 +3954,7 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 <h1 id="phase-9-scradminmanage-courses-tab"><span class="phase-kicker">Build phase</span><a aria-label="Link to section" class="anchor" href="#phase-9-scradminmanage-courses-tab">#</a>PHASE 9 — scrAdminManage · Courses tab</h1>
 <p>Build the Courses controls on the same screen as the People controls. <strong>Do not create <code>grpCourses</code> yet.</strong> Build all controls in this phase first, then group them at the end of the controls section using the exact list provided.</p>
 <h3 id="add-course-panel"><a aria-label="Link to section" class="anchor" href="#add-course-panel">#</a>Add course panel</h3>
+<div class="layer-note"><strong>Layer order:</strong> <code>recAddCoursePanel</code> is the white panel background. It must sit behind the Add course title, inputs, dropdowns, combo box and button. If it covers them, send it to the back before grouping.</div>
 <table>
 <thead>
 <tr>
@@ -3883,6 +3997,7 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 </tbody>
 </table>
 <h3 id="edit-panel-shown-when-vareditcourse-is-set"><a aria-label="Link to section" class="anchor" href="#edit-panel-shown-when-vareditcourse-is-set">#</a>Edit panel — shown when varEditCourse is set</h3>
+<div class="layer-note"><strong>Layer order:</strong> <code>recEditPanel</code> is the edit panel background. It must sit behind all edit-panel controls. Keep it behind <code>txtEditCourse</code>, <code>cmbEditApplic</code>, <code>drpEditRecur</code> and the edit buttons.</div>
 <table>
 <thead>
 <tr>
@@ -3965,6 +4080,7 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 </tbody>
 </table>
 <p>Inside galCourses template:</p>
+<div class="layer-note"><strong>Layer order:</strong> <code>recCourseRow</code> is the course row background. It must stay behind <code>lblCrsName</code>, <code>lblCrsDetail</code>, status pills and action icons. If it covers them, send it to the back inside the gallery template.</div>
 <table>
 <thead>
 <tr>
@@ -4309,6 +4425,7 @@ Notify("Report sent — check your inbox in ~30 seconds.", NotificationType.Succ
 <p>These are hard-won corrections from real build experience. Do not silently "fix" or rephrase any of the following — they are correct as written, even where they may look unusual:</p>
 <ul>
 <li><strong>Rounded corners</strong>: Power Apps rectangles have NO radius property. Every "card" or "rounded panel" in this guide is built using a <strong>classic Button control</strong> with <code>Text=""</code>, <code>DisplayMode=DisplayMode.View</code>, <code>HoverFill</code> and <code>PressedFill</code> locked to match <code>Fill</code> (to prevent hover-darkening), and then <code>RadiusTopLeft</code>/<code>RadiusTopRight</code>/<code>RadiusBottomLeft</code>/<code>RadiusBottomRight</code> set normally. Never suggest using Insert → Rectangle for anything that needs rounded corners.</li>
+<li><strong>Layer order matters</strong>: any classic Button used as a card, panel, row background, indentation strip, or progress-bar background must sit behind the controls it visually supports. If it covers labels, inputs, icons or buttons, use Send to back or move it to the bottom/back of that screen/group/gallery template before continuing.</li>
 <li><strong>List names</strong>: All three SharePoint list names contain spaces and must be wrapped in single quotes in every formula: <code>'TT Personnel'</code>, <code>'TT Courses'</code>, <code>'TT TrainingRecords'</code>. This is not optional and not a style choice — Power Fx requires it for any identifier containing a space.</li>
 <li><strong>Sort order</strong>: Always the full enum prefix — <code>SortOrder.Ascending</code> or <code>SortOrder.Descending</code>. Never bare <code>Ascending</code>/<code>Descending</code>.</li>
 <li><strong>DateAdd day filters</strong>: in this tenant/editor, the expiring-soon filters accepted <code>"Days"</code> as the day unit. Preserve that exact quoted value in the Training Tracker formulas unless the live editor is rechecked.</li>

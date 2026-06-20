@@ -31,6 +31,7 @@ Do not write guide instructions from memory when the property, connector field, 
 ## Real Build Quirks To Preserve
 
 - SharePoint list names with spaces must be wrapped in single quotes, for example `'TT Personnel'`.
+- Layer order matters: background/card/panel/gallery-row controls must sit behind the controls they support.
 - Sort order must use full enum names, for example `SortOrder.Ascending`, not bare `Ascending`.
 - Modern Combo box hint text uses `InputTextPlaceholder`, not `Placeholder`.
 - Modern Combo box display text must be explicit with `ItemDisplayText`.
