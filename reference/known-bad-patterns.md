@@ -15,6 +15,9 @@ These are mistakes that must not reappear in this guide family.
 - Multi-select Combo box preselection with `Default`. Use `DefaultSelectedItems`.
 - Modern Dropdown with table-shaped `Items` but no explicit `ItemDisplayText`.
 - Any property copied from a similar control without checking that control's Microsoft Learn page.
+- `Size` on `Toggle@1.1.5`. Toggle does not expose font-size. Confirmed PA2108 in live editor 2026-06-20.
+- `FontWeight` on `ModernButton@1.0.0`. Modern Button does not expose FontWeight. Confirmed by cross-check against user's working Screens.txt (which uses BasePaletteColor, Color, Size but never FontWeight) 2026-06-20.
+- YAML properties on a control generated from the guide's *intent* without running an audit against `verified-control-reference.md`. Always audit before publishing.
 
 ## Power Fx
 
