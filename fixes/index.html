@@ -366,18 +366,10 @@ pre {
       </div>
     </div>
     <nav class="toc" aria-label="On this page">
-      <a class="toc-l1" href="#fix1">Fix 1 — Navigate in OnVisible</a>
-      <a class="toc-l2" href="#fix1-why">Why it errors</a>
-      <a class="toc-l2" href="#fix1-steps">Step-by-step</a>
-      <a class="toc-l2" href="#fix1-scrstart">scrStart formula</a>
-      <a class="toc-l2" href="#fix1-admindash">scrAdminDash formula</a>
-      <a class="toc-l2" href="#fix1-adminmanage">scrAdminManage formula</a>
-      <a class="toc-l1" href="#fix2">Fix 2 — Sort on Choice column</a>
-      <a class="toc-l2" href="#fix2-why">Why it errors</a>
-      <a class="toc-l2" href="#fix2-formula">Replacement formula</a>
-      <a class="toc-l1" href="#warn1">Warning — Delegation</a>
-      <a class="toc-l1" href="#note1">Fix — Gray buttons</a>
-      <a class="toc-l2" href="#note1">5 affected buttons</a>
+      <a class="toc-l1" href="#fix1">Fix 1 — Missing Manage button</a>
+      <a class="toc-l2" href="#fix1-props">Button properties</a>
+      <a class="toc-l1" href="#fix2">Fix 2 — Search does nothing</a>
+      <a class="toc-l2" href="#fix2-formula">Items formula</a>
     </nav>
     <a class="back-link" href="../">← Guide library</a>
   </aside>
@@ -391,292 +383,88 @@ pre {
         <span class="badge">Canvas App</span>
       </div>
       <h1>Final fixes</h1>
-      <p>The last remaining errors in the training tracker app. Each fix includes the exact steps and ready-to-paste formulas. Delegation warnings and the gray button issue are also documented.</p>
+      <p>Two missing pieces in the admin dashboard — a navigation button that was never added, and a gallery Items formula that was set incorrectly.</p>
     </div>
 
     <!-- ══════════════════════════════════════════════════════
-         FIX 1 — Navigate in OnVisible
+         FIX 1 — Missing Manage button on scrAdminDash
     ═══════════════════════════════════════════════════════ -->
     <section class="section" id="fix1">
       <div class="section-header">
         <div class="section-num">1</div>
         <div>
-          <h2>Navigate in OnVisible</h2>
-          <p style="margin:0;color:var(--muted);">Affects: scrStart · scrAdminDash · scrAdminManage</p>
+          <h2>No way to reach the Manage screen</h2>
+          <p style="margin:0;color:var(--muted);">scrAdminDash is missing a button to navigate to scrAdminManage</p>
         </div>
       </div>
 
-      <div class="error-label">⛔ Error</div>
-      <p style="font-family:var(--mono);font-size:.88rem;background:var(--paper-2);padding:10px 14px;border-radius:10px;border:1px solid var(--line);">Navigate cannot be used here since it would automatically always navigate away from this screen.</p>
+      <div class="warn-label">Missing navigation</div>
 
-      <div class="callout callout-why" id="fix1-why">
-        <strong>Why this happens</strong>
-        Power Apps runs <code>OnVisible</code> every time the screen loads. If <code>Navigate()</code> is inside it, the app immediately jumps away — which loads the new screen — which might redirect back — infinite loop. Power Apps blocks it entirely.
+      <div class="callout callout-why">
+        <strong>What happened</strong>
+        The guide built scrAdminDash (compliance dashboard) but never added a button to get to scrAdminManage (where you add courses, add people, etc.). The back arrow on scrAdminDash only goes back to scrMyTraining. scrAdminManage was unreachable.
       </div>
 
-      <p>The fix is a hidden <strong>Timer</strong> control. The timer fires automatically 1 millisecond after the screen loads, then the Navigate call goes inside the timer's <code>OnTimerEnd</code> instead of <code>OnVisible</code>. The screen loads first, then the timer fires, then the navigation happens — no loop.</p>
+      <p>Add a modern Button directly on <strong>scrAdminDash</strong> with these properties. It sits in the header bar to the left of the Export PDF button.</p>
 
-      <div class="callout callout-warning">
-        <strong>Important — one timer per screen</strong>
-        You need to add a <strong>separate timer to each of the three screens</strong>: scrStart, scrAdminDash, and scrAdminManage. A timer only works on the screen it lives on. Follow steps 1–6 three times — once on each screen — then paste the correct formula for that screen in step 5.
-      </div>
-
-      <h3 id="fix1-steps" style="margin:22px 0 14px;color:var(--blue);">Step-by-step — repeat on each of the three screens</h3>
-
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-body">
-            <strong>Select the screen in the Tree View</strong>
-            <p>Click the screen name (e.g. <code>scrStart</code>) in the left panel. Make sure the screen itself is selected, not a control inside it.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <div class="step-body">
-            <strong>Insert a Timer</strong>
-            <p>In the top ribbon: <strong>Insert → Timer</strong>. A white timer box will appear on the canvas. It doesn't matter where it sits — drag it to a corner or off the edge.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-body">
-            <strong>Rename the timer (optional but tidy)</strong>
-            <p>In the Tree View, right-click the new timer → <strong>Rename</strong> → type <code>tmrNav</code> → press Enter.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">4</div>
-          <div class="step-body">
-            <strong>Set these four properties on the timer</strong>
-            <p>With the timer selected, use the property dropdown (top-left of the formula bar) to switch between properties and set each value:</p>
-            <table class="prop-table">
-              <thead>
-                <tr><th>Property</th><th>Value to type</th><th>What it does</th></tr>
-              </thead>
-              <tbody>
-                <tr><td><code>AutoStart</code></td><td><code>true</code></td><td>Timer starts the moment the screen loads</td></tr>
-                <tr><td><code>Duration</code></td><td><code>1</code></td><td>Fires after 1 millisecond (effectively instant)</td></tr>
-                <tr><td><code>Repeat</code></td><td><code>false</code></td><td>Only fires once, not on a loop</td></tr>
-                <tr><td><code>Visible</code></td><td><code>false</code></td><td>Hides the timer box from users</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">5</div>
-          <div class="step-body">
-            <strong>Paste the Navigate formula into OnTimerEnd</strong>
-            <p>In the property dropdown, select <strong>OnTimerEnd</strong>. Copy the formula for your screen from the section below and paste it in.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">6</div>
-          <div class="step-body">
-            <strong>Remove Navigate from OnVisible</strong>
-            <p>Click the screen (not the timer) in the Tree View. Set the property dropdown to <strong>OnVisible</strong>. <strong>Delete only the Navigate line(s)</strong>. Leave any <code>ClearCollect</code>, <code>Set</code>, or other lines exactly as they are.</p>
-          </div>
-        </div>
-      </div>
+      <table class="prop-table" id="fix1-props">
+        <thead><tr><th>Property</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Type</td><td>Button (modern)</td></tr>
+          <tr><td>X</td><td><code>986</code></td></tr>
+          <tr><td>Y</td><td><code>16</code></td></tr>
+          <tr><td>Width</td><td><code>180</code></td></tr>
+          <tr><td>Height</td><td><code>40</code></td></tr>
+          <tr><td>Text</td><td><code>"Manage courses &amp; people"</code></td></tr>
+          <tr><td>FontSize</td><td><code>11</code></td></tr>
+          <tr><td>BasePaletteColor</td><td><code>RGBA(230,241,251,1)</code></td></tr>
+          <tr><td>Color</td><td><code>RGBA(12,68,124,1)</code></td></tr>
+          <tr><td>OnSelect</td><td><code>Navigate(scrAdminManage, ScreenTransition.Cover)</code></td></tr>
+        </tbody>
+      </table>
 
       <div class="callout callout-ok">
-        <strong>How to check it worked</strong>
-        The red error underline on <code>OnVisible</code> should disappear. The Navigate call now sits in <code>OnTimerEnd</code>, which Power Apps permits.
-      </div>
-
-      <!-- scrStart -->
-      <div class="screen-divider" id="fix1-scrstart">Screen 1 of 3 — scrStart</div>
-      <p>Go to <strong>scrStart</strong>. Add a timer there following steps 1–6 above. In step 5, paste this formula into that timer's <code>OnTimerEnd</code>. Then delete the Navigate lines from <code>scrStart → OnVisible</code>.</p>
-      <div class="code-wrap">
-        <span class="code-label">OnTimerEnd · scrStart</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre id="code-scrstart">If(
-    IsBlank(varMe),
-    Navigate(scrNoRecord, ScreenTransition.Fade),
-    Navigate(scrMyTraining, ScreenTransition.Fade)
-)</pre>
-      </div>
-
-      <!-- scrAdminDash -->
-      <div class="screen-divider" id="fix1-admindash">Screen 2 of 3 — scrAdminDash</div>
-      <p>Go to <strong>scrAdminDash</strong>. Add a second, separate timer to this screen following steps 1–6. In step 5, paste this formula into that timer's <code>OnTimerEnd</code>. The <code>ClearCollect</code> calls already in <code>OnVisible</code> stay exactly where they are — only the Navigate line gets removed.</p>
-      <div class="code-wrap">
-        <span class="code-label">OnTimerEnd · scrAdminDash</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre id="code-admindash">If(!varIsAdmin, Navigate(scrMyTraining, ScreenTransition.None))</pre>
-      </div>
-
-      <!-- scrAdminManage -->
-      <div class="screen-divider" id="fix1-adminmanage">Screen 3 of 3 — scrAdminManage</div>
-      <p>Go to <strong>scrAdminManage</strong>. Add a third, separate timer to this screen following steps 1–6. In step 5, paste this formula into that timer's <code>OnTimerEnd</code>. All <code>ClearCollect</code> and other lines stay in <code>OnVisible</code> — only the Navigate line gets removed.</p>
-      <div class="code-wrap">
-        <span class="code-label">OnTimerEnd · scrAdminManage</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre id="code-adminmanage">If(!varIsAdmin, Navigate(scrMyTraining, ScreenTransition.None))</pre>
+        <strong>After this fix</strong>
+        The flow becomes: home → Admin button → scrAdminDash (compliance overview) → Manage courses &amp; people → scrAdminManage (add/edit courses, add/remove people). The back arrow on scrAdminManage returns to scrAdminDash.
       </div>
     </section>
 
     <!-- ══════════════════════════════════════════════════════
-         FIX 2 — Sort on Choice column
+         FIX 2 — galCompliance search does nothing
     ═══════════════════════════════════════════════════════ -->
     <section class="section" id="fix2">
       <div class="section-header">
         <div class="section-num green">2</div>
         <div>
-          <h2>Sort on Choice column</h2>
-          <p style="margin:0;color:var(--muted);">Affects: galCourses Items · scrAdminManage</p>
+          <h2>Staff search field does nothing</h2>
+          <p style="margin:0;color:var(--muted);">galCompliance.Items is set incorrectly — scrAdminDash</p>
         </div>
       </div>
 
-      <div class="error-label">⛔ Error</div>
-      <p style="font-family:var(--mono);font-size:.88rem;background:var(--paper-2);padding:10px 14px;border-radius:10px;border:1px solid var(--line);">Cannot sort on the expression type.</p>
+      <div class="warn-label">Formula set wrong</div>
 
-      <div class="callout callout-why" id="fix2-why">
-        <strong>Why this happens</strong>
-        The <code>Status</code> column is a <strong>Choice</strong> column (a preset dropdown, not plain text). <code>SortByColumns()</code> only works on text and number columns — it cannot sort Choice fields directly.
+      <div class="callout callout-why">
+        <strong>What happened</strong>
+        The <code>galCompliance</code> Items property was set to <code>txtAdminSearch</code> (just the name of the text input control) instead of the full Filter formula that references it. The gallery had no idea what to display or filter.
       </div>
 
-      <div class="screen-divider" id="fix2-formula">Replacement formula</div>
-      <p>Select <strong>galCourses</strong> in the Tree View. Set the property dropdown to <strong>Items</strong>. Replace the entire current formula with this:</p>
+      <p>Select <strong>galCompliance</strong> in the Tree View on scrAdminDash. Set the property dropdown to <strong>Items</strong>. Replace whatever is there with this formula:</p>
+
+      <div class="screen-divider" id="fix2-formula">galCompliance — Items</div>
       <div class="code-wrap">
-        <span class="code-label">Items · galCourses</span>
+        <span class="code-label">Items · galCompliance</span>
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre id="code-sort">Sort(
-    Sort(colCourses, Title, SortOrder.Ascending),
-    Status.Value,
-    SortOrder.Descending
+        <pre>Filter(colCompliance,
+    (drpTypeFilter.Selected.Value = "All" ||
+     StaffType = drpTypeFilter.Selected.Value) &&
+    (IsBlank(txtAdminSearch.Text) ||
+     txtAdminSearch.Text in Name)
 )</pre>
-      </div>
-      <p style="color:var(--muted);font-size:.92rem;">This uses <code>Sort()</code> (not <code>SortByColumns()</code>) and reads <code>Status.Value</code> — the text label of the choice — which <em>is</em> sortable. The inner sort applies Title A→Z first, then the outer sort layers Status on top.</p>
-
-      <div class="callout callout-warning">
-        <strong>If Status.Value still errors</strong>
-        Try <code>Text(Status)</code> in place of <code>Status.Value</code>. This depends on whether Status is a Dataverse Choice or a SharePoint Choice column — both have slightly different Power Fx representations.
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         WARNING — Delegation
-    ═══════════════════════════════════════════════════════ -->
-    <section class="section" id="warn1">
-      <div class="section-header">
-        <div class="section-num amber">!</div>
-        <div>
-          <h2>Delegation warning</h2>
-          <p style="margin:0;color:var(--muted);">Affects: btnRetry · scrNoRecord</p>
-        </div>
-      </div>
-
-      <div class="warn-label">⚠ Warning — no action needed</div>
-      <p style="font-family:var(--mono);font-size:.88rem;background:var(--paper-2);padding:10px 14px;border-radius:10px;border:1px solid var(--line);">The "Lower" part of this formula might not work correctly on large data sets.</p>
-
-      <p>This is a yellow warning, not a red error. The app will build and run fine.</p>
-
-      <div class="callout callout-why">
-        <strong>What it means</strong>
-        <code>LookUp('TT Personnel', Lower(Email) = varMyEmail)</code> uses <code>Lower()</code> to compare emails case-insensitively. Power Apps can't push <code>Lower()</code> to the data source, so it fetches records locally and filters them in-app. This only becomes a problem if TT Personnel ever exceeds ~500 rows. For a cadets register, that won't happen.
-      </div>
-
-      <p><strong>Leave this formula as-is.</strong> To hide the yellow underline in Studio: <strong>File → Settings → Upcoming features → Experimental</strong> → toggle <em>Show delegation warnings</em> off. But this is cosmetic only.</p>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         NOTE — Gray buttons
-    ═══════════════════════════════════════════════════════ -->
-    <section class="section" id="note1">
-      <div class="section-header">
-        <div class="section-num" style="background:linear-gradient(145deg,#555,#333);">~</div>
-        <div>
-          <h2>Gray buttons with gray text</h2>
-          <p style="margin:0;color:var(--muted);">5 buttons across multiple screens — same fix each time</p>
-        </div>
-      </div>
-
-      <div class="warn-label">⚠ Visual issue — same root cause on every button</div>
-
-      <div class="callout callout-why">
-        <strong>Why it happened</strong>
-        Every "secondary" button in the guide (Cancel, Show archive, inactive tabs) was given <code>BasePaletteColor=RGBA(244,246,248,1)</code> (very light gray) and <code>Color=RGBA(85,85,85,1)</code> (medium gray text). In practice these render as gray-on-gray and the text disappears. The fix is the same for all five: change <code>Color</code> to <code>RGBA(31,58,95,1)</code> (the app's dark navy), which gives proper contrast against the light gray background.
-      </div>
-
-      <h3 style="margin:22px 0 14px;color:var(--blue);">The 5 affected buttons</h3>
-
-      <table class="prop-table">
-        <thead>
-          <tr><th>Screen</th><th>Button</th><th>What to change</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>scrMyTraining</td>
-            <td>"Show archive / Hide archive" button</td>
-            <td>Change <code>Color</code> to <code>RGBA(31,58,95,1)</code></td>
-          </tr>
-          <tr>
-            <td>scrCourseDetail</td>
-            <td>Cancel button (bottom of cert upload form)</td>
-            <td>Change <code>Color</code> to <code>RGBA(31,58,95,1)</code></td>
-          </tr>
-          <tr>
-            <td>scrAdminManage</td>
-            <td>btnTabPeople — <strong>inactive state only</strong></td>
-            <td>Change the second value in the If: <code>If(varTab="People", RGBA(255,255,255,1), <mark>RGBA(31,58,95,1)</mark>)</code></td>
-          </tr>
-          <tr>
-            <td>scrAdminManage</td>
-            <td>btnTabCourses — <strong>inactive state only</strong></td>
-            <td>Change the second value in the If: <code>If(varTab="Courses", RGBA(255,255,255,1), <mark>RGBA(31,58,95,1)</mark>)</code></td>
-          </tr>
-          <tr>
-            <td>scrAdminManage</td>
-            <td>Cancel button (bottom of edit course panel)</td>
-            <td>Change <code>Color</code> to <code>RGBA(31,58,95,1)</code></td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h3 style="margin:22px 0 14px;color:var(--blue);">How to apply the fix</h3>
-
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-body">
-            <strong>Select the button in the Tree View</strong>
-            <p>Click the button by name. For the tab buttons, you'll be editing a formula — use the property dropdown and select <strong>Color</strong>.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <div class="step-body">
-            <strong>For simple buttons (Show archive, both Cancel buttons)</strong>
-            <p>In the right panel under <strong>Color</strong>, replace the value with <code>RGBA(31,58,95,1)</code>. The button text will turn dark navy and become clearly readable against the light gray background.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-body">
-            <strong>For tab buttons (btnTabPeople, btnTabCourses)</strong>
-            <p>The Color property is a formula. Set the property dropdown to <strong>Color</strong> and replace the whole formula with the corrected version — only the second RGBA value changes:</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="screen-divider">btnTabPeople — Color (corrected)</div>
-      <div class="code-wrap">
-        <span class="code-label">Color · btnTabPeople</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre id="code-tabpeople-color">If(varTab="People", RGBA(255,255,255,1), RGBA(31,58,95,1))</pre>
-      </div>
-
-      <div class="screen-divider">btnTabCourses — Color (corrected)</div>
-      <div class="code-wrap">
-        <span class="code-label">Color · btnTabCourses</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre id="code-tabcourses-color">If(varTab="Courses", RGBA(255,255,255,1), RGBA(31,58,95,1))</pre>
       </div>
 
       <div class="callout callout-ok">
-        <strong>One button that looks similar but is actually fine</strong>
-        The "Pull details" button also uses <code>BasePaletteColor=RGBA(244,246,248,1)</code> but its <code>Color</code> is <code>RGBA(24,95,165,1)</code> (blue) — blue text on light gray is readable. Leave that one as-is.
+        <strong>After this fix</strong>
+        Typing in the search box filters the list instantly as you type — no search button needed. The type filter dropdown also works at the same time. Both filter together.
       </div>
     </section>
 
