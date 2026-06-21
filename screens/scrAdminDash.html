@@ -23,15 +23,16 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 6 of 7</p>
   <h1>scrAdminDash</h1>
-  <p class="meta">v1.8 — recRowBGCom moved to back; filter + search restored</p>
+  <p class="meta">v1.9 &mdash; Status pill Label (solid colour + white text) · 21 Jun 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
-    <a href="../"><button class="btn-back" type="button">← Guide library</button></a>
+    <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
   </div>
   <p id="status">Ready to copy</p>
   <div class="instructions">
     <strong>How to paste into Power Apps Studio</strong><br>
-    Tree View → click screen → Ctrl+A → Delete → Ctrl+V.
+    Tree View &rarr; click screen &rarr; Ctrl+A &rarr; Delete &rarr; Ctrl+V.<br><br>
+    <strong>After pasting:</strong> drag recRowBGCom to the bottom of galCompliance children in Tree View (Z-order).
   </div>
   <script>
 const yaml = `Screens:
@@ -686,13 +687,25 @@ const yaml = `Screens:
             Y: =358
           Children:
             - btnDetailPill:
-                Control: ModernButton@1.0.0
+                Control: Label@2.5.1
                 Properties:
-                  BasePaletteColor: =Switch(ThisItem.TrainingStatus,"Expired",RGBA(252,235,235,1),"Expiring Soon",RGBA(250,238,218,1),"Not Started",RGBA(241,239,232,1),"Complete",RGBA(230,241,251,1),RGBA(234,243,222,1))
-                  Color: =Switch(ThisItem.TrainingStatus,"Expired",RGBA(121,31,31,1),"Expiring Soon",RGBA(99,56,6,1),"Not Started",RGBA(68,68,65,1),"Complete",RGBA(12,68,124,1),RGBA(39,80,10,1))
-                  DisplayMode: =DisplayMode.View
+                  Align: =Align.Center
+                  BorderColor: =RGBA(0,0,0,0)
+                  Color: =RGBA(255,255,255,1)
+                  Fill: =Switch(ThisItem.TrainingStatus,
+                      "Expired",       RGBA(226,75,74,1),
+                      "Expiring Soon", RGBA(239,159,39,1),
+                      "Not Started",   RGBA(136,135,128,1),
+                      "Complete",      RGBA(55,138,221,1),
+                      RGBA(99,153,34,1))
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
                   Height: =28
                   OnSelect: =Select(Parent)
+                  RadiusBottomLeft: =14
+                  RadiusBottomRight: =14
+                  RadiusTopLeft: =14
+                  RadiusTopRight: =14
                   Size: =9
                   Text: =ThisItem.TrainingStatus
                   Width: =110
@@ -785,16 +798,14 @@ const yaml = `Screens:
             Y: =16
 `;
 function copyYAML() {
-  const crlf = yaml.replace(/\r?\n/g, '\r\n');
+  const crlf = yaml.replace(/\n/g, '\r\n');
   navigator.clipboard.writeText(crlf).then(() => {
     const s = document.getElementById('status');
-    s.textContent = 'Copied!';
+    s.textContent = 'Copied! Paste into Power Apps Studio now.';
     s.className = 'ok';
-    setTimeout(() => { s.textContent = 'Ready to copy'; s.className = ''; }, 3000);
+    setTimeout(() => { s.textContent = 'Ready to copy'; s.className = ''; }, 4000);
   }).catch(() => {
-    const s = document.getElementById('status');
-    s.textContent = 'Copy failed.';
-    s.className = 'err';
+    document.getElementById('status').textContent = 'Copy failed — try a different browser.';
   });
 }
   </script>
