@@ -134,6 +134,26 @@ ClearCollect(colMyRecords,
         GitHub issue #1
       </a>
     </div>
+    <div class="answer-card">
+      <h3 class="answer-title">recRowBG_1 Fill error — IsOdd is not a valid Power Apps function</h3>
+      <div class="answer-meta">
+        <span class="pill">Gallery row background</span>
+        <span class="pill">Fill formula</span>
+        <span class="pill green">Fixed · 21 Jun 2026</span>
+      </div>
+      <span class="section-label">Problem</span>
+      <div class="problem-box">Formula <code>If(IsOdd(ThisItem.ItemIndex), ...)</code> gives red X. Two issues: <code>IsOdd</code> does not exist in Power Apps, and <code>ThisItem.ItemIndex</code> is an unreliable visual position index that shifts when the gallery filters or sorts.</div>
+      <span class="section-label">Fix — SharePoint-backed gallery (galPersonnel, galCourses etc.)</span>
+      <div class="code-block"><button class="copy-btn">Copy</button>If(Mod(ThisItem.ID, 2) = 0, RGBA(255,255,255,1), RGBA(247,249,252,1))</div>
+      <span class="section-label" style="margin-top:14px;">Fix — galMyTraining (colMyTraining, no ID field)</span>
+      <div class="code-block"><button class="copy-btn">Copy</button>If(Mod(ThisItem.CourseID, 2) = 0, RGBA(255,255,255,1), RGBA(247,249,252,1))</div>
+      <span class="section-label" style="margin-top:14px;">Fix — galMyChain (colMyChain, no numeric ID)</span>
+      <div class="code-block"><button class="copy-btn">Copy</button>If(Mod(Len(ThisItem.Email), 2) = 0, RGBA(255,255,255,1), RGBA(247,249,252,1))</div>
+      <a class="issue-link" href="https://github.com/Phaderon/PowerApps/issues/2" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M7 4.5v3.5M7 9.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        GitHub issue #2
+      </a>
+    </div>
 <!-- ANSWERS_END -->
   </div>
 </main>
