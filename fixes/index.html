@@ -366,18 +366,7 @@ pre {
       </div>
     </div>
     <nav class="toc" aria-label="On this page">
-      <a class="toc-l1" href="#fix1">Fix 1 — Missing Manage button</a>
-      <a class="toc-l1" href="#fix2">Fix 2 — Search does nothing</a>
-      <a class="toc-l1" href="#fix3">Fix 3 — Gallery shows nothing</a>
-      <a class="toc-l1" href="#fix4">Fix 4 — StaffType dropdown blank</a>
-      <a class="toc-l1" href="#fix5">Fix 5 — Recurrence dropdown blank</a>
-      <a class="toc-l1" href="#fix6">Fix 6 — Cancel button says "Button"</a>
-      <a class="toc-l1" href="#fix7">Fix 7 — Toggle says "Label"</a>
-      <a class="toc-l1" href="#fix8">Fix 8 — Edit panel overlaps add panel</a>
-      <a class="toc-l1" href="#fix9">Fix 9 — Team chain gallery invisible</a>
-      <a class="toc-l1" href="#fix10">Fix 10 — Team member shows own data</a>
-      <a class="toc-l1" href="#fix11">Fix 11 — Courses gallery StatusKey error</a>
-      <a class="toc-l1" href="#fix12">Fix 12 — Recurrence dropdown blank (ModernDropdown)</a>
+      <a class="toc-l1" href="#fix1">Fix 1 — Status pill colours unreadable</a>
     </nav>
     <a class="back-link" href="../">← Guide library</a>
   </aside>
@@ -390,470 +379,53 @@ pre {
         <span class="badge">Power Apps Studio</span>
         <span class="badge">Canvas App</span>
       </div>
-      <h1>Final fixes</h1>
-      <p>Known issues in the admin dashboard — navigation gaps, wrong formulas, empty gallery, and a colour fix.</p>
+      <h1>Manual fixes</h1>
+      <p>Tweaks that can't go in the YAML paste — apply these directly in Power Apps Studio after pasting a screen. Each fix has a version number and date so you know if it's been updated.</p>
     </div>
 
     <!-- ══════════════════════════════════════════════════════
-         FIX 1 — Missing Manage button on scrAdminDash
+         FIX 1 — Status pill colours (scrAdminDash)
     ═══════════════════════════════════════════════════════ -->
     <section class="section" id="fix1">
       <div class="section-header">
-        <div class="section-num">1</div>
+        <div class="section-num amber">1</div>
         <div>
-          <h2>No way to reach the Manage screen</h2>
-          <p style="margin:0;color:var(--muted);">scrAdminDash is missing a button to navigate to scrAdminManage</p>
-        </div>
-      </div>
-
-      <div class="warn-label">Missing navigation</div>
-
-      <div class="callout callout-why">
-        <strong>What happened</strong>
-        The guide built scrAdminDash (compliance dashboard) but never added a button to get to scrAdminManage (where you add courses, add people, etc.). The back arrow on scrAdminDash only goes back to scrMyTraining. scrAdminManage was unreachable.
-      </div>
-
-      <p>Add a modern Button directly on <strong>scrAdminDash</strong> with these properties. It sits in the header bar to the left of the Export PDF button.</p>
-
-      <table class="prop-table" id="fix1-props">
-        <thead><tr><th>Property</th><th>Value</th></tr></thead>
-        <tbody>
-          <tr><td>Type</td><td>Button (modern)</td></tr>
-          <tr><td>X</td><td><code>986</code></td></tr>
-          <tr><td>Y</td><td><code>16</code></td></tr>
-          <tr><td>Width</td><td><code>180</code></td></tr>
-          <tr><td>Height</td><td><code>40</code></td></tr>
-          <tr><td>Text</td><td><code>"Manage courses &amp; people"</code></td></tr>
-          <tr><td>FontSize</td><td><code>11</code></td></tr>
-          <tr><td>BasePaletteColor</td><td><code>RGBA(230,241,251,1)</code></td></tr>
-          <tr><td>Color</td><td><code>RGBA(12,68,124,1)</code></td></tr>
-          <tr><td>OnSelect</td><td><code>Navigate(scrAdminManage, ScreenTransition.Cover)</code></td></tr>
-        </tbody>
-      </table>
-
-      <div class="callout callout-ok">
-        <strong>After this fix</strong>
-        The flow becomes: home → Admin button → scrAdminDash (compliance overview) → Manage courses &amp; people → scrAdminManage (add/edit courses, add/remove people). The back arrow on scrAdminManage returns to scrAdminDash.
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         FIX 2 — galCompliance search does nothing
-    ═══════════════════════════════════════════════════════ -->
-    <section class="section" id="fix2">
-      <div class="section-header">
-        <div class="section-num green">2</div>
-        <div>
-          <h2>Staff search field does nothing</h2>
-          <p style="margin:0;color:var(--muted);">galCompliance.Items is set incorrectly — scrAdminDash</p>
-        </div>
-      </div>
-
-      <div class="warn-label">Formula set wrong</div>
-
-      <div class="callout callout-why">
-        <strong>What happened</strong>
-        The <code>galCompliance</code> Items property was set to <code>txtAdminSearch</code> (just the name of the text input control) instead of the full Filter formula that references it. The gallery had no idea what to display or filter.
-      </div>
-
-      <p>Select <strong>galCompliance</strong> in the Tree View on scrAdminDash. Set the property dropdown to <strong>Items</strong>. Replace whatever is there with this formula:</p>
-
-      <div class="screen-divider" id="fix2-formula">galCompliance — Items</div>
-      <div class="code-wrap">
-        <span class="code-label">Items · galCompliance</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre>Filter(colCompliance,
-    (drpTypeFilter.Selected.Value = "All" ||
-     StaffType = drpTypeFilter.Selected.Value) &&
-    (IsBlank(txtAdminSearch.Text) ||
-     txtAdminSearch.Text in Name)
-)</pre>
-      </div>
-
-      <div class="callout callout-ok">
-        <strong>After this fix</strong>
-        Typing in the search box filters the list instantly as you type — no search button needed. The type filter dropdown also works at the same time. Both filter together.
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         FIX 3 — Compliance gallery shows nothing
-    ═══════════════════════════════════════════════════════ -->
-    <section class="section" id="fix3">
-      <div class="section-header">
-        <div class="section-num amber">3</div>
-        <div>
-          <h2>Compliance gallery shows nothing</h2>
-          <p style="margin:0;color:var(--muted);">scrAdminDash · drpTypeFilter · Default</p>
-        </div>
-      </div>
-
-      <div class="error-label">Root cause found</div>
-
-      <div class="callout callout-why">
-        <strong>Why it's empty — nothing to do with your data</strong>
-        <code>drpTypeFilter</code> has no <code>Default</code> property set. When the screen loads, the dropdown's selected value is blank. The gallery Items filter checks <code>drpTypeFilter.Selected.Value = "All"</code> — blank does not equal "All", so that condition is false. The second condition (<code>StaffType = drpTypeFilter.Selected.Value</code>) checks if StaffType equals blank — also false for everyone. Every single row gets filtered out. Your 2 people are in <code>colCompliance</code>, they're just being hidden by the type filter every time the screen loads.
-      </div>
-
-      <p>Select <strong>drpTypeFilter</strong> on scrAdminDash. Add this one property:</p>
-
-      <table class="prop-table">
-        <thead><tr><th>Property</th><th>Value</th></tr></thead>
-        <tbody>
-          <tr><td>Default</td><td><code>"All"</code></td></tr>
-        </tbody>
-      </table>
-
-      <p>That's the entire fix. The gallery will now show everyone on load, and the filter still works when you pick a specific staff type.</p>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         FIX 4 — StaffType dropdown blank in people list
-    ═══════════════════════════════════════════════════════ -->
-    <section class="section" id="fix4">
-      <div class="section-header">
-        <div class="section-num amber">4</div>
-        <div>
-          <h2>StaffType dropdown blank in people list</h2>
-          <p style="margin:0;color:var(--muted);">scrAdminManage · galPeople · drpRowType · Default</p>
+          <h2>Status pill colours unreadable</h2>
+          <p style="margin:0;color:var(--muted);">scrAdminDash · galCompliance · galDrillDetail · btnDetailPill &nbsp;·&nbsp; <strong>v1.0 — 21 Jun 2026</strong></p>
         </div>
       </div>
 
       <div class="callout callout-why">
-        <strong>Why it's blank</strong>
-        <code>drpRowType.Default</code> is set to <code>ThisItem.StaffType</code>. In SharePoint, StaffType is a Choice column — so <code>ThisItem.StaffType</code> returns a <strong>record</strong> like <code>{Value: "Civil Servant"}</code>, not a plain string. The dropdown Items list is a plain string array, so passing a record as Default finds no match and shows blank. The value IS there, it just can't be pre-selected with a record.
+        <strong>Why it looked wrong</strong>
+        <code>btnDetailPill</code> was a <code>ModernButton</code>. ModernButton runs <code>BasePaletteColor</code> through Fluent's tonal palette generator — light colours come out washed-out grey, dark text on grey = unreadable. The fix changes it to a plain <code>Label</code> so Fill and Color are used directly, no tonal processing.
       </div>
 
-      <p>Select <strong>drpRowType</strong> inside <code>galPeople</code>. Change <code>Default</code> to:</p>
-
-      <table class="prop-table">
-        <thead><tr><th>Property</th><th>Current</th><th>Fix</th></tr></thead>
-        <tbody>
-          <tr><td>Default</td><td><code>ThisItem.StaffType</code></td><td><code>ThisItem.StaffType.Value</code></td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         FIX 5 — Recurrence dropdown blank when editing a course
-    ═══════════════════════════════════════════════════════ -->
-    <section class="section" id="fix5">
-      <div class="section-header">
-        <div class="section-num amber">5</div>
-        <div>
-          <h2>Recurrence dropdown blank when editing a course</h2>
-          <p style="margin:0;color:var(--muted);">scrAdminManage · drpEditRecur · Default</p>
-        </div>
-      </div>
-
-      <div class="callout callout-why">
-        <strong>Why it's blank</strong>
-        <code>drpEditRecur</code> has no <code>Default</code> set at all. When you open a course to edit, the recurrence dropdown has no way to know which option to pre-select, so it shows blank. If you save without touching it, it saves the recurrence as 0 and corrupts the course record.
-      </div>
-
-      <div class="callout callout-warning" style="margin-bottom:12px;">
-        <strong>Set this directly in Studio — do not paste it via YAML</strong>
-        The <code>Default</code> formula contains <code>{Label: ..., Months: ...}</code> syntax which breaks Power Apps' own YAML parser. Click <strong>drpEditRecur</strong> in the Tree View, switch the formula bar to the <strong>Default</strong> property, and type the formula directly there.
-      </div>
-
-      <p>Select <strong>drpEditRecur</strong> on scrAdminManage. Set the <code>Default</code> property directly in Studio — it looks up the matching row in the options table based on the current course's saved recurrence months:</p>
+      <p>In the Tree View, expand <strong>galCompliance</strong> → expand a row → expand <strong>galDrillDetail</strong> → click <strong>btnDetailPill</strong>. Set these two properties in the formula bar:</p>
 
       <div class="code-wrap">
-        <span class="code-label">Default · drpEditRecur</span>
+        <span class="code-label">Fill · btnDetailPill</span>
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre>LookUp(
-    Table(
-        {Label: "One-off (never expires)", Months: 0},
-        {Label: "Every 6 months",          Months: 6},
-        {Label: "Every year",              Months: 12},
-        {Label: "Every 18 months",         Months: 18},
-        {Label: "Every 2 years",           Months: 24},
-        {Label: "Every 3 years",           Months: 36}
-    ),
-    Months = varEditCourse.RecurrenceMonths
-)</pre>
+        <pre>=Switch(ThisItem.TrainingStatus,
+    "Expired",       RGBA(226,75,74,1),
+    "Expiring Soon", RGBA(239,159,39,1),
+    "Not Started",   RGBA(136,135,128,1),
+    "Complete",      RGBA(55,138,221,1),
+    RGBA(99,153,34,1))</pre>
+      </div>
+
+      <div class="code-wrap">
+        <span class="code-label">Color · btnDetailPill</span>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+        <pre>=RGBA(255,255,255,1)</pre>
       </div>
 
       <div class="callout callout-warning">
-        <strong>The table in Default must exactly match the table in Items</strong>
-        If you've added or removed options from <code>drpEditRecur.Items</code>, update this table to match — same Label text, same Months values, same order.
+        <strong>This only applies if btnDetailPill is a Label</strong>
+        The scrAdminDash v1.9 YAML paste already replaces the control with a Label. If you haven't repasted scrAdminDash yet, paste it first — then these formulas are already baked in and you don't need to do anything manually.
       </div>
     </section>
 
-    <!-- ══════════════════════════════════════════════════════
-         FIX 6 — Cancel button shows "Button"
-    ═══════════════════════════════════════════════════════ -->
-    <section class="section" id="fix6">
-      <div class="section-header">
-        <div class="section-num" style="background:linear-gradient(145deg,#555,#333);">6</div>
-        <div>
-          <h2>Cancel button shows "Button"</h2>
-          <p style="margin:0;color:var(--muted);">scrAdminManage · btnCancelEdit · Text</p>
-        </div>
-      </div>
 
-      <p>The <code>Text</code> property was never set on <code>btnCancelEdit</code>. Modern buttons default to showing "Button" when Text is missing.</p>
-
-      <table class="prop-table">
-        <thead><tr><th>Property</th><th>Value</th></tr></thead>
-        <tbody>
-          <tr><td>Text</td><td><code>"Cancel"</code></td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         FIX 7 — Toggle says "Label"
-    ═══════════════════════════════════════════════════════ -->
-    <section class="section" id="fix7">
-      <div class="section-header">
-        <div class="section-num" style="background:linear-gradient(145deg,#555,#333);">7</div>
-        <div>
-          <h2>Toggle says "Label" next to it</h2>
-          <p style="margin:0;color:var(--muted);">scrAdminDash · tglManagerEdit · Label</p>
-        </div>
-      </div>
-
-      <p>Power Apps Toggle controls have a built-in <code>Label</code> property that renders text to the right of the toggle. When not set, it defaults to the word "Label". Since <code>lblDrillMgrLbl</code> already handles the description, suppress the built-in label with a space:</p>
-
-      <table class="prop-table">
-        <thead><tr><th>Property</th><th>Value</th></tr></thead>
-        <tbody>
-          <tr><td>Label</td><td><code>" "</code></td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         FIX 8 — Edit panel overlaps add panel
-    ═══════════════════════════════════════════════════════ -->
-    <section class="section" id="fix8">
-      <div class="section-header">
-        <div class="section-num red">8</div>
-        <div>
-          <h2>Edit course panel overlaps Add course panel</h2>
-          <p style="margin:0;color:var(--muted);">scrAdminManage · Courses tab · Visible conditions</p>
-        </div>
-      </div>
-
-      <div class="callout callout-why">
-        <strong>Why they overlap</strong>
-        Both panels sit at the same Y position. The edit panel correctly hides when <code>varEditCourse</code> is blank. But the add panel's <code>Visible</code> is just <code>varTab = "Courses"</code> — it never hides when the edit panel is open. Both are visible at the same time and stack on top of each other.
-      </div>
-
-      <p>For every control in the <strong>Add course</strong> panel, change <code>Visible</code> from <code>varTab = "Courses"</code> to:</p>
-
-      <div class="code-wrap">
-        <span class="code-label">Visible — all Add course controls</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre>varTab = "Courses" && IsBlank(varEditCourse)</pre>
-      </div>
-
-      <p>Controls to update — set the same Visible on all of these:</p>
-      <table class="prop-table">
-        <thead><tr><th>Control</th></tr></thead>
-        <tbody>
-          <tr><td><code>recAddCoursePanel</code></td></tr>
-          <tr><td><code>lblAddCourseTitle</code></td></tr>
-          <tr><td><code>txtNewCourse</code></td></tr>
-          <tr><td><code>cmbNewApplic</code></td></tr>
-          <tr><td><code>drpNewRecur</code></td></tr>
-          <tr><td><code>btnAddCourse</code></td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         FIX 9 — Team chain gallery invisible
-    ═══════════════════════════════════════════════════════ -->
-    <section class="section" id="fix9">
-      <div class="section-header">
-        <div class="section-num red">9</div>
-        <div>
-          <h2>Team member chain gallery invisible</h2>
-          <p style="margin:0;color:var(--muted);">scrTeamMember · galMyChain · TemplateSize</p>
-        </div>
-      </div>
-
-      <div class="callout callout-why">
-        <strong>Why it's invisible</strong>
-        <code>galMyChain.TemplateSize</code> is set to <code>0</code>. Every row has zero height so nothing renders — the gallery exists and has data but is completely collapsed. The child controls are built correctly at their pixel positions, they just can't be seen.
-      </div>
-
-      <table class="prop-table">
-        <thead><tr><th>Property</th><th>Current</th><th>Fix</th></tr></thead>
-        <tbody>
-          <tr><td>TemplateSize</td><td><code>0</code></td><td><code>64</code></td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         FIX 10 — Team member view shows your own data
-    ═══════════════════════════════════════════════════════ -->
-    <section class="section" id="fix10">
-      <div class="section-header">
-        <div class="section-num red">10</div>
-        <div>
-          <h2>Clicking a team member shows your own training</h2>
-          <p style="margin:0;color:var(--muted);">scrTeamMember · galMyChain · recRowBG · OnSelect</p>
-        </div>
-      </div>
-
-      <div class="callout callout-why">
-        <strong>Why it shows the wrong person</strong>
-        When you tap a team member, <code>recRowBG.OnSelect</code> builds <code>colViewTraining</code> and then navigates to <code>scrMyTraining</code>. But <code>scrMyTraining.OnVisible</code> runs immediately on arrival and completely rebuilds <code>colMyTraining</code> using <strong>your own email</strong> (<code>varMyEmail</code>) — wiping out <code>colViewTraining</code> before the gallery ever reads it. The screen then shows your own training.
-      </div>
-
-      <p>Two changes needed:</p>
-
-      <p><strong>Step 1</strong> — Update <code>recRowBG.OnSelect</code> in <code>galMyChain</code>. Find the Navigate call at the end and replace it. The full OnSelect should end with:</p>
-
-      <div class="code-wrap">
-        <span class="code-label">recRowBG.OnSelect — end of formula (replace Navigate line)</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre>ClearCollect(colMyTraining, colViewTraining);
-ClearCollect(colMyRecords, colViewRecords);
-Set(varViewingForSelf, false);
-Navigate(scrMyTraining, ScreenTransition.Cover)</pre>
-      </div>
-
-      <p><strong>Step 2</strong> — Guard <code>scrMyTraining.OnVisible</code> so it only rebuilds training data when viewing your own record. Wrap the existing ClearCollect block:</p>
-
-      <div class="code-wrap">
-        <span class="code-label">scrMyTraining.OnVisible — wrap existing data load</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre>If(
-    varViewingForSelf,
-    ClearCollect(colMyRecords, Filter('TT TrainingRecords', Lower(PersonEmail) = varMyEmail));
-    // ... rest of your existing ClearCollect calls go here, unchanged
-)</pre>
-      </div>
-
-      <div class="callout callout-warning">
-        <strong>Also set varViewingForSelf back to true on the back button</strong>
-        When the user taps back from scrMyTraining to scrTeamMember (or to their own home screen), set <code>varViewingForSelf</code> back to <code>true</code> so their own data loads correctly next time they visit scrMyTraining directly.
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         FIX 11 — Courses gallery StatusKey error
-    ═══════════════════════════════════════════════════════ -->
-    <section class="section" id="fix11">
-      <div class="section-header">
-        <div class="section-num red">11</div>
-        <div>
-          <h2>Courses gallery errors: "StatusKey does not exist"</h2>
-          <p style="margin:0;color:var(--muted);">scrAdminManage · galCourses · Items</p>
-        </div>
-      </div>
-
-      <div class="callout callout-why">
-        <strong>Why it errors</strong>
-        <code>AddColumns(colCourses, StatusKey, ...)</code> without quotes makes Power Apps look for an existing column called StatusKey — which doesn't exist. Adding quotes (<code>"StatusKey"</code>) causes a different error ("Expected identifier name") due to a quirk in how Power Apps parses computed column names in this context. The fix is to drop <code>AddColumns</code> entirely and use nested <code>Sort</code> calls instead.
-      </div>
-
-      <p>Click <strong>galCourses</strong> in the Tree View. Switch the formula bar to the <strong>Items</strong> property and replace the entire formula with this:</p>
-
-      <div class="code-wrap">
-        <span class="code-label">Items · galCourses</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre>Sort(
-    Sort(colCourses, Title, SortOrder.Ascending),
-    Status.Value,
-    SortOrder.Ascending
-)</pre>
-      </div>
-
-      <p>The inner <code>Sort</code> orders courses A–Z by title. The outer <code>Sort</code> groups Active courses before Inactive ("Active" &lt; "Inactive" alphabetically). Same visual result as the original sort — no <code>AddColumns</code> required.</p>
-
-      <div class="callout callout-warning">
-        <strong>Same pattern in scrMyTraining and scrTeamMember</strong>
-        If you see a similar error mentioning <code>SortKey</code> (scrMyTraining · galMyTraining) or <code>PersonRequired</code> / <code>PersonInDate</code> (scrTeamMember · galMyChain), repaste those screens from the Screens tab — the YAML files for those screens already use the correct quoted syntax.
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════
-         FIX 12 — ModernDropdown Default set directly in Studio
-    ═══════════════════════════════════════════════════════ -->
-    <section class="section" id="fix12">
-      <div class="section-header">
-        <div class="section-num amber">12</div>
-        <div>
-          <h2>ModernDropdowns not pre-selecting saved values</h2>
-          <p style="margin:0;color:var(--muted);">scrAdminManage · drpRowType · drpEditPersonType · drpEditRecur · Default</p>
-        </div>
-      </div>
-
-      <div class="callout callout-why">
-        <strong>Why the dropdowns look blank</strong>
-        ModernDropdown's <code>Default</code> property takes a record like <code>&#123;Value: "Civil Servant"&#125;</code>. That curly-brace syntax breaks Power Apps' own YAML parser when included in a paste, so the Default is intentionally left out of the YAML. You set these three formulas once directly in Studio after pasting — they stay saved to the app.
-      </div>
-
-      <p style="margin-bottom:1rem;">For each one: click the control in the Tree View → click the formula bar → switch the property dropdown (top-left of formula bar) to <strong>Default</strong> → type the formula.</p>
-
-      <h3 style="margin-top:1rem;">1 · drpRowType — staff type shown in the People list rows</h3>
-      <p>This control is inside the <code>galPeople</code> gallery template. Click into the gallery, then click <strong>drpRowType</strong>.</p>
-
-      <div class="code-wrap">
-        <span class="code-label">Default · drpRowType</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre>={Value: ThisItem.StaffType.Value}</pre>
-      </div>
-
-      <h3 style="margin-top:1.5rem;">2 · drpEditPersonType — staff type in the Edit person panel</h3>
-      <p>This control is at screen level (not inside a gallery). Click <strong>drpEditPersonType</strong> directly in the Tree View.</p>
-
-      <div class="code-wrap">
-        <span class="code-label">Default · drpEditPersonType</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre>={Value: varEditPerson.StaffType.Value}</pre>
-      </div>
-
-      <h3 style="margin-top:1.5rem;">3 · drpEditRecur — recurrence when editing a course</h3>
-      <p>This control is at screen level. Click <strong>drpEditRecur</strong> in the Tree View.</p>
-
-      <p>Use the property <strong>DefaultSelectedItems</strong> (not Default) — switch it in the property dropdown top-left of the formula bar. You cannot reference <code>drpEditRecur.Items</code> here (circular reference), so the table is rebuilt inline:</p>
-
-      <div class="code-wrap">
-        <span class="code-label">DefaultSelectedItems · drpEditRecur</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre>=Filter(
-    Table(
-        {Label: "One-off (never expires)", Months: 0},
-        {Label: "Every 6 months",          Months: 6},
-        {Label: "Every year",              Months: 12},
-        {Label: "Every 18 months",         Months: 18},
-        {Label: "Every 2 years",           Months: 24},
-        {Label: "Every 3 years",           Months: 36}
-    ),
-    Months = varEditCourse.RecurrenceMonths
-)</pre>
-      </div>
-
-      <p>If <strong>DefaultSelectedItems</strong> is not available in the dropdown, use <strong>Default</strong> with <code>LookUp</code> instead (returns a single record, not a table):</p>
-
-      <div class="code-wrap">
-        <span class="code-label">Default · drpEditRecur (fallback)</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre>=LookUp(
-    Table(
-        {Label: "One-off (never expires)", Months: 0},
-        {Label: "Every 6 months",          Months: 6},
-        {Label: "Every year",              Months: 12},
-        {Label: "Every 18 months",         Months: 18},
-        {Label: "Every 2 years",           Months: 24},
-        {Label: "Every 3 years",           Months: 36}
-    ),
-    Months = varEditCourse.RecurrenceMonths
-)</pre>
-      </div>
-
-      <div class="callout callout-warning" style="margin-top:1.5rem;">
-        <strong>You only need to do this once</strong>
-        Power Apps saves these formulas to the app when you hit Save. They survive future YAML pastes of other screens. If you ever repaste scrAdminManage itself, you'll need to re-enter these three — that's the only exception.
-      </div>
-    </section>
 
   </main>
 </div>
