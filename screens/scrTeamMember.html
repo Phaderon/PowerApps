@@ -121,6 +121,29 @@
 
   <hr class="divider"/>
 
+  <h2>Step 6 — Tap avatar to return to your own training</h2>
+  <p class="meta" style="max-width:540px;text-align:center">The avatar circle (recInitialsBG) does nothing currently. These two changes make it navigate back to your own training when you are viewing someone else. Tap it to go home.</p>
+
+  <div class="section">
+    <p class="section-label">recInitialsBG → OnSelect property</p>
+    <p style="font-size:.8rem;color:#475569;line-height:1.6">Select <strong>recInitialsBG</strong>, click <strong>OnSelect</strong>, select all, paste:</p>
+    <div class="btn-row">
+      <button class="btn-copy-sm" onclick="copyFormula('status-f9', formula9)">Copy formula</button>
+    </div>
+    <p id="status-f9" class="status">Ready to copy</p>
+  </div>
+
+  <div class="section">
+    <p class="section-label">recInitialsBG → DisplayMode property</p>
+    <p style="font-size:.8rem;color:#475569;line-height:1.6">Select <strong>recInitialsBG</strong>, click <strong>DisplayMode</strong>, select all, paste:</p>
+    <div class="btn-row">
+      <button class="btn-copy-sm" onclick="copyFormula('status-f10', formula10)">Copy formula</button>
+    </div>
+    <p id="status-f10" class="status">Ready to copy</p>
+  </div>
+
+  <hr class="divider"/>
+
   <h2>Step 4 — Fix scrMyTraining.OnVisible</h2>
   <p class="meta" style="max-width:540px;text-align:center">The OnVisible in your app is out of date — it references colMyRecords before defining it, and includes removed columns (CourseURL etc). Select <strong>scrMyTraining</strong> in the Tree View, click <strong>OnVisible</strong> in the formula bar, select all, paste the full replacement below.</p>
 
@@ -537,6 +560,12 @@ const formula4 = `=If(
 const formula5 = `=If(IsBlank(varViewingPerson), "Your training", "Their training")`;
 
 const formula7 = `=If(IsBlank(varViewingPerson), "My team", "← My team")`;
+
+const formula9 = `=Set(varViewingForSelf, true);
+Set(varViewingPerson, Blank());
+Navigate(scrMyTraining, ScreenTransition.UnCover)`;
+
+const formula10 = `=If(IsBlank(varViewingPerson), DisplayMode.View, DisplayMode.Edit)`;
 
 const formula8 = `=!IsBlank(varViewingPerson) || CountRows(Filter('TT Personnel', Lower(LineManagerEmail) = varMyEmail && Active = true)) > 0`;
 
