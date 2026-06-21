@@ -28,7 +28,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 5 of 7</p>
   <h1>scrTeamMember</h1>
-  <p class="meta">v1.4 — fixed IsOdd row bg, corrected OnSelect for manager uploads, added scrMyTraining updates</p>
+  <p class="meta">v1.5 — fixed gallery row click (DisplayMode.View blocked all taps; navigation moved to galMyChain.OnSelect)</p>
 
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
@@ -221,6 +221,54 @@ const yaml = `Screens:
                   (R.ChainLevel = 3 &&
                    LookUp(colMyChain, Lower(Email) = Lower(R.ManagerEmail), IsExpanded) = true)
               )
+            OnSelect: |-
+              =Set(varViewingPerson, LookUp('TT Personnel', Lower(Email) = Lower(ThisItem.Email)));
+              Set(varViewingForSelf, false);
+              ClearCollect(
+                  colViewRecords,
+                  Filter(colAllRecords, Lower(PersonEmail) = Lower(ThisItem.Email))
+              );
+              ClearCollect(
+                  colViewTraining,
+                  ForAll(
+                      Filter(
+                          colCourses,
+                          Status.Value = "Active" &&
+                          ThisItem.StaffType in ApplicableTo.Value
+                      ) As C,
+                      With(
+                          {rec: LookUp(colViewRecords, CourseID = C.ID)},
+                          {
+                              CourseID:    C.ID,
+                              CourseName:  C.Title,
+                              RecurMonths: C.RecurrenceMonths,
+                              RecurText:   Switch(C.RecurrenceMonths,
+                                               0,  "One-off",
+                                               12, "Every year",
+                                               24, "Every 2 years",
+                                               "Every " & C.RecurrenceMonths & " months"),
+                              RecordID:    rec.ID,
+                              DateDone:    rec.DateCompleted,
+                              UploadedBy:  rec.UploadedByEmail,
+                              ExpiresOn:   If(IsBlank(rec.DateCompleted) || C.RecurrenceMonths = 0,
+                                               Blank(),
+                                               DateAdd(rec.DateCompleted,
+                                                       C.RecurrenceMonths, TimeUnit.Months)),
+                              TrainingStatus:
+                                  If(IsBlank(rec.DateCompleted), "Not Started",
+                                     C.RecurrenceMonths = 0, "Complete",
+                                     DateAdd(rec.DateCompleted, C.RecurrenceMonths,
+                                             TimeUnit.Months) < Today(), "Expired",
+                                     DateAdd(rec.DateCompleted, C.RecurrenceMonths,
+                                             TimeUnit.Months) <= DateAdd(Today(), 60,
+                                             TimeUnit.Days), "Expiring Soon",
+                                     "In Date"),
+                              CanEdit: ThisItem.ManagerCanEdit
+                          }
+                      )
+                  )
+              );
+              Navigate(scrMyTraining, ScreenTransition.Cover)
             ShowScrollbar: =true
             TemplatePadding: =0
             TemplateSize: =64
@@ -231,62 +279,11 @@ const yaml = `Screens:
                 Control: Classic/Button@2.2.0
                 Properties:
                   BorderThickness: =0
-                  DisplayMode: =DisplayMode.View
                   Fill: =If(Mod(Len(ThisItem.Email),2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1))
                   Height: =63
-                  HoverFill: =Self.Fill
-                  OnSelect: |-
-                    =Set(varViewingPerson, LookUp('TT Personnel', Lower(Email) = Lower(ThisItem.Email)));
-                    Set(varViewingForSelf, false);
-
-                    ClearCollect(
-                        colViewRecords,
-                        Filter(colAllRecords, Lower(PersonEmail) = Lower(ThisItem.Email))
-                    );
-
-                    ClearCollect(
-                        colViewTraining,
-                        ForAll(
-                            Filter(
-                                colCourses,
-                                Status.Value = "Active" &&
-                                ThisItem.StaffType in ApplicableTo.Value
-                            ) As C,
-                            With(
-                                {rec: LookUp(colViewRecords, CourseID = C.ID)},
-                                {
-                                    CourseID:    C.ID,
-                                    CourseName:  C.Title,
-                                    RecurMonths: C.RecurrenceMonths,
-                                    RecurText:   Switch(C.RecurrenceMonths,
-                                                     0,  "One-off",
-                                                     12, "Every year",
-                                                     24, "Every 2 years",
-                                                     "Every " & C.RecurrenceMonths & " months"),
-                                    RecordID:    rec.ID,
-                                    DateDone:    rec.DateCompleted,
-                                    UploadedBy:  rec.UploadedByEmail,
-                                    ExpiresOn:   If(IsBlank(rec.DateCompleted) || C.RecurrenceMonths = 0,
-                                                     Blank(),
-                                                     DateAdd(rec.DateCompleted,
-                                                             C.RecurrenceMonths, TimeUnit.Months)),
-                                    TrainingStatus:
-                                        If(IsBlank(rec.DateCompleted), "Not Started",
-                                           C.RecurrenceMonths = 0, "Complete",
-                                           DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                                                   TimeUnit.Months) < Today(), "Expired",
-                                           DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                                                   TimeUnit.Months) <= DateAdd(Today(), 60,
-                                                   TimeUnit.Days), "Expiring Soon",
-                                           "In Date"),
-                                    CanEdit: ThisItem.ManagerCanEdit
-                                }
-                            )
-                        )
-                    );
-
-                    Navigate(scrMyTraining, ScreenTransition.Cover)
-                  PressedFill: =Self.Fill
+                  HoverFill: =RGBA(232,240,248,1)
+                  OnSelect: =Select(Parent)
+                  PressedFill: =RGBA(218,232,246,1)
                   RadiusBottomLeft: =0
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
@@ -297,12 +294,11 @@ const yaml = `Screens:
                 Control: Classic/Button@2.2.0
                 Properties:
                   BorderThickness: =0
-                  DisplayMode: =DisplayMode.View
                   Fill: =RGBA(240,244,255,1)
                   Height: =64
-                  HoverFill: =Self.Fill
+                  HoverFill: =RGBA(240,244,255,1)
                   OnSelect: =Select(Parent)
-                  PressedFill: =Self.Fill
+                  PressedFill: =RGBA(240,244,255,1)
                   RadiusBottomLeft: =0
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
@@ -351,7 +347,6 @@ const yaml = `Screens:
                 Control: Classic/Button@2.2.0
                 Properties:
                   BorderThickness: =0
-                  DisplayMode: =DisplayMode.View
                   Fill: =RGBA(221,227,234,1)
                   Height: =10
                   HoverFill: =Self.Fill
@@ -369,7 +364,6 @@ const yaml = `Screens:
                 Control: Classic/Button@2.2.0
                 Properties:
                   BorderThickness: =0
-                  DisplayMode: =DisplayMode.View
                   Fill: =If(ThisItem.PersonInDate=ThisItem.PersonRequired,RGBA(99,153,34,1),ThisItem.PersonInDate/Max(ThisItem.PersonRequired,1)>=0.6,RGBA(239,159,39,1),RGBA(226,75,74,1))
                   Height: =10
                   HoverFill: =Self.Fill
