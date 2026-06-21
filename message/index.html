@@ -259,20 +259,20 @@ textarea:focus {
     </div>
 
     <button class="btn" id="sendBtn" type="button">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M15.5 2.5L8 10M15.5 2.5L10.5 15.5L8 10M15.5 2.5L2.5 7L8 10" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Open GitHub to send
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="5" width="10" height="12" rx="2" stroke="white" stroke-width="1.7"/><path d="M6 5V4a3 3 0 0 1 6 0v1" stroke="white" stroke-width="1.7" stroke-linecap="round"/></svg>
+      Copy GitHub URL
     </button>
 
     <div class="success-box" id="successBox">
-      GitHub issue page opened in a new tab. Attach any screenshots by dragging them onto the body field there, then click <strong>Submit new issue</strong>.
+      URL copied — open a new tab, paste it in, then drag any screenshots onto the body and click <strong>Submit new issue</strong>.
     </div>
 
     <hr class="divider"/>
 
     <p style="margin:0 0 12px; font-size:.9rem; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;">How it works</p>
     <div class="step"><span class="step-num">1</span><span style="font-size:.9rem; color:var(--muted)">Fill in the subject and message above.</span></div>
-    <div class="step"><span class="step-num">2</span><span style="font-size:.9rem; color:var(--muted)">Click <strong>Open GitHub to send</strong> — a new tab opens with the issue pre-filled.</span></div>
-    <div class="step"><span class="step-num">3</span><span style="font-size:.9rem; color:var(--muted)">Drag any screenshots onto the issue body, then click <strong>Submit new issue</strong>.</span></div>
+    <div class="step"><span class="step-num">2</span><span style="font-size:.9rem; color:var(--muted)">Click <strong>Copy GitHub URL</strong> — the pre-filled issue URL is on your clipboard.</span></div>
+    <div class="step"><span class="step-num">3</span><span style="font-size:.9rem; color:var(--muted)">Open a new tab, paste the URL, drag in any screenshots, then click <strong>Submit new issue</strong>.</span></div>
     <div class="step"><span class="step-num">4</span><span style="font-size:.9rem; color:var(--muted)">Claude picks it up on the main PC and actions it.</span></div>
 
     <div class="note">
@@ -318,14 +318,14 @@ document.getElementById('sendBtn').addEventListener('click', () => {
 
   const url = `${ISSUES_URL}?title=${title}&body=${encodeURIComponent(fullBody)}&labels=from-laptop`;
 
-  const a = document.createElement('a');
-  a.href = url;
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  document.getElementById('successBox').style.display = 'block';
+  const btn = document.getElementById('sendBtn');
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = 'Copied!';
+    document.getElementById('successBox').style.display = 'block';
+    setTimeout(() => {
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="5" width="10" height="12" rx="2" stroke="white" stroke-width="1.7"/><path d="M6 5V4a3 3 0 0 1 6 0v1" stroke="white" stroke-width="1.7" stroke-linecap="round"/></svg> Copy GitHub URL';
+    }, 2000);
+  });
 });
 
 document.getElementById('subject').addEventListener('keydown', e => {
