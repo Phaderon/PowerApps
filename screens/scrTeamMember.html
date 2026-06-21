@@ -64,6 +64,38 @@
     <p id="status-f2" class="status">Ready to copy</p>
   </div>
 
+  <hr class="divider"/>
+
+  <h2>Step 3 — Fix scrMyTraining header when viewing someone else</h2>
+  <p class="meta" style="max-width:540px;text-align:center">These fix the profile photo, initials, and section label so they show the viewed person's details instead of yours.</p>
+
+  <div class="section">
+    <p class="section-label">imgMyPhoto → Image property</p>
+    <p style="font-size:.8rem;color:#475569;line-height:1.6">Select <strong>imgMyPhoto</strong>, click <strong>Image</strong> in the formula bar, select all, paste:</p>
+    <div class="btn-row">
+      <button class="btn-copy-sm" onclick="copyFormula('status-f3', formula3)">Copy formula</button>
+    </div>
+    <p id="status-f3" class="status">Ready to copy</p>
+  </div>
+
+  <div class="section">
+    <p class="section-label">lblInitials → Text property</p>
+    <p style="font-size:.8rem;color:#475569;line-height:1.6">Select <strong>lblInitials</strong>, click <strong>Text</strong> in the formula bar, select all, paste:</p>
+    <div class="btn-row">
+      <button class="btn-copy-sm" onclick="copyFormula('status-f4', formula4)">Copy formula</button>
+    </div>
+    <p id="status-f4" class="status">Ready to copy</p>
+  </div>
+
+  <div class="section">
+    <p class="section-label">lblSectionTraining → Text property</p>
+    <p style="font-size:.8rem;color:#475569;line-height:1.6">Select <strong>lblSectionTraining</strong>, click <strong>Text</strong> in the formula bar, select all, paste:</p>
+    <div class="btn-row">
+      <button class="btn-copy-sm" onclick="copyFormula('status-f5', formula5)">Copy formula</button>
+    </div>
+    <p id="status-f5" class="status">Ready to copy</p>
+  </div>
+
   <script>
 const yaml = `Screens:
   scrTeamMember:
@@ -453,6 +485,20 @@ const formula2 = `=If(
     "Hello, " & First(Split(varMe.Title," ")).Value & "  \xB7  " & varMe.StaffType.Value,
     "Viewing: " & varViewingPerson.Title
 )`;
+
+const formula3 = `=If(
+    IsBlank(varViewingPerson),
+    If(varMe.HasM365Access, Office365Users.UserPhotoV2(varMyEmail), Blank()),
+    If(Coalesce(varViewingPerson.HasM365Access, false), Office365Users.UserPhotoV2(Lower(varViewingPerson.Email)), Blank())
+)`;
+
+const formula4 = `=If(
+    IsBlank(varViewingPerson),
+    Upper(Left(varMe.Title,1) & Mid(varMe.Title,Find(" ",varMe.Title)+1,1)),
+    Upper(Left(varViewingPerson.Title,1) & Mid(varViewingPerson.Title,Find(" ",varViewingPerson.Title)+1,1))
+)`;
+
+const formula5 = `=If(IsBlank(varViewingPerson), "Your training", "Their training")`;
   </script>
 </body>
 </html>
