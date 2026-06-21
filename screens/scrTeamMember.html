@@ -400,6 +400,24 @@ const yaml = `Screens:
                   Y: =20
 `;
 
+function copyYAML() {
+  const crlf = yaml.replace(/\r?\n/g, '\r\n');
+  navigator.clipboard.writeText(crlf).then(() => {
+    const s = document.getElementById('status-main');
+    s.textContent = 'Copied!'; s.className = 'status ok';
+    setTimeout(() => { s.textContent = 'Ready to copy'; s.className = 'status'; }, 3000);
+  });
+}
+
+function copyFormula(statusId, text) {
+  const crlf = text.replace(/\r?\n/g, '\r\n');
+  navigator.clipboard.writeText(crlf).then(() => {
+    const s = document.getElementById(statusId);
+    s.textContent = 'Copied!'; s.className = 'status ok';
+    setTimeout(() => { s.textContent = 'Ready to copy'; s.className = 'status'; }, 3000);
+  });
+}
+
 const formula1 = `=Set(varCourse, ThisItem);
 If(
     IsBlank(varViewingPerson),
@@ -441,24 +459,6 @@ const formula2 = `=If(
     "Hello, " & First(Split(varMe.Title," ")).Value & "  \xB7  " & varMe.StaffType.Value,
     "Viewing: " & varViewingPerson.Title
 )`;
-
-function copyYAML() {
-  const crlf = yaml.replace(/\r?\n/g, '\r\n');
-  navigator.clipboard.writeText(crlf).then(() => {
-    const s = document.getElementById('status-main');
-    s.textContent = 'Copied!'; s.className = 'status ok';
-    setTimeout(() => { s.textContent = 'Ready to copy'; s.className = 'status'; }, 3000);
-  });
-}
-
-function copyFormula(statusId, text) {
-  const crlf = text.replace(/\r?\n/g, '\r\n');
-  navigator.clipboard.writeText(crlf).then(() => {
-    const s = document.getElementById(statusId);
-    s.textContent = 'Copied!'; s.className = 'status ok';
-    setTimeout(() => { s.textContent = 'Ready to copy'; s.className = 'status'; }, 3000);
-  });
-}
   </script>
 </body>
 </html>
