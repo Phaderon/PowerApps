@@ -98,6 +98,29 @@
 
   <hr class="divider"/>
 
+  <h2>Step 5 — Back button when viewing someone else</h2>
+  <p class="meta" style="max-width:540px;text-align:center">The "My team" button already navigates back, but it's not obvious. These two formula changes make it always visible and relabel it as a back arrow when you're viewing someone else's training.</p>
+
+  <div class="section">
+    <p class="section-label">btnMyTeam → Text property</p>
+    <p style="font-size:.8rem;color:#475569;line-height:1.6">Select <strong>btnMyTeam</strong>, click <strong>Text</strong>, select all, paste:</p>
+    <div class="btn-row">
+      <button class="btn-copy-sm" onclick="copyFormula('status-f7', formula7)">Copy formula</button>
+    </div>
+    <p id="status-f7" class="status">Ready to copy</p>
+  </div>
+
+  <div class="section">
+    <p class="section-label">btnMyTeam → Visible property</p>
+    <p style="font-size:.8rem;color:#475569;line-height:1.6">Select <strong>btnMyTeam</strong>, click <strong>Visible</strong>, select all, paste:</p>
+    <div class="btn-row">
+      <button class="btn-copy-sm" onclick="copyFormula('status-f8', formula8)">Copy formula</button>
+    </div>
+    <p id="status-f8" class="status">Ready to copy</p>
+  </div>
+
+  <hr class="divider"/>
+
   <h2>Step 4 — Fix scrMyTraining.OnVisible</h2>
   <p class="meta" style="max-width:540px;text-align:center">The OnVisible in your app is out of date — it references colMyRecords before defining it, and includes removed columns (CourseURL etc). Select <strong>scrMyTraining</strong> in the Tree View, click <strong>OnVisible</strong> in the formula bar, select all, paste the full replacement below.</p>
 
@@ -512,6 +535,10 @@ const formula4 = `=If(
 )`;
 
 const formula5 = `=If(IsBlank(varViewingPerson), "Your training", "Their training")`;
+
+const formula7 = `=If(IsBlank(varViewingPerson), "My team", "← My team")`;
+
+const formula8 = `=!IsBlank(varViewingPerson) || CountRows(Filter('TT Personnel', Lower(LineManagerEmail) = varMyEmail && Active = true)) > 0`;
 
 const formula6 = `=If(
     varViewingForSelf,
