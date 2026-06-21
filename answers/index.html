@@ -112,9 +112,27 @@ h1 { margin: 0 0 8px; font-size: 2rem; line-height: 1.1; letter-spacing: -.03em;
   </div>
   <div class="answers-list">
 <!-- ANSWERS_START -->
-    <div class="empty-state">
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="16" stroke="#c5a56d" stroke-width="1.5"/><path d="M18 12v7M18 23v1.5" stroke="#c5a56d" stroke-width="2" stroke-linecap="round"/></svg>
-      <p>No answers yet — send your first issue from the <a href="../message/">message page</a>.</p>
+    <div class="answer-card">
+      <h3 class="answer-title">scrMyTraining gallery empty — 0 of 0 courses showing</h3>
+      <div class="answer-meta">
+        <span class="pill">scrMyTraining</span>
+        <span class="pill">colMyTraining</span>
+        <span class="pill green">Fixed · 21 Jun 2026</span>
+      </div>
+      <span class="section-label">Problem</span>
+      <div class="problem-box">All stat cards show 0 and the gallery is empty, even after adding a course and completing it. The header shows the correct user name and staff type.</div>
+      <span class="section-label">Root cause</span>
+      <div class="solution-box"><code>scrMyTraining.OnVisible</code> builds <code>colMyTraining</code> from <code>colCourses</code>, but doesn't reload <code>colCourses</code> from SharePoint first. If courses were added or the app was reopened since <code>App.OnStart</code> ran, the collection is stale and the filter returns zero rows. Also check: the course <strong>Status</strong> field in SharePoint must be <strong>Active</strong> (not blank) — the filter excludes anything else.</div>
+      <span class="section-label">Fix — add to the top of scrMyTraining.OnVisible</span>
+      <div class="code-block"><button class="copy-btn">Copy</button>ClearCollect(colCourses, 'TT Courses');</div>
+      <span class="section-label" style="margin-top:14px;">Full corrected start of scrMyTraining.OnVisible</span>
+      <div class="code-block"><button class="copy-btn">Copy</button>ClearCollect(colCourses, 'TT Courses');
+ClearCollect(colMyRecords,
+    Filter('TT TrainingRecords', PersonEmail = varMyEmail));</div>
+      <a class="issue-link" href="https://github.com/Phaderon/PowerApps/issues/1" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M7 4.5v3.5M7 9.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        GitHub issue #1
+      </a>
     </div>
 <!-- ANSWERS_END -->
   </div>
