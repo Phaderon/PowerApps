@@ -687,11 +687,13 @@ const yaml = `Screens:
             Y: =358
           Children:
             - btnDetailPill:
-                Control: Label@2.5.1
+                Control: Classic/Button@2.2.0
                 Properties:
-                  Align: =Align.Center
                   BorderColor: =RGBA(0,0,0,0)
+                  BorderThickness: =0
                   Color: =RGBA(255,255,255,1)
+                  DisabledBorderColor: =RGBA(0,0,0,0)
+                  DisplayMode: =DisplayMode.View
                   Fill: =Switch(ThisItem.TrainingStatus,
                       "Expired",       RGBA(226,75,74,1),
                       "Expiring Soon", RGBA(239,159,39,1),
@@ -701,7 +703,13 @@ const yaml = `Screens:
                   Font: =Font.'Open Sans'
                   FontWeight: =FontWeight.Semibold
                   Height: =28
+                  HoverBorderColor: =RGBA(0,0,0,0)
+                  HoverColor: =RGBA(255,255,255,1)
+                  HoverFill: =Self.Fill
                   OnSelect: =Select(Parent)
+                  PressedBorderColor: =RGBA(0,0,0,0)
+                  PressedColor: =RGBA(255,255,255,1)
+                  PressedFill: =Self.Fill
                   RadiusBottomLeft: =14
                   RadiusBottomRight: =14
                   RadiusTopLeft: =14
