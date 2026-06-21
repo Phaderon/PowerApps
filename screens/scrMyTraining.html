@@ -16,33 +16,36 @@
     .btn-back { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
     #status { font-size: .85rem; color: #475569; min-height: 1.2em; }
     #status.ok { color: #22c55e; }
-    .instructions { max-width: 480px; text-align: center; font-size: .82rem; color: #475569; line-height: 1.7; border: 1px solid #1e293b; border-radius: 12px; padding: 16px 20px; background: #0d1117; }
+    .instructions { max-width: 520px; text-align: center; font-size: .82rem; color: #475569; line-height: 1.7; border: 1px solid #1e293b; border-radius: 12px; padding: 16px 20px; background: #0d1117; }
     .instructions strong { color: #94a3b8; }
   </style>
 </head>
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 3 of 7</p>
   <h1>scrMyTraining</h1>
-  <p class="meta">v1.3 — SortKey quoted in AddColumns</p>
+  <p class="meta">v2.0 &mdash; Full redesign: data fix, aligned stat cards, compliance bar, solid-colour status pills &middot; 21 Jun 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
-    <a href="../"><button class="btn-back" type="button">← Guide library</button></a>
+    <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
   </div>
   <p id="status">Ready to copy</p>
   <div class="instructions">
     <strong>How to paste into Power Apps Studio</strong><br>
-    Tree View → click screen → Ctrl+A → Delete → Ctrl+V.
+    Tree View &rarr; click screen &rarr; Ctrl+A &rarr; Delete &rarr; Ctrl+V.<br><br>
+    <strong>What changed in v2.0:</strong> OnVisible now loads colCourses directly (fixes zero counts when navigating here first), all three stat cards are at the same Y, compliance progress bar added below the cards, gallery sort fixed (no AddColumns), status pills are now Labels with solid fill colours.
   </div>
   <script>
 const yaml = `Screens:
   scrMyTraining:
     Properties:
+      Fill: =RGBA(247,249,252,1)
       LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
       OnVisible: |-
         =If(
             varViewingForSelf,
+            ClearCollect(colCourses, 'TT Courses');
             ClearCollect(colMyRecords,
-                Filter('TT TrainingRecords', PersonEmail = varMyEmail));
+                Filter('TT TrainingRecords', Lower(PersonEmail) = varMyEmail));
 
             ClearCollect(colMyTraining,
                 ForAll(
@@ -54,7 +57,6 @@ const yaml = `Screens:
                     {
                         CourseID:    C.ID,
                         CourseName:  C.Title,
-                        CourseInfo:  C.CourseInfo,
                         RecurMonths: C.RecurrenceMonths,
                         RecurText:   Switch(C.RecurrenceMonths,
                                          0,  "One-off",
@@ -193,6 +195,7 @@ const yaml = `Screens:
             Height: =40
             OnSelect: =Navigate(scrTeamMember, ScreenTransition.Cover)
             Size: =12
+            Text: ="My team"
             Visible: =CountRows(Filter('TT Personnel', Lower(LineManagerEmail) = varMyEmail && Active = true)) > 0
             Width: =124
             X: =1086
@@ -220,7 +223,7 @@ const yaml = `Screens:
             DisplayMode: =DisplayMode.View
             Fill: =RGBA(255,255,255,1)
             Font: =Font.'Open Sans'
-            Height: =90
+            Height: =80
             HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
             HoverColor: =RGBA(255, 255, 255, 1)
             HoverFill: =RGBA(255,255,255,1)
@@ -232,7 +235,32 @@ const yaml = `Screens:
             RadiusTopLeft: =8
             RadiusTopRight: =8
             Text: =
-            Width: =430
+            Width: =434
+            X: =16
+            Y: =88
+      - recCard1Accent:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(0,0,0,0)
+            BorderThickness: =0
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(24,95,165,1)
+            Font: =Font.'Open Sans'
+            Height: =80
+            HoverBorderColor: =RGBA(0,0,0,0)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(24,95,165,1)
+            PressedBorderColor: =RGBA(0,0,0,0)
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(24,95,165,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =0
+            RadiusTopLeft: =8
+            RadiusTopRight: =0
+            Text: =
+            Width: =6
             X: =16
             Y: =88
       - lblStatRequired:
@@ -240,15 +268,15 @@ const yaml = `Screens:
           Properties:
             Align: =Align.Center
             BorderColor: =RGBA(0, 18, 107, 1)
-            Color: =RGBA(31,58,95,1)
+            Color: =RGBA(24,95,165,1)
             Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
-            Height: =44
-            Size: =28
+            Height: =40
+            Size: =26
             Text: =CountRows(colMyTraining)
-            Width: =430
+            Width: =434
             X: =16
-            Y: =96
+            Y: =94
       - lblCapRequired:
           Control: Label@2.5.1
           Properties:
@@ -256,12 +284,12 @@ const yaml = `Screens:
             BorderColor: =RGBA(0, 18, 107, 1)
             Color: =RGBA(85,85,85,1)
             Font: =Font.'Open Sans'
-            Height: =26
+            Height: =22
             Size: =10
             Text: ="Mandatory courses"
-            Width: =430
+            Width: =434
             X: =16
-            Y: =144
+            Y: =138
       - recCard2:
           Control: Classic/Button@2.2.0
           Properties:
@@ -272,7 +300,7 @@ const yaml = `Screens:
             DisplayMode: =DisplayMode.View
             Fill: =RGBA(255,255,255,1)
             Font: =Font.'Open Sans'
-            Height: =90
+            Height: =80
             HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
             HoverColor: =RGBA(255, 255, 255, 1)
             HoverFill: =RGBA(255,255,255,1)
@@ -284,23 +312,48 @@ const yaml = `Screens:
             RadiusTopLeft: =8
             RadiusTopRight: =8
             Text: =
-            Width: =430
+            Width: =434
             X: =462
-            Y: =108
+            Y: =88
+      - recCard2Accent:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(0,0,0,0)
+            BorderThickness: =0
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(45,106,79,1)
+            Font: =Font.'Open Sans'
+            Height: =80
+            HoverBorderColor: =RGBA(0,0,0,0)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(45,106,79,1)
+            PressedBorderColor: =RGBA(0,0,0,0)
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(45,106,79,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =0
+            RadiusTopLeft: =8
+            RadiusTopRight: =0
+            Text: =
+            Width: =6
+            X: =462
+            Y: =88
       - lblStatInDate:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
             BorderColor: =RGBA(0, 18, 107, 1)
-            Color: =RGBA(59,109,17,1)
+            Color: =RGBA(45,106,79,1)
             Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
-            Height: =44
-            Size: =28
+            Height: =40
+            Size: =26
             Text: =CountRows(Filter(colMyTraining, TrainingStatus = "In Date" || TrainingStatus = "Complete"))
-            Width: =430
+            Width: =434
             X: =462
-            Y: =116
+            Y: =94
       - lblCapInDate:
           Control: Label@2.5.1
           Properties:
@@ -308,12 +361,12 @@ const yaml = `Screens:
             BorderColor: =RGBA(0, 18, 107, 1)
             Color: =RGBA(85,85,85,1)
             Font: =Font.'Open Sans'
-            Height: =26
+            Height: =22
             Size: =10
             Text: ="In date"
-            Width: =430
+            Width: =434
             X: =462
-            Y: =164
+            Y: =138
       - recCard3:
           Control: Classic/Button@2.2.0
           Properties:
@@ -324,7 +377,7 @@ const yaml = `Screens:
             DisplayMode: =DisplayMode.View
             Fill: =RGBA(255,255,255,1)
             Font: =Font.'Open Sans'
-            Height: =90
+            Height: =80
             HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
             HoverColor: =RGBA(255, 255, 255, 1)
             HoverFill: =RGBA(255,255,255,1)
@@ -336,23 +389,48 @@ const yaml = `Screens:
             RadiusTopLeft: =8
             RadiusTopRight: =8
             Text: =
-            Width: =430
+            Width: =454
             X: =908
-            Y: =128
+            Y: =88
+      - recCard3Accent:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(0,0,0,0)
+            BorderThickness: =0
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =If(CountRows(Filter(colMyTraining, TrainingStatus="Expired"||TrainingStatus="Not Started"||TrainingStatus="Expiring Soon"))>0, RGBA(163,45,45,1), RGBA(136,135,128,1))
+            Font: =Font.'Open Sans'
+            Height: =80
+            HoverBorderColor: =RGBA(0,0,0,0)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =Self.Fill
+            PressedBorderColor: =RGBA(0,0,0,0)
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =0
+            RadiusTopLeft: =8
+            RadiusTopRight: =0
+            Text: =
+            Width: =6
+            X: =908
+            Y: =88
       - lblStatAction:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
             BorderColor: =RGBA(0, 18, 107, 1)
-            Color: =If(Value(Self.Text) > 0, RGBA(163,45,45,1), RGBA(59,109,17,1))
+            Color: =If(Value(Self.Text) > 0, RGBA(163,45,45,1), RGBA(136,135,128,1))
             Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
-            Height: =44
-            Size: =28
+            Height: =40
+            Size: =26
             Text: =CountRows(Filter(colMyTraining, TrainingStatus = "Expired" || TrainingStatus = "Not Started" || TrainingStatus = "Expiring Soon"))
-            Width: =430
+            Width: =454
             X: =908
-            Y: =136
+            Y: =94
       - lblCapAction:
           Control: Label@2.5.1
           Properties:
@@ -360,30 +438,105 @@ const yaml = `Screens:
             BorderColor: =RGBA(0, 18, 107, 1)
             Color: =RGBA(85,85,85,1)
             Font: =Font.'Open Sans'
-            Height: =26
+            Height: =22
             Size: =10
             Text: ="Need action"
-            Width: =430
+            Width: =454
             X: =908
+            Y: =138
+      - recCompBG:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(0,0,0,0)
+            BorderThickness: =0
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(221,227,234,1)
+            Font: =Font.'Open Sans'
+            Height: =8
+            HoverBorderColor: =RGBA(0,0,0,0)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(221,227,234,1)
+            PressedBorderColor: =RGBA(0,0,0,0)
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(221,227,234,1)
+            RadiusBottomLeft: =4
+            RadiusBottomRight: =4
+            RadiusTopLeft: =4
+            RadiusTopRight: =4
+            Text: =
+            Width: =1334
+            X: =16
             Y: =184
+      - recCompFill:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(0,0,0,0)
+            BorderThickness: =0
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =If(CountRows(Filter(colMyTraining,TrainingStatus="Expired"))>0,RGBA(226,75,74,1),RGBA(99,153,34,1))
+            Font: =Font.'Open Sans'
+            Height: =8
+            HoverBorderColor: =RGBA(0,0,0,0)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =Self.Fill
+            PressedBorderColor: =RGBA(0,0,0,0)
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =4
+            RadiusBottomRight: =4
+            RadiusTopLeft: =4
+            RadiusTopRight: =4
+            Text: =
+            Width: =1334 * CountRows(Filter(colMyTraining, TrainingStatus="In Date"||TrainingStatus="Complete"||TrainingStatus="Expiring Soon")) / Max(CountRows(colMyTraining),1)
+            X: =16
+            Y: =184
+      - lblCompText:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(136,135,128,1)
+            Font: =Font.'Open Sans'
+            Height: =20
+            Size: =10
+            Text: =CountRows(Filter(colMyTraining, TrainingStatus="In Date"||TrainingStatus="Complete")) & " of " & CountRows(colMyTraining) & " courses in date"
+            Width: =500
+            X: =16
+            Y: =198
+      - lblSectionTraining:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(31,58,95,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =13
+            Text: ="Your training"
+            Width: =600
+            X: =16
+            Y: =226
       - galMyTraining:
           Control: Gallery@2.15.0
           Variant: Vertical
           Properties:
             BorderColor: =RGBA(0, 18, 107, 1)
-            Height: =540
+            Fill: =RGBA(247,249,252,1)
+            Height: =500
             Items: |-
-              =SortByColumns(
-                  AddColumns(colMyTraining,
-                      "SortKey", Switch(TrainingStatus,
-                          "Expired",       1,
-                          "Not Started",   2,
-                          "Expiring Soon", 3,
-                          "In Date",       4,
-                          "Complete",      5)
-                  ),
-                  "SortKey", SortOrder.Ascending,
-                  "CourseName", SortOrder.Ascending
+              =Sort(
+                  Sort(colMyTraining, CourseName, SortOrder.Ascending),
+                  Switch(TrainingStatus,
+                      "Expired",       1,
+                      "Not Started",   2,
+                      "Expiring Soon", 3,
+                      "In Date",       4,
+                      "Complete",      5,
+                      99),
+                  SortOrder.Ascending
               )
             OnSelect: |-
               =Set(varCourse, ThisItem);
@@ -406,7 +559,7 @@ const yaml = `Screens:
             TemplatePadding: =0
             TemplateSize: =68
             Width: =1366
-            Y: =194
+            Y: =260
           Children:
             - recStatusBar:
                 Control: Classic/Button@2.2.0
@@ -416,7 +569,12 @@ const yaml = `Screens:
                   Color: =RGBA(255, 255, 255, 1)
                   DisabledBorderColor: =RGBA(166, 166, 166, 1)
                   DisplayMode: =DisplayMode.View
-                  Fill: =Switch(ThisItem.TrainingStatus, "Expired", RGBA(226,75,74,1), "Expiring Soon", RGBA(239,159,39,1), "Not Started", RGBA(136,135,128,1), "Complete", RGBA(55,138,221,1), RGBA(99,153,34,1))
+                  Fill: =Switch(ThisItem.TrainingStatus,
+                      "Expired",       RGBA(226,75,74,1),
+                      "Expiring Soon", RGBA(239,159,39,1),
+                      "Not Started",   RGBA(136,135,128,1),
+                      "Complete",      RGBA(55,138,221,1),
+                      RGBA(99,153,34,1))
                   Font: =Font.'Open Sans'
                   Height: =68
                   HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
@@ -432,6 +590,31 @@ const yaml = `Screens:
                   RadiusTopRight: =0
                   Text: =
                   Width: =5
+            - recRowBG:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =ColorFade(Self.Fill, -15%)
+                  BorderThickness: =0
+                  Color: =RGBA(255, 255, 255, 1)
+                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                  DisplayMode: =DisplayMode.View
+                  Fill: =If(IsOdd(ThisItem.ItemIndex),RGBA(255,255,255,1),RGBA(247,249,252,1))
+                  Font: =Font.'Open Sans'
+                  Height: =67
+                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+                  HoverColor: =RGBA(255, 255, 255, 1)
+                  HoverFill: =RGBA(240,245,255,1)
+                  OnSelect: =Select(Parent)
+                  PressedBorderColor: =Self.Fill
+                  PressedColor: =Self.Fill
+                  PressedFill: =RGBA(235,242,255,1)
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Text: =
+                  Width: =1361
+                  X: =5
             - recRowDivider:
                 Control: Classic/Button@2.2.0
                 Properties:
@@ -454,7 +637,7 @@ const yaml = `Screens:
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
                   RadiusTopRight: =0
-                  Text: ="1"
+                  Text: =
                   Width: =1366
                   Y: =67
             - lblCourseName:
@@ -466,10 +649,23 @@ const yaml = `Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =26
                   OnSelect: =Select(Parent)
-                  Text: =ThisItem.CourseName & " (" & ThisItem.RecurText & ")"
-                  Width: =900
+                  Text: =ThisItem.CourseName
+                  Width: =860
                   X: =20
-                  Y: =10
+                  Y: =8
+            - lblRecurText:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(136,135,128,1)
+                  Font: =Font.'Open Sans'
+                  Height: =20
+                  OnSelect: =Select(Parent)
+                  Size: =9
+                  Text: =ThisItem.RecurText
+                  Width: =200
+                  X: =20
+                  Y: =36
             - lblDates:
                 Control: Label@2.5.1
                 Properties:
@@ -478,23 +674,39 @@ const yaml = `Screens:
                   Font: =Font.'Open Sans'
                   Height: =20
                   OnSelect: =Select(Parent)
-                  Size: =10.5
-                  Text: =If(IsBlank(ThisItem.DateDone), "Not yet completed", "Completed " & Text(ThisItem.DateDone, "dd mmm yyyy") & If(IsBlank(ThisItem.ExpiresOn), "", " · expires " & Text(ThisItem.ExpiresOn, "dd mmm yyyy")) & If(!IsBlank(ThisItem.UploadedBy), " · uploaded by " & ThisItem.UploadedBy, ""))
-                  Width: =1050
-                  X: =20
-                  Y: =38
-            - btnStatusPill:
-                Control: ModernButton@1.0.0
+                  Size: =10
+                  Text: =If(IsBlank(ThisItem.DateDone),
+                      "Not yet completed",
+                      "Done " & Text(ThisItem.DateDone,"dd mmm yyyy") &
+                      If(IsBlank(ThisItem.ExpiresOn), "", " \xB7 expires " & Text(ThisItem.ExpiresOn,"dd mmm yyyy")))
+                  Width: =900
+                  X: =220
+                  Y: =36
+            - lblStatusPill:
+                Control: Label@2.5.1
                 Properties:
-                  BasePaletteColor: =Switch(ThisItem.TrainingStatus, "Expired", RGBA(252,235,235,1), "Expiring Soon", RGBA(250,238,218,1), "Not Started", RGBA(241,239,232,1), "Complete", RGBA(230,241,251,1), RGBA(234,243,222,1))
-                  Color: =Switch(ThisItem.TrainingStatus, "Expired", RGBA(121,31,31,1), "Expiring Soon", RGBA(99,56,6,1), "Not Started", RGBA(68,68,65,1), "Complete", RGBA(12,68,124,1), RGBA(39,80,10,1))
-                  DisplayMode: =DisplayMode.View
+                  Align: =Align.Center
+                  BorderColor: =RGBA(0,0,0,0)
+                  Color: =RGBA(255,255,255,1)
+                  Fill: =Switch(ThisItem.TrainingStatus,
+                      "Expired",       RGBA(226,75,74,1),
+                      "Expiring Soon", RGBA(239,159,39,1),
+                      "Not Started",   RGBA(136,135,128,1),
+                      "Complete",      RGBA(55,138,221,1),
+                      RGBA(99,153,34,1))
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =28
                   OnSelect: =Select(Parent)
-                  Size: =11
+                  RadiusBottomLeft: =14
+                  RadiusBottomRight: =14
+                  RadiusTopLeft: =14
+                  RadiusTopRight: =14
+                  Size: =10
                   Text: =ThisItem.TrainingStatus
-                  Width: =174
-                  X: =1176
-                  Y: =18
+                  Width: =130
+                  X: =1190
+                  Y: =20
             - icoChevron:
                 Control: Classic/Icon@2.5.0
                 Properties:
@@ -506,10 +718,24 @@ const yaml = `Screens:
                   Width: =24
                   X: =1338
                   Y: =22
+      - lblSectionArchive:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(136,135,128,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =11
+            Text: ="Archived courses (no longer required)"
+            Visible: =varShowArchive && CountRows(colMyArchive) > 0
+            Width: =600
+            X: =16
+            Y: =galMyTraining.Y + galMyTraining.Height + 48
       - btnShowArchive:
           Control: ModernButton@1.0.0
           Properties:
-            BasePaletteColor: =RGBA(46,110,145,1)
+            BasePaletteColor: =RGBA(108,117,125,1)
             Color: =RGBA(255,255,255,1)
             OnSelect: =Set(varShowArchive, !varShowArchive)
             Size: =11
@@ -517,58 +743,82 @@ const yaml = `Screens:
             Visible: =CountRows(colMyArchive) > 0
             Width: =220
             X: =16
-            Y: =742
+            Y: =galMyTraining.Y + galMyTraining.Height + 12
       - galMyArchive:
           Control: Gallery@2.15.0
           Variant: Vertical
           Properties:
             BorderColor: =RGBA(0, 18, 107, 1)
-            Height: =180
+            Fill: =RGBA(247,249,252,1)
+            Height: =200
             Items: =colMyArchive
             TemplatePadding: =0
             TemplateSize: =48
             Visible: =varShowArchive
             Width: =1366
-            Y: =galMyTraining.Y + galMyTraining.Height + 56
+            Y: =galMyTraining.Y + galMyTraining.Height + 80
           Children:
-            - lblArchiveDate:
-                Control: Label@2.5.1
+            - recArchiveDivider:
+                Control: Classic/Button@2.2.0
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
-                  Color: =RGBA(136,135,128,1)
+                  BorderColor: =ColorFade(Self.Fill, -15%)
+                  BorderThickness: =0
+                  Color: =RGBA(255, 255, 255, 1)
+                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                  DisplayMode: =DisplayMode.View
+                  Fill: =RGBA(221,227,234,1)
                   Font: =Font.'Open Sans'
-                  Height: =16
+                  Height: =1
+                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+                  HoverColor: =RGBA(255, 255, 255, 1)
+                  HoverFill: =RGBA(221,227,234,1)
                   OnSelect: =Select(Parent)
-                  Size: =10
-                  Text: ="Completed " & Text(ThisItem.DateDone, "dd mmm yyyy") & " · no longer required"
-                  Width: =900
-                  X: =20
-                  Y: =28
+                  PressedBorderColor: =Self.Fill
+                  PressedColor: =Self.Fill
+                  PressedFill: =RGBA(221,227,234,1)
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Text: =
+                  Width: =1366
+                  Y: =47
             - lblArchiveName:
                 Control: Label@2.5.1
                 Properties:
                   BorderColor: =RGBA(0, 18, 107, 1)
                   Color: =RGBA(136,135,128,1)
                   Font: =Font.'Open Sans'
-                  Height: =20
+                  Height: =22
                   OnSelect: =Select(Parent)
                   Size: =12
                   Text: =ThisItem.CourseName
                   Width: =700
                   X: =20
                   Y: =6
-`;
+            - lblArchiveDate:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(170,187,204,1)
+                  Font: =Font.'Open Sans'
+                  Height: =16
+                  OnSelect: =Select(Parent)
+                  Size: =10
+                  Text: ="Completed " & Text(ThisItem.DateDone, "dd mmm yyyy") & " \xB7 no longer required"
+                  Width: =900
+                  X: =20
+                  Y: =28`;
+
 function copyYAML() {
   const crlf = yaml.replace(/\r?\n/g, '\r\n');
   navigator.clipboard.writeText(crlf).then(() => {
     const s = document.getElementById('status');
-    s.textContent = 'Copied!';
+    s.textContent = 'Copied to clipboard — paste into Power Apps Studio';
     s.className = 'ok';
     setTimeout(() => { s.textContent = 'Ready to copy'; s.className = ''; }, 3000);
   }).catch(() => {
-    const s = document.getElementById('status');
-    s.textContent = 'Copy failed.';
-    s.className = 'err';
+    document.getElementById('status').textContent = 'Copy failed — try clicking Copy YAML button again';
   });
 }
   </script>
