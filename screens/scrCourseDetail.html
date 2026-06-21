@@ -59,7 +59,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 4 of 7</p>
   <h1>scrCourseDetail</h1>
-  <p class="meta">Full screen YAML — bugs fixed, colours polished</p>
+  <p class="meta">v2.2 &mdash; Added OnVisible: ResetForm(frmCert) so the form reloads between course visits &middot; 21 Jun 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">← Guide library</button></a>
@@ -79,6 +79,7 @@ const yaml = `Screens:
     Properties:
       Fill: =RGBA(247,249,252,1)
       LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      OnVisible: =ResetForm(frmCert)
     Children:
       - recHeaderCD:
           Control: Classic/Button@2.2.0
@@ -101,7 +102,7 @@ const yaml = `Screens:
             RadiusBottomRight: =0
             RadiusTopLeft: =0
             RadiusTopRight: =0
-            Text: =
+            Text: =""
             Width: =1366
       - icoBack:
           Control: Classic/Icon@2.5.0
@@ -159,7 +160,7 @@ const yaml = `Screens:
             RadiusBottomRight: =12
             RadiusTopLeft: =12
             RadiusTopRight: =12
-            Text: =
+            Text: =""
             Width: =800
             X: =283
             Y: =96
