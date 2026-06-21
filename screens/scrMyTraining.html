@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 3 of 7</p>
   <h1>scrMyTraining</h1>
-  <p class="meta">v2.0 &mdash; Full redesign: data fix, aligned stat cards, compliance bar, solid-colour status pills &middot; 21 Jun 2026</p>
+  <p class="meta">v2.1 &mdash; Home button added to header (left of avatar); avatar, initials, photo and greeting now show viewed person when in manager view &middot; 21 Jun 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -121,8 +121,22 @@ const yaml = `Screens:
             RadiusBottomRight: =0
             RadiusTopLeft: =0
             RadiusTopRight: =0
-            Text: =
+            Text: =""
             Width: =1366
+      - icoHome:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =RGBA(230,241,251,1)
+            Height: =28
+            Icon: =Icon.Home
+            OnSelect: |-
+              =Set(varViewingForSelf, true);
+              Set(varViewingPerson, Blank());
+              Navigate(scrMyTraining, ScreenTransition.UnCover)
+            Visible: =!IsBlank(varViewingPerson)
+            Width: =28
+            X: =16
+            Y: =22
       - recInitialsBG:
           Control: Classic/Button@2.2.0
           Properties:
@@ -144,9 +158,9 @@ const yaml = `Screens:
             RadiusBottomRight: =24
             RadiusTopLeft: =24
             RadiusTopRight: =24
-            Text: =
+            Text: =""
             Width: =48
-            X: =16
+            X: =If(IsBlank(varViewingPerson), 16, 56)
             Y: =12
       - lblInitials:
           Control: Label@2.5.1
@@ -158,23 +172,23 @@ const yaml = `Screens:
             FontWeight: =FontWeight.Bold
             Height: =48
             Size: =16
-            Text: =Upper(Left(varMe.Title,1) & Mid(varMe.Title,Find(" ",varMe.Title)+1,1))
+            Text: =If(IsBlank(varViewingPerson),Upper(Left(varMe.Title,1) & Mid(varMe.Title,Find(" ",varMe.Title)+1,1)),Upper(Left(varViewingPerson.Title,1) & Mid(varViewingPerson.Title,Find(" ",varViewingPerson.Title)+1,1)))
             Width: =48
-            X: =16
+            X: =If(IsBlank(varViewingPerson), 16, 56)
             Y: =12
       - imgMyPhoto:
           Control: Image@2.2.3
           Properties:
             BorderColor: =RGBA(0, 18, 107, 1)
             Height: =48
-            Image: =If(varMe.HasM365Access, Office365Users.UserPhotoV2(varMyEmail), Blank())
+            Image: =If(IsBlank(varViewingPerson),If(varMe.HasM365Access,Office365Users.UserPhotoV2(varMyEmail),Blank()),If(Coalesce(varViewingPerson.HasM365Access,false),Office365Users.UserPhotoV2(Lower(varViewingPerson.Email)),Blank()))
             ImagePosition: =ImagePosition.Fill
             RadiusBottomLeft: =24
             RadiusBottomRight: =24
             RadiusTopLeft: =24
             RadiusTopRight: =24
             Width: =48
-            X: =16
+            X: =If(IsBlank(varViewingPerson), 16, 56)
             Y: =12
       - lblWelcome:
           Control: Label@2.5.1
@@ -184,9 +198,12 @@ const yaml = `Screens:
             Font: =Font.'Open Sans'
             Height: =72
             Size: =14
-            Text: ="Hello, " & First(Split(varMe.Title," ")).Value & " · " & varMe.StaffType.Value
+            Text: |-
+              =If(IsBlank(varViewingPerson),
+                  "Hello, " & First(Split(varMe.Title," ")).Value & " · " & varMe.StaffType.Value,
+                  "Viewing: " & varViewingPerson.Title)
             Width: =500
-            X: =74
+            X: =If(IsBlank(varViewingPerson), 74, 114)
       - btnMyTeam:
           Control: ModernButton@1.0.0
           Properties:
@@ -234,7 +251,7 @@ const yaml = `Screens:
             RadiusBottomRight: =8
             RadiusTopLeft: =8
             RadiusTopRight: =8
-            Text: =
+            Text: =""
             Width: =434
             X: =16
             Y: =88
@@ -259,7 +276,7 @@ const yaml = `Screens:
             RadiusBottomRight: =0
             RadiusTopLeft: =8
             RadiusTopRight: =0
-            Text: =
+            Text: =""
             Width: =6
             X: =16
             Y: =88
@@ -311,7 +328,7 @@ const yaml = `Screens:
             RadiusBottomRight: =8
             RadiusTopLeft: =8
             RadiusTopRight: =8
-            Text: =
+            Text: =""
             Width: =434
             X: =462
             Y: =88
@@ -336,7 +353,7 @@ const yaml = `Screens:
             RadiusBottomRight: =0
             RadiusTopLeft: =8
             RadiusTopRight: =0
-            Text: =
+            Text: =""
             Width: =6
             X: =462
             Y: =88
@@ -388,7 +405,7 @@ const yaml = `Screens:
             RadiusBottomRight: =8
             RadiusTopLeft: =8
             RadiusTopRight: =8
-            Text: =
+            Text: =""
             Width: =454
             X: =908
             Y: =88
@@ -413,7 +430,7 @@ const yaml = `Screens:
             RadiusBottomRight: =0
             RadiusTopLeft: =8
             RadiusTopRight: =0
-            Text: =
+            Text: =""
             Width: =6
             X: =908
             Y: =88
@@ -465,7 +482,7 @@ const yaml = `Screens:
             RadiusBottomRight: =4
             RadiusTopLeft: =4
             RadiusTopRight: =4
-            Text: =
+            Text: =""
             Width: =1334
             X: =16
             Y: =184
@@ -490,7 +507,7 @@ const yaml = `Screens:
             RadiusBottomRight: =4
             RadiusTopLeft: =4
             RadiusTopRight: =4
-            Text: =
+            Text: =""
             Width: =1334 * CountRows(Filter(colMyTraining, TrainingStatus="In Date"||TrainingStatus="Complete"||TrainingStatus="Expiring Soon")) / Max(CountRows(colMyTraining),1)
             X: =16
             Y: =184
@@ -588,7 +605,7 @@ const yaml = `Screens:
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
                   RadiusTopRight: =0
-                  Text: =
+                  Text: =""
                   Width: =5
             - recRowBG:
                 Control: Classic/Button@2.2.0
@@ -612,7 +629,7 @@ const yaml = `Screens:
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
                   RadiusTopRight: =0
-                  Text: =
+                  Text: =""
                   Width: =1361
                   X: =5
             - recRowDivider:
@@ -637,7 +654,7 @@ const yaml = `Screens:
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
                   RadiusTopRight: =0
-                  Text: =
+                  Text: =""
                   Width: =1366
                   Y: =67
             - lblCourseName:
@@ -788,7 +805,7 @@ const yaml = `Screens:
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
                   RadiusTopRight: =0
-                  Text: =
+                  Text: =""
                   Width: =1366
                   Y: =47
             - lblArchiveName:
