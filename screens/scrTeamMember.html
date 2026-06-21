@@ -96,6 +96,19 @@
     <p id="status-f5" class="status">Ready to copy</p>
   </div>
 
+  <hr class="divider"/>
+
+  <h2>Step 4 — Fix scrMyTraining.OnVisible</h2>
+  <p class="meta" style="max-width:540px;text-align:center">The OnVisible in your app is out of date — it references colMyRecords before defining it, and includes removed columns (CourseURL etc). Select <strong>scrMyTraining</strong> in the Tree View, click <strong>OnVisible</strong> in the formula bar, select all, paste the full replacement below.</p>
+
+  <div class="section">
+    <p class="section-label">scrMyTraining → OnVisible — full replacement</p>
+    <div class="btn-row">
+      <button class="btn-copy-sm" onclick="copyFormula('status-f6', formula6)">Copy formula</button>
+    </div>
+    <p id="status-f6" class="status">Ready to copy</p>
+  </div>
+
   <script>
 const yaml = `Screens:
   scrTeamMember:
@@ -499,6 +512,63 @@ const formula4 = `=If(
 )`;
 
 const formula5 = `=If(IsBlank(varViewingPerson), "Your training", "Their training")`;
+
+const formula6 = `=If(
+    varViewingForSelf,
+    ClearCollect(colCourses, 'TT Courses');
+    ClearCollect(colMyRecords,
+        Filter('TT TrainingRecords', Lower(PersonEmail) = varMyEmail));
+    ClearCollect(colMyTraining,
+        ForAll(
+            Filter(colCourses,
+                Status.Value = "Active" &&
+                varMe.StaffType.Value in ApplicableTo.Value
+            ) As C,
+            With({rec: LookUp(colMyRecords, CourseID = C.ID)},
+            {
+                CourseID:    C.ID,
+                CourseName:  C.Title,
+                RecurMonths: C.RecurrenceMonths,
+                RecurText:   Switch(C.RecurrenceMonths,
+                                 0,  "One-off",
+                                 12, "Every year",
+                                 24, "Every 2 years",
+                                 "Every " & C.RecurrenceMonths & " months"),
+                RecordID:    rec.ID,
+                DateDone:    rec.DateCompleted,
+                UploadedBy:  rec.UploadedByEmail,
+                ExpiresOn:   If(IsBlank(rec.DateCompleted) || C.RecurrenceMonths = 0,
+                                 Blank(),
+                                 DateAdd(rec.DateCompleted, C.RecurrenceMonths,
+                                         TimeUnit.Months)),
+                TrainingStatus:
+                    If(IsBlank(rec.DateCompleted), "Not Started",
+                       C.RecurrenceMonths = 0, "Complete",
+                       DateAdd(rec.DateCompleted, C.RecurrenceMonths,
+                               TimeUnit.Months) < Today(), "Expired",
+                       DateAdd(rec.DateCompleted, C.RecurrenceMonths,
+                               TimeUnit.Months) <= DateAdd(Today(), 60,
+                               TimeUnit.Days), "Expiring Soon",
+                       "In Date")
+            })
+        )
+    );
+    ClearCollect(colMyArchive,
+        Filter(
+            ForAll(colMyRecords As R,
+                {
+                    RecordID:   R.ID,
+                    CourseName: R.CourseName,
+                    DateDone:   R.DateCompleted,
+                    IsArchived: IsBlank(LookUp(colCourses, ID = R.CourseID, ID)) ||
+                                LookUp(colCourses, ID = R.CourseID,
+                                       Status.Value) = "Archived"
+                }
+            ),
+            IsArchived && !IsBlank(DateDone)
+        )
+    )
+)`;
   </script>
 </body>
 </html>
