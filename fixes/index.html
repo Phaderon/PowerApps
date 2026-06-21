@@ -813,10 +813,40 @@ Navigate(scrMyTraining, ScreenTransition.Cover)</pre>
       <h3 style="margin-top:1.5rem;">3 · drpEditRecur — recurrence when editing a course</h3>
       <p>This control is at screen level. Click <strong>drpEditRecur</strong> in the Tree View.</p>
 
+      <p>Use the property <strong>DefaultSelectedItems</strong> (not Default) — switch it in the property dropdown top-left of the formula bar. You cannot reference <code>drpEditRecur.Items</code> here (circular reference), so the table is rebuilt inline:</p>
+
       <div class="code-wrap">
-        <span class="code-label">Default · drpEditRecur</span>
+        <span class="code-label">DefaultSelectedItems · drpEditRecur</span>
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
-        <pre>=LookUp(drpEditRecur.Items, Months = varEditCourse.RecurrenceMonths)</pre>
+        <pre>=Filter(
+    Table(
+        {Label: "One-off (never expires)", Months: 0},
+        {Label: "Every 6 months",          Months: 6},
+        {Label: "Every year",              Months: 12},
+        {Label: "Every 18 months",         Months: 18},
+        {Label: "Every 2 years",           Months: 24},
+        {Label: "Every 3 years",           Months: 36}
+    ),
+    Months = varEditCourse.RecurrenceMonths
+)</pre>
+      </div>
+
+      <p>If <strong>DefaultSelectedItems</strong> is not available in the dropdown, use <strong>Default</strong> with <code>LookUp</code> instead (returns a single record, not a table):</p>
+
+      <div class="code-wrap">
+        <span class="code-label">Default · drpEditRecur (fallback)</span>
+        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+        <pre>=LookUp(
+    Table(
+        {Label: "One-off (never expires)", Months: 0},
+        {Label: "Every 6 months",          Months: 6},
+        {Label: "Every year",              Months: 12},
+        {Label: "Every 18 months",         Months: 18},
+        {Label: "Every 2 years",           Months: 24},
+        {Label: "Every 3 years",           Months: 36}
+    ),
+    Months = varEditCourse.RecurrenceMonths
+)</pre>
       </div>
 
       <div class="callout callout-warning" style="margin-top:1.5rem;">
