@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 3 of 7</p>
   <h1>scrMyTraining</h1>
-  <p class="meta">v2.2 &mdash; Fixed IsOdd/ItemIndex row background (invalid functions) &middot; 21 Jun 2026</p>
+  <p class="meta">v2.3 &mdash; Fixed Char(183) bullet dot in gallery rows; CourseURL/CourseHost/CourseDescription/ApplicableTo restored to colMyTraining ForAll &middot; 21 Jun 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -55,9 +55,13 @@ const yaml = `Screens:
                     ) As C,
                     With({rec: LookUp(colMyRecords, CourseID = C.ID)},
                     {
-                        CourseID:    C.ID,
-                        CourseName:  C.Title,
-                        RecurMonths: C.RecurrenceMonths,
+                        CourseID:         C.ID,
+                        CourseName:       C.Title,
+                        CourseURL:        C.CourseURL,
+                        CourseHost:       C.CourseHost,
+                        CourseDescription: C.CourseDescription,
+                        ApplicableTo:     C.ApplicableTo,
+                        RecurMonths:      C.RecurrenceMonths,
                         RecurText:   Switch(C.RecurrenceMonths,
                                          0,  "One-off",
                                          12, "Every year",
@@ -695,7 +699,7 @@ const yaml = `Screens:
                   Text: =If(IsBlank(ThisItem.DateDone),
                       "Not yet completed",
                       "Done " & Text(ThisItem.DateDone,"dd mmm yyyy") &
-                      If(IsBlank(ThisItem.ExpiresOn), "", " \xB7 expires " & Text(ThisItem.ExpiresOn,"dd mmm yyyy")))
+                      If(IsBlank(ThisItem.ExpiresOn), "", " " & Char(183) & " expires " & Text(ThisItem.ExpiresOn,"dd mmm yyyy")))
                   Width: =900
                   X: =220
                   Y: =36
@@ -830,7 +834,7 @@ const yaml = `Screens:
                   Height: =16
                   OnSelect: =Select(Parent)
                   Size: =10
-                  Text: ="Completed " & Text(ThisItem.DateDone, "dd mmm yyyy") & " \xB7 no longer required"
+                  Text: ="Completed " & Text(ThisItem.DateDone, "dd mmm yyyy") & " " & Char(183) & " no longer required"
                   Width: =900
                   X: =20
                   Y: =28`;
