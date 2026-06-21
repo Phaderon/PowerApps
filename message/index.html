@@ -318,7 +318,13 @@ document.getElementById('sendBtn').addEventListener('click', () => {
 
   const url = `${ISSUES_URL}?title=${title}&body=${encodeURIComponent(fullBody)}&labels=from-laptop`;
 
-  window.open(url, '_blank', 'noopener');
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
   document.getElementById('successBox').style.display = 'block';
 });
 
