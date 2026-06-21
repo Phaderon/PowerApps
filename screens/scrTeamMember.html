@@ -5,34 +5,65 @@
   <title>Power Apps — scrTeamMember</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 32px 16px; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 32px 16px; }
     .kicker { font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #64748b; }
     h1 { font-size: 1.8rem; font-weight: 700; color: #c7d2fe; letter-spacing: -.02em; }
+    h2 { font-size: 1.1rem; font-weight: 700; color: #94a3b8; letter-spacing: -.01em; margin-top: 8px; }
     .meta { font-size: .85rem; color: #475569; }
     .btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
     button { padding: 13px 32px; font-size: 1rem; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; transition: opacity .15s; }
     button:hover { opacity: .88; }
     .btn-copy { background: #4f46e5; color: #fff; }
+    .btn-copy-sm { background: #0f766e; color: #fff; padding: 9px 22px; font-size: .88rem; }
     .btn-back { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
-    #status { font-size: .85rem; color: #475569; min-height: 1.2em; }
-    #status.ok { color: #22c55e; }
-    .instructions { max-width: 480px; text-align: center; font-size: .82rem; color: #475569; line-height: 1.7; border: 1px solid #1e293b; border-radius: 12px; padding: 16px 20px; background: #0d1117; }
+    .status { font-size: .85rem; color: #475569; min-height: 1.2em; }
+    .status.ok { color: #22c55e; }
+    .instructions { max-width: 540px; text-align: center; font-size: .82rem; color: #475569; line-height: 1.7; border: 1px solid #1e293b; border-radius: 12px; padding: 16px 20px; background: #0d1117; }
     .instructions strong { color: #94a3b8; }
+    .section { max-width: 540px; width: 100%; background: #0d1117; border: 1px solid #1e293b; border-radius: 12px; padding: 20px 24px; display: flex; flex-direction: column; gap: 10px; }
+    .section-label { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #475569; }
+    .divider { width: 100%; max-width: 540px; border: none; border-top: 1px solid #1e293b; }
   </style>
 </head>
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 5 of 7</p>
   <h1>scrTeamMember</h1>
-  <p class="meta">v1.3 — PersonRequired/InDate quoted in AddColumns</p>
+  <p class="meta">v1.4 — fixed IsOdd row bg, corrected OnSelect for manager uploads, added scrMyTraining updates</p>
+
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">← Guide library</button></a>
   </div>
-  <p id="status">Ready to copy</p>
+  <p id="status-main" class="status">Ready to copy</p>
+
   <div class="instructions">
-    <strong>How to paste into Power Apps Studio</strong><br>
-    Tree View → click screen → Ctrl+A → Delete → Ctrl+V.
+    <strong>Step 1 — Paste the screen YAML</strong><br>
+    Delete the existing scrTeamMember screen. Create a blank new screen named <strong>scrTeamMember</strong>. Click the screen in Tree View → Ctrl+A → Delete → then Ctrl+V to paste.
   </div>
+
+  <hr class="divider"/>
+
+  <h2>Step 2 — Update scrMyTraining formulas</h2>
+  <p class="meta" style="max-width:540px;text-align:center">After pasting the screen above, update these two formulas on scrMyTraining so that tapping a course while viewing someone else's training works correctly.</p>
+
+  <div class="section">
+    <p class="section-label">galMyTraining.OnSelect — full replacement</p>
+    <p style="font-size:.8rem;color:#475569;line-height:1.6">Select galMyTraining, click the row area (not the gallery itself), click OnSelect in the formula bar, select all, paste:</p>
+    <div class="btn-row">
+      <button class="btn-copy-sm" onclick="copyFormula('status-f1', formula1)">Copy formula</button>
+    </div>
+    <p id="status-f1" class="status">Ready to copy</p>
+  </div>
+
+  <div class="section">
+    <p class="section-label">Greeting label Text — full replacement</p>
+    <p style="font-size:.8rem;color:#475569;line-height:1.6">Find the label that shows "Hello, [name] · Civil Servant" (likely called lblGreeting or lblHello). Click its Text property, select all, paste:</p>
+    <div class="btn-row">
+      <button class="btn-copy-sm" onclick="copyFormula('status-f2', formula2)">Copy formula</button>
+    </div>
+    <p id="status-f2" class="status">Ready to copy</p>
+  </div>
+
   <script>
 const yaml = `Screens:
   scrTeamMember:
@@ -116,19 +147,11 @@ const yaml = `Screens:
       - recTeamHeader:
           Control: Classic/Button@2.2.0
           Properties:
-            BorderColor: =ColorFade(Self.Fill, -15%)
             BorderThickness: =0
-            Color: =RGBA(255, 255, 255, 1)
-            DisabledBorderColor: =RGBA(166, 166, 166, 1)
             DisplayMode: =DisplayMode.View
             Fill: =RGBA(24,95,165,1)
-            Font: =Font.'Open Sans'
             Height: =72
-            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
-            HoverColor: =RGBA(255, 255, 255, 1)
             HoverFill: =RGBA(24,95,165,1)
-            PressedBorderColor: =Self.Fill
-            PressedColor: =Self.Fill
             PressedFill: =RGBA(24,95,165,1)
             RadiusBottomLeft: =0
             RadiusBottomRight: =0
@@ -136,10 +159,9 @@ const yaml = `Screens:
             RadiusTopRight: =0
             Text: =
             Width: =1366
-      - icoBack_1:
+      - icoTeamBack:
           Control: Classic/Icon@2.5.0
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
             Color: =RGBA(230,241,251,1)
             Height: =24
             Icon: =Icon.ChevronLeft
@@ -150,46 +172,57 @@ const yaml = `Screens:
       - lblTeamTitle:
           Control: Label@2.5.1
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
             Color: =RGBA(230,241,251,1)
-            Font: =Font.'Open Sans'
+            Fill: =RGBA(0,0,0,0)
             FontWeight: =FontWeight.Bold
             Height: =72
             Size: =17
             Text: ="My team"
+            VerticalAlign: =VerticalAlign.Middle
             Width: =600
             X: =52
       - galMyChain:
           Control: Gallery@2.15.0
           Variant: Vertical
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
+            BorderThickness: =0
+            Fill: =RGBA(0,0,0,0)
             Height: =680
             Items: |-
               =Filter(
-                  AddColumns(colMyChain,
-                      "PersonRequired", CountRows(
+                  AddColumns(
+                      colMyChain As P,
+                      PersonRequired,
+                      CountRows(
                           Filter(colCourses,
                               Status.Value = "Active" &&
-                              StaffType in ApplicableTo.Value)),
-                      "PersonInDate", CountRows(
+                              P.StaffType in ApplicableTo.Value)
+                      ),
+                      PersonInDate,
+                      CountRows(
                           Filter(
                               Filter(colCourses,
                                   Status.Value = "Active" &&
-                                  StaffType in ApplicableTo.Value) As C,
+                                  P.StaffType in ApplicableTo.Value) As C,
                               With({rec: LookUp(colAllRecords,
-                                        Lower(PersonEmail) = Email && CourseID = C.ID)},
+                                      Lower(PersonEmail) = P.Email &&
+                                      CourseID = C.ID)},
                                   !IsBlank(rec.DateCompleted) &&
                                   (C.RecurrenceMonths = 0 ||
-                                   DateAdd(rec.DateCompleted,C.RecurrenceMonths,TimeUnit.Months) >= Today())
-                              )))
-                  ),
-                  ChainLevel = 1 ||
-                  (ChainLevel = 2 && LookUp(colMyChain,
-                      Lower(Email)=Lower(ThisRecord.ManagerEmail),IsExpanded)=true) ||
-                  (ChainLevel = 3 && LookUp(colMyChain,
-                      Lower(Email)=Lower(ThisRecord.ManagerEmail),IsExpanded)=true)
+                                   DateAdd(rec.DateCompleted, C.RecurrenceMonths,
+                                           TimeUnit.Months) >= Today())
+                              )
+                          )
+                      )
+                  ) As R,
+                  R.ChainLevel = 1 ||
+                  (R.ChainLevel = 2 &&
+                   LookUp(colMyChain, Lower(Email) = Lower(R.ManagerEmail), IsExpanded) = true) ||
+                  (R.ChainLevel = 3 &&
+                   LookUp(colMyChain, Lower(Email) = Lower(R.ManagerEmail), IsExpanded) = true)
               )
+            ShowScrollbar: =true
+            TemplatePadding: =0
             TemplateSize: =64
             Width: =1366
             Y: =88
@@ -197,57 +230,63 @@ const yaml = `Screens:
             - recRowBG:
                 Control: Classic/Button@2.2.0
                 Properties:
-                  BorderColor: =ColorFade(Self.Fill, -15%)
                   BorderThickness: =0
-                  Color: =RGBA(255, 255, 255, 1)
-                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
                   DisplayMode: =DisplayMode.View
-                  Fill: =If(IsOdd(ThisItem.ItemIndex),RGBA(255,255,255,1),RGBA(247,249,252,1))
-                  Font: =Font.'Open Sans'
+                  Fill: =If(Mod(Len(ThisItem.Email),2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1))
                   Height: =63
-                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
-                  HoverColor: =RGBA(255, 255, 255, 1)
                   HoverFill: =Self.Fill
                   OnSelect: |-
                     =Set(varViewingPerson, LookUp('TT Personnel', Lower(Email) = Lower(ThisItem.Email)));
                     Set(varViewingForSelf, false);
-                    ClearCollect(colViewRecords,
-                        Filter(colAllRecords, Lower(PersonEmail) = Lower(ThisItem.Email)));
-                    ClearCollect(colViewTraining,
+
+                    ClearCollect(
+                        colViewRecords,
+                        Filter(colAllRecords, Lower(PersonEmail) = Lower(ThisItem.Email))
+                    );
+
+                    ClearCollect(
+                        colViewTraining,
                         ForAll(
-                            Filter(colCourses,
+                            Filter(
+                                colCourses,
                                 Status.Value = "Active" &&
-                                ThisItem.StaffType in ApplicableTo.Value) As C,
-                            With({rec: LookUp(colViewRecords, CourseID = C.ID)},
-                            {
-                                CourseID:    C.ID,
-                                CourseName:  C.Title,
-                                RecurMonths: C.RecurrenceMonths,
-                                RecurText:   Switch(C.RecurrenceMonths,
-                                                 0,"One-off",12,"Every year",24,"Every 2 years",
-                                                 "Every " & C.RecurrenceMonths & " months"),
-                                RecordID:    rec.ID,
-                                DateDone:    rec.DateCompleted,
-                                UploadedBy:  rec.UploadedByEmail,
-                                ExpiresOn:   If(IsBlank(rec.DateCompleted)||C.RecurrenceMonths=0,Blank(),
-                                                DateAdd(rec.DateCompleted,C.RecurrenceMonths,TimeUnit.Months)),
-                                TrainingStatus:
-                                    If(IsBlank(rec.DateCompleted),"Not Started",
-                                       C.RecurrenceMonths=0,"Complete",
-                                       DateAdd(rec.DateCompleted,C.RecurrenceMonths,TimeUnit.Months)<Today(),"Expired",
-                                       DateAdd(rec.DateCompleted,C.RecurrenceMonths,TimeUnit.Months)<=DateAdd(Today(),60,TimeUnit.Days),"Expiring Soon",
-                                       "In Date"),
-                                CanEdit: ThisItem.ManagerCanEdit
-                            })
+                                ThisItem.StaffType in ApplicableTo.Value
+                            ) As C,
+                            With(
+                                {rec: LookUp(colViewRecords, CourseID = C.ID)},
+                                {
+                                    CourseID:    C.ID,
+                                    CourseName:  C.Title,
+                                    RecurMonths: C.RecurrenceMonths,
+                                    RecurText:   Switch(C.RecurrenceMonths,
+                                                     0,  "One-off",
+                                                     12, "Every year",
+                                                     24, "Every 2 years",
+                                                     "Every " & C.RecurrenceMonths & " months"),
+                                    RecordID:    rec.ID,
+                                    DateDone:    rec.DateCompleted,
+                                    UploadedBy:  rec.UploadedByEmail,
+                                    ExpiresOn:   If(IsBlank(rec.DateCompleted) || C.RecurrenceMonths = 0,
+                                                     Blank(),
+                                                     DateAdd(rec.DateCompleted,
+                                                             C.RecurrenceMonths, TimeUnit.Months)),
+                                    TrainingStatus:
+                                        If(IsBlank(rec.DateCompleted), "Not Started",
+                                           C.RecurrenceMonths = 0, "Complete",
+                                           DateAdd(rec.DateCompleted, C.RecurrenceMonths,
+                                                   TimeUnit.Months) < Today(), "Expired",
+                                           DateAdd(rec.DateCompleted, C.RecurrenceMonths,
+                                                   TimeUnit.Months) <= DateAdd(Today(), 60,
+                                                   TimeUnit.Days), "Expiring Soon",
+                                           "In Date"),
+                                    CanEdit: ThisItem.ManagerCanEdit
+                                }
+                            )
                         )
                     );
-                    ClearCollect(colMyTraining, colViewTraining);
-                    ClearCollect(colMyRecords, colViewRecords);
-                    Set(varViewingForSelf, false);
+
                     Navigate(scrMyTraining, ScreenTransition.Cover)
-                  PressedBorderColor: =Self.Fill
-                  PressedColor: =Self.Fill
-                  PressedFill: =Self.Color
+                  PressedFill: =Self.Fill
                   RadiusBottomLeft: =0
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
@@ -257,21 +296,13 @@ const yaml = `Screens:
             - recIndent:
                 Control: Classic/Button@2.2.0
                 Properties:
-                  BorderColor: =ColorFade(Self.Fill, -15%)
                   BorderThickness: =0
-                  Color: =RGBA(255, 255, 255, 1)
-                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
                   DisplayMode: =DisplayMode.View
                   Fill: =RGBA(240,244,255,1)
-                  Font: =Font.'Open Sans'
                   Height: =64
-                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
-                  HoverColor: =RGBA(255, 255, 255, 1)
                   HoverFill: =Self.Fill
                   OnSelect: =Select(Parent)
-                  PressedBorderColor: =Self.Fill
-                  PressedColor: =Self.Fill
-                  PressedFill: =Self.Color
+                  PressedFill: =Self.Fill
                   RadiusBottomLeft: =0
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
@@ -281,12 +312,12 @@ const yaml = `Screens:
             - lblChainName:
                 Control: Label@2.5.1
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
                   Color: =RGBA(31,58,95,1)
-                  Font: =Font.'Open Sans'
+                  Fill: =RGBA(0,0,0,0)
                   FontWeight: =FontWeight.Semibold
                   Height: =24
                   OnSelect: =Select(Parent)
+                  Size: =13
                   Text: =ThisItem.Name
                   Width: =500
                   X: =(ThisItem.ChainLevel-1)*24+16
@@ -294,9 +325,8 @@ const yaml = `Screens:
             - lblChainType:
                 Control: Label@2.5.1
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
                   Color: =RGBA(136,135,128,1)
-                  Font: =Font.'Open Sans'
+                  Fill: =RGBA(0,0,0,0)
                   Height: =20
                   OnSelect: =Select(Parent)
                   Size: =10
@@ -308,9 +338,8 @@ const yaml = `Screens:
                 Control: Label@2.5.1
                 Properties:
                   Align: =Align.Right
-                  BorderColor: =RGBA(0, 18, 107, 1)
                   Color: =RGBA(85,85,85,1)
-                  Font: =Font.'Open Sans'
+                  Fill: =RGBA(0,0,0,0)
                   Height: =24
                   OnSelect: =Select(Parent)
                   Size: =12
@@ -321,21 +350,13 @@ const yaml = `Screens:
             - recBarBack:
                 Control: Classic/Button@2.2.0
                 Properties:
-                  BorderColor: =ColorFade(Self.Fill, -15%)
                   BorderThickness: =0
-                  Color: =RGBA(255, 255, 255, 1)
-                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
                   DisplayMode: =DisplayMode.View
                   Fill: =RGBA(221,227,234,1)
-                  Font: =Font.'Open Sans'
                   Height: =10
-                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
-                  HoverColor: =RGBA(255, 255, 255, 1)
                   HoverFill: =Self.Fill
                   OnSelect: =Select(Parent)
-                  PressedBorderColor: =Self.Fill
-                  PressedColor: =Self.Fill
-                  PressedFill: =Self.Color
+                  PressedFill: =Self.Fill
                   RadiusBottomLeft: =5
                   RadiusBottomRight: =5
                   RadiusTopLeft: =5
@@ -347,20 +368,13 @@ const yaml = `Screens:
             - recBarFill:
                 Control: Classic/Button@2.2.0
                 Properties:
-                  BorderColor: =ColorFade(Self.Fill, -15%)
-                  Color: =RGBA(255, 255, 255, 1)
-                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                  BorderThickness: =0
                   DisplayMode: =DisplayMode.View
                   Fill: =If(ThisItem.PersonInDate=ThisItem.PersonRequired,RGBA(99,153,34,1),ThisItem.PersonInDate/Max(ThisItem.PersonRequired,1)>=0.6,RGBA(239,159,39,1),RGBA(226,75,74,1))
-                  Font: =Font.'Open Sans'
                   Height: =10
-                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
-                  HoverColor: =RGBA(255, 255, 255, 1)
                   HoverFill: =Self.Fill
                   OnSelect: =Select(Parent)
-                  PressedBorderColor: =Self.Fill
-                  PressedColor: =Self.Fill
-                  PressedFill: =Self.Color
+                  PressedFill: =Self.Fill
                   RadiusBottomLeft: =5
                   RadiusBottomRight: =5
                   RadiusTopLeft: =5
@@ -372,7 +386,6 @@ const yaml = `Screens:
             - icoChainChevron:
                 Control: Classic/Icon@2.5.0
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
                   Color: =RGBA(170,187,204,1)
                   Height: =24
                   Icon: =If(LookUp(colMyChain,Lower(Email)=Lower(ThisItem.Email),IsExpanded),Icon.ChevronDown,Icon.ChevronRight)
@@ -386,17 +399,64 @@ const yaml = `Screens:
                   X: =1100
                   Y: =20
 `;
+
+const formula1 = `=Set(varCourse, ThisItem);
+If(
+    IsBlank(varViewingPerson),
+    Set(varViewingForSelf, true);
+    If(
+        IsBlank(varCourse.RecordID),
+        Set(varRecord,
+            Patch('TT TrainingRecords', Defaults('TT TrainingRecords'),
+                {
+                    Title:       varMe.Title & " - " & varCourse.CourseName,
+                    PersonEmail: varMyEmail,
+                    CourseID:    varCourse.CourseID,
+                    CourseName:  varCourse.CourseName
+                }
+            )
+        ),
+        Set(varRecord, LookUp('TT TrainingRecords', ID = varCourse.RecordID))
+    ),
+    Set(varViewingForSelf, false);
+    If(
+        IsBlank(varCourse.RecordID),
+        Set(varRecord,
+            Patch('TT TrainingRecords', Defaults('TT TrainingRecords'),
+                {
+                    Title:       varViewingPerson.Title & " - " & varCourse.CourseName,
+                    PersonEmail: Lower(varViewingPerson.Email),
+                    CourseID:    varCourse.CourseID,
+                    CourseName:  varCourse.CourseName
+                }
+            )
+        ),
+        Set(varRecord, LookUp('TT TrainingRecords', ID = varCourse.RecordID))
+    )
+);
+Navigate(scrCourseDetail, ScreenTransition.Cover)`;
+
+const formula2 = `=If(
+    IsBlank(varViewingPerson),
+    "Hello, " & First(Split(varMe.Title," ")).Value & "  \xB7  " & varMe.StaffType.Value,
+    "Viewing: " & varViewingPerson.Title
+)`;
+
 function copyYAML() {
   const crlf = yaml.replace(/\r?\n/g, '\r\n');
   navigator.clipboard.writeText(crlf).then(() => {
-    const s = document.getElementById('status');
-    s.textContent = 'Copied!';
-    s.className = 'ok';
-    setTimeout(() => { s.textContent = 'Ready to copy'; s.className = ''; }, 3000);
-  }).catch(() => {
-    const s = document.getElementById('status');
-    s.textContent = 'Copy failed.';
-    s.className = 'err';
+    const s = document.getElementById('status-main');
+    s.textContent = 'Copied!'; s.className = 'status ok';
+    setTimeout(() => { s.textContent = 'Ready to copy'; s.className = 'status'; }, 3000);
+  });
+}
+
+function copyFormula(statusId, text) {
+  const crlf = text.replace(/\r?\n/g, '\r\n');
+  navigator.clipboard.writeText(crlf).then(() => {
+    const s = document.getElementById(statusId);
+    s.textContent = 'Copied!'; s.className = 'status ok';
+    setTimeout(() => { s.textContent = 'Ready to copy'; s.className = 'status'; }, 3000);
   });
 }
   </script>
