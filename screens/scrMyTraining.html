@@ -615,7 +615,7 @@ const yaml = `Screens:
                   Color: =RGBA(255, 255, 255, 1)
                   DisabledBorderColor: =RGBA(166, 166, 166, 1)
                   DisplayMode: =DisplayMode.View
-                  Fill: =If(IsOdd(ThisItem.ItemIndex),RGBA(255,255,255,1),RGBA(247,249,252,1))
+                  Fill: =If(Mod(ThisItem.CourseID,2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1))
                   Font: =Font.'Open Sans'
                   Height: =67
                   HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
