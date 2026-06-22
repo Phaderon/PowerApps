@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 3 of 7</p>
   <h1>scrMyTraining</h1>
-  <p class="meta">v2.3 &mdash; Fixed Char(183) bullet dot in gallery rows; CourseURL/CourseHost/CourseDescription/ApplicableTo restored to colMyTraining ForAll &middot; 21 Jun 2026</p>
+  <p class="meta">v2.3 &mdash; Current screen YAML with course detail fields and clean gallery date text &middot; 21 Jun 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -32,7 +32,7 @@
   <div class="instructions">
     <strong>How to paste into Power Apps Studio</strong><br>
     Tree View &rarr; click screen &rarr; Ctrl+A &rarr; Delete &rarr; Ctrl+V.<br><br>
-    <strong>What changed in v2.0:</strong> OnVisible now loads colCourses directly (fixes zero counts when navigating here first), all three stat cards are at the same Y, compliance progress bar added below the cards, gallery sort fixed (no AddColumns), status pills are now Labels with solid fill colours.
+    <strong>Included in this screen:</strong> OnVisible loads the latest courses, the stat cards align consistently, the compliance progress bar sits below the cards, and status pills use solid label colours.
   </div>
   <script>
 const yaml = `Screens:
