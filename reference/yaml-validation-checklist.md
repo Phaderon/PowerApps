@@ -10,6 +10,7 @@ Run through this checklist mentally before generating or outputting ANY screen Y
 
 - [ ] Every formula value starts with `=` prefix — no bare values on formula properties
 - [ ] Multi-line formulas use `|-` block scalar (any formula with `;`, `:`, or 3+ lines)
+- [ ] **Every `|-` block's first content line starts with `=`** — this applies to ALL properties using `|-` (OnSelect, OnChange, OnVisible, OnCheck, OnUncheck, Items, Fill, Visible, Text, etc.). Missing `=` on the first line causes PA1001 YamlInvalidSyntax and the entire paste is rejected.
 - [ ] Indent is exactly 2 spaces — no tabs anywhere
 - [ ] Control names follow the naming convention (`btn`, `lbl`, `txt`, `cmb`, `drp`, `gal`, `rec`, `ico`, `tgl`, `frm`)
 - [ ] No trailing spaces on any line

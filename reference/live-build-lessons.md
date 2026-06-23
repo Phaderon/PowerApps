@@ -28,6 +28,37 @@ Never write `\xB7`, `·`, or any escape sequence in a Power Apps string literal.
 
 ---
 
+## PA1001 — Every `|-` Block Must Start With `=` on Its First Content Line
+
+**Error:** `PA1001 : YamlInvalidSyntax; Power Fx expressions must start with '='`
+
+This fires when a `|-` block scalar is used and the **first content line does not start with `=`**.
+
+The rule applies to every property that uses `|-`, without exception:
+- Event handlers: `OnSelect`, `OnChange`, `OnVisible`, `OnCheck`, `OnUncheck`
+- Data properties: `Items`, `Fill`, `Color`, `Visible`, `Text`
+- Any other formula property using multi-line format
+
+**Wrong:**
+```yaml
+OnSelect: |-
+  Patch('MyList', varRecord, {Field: Today()});
+  Set(varRecord, LookUp('MyList', ID = varRecord.ID))
+```
+
+**Correct:**
+```yaml
+OnSelect: |-
+  =Patch('MyList', varRecord, {Field: Today()});
+  Set(varRecord, LookUp('MyList', ID = varRecord.ID))
+```
+
+Note: only the **first line** gets `=`. Continuation lines do not.
+
+**Checklist item to add to every pre-output validation:** scan every `|-` in the YAML and confirm the immediately following content line starts with `=`.
+
+---
+
 ## IsOdd Does Not Exist
 
 `IsOdd()` is not a Power Apps function. It causes a formula error.
