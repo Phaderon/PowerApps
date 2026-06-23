@@ -29,6 +29,18 @@ This is the entry point for the local Power Apps knowledge base.
 
 Do not write guide instructions from memory when the property, connector field, or formula behavior is risky. Search the local Microsoft docs mirror and the curated reference pack first. If the answer is not present, verify with current Microsoft Learn or live Power Apps behavior, then add the result to the curated reference pack.
 
+## Reference Pack Reading Order
+
+For building a new app from scratch:
+1. `builder-system.md` — requirements gathering, naming conventions, YAML generation rules, Patch templates, publishing workflow
+2. `real-build-quirks.md` — live editor confirmed quirks
+3. `live-build-lessons.md` — lessons from Training Tracker GitHub issues (bugs diagnosed and fixed in production)
+4. `ui-patterns.md` — reusable YAML patterns (panels, tab nav, error borders, pill galleries, status colours)
+5. `verified-control-reference.md` — exact property lists per control
+6. `powerfx-patterns.md` — formula reference
+7. `known-bad-patterns.md` — patterns that must never appear
+8. `sharepoint-office365users.md` — SharePoint list and connector patterns
+
 ## Real Build Quirks To Preserve
 
 - SharePoint list names with spaces must be wrapped in single quotes, for example `'TT Personnel'`.

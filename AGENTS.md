@@ -2,9 +2,9 @@
 
 Before creating or editing Power Apps guides in this repo, read:
 
-- `reference/powerapps-bible.md`
-- `reference/README.md`
-- `reference/real-build-quirks.md`
+- `reference/powerapps-bible.md` — entry point and reading order
+- `reference/real-build-quirks.md` — live editor confirmed quirks
+- `reference/live-build-lessons.md` — lessons from Training Tracker GitHub issues (priority read for new apps)
 - `reference/guide-authoring-rules.md`
 - `reference/verified-control-reference.md`
 - `reference/powerapps-control-defaults.md`
@@ -12,6 +12,8 @@ Before creating or editing Power Apps guides in this repo, read:
 
 Load these when relevant:
 
+- Building a new app from scratch: `reference/builder-system.md` — requirements gathering, naming conventions, YAML rules, Patch templates
+- Reusable UI patterns: `reference/ui-patterns.md` — panels, tab nav, error borders, pill galleries, status colours
 - Power Fx formulas: `reference/powerfx-patterns.md`
 - SharePoint or Office365Users: `reference/sharepoint-office365users.md`
 - New guide structure: `reference/future-guide-template.md`

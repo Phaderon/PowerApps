@@ -14,21 +14,42 @@ These are mistakes that must not reappear in this guide family.
 - Modern Toggle initial state set with `Default` in this guide family. Use `Checked`.
 - Multi-select Combo box preselection with `Default`. Use `DefaultSelectedItems`.
 - Modern Dropdown with table-shaped `Items` but no explicit `ItemDisplayText`.
+- Modern Dropdown `Default` set as a plain string. Must be a record: `{Value: “...”}`. A plain string causes the dropdown to appear blank on load.
 - Any property copied from a similar control without checking that control's Microsoft Learn page.
 - `Size` on `Toggle@1.1.5`. Toggle does not expose font-size. Confirmed PA2108 in live editor 2026-06-20.
 - `FontWeight` on `ModernButton@1.0.0`. Modern Button does not expose FontWeight. Confirmed by cross-check against user's working Screens.txt (which uses BasePaletteColor, Color, Size but never FontWeight) 2026-06-20.
+- Light or pastel `BasePaletteColor` on `ModernButton`. Fluent 2 overrides it with a dark fill. Use dark, saturated colours only: navy, dark green, dark grey, dark red.
+- `Text: =` (bare, nothing after the equals) in YAML. Must be `Text: =””`.
+- `%QUALIFIED_DATACARD_FIELD_VALUE.ID%` in a Form card `Default`. This is a broken placeholder — replace with the actual field expression, e.g. `ThisItem.DateCompleted`.
 - YAML properties on a control generated from the guide's *intent* without running an audit against `verified-control-reference.md`. Always audit before publishing.
 
 ## Power Fx
 
 - `ScreenTransition.Back`. Use `Back()` or a valid `ScreenTransition` enum.
 - Bare `Ascending` or `Descending`. Use `SortOrder.Ascending` or `SortOrder.Descending`.
-- Training Tracker day filters using bare `Days` or unverified `TimeUnit.Days`. Preserve the verified quoted string `"Days"` unless the live editor is rechecked.
+- Training Tracker day filters using bare `Days` or unverified `TimeUnit.Days`. Preserve the verified quoted string `”Days”` unless the live editor is rechecked.
 - Schema-less `[]` where Power Apps must infer collection shape.
-- Gallery row index formulas.
+- Gallery row index formulas. Use `ThisItem.ItemIndex` — it shifts when the gallery filters or sorts.
 - `ThisItem.ID` inside collection-backed galleries unless the collection explicitly contains `ID`.
 - Nested formulas that rely on ambiguous `ThisItem`; capture the row with `With` or use `As` aliases.
 - Bare `DisplayMode=View`. Use `DisplayMode=DisplayMode.View` or set the property value to `DisplayMode.View`.
+- `\xB7` or any `\x` escape sequence in Power Apps strings. Use `Char(decimal)` instead. Middle dot is `Char(183)`.
+- `IsOdd()` — does not exist in Power Apps. Use `Mod(value, 2) = 1`.
+- `SortByColumns` on a SharePoint Choice field. Use `Sort(..., Field.Value, SortOrder.Ascending)` to unwrap the Choice record.
+- `”value” in MultiChoiceField` for multi-select Choice filtering. Use `CountIf(MultiChoiceField, Value = “value”) > 0`.
+- `Launch(url)` without `LaunchTarget.New` — reuses current tab. Use `Launch(url, {}, LaunchTarget.New)`.
+- `ForAll(cmbControl.SelectedItems As T, {Value: T.Value})` for patching multi-select Choice. Prefer `ForAll(cmbControl.SelectedItems, {Value: Value})` — the alias form can cause type mismatches.
+- Notify-first validation pattern (checking fields then calling Notify before running Patch). Use Set-error-vars-then-If-guard pattern instead.
+
+## Architecture
+
+- Loading collections only in `App.OnStart` and not reloading in screen `OnVisible`. Collections go stale when data is added in a different screen or session.
+- Not initialising `varViewingForSelf` at the top of `OnVisible`. If it is blank, a self-view/team-view screen will show nothing.
+- Hard-coding `Set(varViewingForSelf, true)` in a gallery row `OnSelect`. This breaks team-member viewing.
+- Not calling `ResetForm(frmCert)` in a form screen's `OnVisible`. The form shows stale data on revisit.
+- Not resetting error border variables (`Set(varErrX, false)`) when opening an edit panel. Red borders from a previous failed save linger.
+- Assuming a field exists in `varCourse` because it exists in SharePoint. The field only exists in `varCourse` if the `ForAll` projection that built `colMyTraining` included it.
+- Using Badge control to render repeating pills. Badge cannot loop over a collection — use Gallery + Classic Button.
 
 ## Guide-Writing
 
@@ -46,5 +67,6 @@ These are mistakes that must not reappear in this guide family.
 - Repeating `SelectMultiple=true` on modern Combo box controls as if it must be manually changed.
 - Repeating `ItemDisplayText=ThisItem.Value` on modern Combo box simple value tables as if it must be manually changed.
 - Treating a property omitted from the fresh-control export as a guaranteed literal default value.
-- Control rows that say only "see formula below" when the formula can be placed in a collapsed copyable block beside the control.
+- Control rows that say only “see formula below” when the formula can be placed in a collapsed copyable block beside the control.
 - Any instruction that depends on visual guessing rather than exact control names and properties.
+- Re-pasting full screen YAML to fix a single property. Targeted property changes are always safer and preserve existing customisations.

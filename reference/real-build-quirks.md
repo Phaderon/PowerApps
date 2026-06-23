@@ -145,3 +145,59 @@ Preserve operation-specific casing:
 
 - `Office365Users.SearchUserV2(...).value`: `.DisplayName`, `.Mail`
 - `Office365Users.UserProfileV2(...)`: `.displayName`, `.jobTitle`, `.mail`
+
+## ModernButton BasePaletteColor — Light Colours Always Render Dark
+
+`BasePaletteColor` is a Fluent 2 seed, not a fill. The framework derives fill, text, and hover colours from it. Light and pastel seeds are treated as low-contrast accents and overrides them with dark fills.
+
+Use only dark, saturated colours:
+- Navy: `RGBA(24,95,165,1)`
+- Dark green: `RGBA(34,139,80,1)` or `RGBA(34,139,80,1)`
+- Dark grey: `RGBA(120,120,120,1)`
+- Dark red: `RGBA(163,45,45,1)`
+
+For any button that needs a light or white fill (tab nav active/inactive, etc.), switch to Classic Button and use `Fill`, `HoverFill`, `PressedFill` directly.
+
+## Tab Buttons Must Be Classic Buttons
+
+Modern Button cannot conditionally switch between light and dark fills for active/inactive tab states. Replace any ModernButton used as a tab navigation button with a Classic/Button and set `Fill` conditionally.
+
+## IsOdd Does Not Exist
+
+`IsOdd()` is not a Power Apps function. Use `Mod(value, 2) = 1`.
+
+## \xB7 Prints as Literal Text
+
+Power Apps strings do not support `\x` or `\u` escape sequences. `\xB7` outputs the four characters `\xB7` literally. Use `Char(183)` for the middle dot `·`.
+
+## SortByColumns Fails on Choice Fields
+
+`SortByColumns` cannot sort on a Choice column because the column returns a record. Use `Sort(source, ChoiceField.Value, SortOrder.Ascending)` to unwrap the Choice record to a string first.
+
+## Multi-Select Choice: `in` Operator Silently Returns Nothing
+
+`"Army" in ApplicableTo` checks for a full record match against a string — it always returns false. Use `CountIf(ApplicableTo, Value = "Army") > 0`.
+
+## Launch Opens in Current Tab
+
+`Launch(url)` reuses the current tab. Use `Launch(url, {}, LaunchTarget.New)` to open in a new tab.
+
+## Collection Projections Must Include All Downstream Fields
+
+If a detail screen reads `varCourse.CourseHost`, `varCourse.CourseURL`, etc., those fields must either be in the `ForAll` projection that built `colMyTraining`, or the detail screen must look them up directly from SharePoint. They do not flow through automatically.
+
+## varViewingForSelf Must Be Initialised
+
+Add `If(IsBlank(varViewingForSelf), Set(varViewingForSelf, true))` to the top of any screen `OnVisible` that branches on this variable. If it is never set, the screen body is skipped entirely.
+
+## Form Does Not Reset Between Visits
+
+Add `ResetForm(frmCert)` to a form screen's `OnVisible`. Without it, the form shows the previous record's data when the user navigates back and taps a different item.
+
+## SharePoint Required Column Causes Network Error
+
+A Patch against a SharePoint column marked Required with a blank value returns "Network error: Field 'X' is required." Unmark the column as Required in SharePoint, or add app-level validation to prevent Patch from running when the field is blank.
+
+## Notify-First Validation Pattern Breaks Error Borders
+
+If validation calls `Notify(...)` before setting error variables, the Notify message appears but the error borders (Visible driven by error variables) never show because the success path immediately clears everything. Set all error variables first, then check them in an If guard. See `ui-patterns.md` for the correct pattern.
