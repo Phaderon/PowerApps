@@ -44,6 +44,37 @@ The stamp appears bottom-right in small monospace text: `v1.2  —  Built 23 Jun
 
 ---
 
+## PA1001 — Multi-Line Formulas Must Use `|-` Block Scalar, Never Inline
+
+**Error:** `PA1001 YamlInvalidSyntax; While parsing a block mapping, did not find expected key.`
+
+This fires when a formula spans multiple lines but is written inline (value starts on the key line) instead of using `|-`. YAML cannot span an unquoted scalar value across lines in a block mapping.
+
+**Wrong (inline multi-line):**
+```yaml
+Fill: =If(
+    ThisItem.Complete,
+    RGBA(34,139,34,1),
+    RGBA(163,100,0,1)
+)
+```
+
+**Correct (`|-` block scalar):**
+```yaml
+Fill: |-
+  =If(
+      ThisItem.Complete,
+      RGBA(34,139,34,1),
+      RGBA(163,100,0,1)
+  )
+```
+
+**Rule:** Any formula that opens a parenthesis without closing it on the same line MUST use `|-`. This applies to `Fill`, `Color`, `DisabledFill`, `HoverFill`, `Text`, `Visible`, `OnSelect` — every property, without exception.
+
+**Pre-output scan:** For every property line matching `Key: =Something(`, count open vs closed parens on that line. If open count > closed count, the formula is multi-line — rewrite it as `|-`.
+
+---
+
 ## PA1001 — Every `|-` Block Must Start With `=` on Its First Content Line
 
 **Error:** `PA1001 : YamlInvalidSyntax; Power Fx expressions must start with '='`
