@@ -20,6 +20,7 @@ Run through this checklist mentally before generating or outputting ANY screen Y
 - [ ] **[PA1001] Screen nodes under `Screens:` do not have `Control:`** — `Screens:` → `scrName:` → `Properties:` is the valid shape. `Control: Screen` at this level causes "Property 'Control' not found on type ... ScreenInstance" at line 3, column 5.
 - [ ] **[YAML parser] Quote single-line formulas containing `: `** — examples: `Default: '={Value: "New to MoD/Branch"}'` and `Text: '=If(IsBlank(varRole), "Role not set", "Role: " & varRole)'`. This keeps `yaml.safe_load` valid while preserving the parsed Power Fx formula.
 - [ ] `Control:` and `Variant:` values use exact version strings (see version list below)
+- [ ] **[PA2109] Gallery variants are exact and case-sensitive** — for `Gallery@2.15.0`, use `Variant: Vertical`, `Variant: Horizontal`, or `Variant: VariableHeight`; never `verticalGallery`.
 - [ ] Screen copy pages show a visible first-lines payload preview and refuse to copy stale `Control: Screen` screen payloads
 - [ ] Index links to generated screen pages include the current version query string, for example `screens/scrDashboard.html?v=1.9`
 
@@ -30,6 +31,7 @@ Label@2.5.1
 Classic/Button@2.2.0
 Classic/Icon@2.5.0
 Gallery@2.15.0
+  Valid classic variants: Vertical, Horizontal, VariableHeight
 Classic/TextInput@2.3.2
 Classic/DropDown@2.3.1
 Classic/ComboBox@2.4.0

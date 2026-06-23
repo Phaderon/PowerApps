@@ -118,6 +118,33 @@ Use versioned or cache-busted links from index pages, for example `screens/scrDa
 
 ---
 
+## PA2109 — Gallery Variant Names Are Case-Sensitive
+
+**Error:** `(255,9) : error PA2109 : Unknown variant 'verticalGallery' for control type 'Gallery@2.15.0'.`
+
+For classic `Gallery@2.15.0`, use the verified variant names from the exported working screens and fresh-control defaults:
+
+```yaml
+Control: Gallery@2.15.0
+Variant: Vertical
+```
+
+Do not use generated/web-style names such as:
+
+```yaml
+Variant: verticalGallery
+```
+
+Known valid classic gallery variants include:
+
+- `Vertical`
+- `Horizontal`
+- `VariableHeight`
+
+The variant value is case-sensitive and schema-checked before Power Fx formulas are evaluated, so a wrong variant blocks the entire screen paste.
+
+---
+
 ## PA1001 — `|-` Block Scalars Are Only Safe on Event Handlers and Items
 
 PaYaml (PowerApps' YAML dialect) does not reliably support `|-` block scalars on visual or style properties. Using `|-` on `Fill`, `Color`, `Visible`, `Text`, `DisabledFill`, `HoverFill`, or any similar property causes PA1001 YamlInvalidSyntax even when the YAML is structurally valid and passes a standard YAML parser.
