@@ -196,7 +196,13 @@ If(IsBlank(varViewingForSelf), Set(varViewingForSelf, true));
 
 ### Use Modern Button for
 - Actual clickable actions (Save, Add, Archive, Go to course)
-- Use dark `BasePaletteColor` only (see `live-build-lessons.md`)
+- Set `BasePaletteColor` to one dark seed and leave it alone — do not fight Fluent 2
+  - Primary action: app primary colour (default `RGBA(0,78,66,1)`)
+  - Secondary / cancel: `RGBA(120,120,120,1)`
+  - Destructive: `RGBA(163,45,45,1)`
+- Never set `BasePaletteColor` conditionally on a ModernButton — the light state will always render dark
+- Never add a `Color` override to try to fix a bad `BasePaletteColor` — find a darker seed instead
+- For anything needing conditional colour states (tab nav, active/inactive), use Classic Button instead
 
 ### Use Modern Text Input for
 - Single-line text entry

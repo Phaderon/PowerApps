@@ -18,7 +18,10 @@ These are mistakes that must not reappear in this guide family.
 - Any property copied from a similar control without checking that control's Microsoft Learn page.
 - `Size` on `Toggle@1.1.5`. Toggle does not expose font-size. Confirmed PA2108 in live editor 2026-06-20.
 - `FontWeight` on `ModernButton@1.0.0`. Modern Button does not expose FontWeight. Confirmed by cross-check against user's working Screens.txt (which uses BasePaletteColor, Color, Size but never FontWeight) 2026-06-20.
-- Light or pastel `BasePaletteColor` on `ModernButton`. Fluent 2 overrides it with a dark fill. Use dark, saturated colours only: navy, dark green, dark grey, dark red.
+- Light or pastel `BasePaletteColor` on `ModernButton`. Fluent 2 overrides it with a dark fill. Use dark, saturated colours only.
+- Conditional `BasePaletteColor` on `ModernButton` (e.g. `If(varTab="X", lightColour, darkColour)`). The light state always renders dark. Use Classic Button for any conditional colour states.
+- `Color` override on a `ModernButton` to compensate for a wrong `BasePaletteColor`. Pick a darker seed instead.
+- Trying to match an exact brand hex on a `ModernButton`. Work with Fluent 2 — pick the closest dark seed and let the framework derive the final shade.
 - `Text: =` (bare, nothing after the equals) in YAML. Must be `Text: =””`.
 - `%QUALIFIED_DATACARD_FIELD_VALUE.ID%` in a Form card `Default`. This is a broken placeholder — replace with the actual field expression, e.g. `ThisItem.DateCompleted`.
 - YAML properties on a control generated from the guide's *intent* without running an audit against `verified-control-reference.md`. Always audit before publishing.

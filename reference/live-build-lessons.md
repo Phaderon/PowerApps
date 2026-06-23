@@ -71,25 +71,24 @@ Never use `ThisItem.ItemIndex` in production alternating row formulas.
 
 ---
 
-## ModernButton BasePaletteColor Rejects Light Colours
+## ModernButton BasePaletteColor — Don't Fight It
 
-`BasePaletteColor` on a `ModernButton` is a Fluent 2 seed colour — the framework derives fill and text colours from it internally. Fluent 2 interprets light or pastel seeds as low-contrast accents and overrides them with a dark fill regardless of what you set.
+`BasePaletteColor` on a `ModernButton` is a Fluent 2 seed colour — the framework derives fill, text, and hover colours from it internally. You do not control the exact output shade; Fluent 2 does.
 
-**Rule: `BasePaletteColor` must be a dark, saturated colour.** If you can imagine reading white text on it, it will probably work. If it's a pastel or grey, it will render wrong.
+**The correct approach: pick one dark, saturated seed per button role and leave it alone.** Don't try to match a specific brand hex precisely, don't set it conditionally, don't add a `Color` override to compensate. Work with Fluent 2, not against it.
 
-Confirmed working values:
-- Navy: `RGBA(24,95,165,1)` — primary action
-- Dark green: `RGBA(34,139,80,1)` — active/success
-- Dark grey: `RGBA(120,120,120,1)` — secondary / cancel
-- Dark red: `RGBA(163,45,45,1)` — destructive
+**Rule: `BasePaletteColor` must be a dark, saturated colour.** If you can imagine reading white text on it, it will probably work. If it's a pastel or near-white, Fluent 2 treats it as a low-contrast accent and overrides it with a dark fill regardless.
 
-Confirmed broken values (all render with dark fills):
-- `RGBA(244,246,248,1)` — near-white grey
-- `RGBA(230,241,251,1)` — light blue
-- `RGBA(228,236,248,1)` — light blue wash
-- `RGBA(255,240,240,1)` — light red
+Standard roles for new apps (using army dark green as primary):
+- Primary action: `RGBA(0,78,66,1)` — app primary colour
+- Secondary / cancel: `RGBA(120,120,120,1)` — neutral dark grey
+- Destructive: `RGBA(163,45,45,1)` — dark red
 
-There is no fix for this at the formula level. If you need a light-coloured button, use a Classic Button and set `Fill` directly.
+Confirmed broken — all render wrong regardless of what you set:
+- Any near-white or pastel (`RGBA(244,246,248,1)`, `RGBA(230,241,251,1)`, `RGBA(255,240,240,1)`, etc.)
+- Conditional expressions like `If(varTab="X", RGBA(34,139,80,1), RGBA(228,236,248,1))` — the light inactive state will always render dark
+
+**If you need conditional colour states** (active/inactive tab buttons, toggle-style buttons), don't use ModernButton. Use Classic Button with `Fill`, `HoverFill`, and `PressedFill` set directly. See `ui-patterns.md` — Tab Navigation Bar.
 
 ---
 
