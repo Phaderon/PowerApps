@@ -37,7 +37,7 @@ Before building anything, ask the user only about the business purpose and workf
 - Are there any notifications or alerts needed?
 
 **Branding:**
-- Primary colour? (default: navy `RGBA(24,95,165,1)`)
+- Primary colour? (default: army dark green `RGBA(0,78,66,1)` / `#004e42`)
 - Any specific name for the app?
 
 ### What NOT to ask the user
