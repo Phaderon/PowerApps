@@ -44,7 +44,7 @@ The stamp appears bottom-right in small monospace text: `v1.2  —  Built 23 Jun
 
 ---
 
-## PA1006 — Screen YAML Needs `Screens:` Root and `Control: Screen`
+## PA1006/PA1001 — Screen YAML Uses `Screens:` Root, Not Screen-Level `Control`
 
 **Error:** `(1,3) : error PA1006 : Empty or invalid value for Control.`
 
@@ -57,7 +57,11 @@ Screens:
 
 Do not paste a bare top-level list item such as `- scrDashboard:`. If the paste starts with `- scrDashboard:`, Power Apps reports the error at line 1, column 3 even when `Control: Screen` is present, because the screen is not under the `Screens:` schema root.
 
-The screen node must also include an explicit `Control: Screen` property. Without it, PaYaml has no type information for the screen and rejects the paste at line 1.
+Once the screen is under `Screens:`, do not add `Control: Screen`. SchemaV3 screen instances do not expose a `Control` property. Adding it causes:
+
+```text
+(3,5) : error PA1001 : YamlInvalidSyntax: Property 'Control' not found on type 'Microsoft.PowerPlatform.PowerApps.Persistence.PaYaml.Models.SchemaV3.ScreenInstance'.
+```
 
 **Wrong:**
 ```yaml
@@ -71,12 +75,11 @@ The screen node must also include an explicit `Control: Screen` property. Withou
 ```yaml
 Screens:
   scrDashboard:
-    Control: Screen
     Properties:
       Fill: =RGBA(248,248,248,1)
 ```
 
-`Control: Screen` has no version suffix — just the bare string `Screen`.
+Child controls under `Children:` still need normal `Control:` values such as `Label@2.5.1` or `Classic/Button@2.2.0`. The no-`Control` rule applies only to the screen node under `Screens:`.
 
 When checking with a standard YAML parser such as `yaml.safe_load`, quote any single-line Power Fx formulas that contain YAML-significant `: ` text, for example record literals or labels with colons:
 
