@@ -145,6 +145,42 @@ The variant value is case-sensitive and schema-checked before Power Fx formulas 
 
 ---
 
+## PA2108 — Labels Do Not Support Radius Properties
+
+**Error:**
+
+```text
+error PA2108 : Unknown property 'RadiusTopLeft' for control type 'Label@2.5.1'.
+error PA2108 : Unknown property 'RadiusTopRight' for control type 'Label@2.5.1'.
+error PA2108 : Unknown property 'RadiusBottomLeft' for control type 'Label@2.5.1'.
+error PA2108 : Unknown property 'RadiusBottomRight' for control type 'Label@2.5.1'.
+```
+
+`Label@2.5.1` can use `Fill`, `Color`, `Align`, `VerticalAlign`, and text styling, but it does **not** expose radius properties in the PaYaml schema. Do not use Label controls for rounded pills/badges.
+
+For rounded badges or status pills, use the established Classic Button pattern with `DisplayMode=DisplayMode.View`:
+
+```yaml
+- btnStatusPill:
+    Control: Classic/Button@2.2.0
+    Properties:
+      Text: ="Active"
+      DisplayMode: =DisplayMode.View
+      Fill: =RGBA(220,238,234,1)
+      HoverFill: =Self.Fill
+      PressedFill: =Self.Fill
+      Color: =RGBA(0,78,66,1)
+      BorderThickness: =0
+      RadiusTopLeft: =12
+      RadiusTopRight: =12
+      RadiusBottomLeft: =12
+      RadiusBottomRight: =12
+```
+
+If a label already exists and the rounded shape is not critical, remove the four radius properties rather than blocking the whole paste.
+
+---
+
 ## PA1001 — `|-` Block Scalars Are Only Safe on Event Handlers and Items
 
 PaYaml (PowerApps' YAML dialect) does not reliably support `|-` block scalars on visual or style properties. Using `|-` on `Fill`, `Color`, `Visible`, `Text`, `DisabledFill`, `HoverFill`, or any similar property causes PA1001 YamlInvalidSyntax even when the YAML is structurally valid and passes a standard YAML parser.

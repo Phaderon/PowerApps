@@ -21,6 +21,7 @@ Run through this checklist mentally before generating or outputting ANY screen Y
 - [ ] **[YAML parser] Quote single-line formulas containing `: `** — examples: `Default: '={Value: "New to MoD/Branch"}'` and `Text: '=If(IsBlank(varRole), "Role not set", "Role: " & varRole)'`. This keeps `yaml.safe_load` valid while preserving the parsed Power Fx formula.
 - [ ] `Control:` and `Variant:` values use exact version strings (see version list below)
 - [ ] **[PA2109] Gallery variants are exact and case-sensitive** — for `Gallery@2.15.0`, use `Variant: Vertical`, `Variant: Horizontal`, or `Variant: VariableHeight`; never `verticalGallery`.
+- [ ] **[PA2108] Labels do not support radius properties** — never put `RadiusTopLeft`, `RadiusTopRight`, `RadiusBottomLeft`, or `RadiusBottomRight` on `Label@2.5.1`. Use Classic Button for rounded pills/badges.
 - [ ] Screen copy pages show a visible first-lines payload preview and refuse to copy stale `Control: Screen` screen payloads
 - [ ] Index links to generated screen pages include the current version query string, for example `screens/scrDashboard.html?v=1.9`
 
@@ -28,6 +29,7 @@ Run through this checklist mentally before generating or outputting ANY screen Y
 
 ```
 Label@2.5.1
+  Do not use radius properties on Label@2.5.1
 Classic/Button@2.2.0
 Classic/Icon@2.5.0
 Gallery@2.15.0

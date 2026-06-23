@@ -18,6 +18,7 @@ These are mistakes that must not reappear in this guide family.
 - Any property copied from a similar control without checking that control's Microsoft Learn page.
 - `Size` on `Toggle@1.1.5`. Toggle does not expose font-size. Confirmed PA2108 in live editor 2026-06-20.
 - `FontWeight` on `ModernButton@1.0.0`. Modern Button does not expose FontWeight. Confirmed by cross-check against user's working Screens.txt (which uses BasePaletteColor, Color, Size but never FontWeight) 2026-06-20.
+- Radius properties on `Label@2.5.1` (`RadiusTopLeft`, `RadiusTopRight`, `RadiusBottomLeft`, `RadiusBottomRight`). Label does not expose them; use Classic Button for rounded pills/badges. Confirmed PA2108 in live editor 2026-06-23.
 - Light or pastel `BasePaletteColor` on `ModernButton`. Fluent 2 overrides it with a dark fill. Use dark, saturated colours only.
 - Conditional `BasePaletteColor` on `ModernButton` (e.g. `If(varTab="X", lightColour, darkColour)`). The light state always renders dark. Use Classic Button for any conditional colour states.
 - `Color` override on a `ModernButton` to compensate for a wrong `BasePaletteColor`. Pick a darker seed instead.
