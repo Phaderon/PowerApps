@@ -44,6 +44,31 @@ The stamp appears bottom-right in small monospace text: `v1.2  —  Built 23 Jun
 
 ---
 
+## PA1006 — Every Screen Definition Needs `Control: Screen`
+
+**Error:** `(1,3) : error PA1006 : Empty or invalid value for Control.`
+
+The top-level screen entry in YAML must include an explicit `Control: Screen` property. Without it, PaYaml has no type information for the screen and rejects the entire paste at line 1.
+
+**Wrong:**
+```yaml
+- scrDashboard:
+    Properties:
+      Fill: =RGBA(248,248,248,1)
+```
+
+**Correct:**
+```yaml
+- scrDashboard:
+    Control: Screen
+    Properties:
+      Fill: =RGBA(248,248,248,1)
+```
+
+`Control: Screen` has no version suffix — just the bare string `Screen`.
+
+---
+
 ## PA1001 — `|-` Block Scalars Are Only Safe on Event Handlers and Items
 
 PaYaml (PowerApps' YAML dialect) does not reliably support `|-` block scalars on visual or style properties. Using `|-` on `Fill`, `Color`, `Visible`, `Text`, `DisabledFill`, `HoverFill`, or any similar property causes PA1001 YamlInvalidSyntax even when the YAML is structurally valid and passes a standard YAML parser.

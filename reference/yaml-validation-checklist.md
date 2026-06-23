@@ -16,6 +16,7 @@ Run through this checklist mentally before generating or outputting ANY screen Y
 - [ ] Indent is exactly 2 spaces — no tabs anywhere
 - [ ] Control names follow the naming convention (`btn`, `lbl`, `txt`, `cmb`, `drp`, `gal`, `rec`, `ico`, `tgl`, `frm`)
 - [ ] No trailing spaces on any line
+- [ ] **[PA1006] Every screen definition has `Control: Screen`** — the line immediately after `- scrName:` must be `    Control: Screen`. Missing it causes PA1006 "Empty or invalid value for Control" at line 1.
 - [ ] `Control:` and `Variant:` values use exact version strings (see version list below)
 
 ### Known valid version strings
