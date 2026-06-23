@@ -44,13 +44,19 @@ The stamp appears bottom-right in small monospace text: `v1.2  —  Built 23 Jun
 
 ---
 
-## PA1001 — Multi-Line Formulas Must Use `|-` Block Scalar, Never Inline
+## PA1001 — Three Rules for `|-` Block Scalars (All Must Hold)
 
-**Error:** `PA1001 YamlInvalidSyntax; While parsing a block mapping, did not find expected key.`
+All three errors share the code `PA1001 YamlInvalidSyntax`. They are distinct causes and must be checked independently.
 
-This fires when a formula spans multiple lines but is written inline (value starts on the key line) instead of using `|-`. YAML cannot span an unquoted scalar value across lines in a block mapping.
+---
 
-**Wrong (inline multi-line):**
+### Rule 1 — Any multi-line formula must use `|-`, never inline
+
+**Error message:** `While parsing a block mapping, did not find expected key.`
+
+YAML cannot span an unquoted scalar value across multiple lines in a block mapping. If a formula opens a parenthesis on the key line without closing it, the next line is parsed as a new key — which fails.
+
+**Wrong:**
 ```yaml
 Fill: =If(
     ThisItem.Complete,
@@ -59,7 +65,7 @@ Fill: =If(
 )
 ```
 
-**Correct (`|-` block scalar):**
+**Correct:**
 ```yaml
 Fill: |-
   =If(
@@ -69,40 +75,74 @@ Fill: |-
   )
 ```
 
-**Rule:** Any formula that opens a parenthesis without closing it on the same line MUST use `|-`. This applies to `Fill`, `Color`, `DisabledFill`, `HoverFill`, `Text`, `Visible`, `OnSelect` — every property, without exception.
-
-**Pre-output scan:** For every property line matching `Key: =Something(`, count open vs closed parens on that line. If open count > closed count, the formula is multi-line — rewrite it as `|-`.
+**Pre-output scan:** For every `Key: =` line, count `(` and `)` on that line. If open count > closed count, the formula continues onto the next line — it must use `|-`. Applies to every property: `Fill`, `Color`, `DisabledFill`, `HoverFill`, `Text`, `Visible`, `OnSelect`, and all others.
 
 ---
 
-## PA1001 — Every `|-` Block Must Start With `=` on Its First Content Line
+### Rule 2 — Every `|-` block's first content line must start with `=`
 
-**Error:** `PA1001 : YamlInvalidSyntax; Power Fx expressions must start with '='`
+**Error message:** `Power Fx expressions must start with '='`
 
-This fires when a `|-` block scalar is used and the **first content line does not start with `=`**.
-
-The rule applies to every property that uses `|-`, without exception:
-- Event handlers: `OnSelect`, `OnChange`, `OnVisible`, `OnCheck`, `OnUncheck`
-- Data properties: `Items`, `Fill`, `Color`, `Visible`, `Text`
-- Any other formula property using multi-line format
+The `=` prefix marks the value as a Power Fx formula. It is required on the **first content line only** — continuation lines do not get it. This applies to every property that uses `|-` without exception: event handlers (`OnSelect`, `OnChange`, `OnVisible`, `OnCheck`, `OnUncheck`) and data properties (`Items`, `Fill`, `Color`, `Visible`, `Text`, etc.).
 
 **Wrong:**
 ```yaml
 OnSelect: |-
   Patch('MyList', varRecord, {Field: Today()});
-  Set(varRecord, LookUp('MyList', ID = varRecord.ID))
+  Navigate(scrRecord)
 ```
 
 **Correct:**
 ```yaml
 OnSelect: |-
   =Patch('MyList', varRecord, {Field: Today()});
-  Set(varRecord, LookUp('MyList', ID = varRecord.ID))
+  Navigate(scrRecord)
 ```
 
-Note: only the **first line** gets `=`. Continuation lines do not.
+**Pre-output scan:** For every `|-` in the YAML, check that the immediately following non-empty line starts with `=`.
 
-**Checklist item to add to every pre-output validation:** scan every `|-` in the YAML and confirm the immediately following content line starts with `=`.
+---
+
+### Rule 3 — Inside a `|-` block, indentation must follow paren depth
+
+**Error message:** `While parsing a block mapping, did not find expected key.` (same as Rule 1, different cause)
+
+When a `|-` block contains a nested formula like `If(condition, If(...))`, each line's indentation must match its logical paren depth. A common mistake when converting inline formulas to `|-` is to carry over original whitespace mechanically — this places the outer closing `)` at the wrong indent level, making the YAML parser see it as a key instead of formula continuation.
+
+**Wrong (outer `)` at wrong indent — both `)` at the same level):**
+```yaml
+Fill: |-
+  =If(
+      ThisItem.Complete,
+      RGBA(34,139,34,1),
+      If(
+          condition,
+          RGBA(163,100,0,1),
+          RGBA(0,78,66,1)
+      )
+      )
+```
+
+**Correct (outer `)` at the same indent as `=If(`):**
+```yaml
+Fill: |-
+  =If(
+      ThisItem.Complete,
+      RGBA(34,139,34,1),
+      If(
+          condition,
+          RGBA(163,100,0,1),
+          RGBA(0,78,66,1)
+      )
+  )
+```
+
+**Rule:** The closing `)` of the outermost function must be at the **same indent as `=If(`** — that is, content indent (key indent + 2). Each nested level adds 4 spaces. Use paren depth to derive correct indentation, not the original source whitespace.
+
+**Depth formula:**
+- Content base = key indent + 2 spaces
+- Each `(` that doesn't close on the same line increases depth by 1 → add 4 spaces per depth level
+- Each unmatched `)` decreases depth before placing the line
 
 ---
 

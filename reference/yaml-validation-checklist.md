@@ -9,9 +9,9 @@ Run through this checklist mentally before generating or outputting ANY screen Y
 ## 1. YAML Structure
 
 - [ ] Every formula value starts with `=` prefix — no bare values on formula properties
-- [ ] Multi-line formulas use `|-` block scalar (any formula with `;`, `:`, or 3+ lines)
-- [ ] **No inline multi-line formulas** — if a property line is `Key: =Something(` and the paren is NOT closed on the same line, the formula MUST be rewritten as `|-`. Writing it inline causes PA1001 "did not find expected key". Scan every `Key: =` line and count `(` vs `)` — if open > closed, it needs `|-`.
-- [ ] **Every `|-` block's first content line starts with `=`** — this applies to ALL properties using `|-` (OnSelect, OnChange, OnVisible, OnCheck, OnUncheck, Items, Fill, Visible, Text, etc.). Missing `=` on the first line causes PA1001 YamlInvalidSyntax and the entire paste is rejected.
+- [ ] **[PA1001 Rule 1] No inline multi-line formulas** — for every `Key: =Something(` line, count `(` vs `)`. If open > closed, the formula spans multiple lines and MUST use `|-`. Inline multi-line causes PA1001 "did not find expected key".
+- [ ] **[PA1001 Rule 2] Every `|-` block's first content line starts with `=`** — applies to ALL properties using `|-` without exception (OnSelect, OnChange, OnVisible, OnCheck, OnUncheck, Items, Fill, Color, Visible, Text, etc.). Missing `=` causes PA1001 "Power Fx expressions must start with '='".
+- [ ] **[PA1001 Rule 3] Inside `|-` blocks, closing parens are indented by depth, not by source whitespace** — the outer `)` of a nested `If()` sits at the same indent as `=If(` (content base = key indent + 2). Each inner nesting adds 4 spaces. A double-`)` at the same indent level is wrong and causes PA1001 "did not find expected key".
 - [ ] Indent is exactly 2 spaces — no tabs anywhere
 - [ ] Control names follow the naming convention (`btn`, `lbl`, `txt`, `cmb`, `drp`, `gal`, `rec`, `ico`, `tgl`, `frm`)
 - [ ] No trailing spaces on any line
