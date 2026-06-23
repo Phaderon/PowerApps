@@ -44,6 +44,45 @@ The stamp appears bottom-right in small monospace text: `v1.2  —  Built 23 Jun
 
 ---
 
+## PA1001 — `|-` Block Scalars Are Only Safe on Event Handlers and Items
+
+PaYaml (PowerApps' YAML dialect) does not reliably support `|-` block scalars on visual or style properties. Using `|-` on `Fill`, `Color`, `Visible`, `Text`, `DisabledFill`, `HoverFill`, or any similar property causes PA1001 YamlInvalidSyntax even when the YAML is structurally valid and passes a standard YAML parser.
+
+**Properties where `|-` is safe:**
+- `OnSelect`, `OnChange`, `OnVisible`, `OnCheck`, `OnUncheck` — event handlers
+- `Items` — gallery/dropdown data source
+
+**Properties where `|-` must NOT be used — use a single-line formula instead:**
+- `Fill`, `HoverFill`, `PressedFill`, `DisabledFill`
+- `Color`, `HoverColor`, `PressedColor`
+- `Visible`
+- `Text`
+- `BorderColor`, `BasePaletteColor`
+- Any other visual/style property
+
+**Wrong:**
+```yaml
+Fill: |-
+  =If(
+      ThisItem.Complete,
+      RGBA(34,139,34,1),
+      RGBA(163,100,0,1)
+  )
+Visible: |-
+  =varSelectedRecord.'Movement Type'.Value = "Leaving Branch" ||
+  varSelectedRecord.'Movement Type'.Value = "Leaving MoD"
+```
+
+**Correct:**
+```yaml
+Fill: =If(ThisItem.Complete, RGBA(34,139,34,1), RGBA(163,100,0,1))
+Visible: =varSelectedRecord.'Movement Type'.Value = "Leaving Branch" || varSelectedRecord.'Movement Type'.Value = "Leaving MoD"
+```
+
+Even a long single-line formula is safe. Multi-line with `|-` on style properties is not.
+
+---
+
 ## PA1001 — Three Rules for `|-` Block Scalars (All Must Hold)
 
 All three errors share the code `PA1001 YamlInvalidSyntax`. They are distinct causes and must be checked independently.
