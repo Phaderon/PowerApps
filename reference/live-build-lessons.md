@@ -28,6 +28,22 @@ Never write `\xB7`, `·`, or any escape sequence in a Power Apps string literal.
 
 ---
 
+## Version Stamps Are Mandatory on Every Screen Page and Index
+
+Every `pa-yaml-wrap` call and every `docs/index.html` must carry a version label and a build timestamp. Without them, the user cannot tell whether GitHub Pages has served the latest push — F5 refreshes look identical.
+
+**For screen pages**, always pass `--version`:
+```bash
+pa-yaml-wrap scrHome.yaml docs/screens/scrHome.html --version v1.2
+```
+The stamp appears bottom-right in small monospace text: `v1.2  —  Built 23 Jun 2026  10:55 BST`
+
+**For `docs/index.html`**, add the version inline after the `<h1>` title and a build timestamp line below it. Use `date '+%-d %b %Y  %H:%M %Z'` to get the local time string.
+
+**Version convention:** start at `v1.0`, bump minor for each fix/push (`v1.1`, `v1.2`), bump major for structural changes. Every push that modifies screen content increments the version so the stamp visibly changes.
+
+---
+
 ## PA1001 — Every `|-` Block Must Start With `=` on Its First Content Line
 
 **Error:** `PA1001 : YamlInvalidSyntax; Power Fx expressions must start with '='`

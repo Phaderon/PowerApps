@@ -154,3 +154,5 @@ Standard approved seeds:
 - [ ] GitHub Pages site has a page for every screen
 - [ ] Index page shows screens in correct paste order
 - [ ] Issues tracker URL is known and ready to report
+- [ ] **Every screen HTML page carries a version and build timestamp** — pass `--version vX.Y` to `pa-yaml-wrap` on every output. Re-wrap every screen on every push, even if only one screen changed, so timestamps update uniformly.
+- [ ] **`docs/index.html` carries the same version and local build timestamp** — inline after the `<h1>` title. Without this, the user cannot tell whether GitHub Pages has served the latest push when refreshing.

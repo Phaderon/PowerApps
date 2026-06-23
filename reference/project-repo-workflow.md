@@ -49,14 +49,27 @@ Enable GitHub Pages from the repo Settings → Pages → Source: `main` branch, 
 
 ## Step 3 — Create Screen HTML Pages
 
-For each screen YAML, write the YAML to a temp file, then wrap it with pa-yaml-wrap:
+For each screen YAML, write the YAML to a temp file, then wrap it with pa-yaml-wrap. **Always pass `--version`** — this stamps the version and local build time onto every page so the user can tell at a glance whether GitHub Pages has served the latest push.
 
 ```bash
-# Write the YAML (e.g. from a heredoc or temp file)
-pa-yaml-wrap /tmp/scrHome.yaml /var/home/Phaderon/PowerApps-Apps/APP-SLUG/docs/screens/scrHome.html
+pa-yaml-wrap /tmp/scrHome.yaml /var/home/Phaderon/PowerApps-Apps/APP-SLUG/docs/screens/scrHome.html --version v1.0
 ```
 
-The tool adds CRLF enforcement and produces a standalone copy-button HTML page.
+The tool adds CRLF enforcement, produces a standalone copy-button HTML page, and stamps the bottom-right corner with e.g. `v1.0  —  Built 23 Jun 2026  11:02 BST` using the system local time.
+
+**Version convention:**
+- Start every app at `v1.0`
+- Bump the minor number (`v1.1`, `v1.2`) for bug fixes and field-level changes
+- Bump the major number (`v2.0`) for structural redesigns or added screens
+- Every push that changes screen content must re-wrap with the new version so the stamp changes
+
+**Also stamp `docs/index.html`** with the same version. Add directly below the `<h1>`:
+```html
+<h1>APP_FULL_NAME <span style="font-size:0.65em;font-weight:400;color:#666;vertical-align:middle;margin-left:8px;">vX.Y</span></h1>
+<p style="font-size:0.75rem;color:#3a3a55;font-family:'Cascadia Code','Consolas',monospace;margin-bottom:4px;">Built DD Mon YYYY  HH:MM TZ</p>
+```
+
+Use `date '+%-d %b %Y  %H:%M %Z'` in the terminal to get the correct local timestamp string to paste in.
 
 ---
 
