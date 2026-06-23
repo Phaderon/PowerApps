@@ -44,20 +44,22 @@ The stamp appears bottom-right in small monospace text: `v1.2  —  Built 23 Jun
 
 ---
 
-## PA1006 — Every Screen Definition Needs `Control: Screen`
+## PA1006 — Screen YAML Needs `Screens:` Root and `Control: Screen`
 
 **Error:** `(1,3) : error PA1006 : Empty or invalid value for Control.`
 
-The top-level screen entry in YAML must include an explicit `Control: Screen` property. Without it, PaYaml has no type information for the screen and rejects the entire paste at line 1.
+Screen paste YAML must use the Source Code schema root:
 
-**Wrong:**
 ```yaml
-- scrDashboard:
-    Properties:
-      Fill: =RGBA(248,248,248,1)
+Screens:
+  scrDashboard:
 ```
 
-**Correct:**
+Do not paste a bare top-level list item such as `- scrDashboard:`. If the paste starts with `- scrDashboard:`, Power Apps reports the error at line 1, column 3 even when `Control: Screen` is present, because the screen is not under the `Screens:` schema root.
+
+The screen node must also include an explicit `Control: Screen` property. Without it, PaYaml has no type information for the screen and rejects the paste at line 1.
+
+**Wrong:**
 ```yaml
 - scrDashboard:
     Control: Screen
@@ -65,7 +67,25 @@ The top-level screen entry in YAML must include an explicit `Control: Screen` pr
       Fill: =RGBA(248,248,248,1)
 ```
 
+**Correct:**
+```yaml
+Screens:
+  scrDashboard:
+    Control: Screen
+    Properties:
+      Fill: =RGBA(248,248,248,1)
+```
+
 `Control: Screen` has no version suffix — just the bare string `Screen`.
+
+When checking with a standard YAML parser such as `yaml.safe_load`, quote any single-line Power Fx formulas that contain YAML-significant `: ` text, for example record literals or labels with colons:
+
+```yaml
+Default: '={Value: "New to MoD/Branch"}'
+Text: '=If(IsBlank(varRole), "Role not set", "Role: " & varRole)'
+```
+
+The quotes are YAML syntax only; the parsed Power Fx value still starts with `=`.
 
 ---
 

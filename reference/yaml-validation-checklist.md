@@ -16,7 +16,9 @@ Run through this checklist mentally before generating or outputting ANY screen Y
 - [ ] Indent is exactly 2 spaces — no tabs anywhere
 - [ ] Control names follow the naming convention (`btn`, `lbl`, `txt`, `cmb`, `drp`, `gal`, `rec`, `ico`, `tgl`, `frm`)
 - [ ] No trailing spaces on any line
-- [ ] **[PA1006] Every screen definition has `Control: Screen`** — the line immediately after `- scrName:` must be `    Control: Screen`. Missing it causes PA1006 "Empty or invalid value for Control" at line 1.
+- [ ] **[PA1006] Screen-copy YAML starts with `Screens:`** — do not start with `- scrName:`. A bare top-level list item can cause PA1006 "Empty or invalid value for Control" at line 1, column 3 even when `Control: Screen` exists.
+- [ ] **[PA1006] Every screen definition has `Control: Screen`** — under `Screens:` and the screen name, include `Control: Screen` before `Properties`. Missing it also causes PA1006 "Empty or invalid value for Control" at line 1.
+- [ ] **[YAML parser] Quote single-line formulas containing `: `** — examples: `Default: '={Value: "New to MoD/Branch"}'` and `Text: '=If(IsBlank(varRole), "Role not set", "Role: " & varRole)'`. This keeps `yaml.safe_load` valid while preserving the parsed Power Fx formula.
 - [ ] `Control:` and `Variant:` values use exact version strings (see version list below)
 
 ### Known valid version strings
