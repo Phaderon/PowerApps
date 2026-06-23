@@ -12,35 +12,55 @@ Before creating or editing Power Apps guides in this repo, read:
 
 Load these when relevant:
 
-- Building a new app from scratch: `reference/builder-system.md` — requirements gathering, naming conventions, YAML rules, Patch templates
+- Building a new app from scratch: `reference/builder-system.md` — requirements gathering, naming conventions, YAML rules, Patch templates, publishing
+- Delivering output to the user: `reference/output-format.md` — exact delivery order, App.OnStart separation rule, GitHub Pages format
+- Validating YAML before output: `reference/yaml-validation-checklist.md` — complete checklist, run before every YAML delivery
+- Creating a new per-project repo: `reference/project-repo-workflow.md` — GitHub repo setup, Pages template, library card
 - Reusable UI patterns: `reference/ui-patterns.md` — panels, tab nav, error borders, pill galleries, status colours
 - Power Fx formulas: `reference/powerfx-patterns.md`
 - SharePoint or Office365Users: `reference/sharepoint-office365users.md`
 - New guide structure: `reference/future-guide-template.md`
 
-## Screen YAML Generation
+## Building a New App — Mandatory Process
 
-When asked to generate a complete PowerApps screen as importable YAML:
+When asked to build a new Power Apps app:
 
-1. **Read the guide first.** Load the relevant Phase section from `training-tracker/index.html` for every control's properties and formulas. Never invent values.
-2. **Read `reference/verified-control-reference.md`** for the exact property list of every modern control (`ModernButton@1.0.0`, `ModernTextInput@1.1.0`, `ModernDropdown@1.0.1`, `ModernCombobox@1.1.0`, `Toggle@1.1.5`).
-3. **Write the YAML file** to `~/Downloads/ScreenName.yaml`:
-   - 2-space indent, CRLF line endings, all formula values prefixed with `=`
-   - Multi-line formulas (colons in values, multi-statement) use `|-` block scalar
-   - Flat control list (no GroupContainer) unless explicitly requested
-   - Tab visibility via `Visible: =varTab = "TabName"` on individual controls
-   - Controls appearing ON TOP of others must appear LATER in `Children:` (z-order = list order)
-4. **Audit before wrapping** — verify every property on every modern control against `reference/verified-control-reference.md`. Known PA2108 traps: `Size` on `Toggle@1.1.5`, `FontWeight` on `ModernButton@1.0.0`.
-5. **Wrap and push:**
-   ```bash
-   pa-yaml-wrap ~/Downloads/ScreenName.yaml /var/home/Phaderon/PowerApps/screens/ScreenName.html
-   cd /var/home/Phaderon/PowerApps
-   git add screens/ScreenName.html
-   git commit -m "Add ScreenName YAML"
-   git push origin main
-   ```
-6. **Add a card** to `index.html` (copy the scrAdminManage card pattern).
-7. Report the live URL: `https://phaderon.github.io/PowerApps/screens/ScreenName.html`
+1. **Phase 0:** Ask only business/workflow questions. Never ask about list/column names.
+2. **Phase 1:** Design all SharePoint lists. Output a complete setup checklist.
+3. **Phase 2–4:** Name all variables, collections, and screens. Write App.OnStart.
+4. **Run the YAML validation checklist** (`reference/yaml-validation-checklist.md`) against the plan before writing a single line of YAML.
+5. **Create the per-project GitHub repo** (`reference/project-repo-workflow.md`).
+6. **Generate screen YAML** — audit every control against `reference/verified-control-reference.md`. PA2108 traps: `Size` on `Toggle@1.1.5`, `FontWeight` on `ModernButton@1.0.0`.
+7. **Deliver output** in the format specified in `reference/output-format.md`:
+   - SharePoint setup (tables)
+   - Data connections list
+   - App.OnStart as a **separate code block** — NEVER inside screen YAML
+   - GitHub Pages URL for screen copy pages
+   - Issues tracker URL
+
+## Screen YAML Generation Rules
+
+- 2-space indent, CRLF line endings (pa-yaml-wrap enforces CRLF), all formula values prefixed with `=`
+- Multi-line formulas (colons in values, multi-statement) use `|-` block scalar
+- Z-order: controls listed LATER in Children appear IN FRONT
+- Background panels listed FIRST; error borders listed IMMEDIATELY BEFORE the field they highlight; overlays listed LAST
+- Never embed App.OnStart formulas in screen YAML
+- Run full validation checklist before wrapping and pushing
+
+## Wrapping Screen YAML
+
+```bash
+pa-yaml-wrap /tmp/ScreenName.yaml /var/home/Phaderon/PowerApps-Apps/app-slug/docs/screens/ScreenName.html
+```
+
+Per-project repos live at: `/var/home/Phaderon/PowerApps-Apps/APP-SLUG/`
+Guide library repo: `/var/home/Phaderon/PowerApps/`
+
+## Per-Project Repo URLs
+
+- Repo: `https://github.com/PhadeDev/APP-SLUG`
+- Pages: `https://phadedev.github.io/APP-SLUG/`
+- Issues: `https://github.com/PhadeDev/APP-SLUG/issues`
 
 ---
 

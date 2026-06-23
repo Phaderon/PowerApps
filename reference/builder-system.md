@@ -6,45 +6,91 @@ This document defines the conventions, naming rules, and workflow for generating
 
 ---
 
-## Phase 0 — Requirements Gathering (Ask First)
+## Phase 0 — Consultation Q&A (Do This First, Always)
 
-Before building anything, ask the user only about the business purpose and workflow. Do NOT ask about list names, column names, column types, or screen names — those are design decisions that belong to Phase 1 and are the builder's responsibility to define.
+When the user requests a new app, do NOT start building immediately. Run a proper consultation phase first.
 
-### Questions to ask the user
+### Step 0a — First Response
 
-**What the app does:**
-- What does this app need to do in one or two sentences?
-- What problem is it solving?
+When the user describes an app they want:
+1. Acknowledge what they've told you.
+2. Think through the use case and identify every gap, edge case, and design decision that needs clarifying.
+3. Ask all your questions in a single message — grouped by topic, clearly numbered. Do not drip-feed questions one by one.
+4. Be thorough. It is better to ask 10 questions now than to build something wrong and need to redesign it later.
 
-**Who uses it:**
-- Who are the users — what roles exist? (e.g. regular staff, managers, admins)
-- How many people roughly?
-- Do different roles see different things or have different permissions?
+The consultation is a proper design session — treat it like a requirements meeting. The user knows the business domain; you know the technical implications. Ask enough questions to design the data model, access rules, workflow, and screens with confidence before touching any code.
 
-**Workflow:**
-- Walk me through what a typical user does step by step when they open the app.
-- Walk me through what an admin does.
-- Are there any approval flows, manager relationships, or delegated actions?
+### Question Topics to Cover (derive specific questions from these)
+
+**Purpose and scope:**
+- What does this app need to do, exactly? What is the core task a user performs?
+- Who uses it and what are their different roles?
+- Are there any roles that can do things other roles cannot?
+- How many users roughly?
+
+**Workflow — standard user:**
+- Walk me through what a standard user does when they open the app.
+- What are the key actions they take? (add, edit, view, search, filter, submit)
+- Is there any concept of "my records" vs "all records"?
+
+**Workflow — manager/admin:**
+- What can a manager or admin do that a standard user cannot?
+- Can managers see or edit other people's records?
+- Is there any kind of approval or sign-off flow?
 
 **Business rules:**
-- Are there any date-based rules? (expiry dates, recurrence intervals, deadlines)
-- What makes a record complete vs incomplete?
-- Are there any status states a record can be in?
-- What happens when something expires or is overdue?
+- Are there any date-driven rules? (expiry, deadlines, renewal intervals, overdue logic)
+- What does a record look like when it is "complete" vs "incomplete" vs "overdue"?
+- Are there any status values a record can have? What triggers a status change?
+- Are there any mandatory fields? (These become the validation rules in the app)
 
-**Outputs:**
+**Data relationships:**
+- Are there different categories or types of thing being tracked? (e.g. different course types, asset categories)
+- Does a person have a line manager relationship? Can managers update on behalf of others?
+- Are there any lists of reference data that don't change often? (e.g. list of departments, list of roles)
+
+**Edge cases:**
+- What happens when someone leaves / is deactivated?
+- What happens if a record needs to be deleted vs archived?
+- Are there any records that should be read-only to most users?
+
+**Notifications and reporting:**
+- Does anyone need to be notified when something changes, expires, or is submitted?
 - Does anyone need to export or report on the data?
-- Are there any notifications or alerts needed?
 
 **Branding:**
-- Primary colour? (default: army dark green `RGBA(0,78,66,1)` / `#004e42`)
-- Any specific name for the app?
+- Is the primary colour the default army dark green (`#004e42`), or a different colour?
+- Any specific app name?
+
+**Technical:**
+- Are all users on the same M365 tenant?
+- Is there an existing SharePoint site to use, or a new one?
 
 ### What NOT to ask the user
 - List names, column names, column types — design these yourself in Phase 1.
-- How many lists are needed — derive this from the workflow.
-- What Choice options to use — propose sensible defaults and confirm only if the domain is specialised.
+- How many lists are needed — derive this from the workflow answers.
+- What Choice option strings to use — propose sensible defaults and confirm only if the domain is specialised.
 - Screen names or navigation structure — design these yourself in Phase 2.
+
+### Step 0b — Follow-Up Questions
+
+After the user answers, review their responses critically. If any answer raises new questions or reveals a gap, ask those as a short follow-up — still in one message.
+
+It is acceptable to do up to 3 rounds of questions if the app is complex. Never build until you are confident you understand every part of the workflow.
+
+### Step 0c — Confirm Before Building
+
+When you have enough information to design the complete app, present a brief summary:
+- App name
+- Roles and what each can do
+- Core screens (just names and one-line purpose)
+- Key business rules
+
+Then end with:
+
+> **Ready to build?** Any final changes before I go ahead?
+
+Wait for the user to say "build" or ask more questions. Do not start Phase 1 until the user explicitly confirms.
 
 ---
 
@@ -334,21 +380,33 @@ If(
 
 ## Phase 8 — Publishing Workflow
 
-1. Write YAML to scratchpad or `/var/home/Phaderon/PowerApps/screens/`.
-2. Run `pa-yaml-wrap` to wrap in copy-button HTML with CRLF:
+For a new app, always use the per-project repo system — do NOT push screen YAML into the `Phaderon/PowerApps` guide library repo.
+
+See `output-format.md` for the exact delivery sequence and `project-repo-workflow.md` for the full GitHub repo setup procedure.
+
+**Summary for a new app:**
+
+1. Run the YAML validation checklist in `yaml-validation-checklist.md` before generating any YAML.
+2. Deliver output in this order:
+   - SharePoint setup checklist (tables)
+   - Data connections list
+   - **App.OnStart as a separate code block** — NEVER in screen YAML
+   - GitHub Pages link for screen YAMLs
+3. Create the per-project repo under `PhadeDev`:
    ```bash
-   pa-yaml-wrap ~/Downloads/ScreenName.yaml /var/home/Phaderon/PowerApps/screens/ScreenName.html
+   gh repo create PhadeDev/app-slug --description "Power Apps canvas app — App Name" --private --add-readme
    ```
-3. Add a card to the root `index.html` (copy the scrAdminManage card pattern).
-4. Commit and push:
+4. Create the `docs/` structure and push screens via `pa-yaml-wrap`:
    ```bash
-   cd /var/home/Phaderon/PowerApps
-   git add screens/ScreenName.html index.html
-   git commit -m "Add ScreenName"
-   git push origin main
+   pa-yaml-wrap /tmp/scrHome.yaml /var/home/Phaderon/PowerApps-Apps/app-slug/docs/screens/scrHome.html
    ```
-5. Report the live URL: `https://phaderon.github.io/PowerApps/screens/ScreenName.html`
-6. Add the new screen to the `AGENTS.md` list of known screen files.
+5. Build the `docs/index.html` from the template in `project-repo-workflow.md`.
+6. Commit and push to the project repo, enable GitHub Pages from `/docs`.
+7. Report: live URL, screen paste order, issues tracker URL.
+8. Ask user's permission to add a library card to `Phaderon/PowerApps/index.html`.
+
+**App.OnStart separation rule — non-negotiable:**
+App.OnStart is ALWAYS delivered as a separate code block. If a formula belongs in `App.OnStart`, it does NOT appear anywhere in the screen YAML. No exceptions.
 
 ---
 
