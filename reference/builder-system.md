@@ -8,45 +8,70 @@ This document defines the conventions, naming rules, and workflow for generating
 
 ## Phase 0 — Requirements Gathering (Ask First)
 
-Before building anything, get answers to these questions. Do not invent values or assume defaults.
+Before building anything, ask the user only about the business purpose and workflow. Do NOT ask about list names, column names, column types, or screen names — those are design decisions that belong to Phase 1 and are the builder's responsibility to define.
 
-### App purpose
-- What does this app do in one sentence?
-- Who are the users? (roles, permissions, size of user base)
-- Is there an admin role? What can admins do that regular users cannot?
+### Questions to ask the user
 
-### Data
-- What SharePoint lists will this app use?
-- For each list: what columns, what types, what are the required fields?
-- Are there Choice columns? What are the exact option values?
-- Are there multi-select Choice columns?
-- Are there people/email lookup columns?
-- What is the primary key field? (usually SharePoint `ID`)
+**What the app does:**
+- What does this app need to do in one or two sentences?
+- What problem is it solving?
 
-### Screens
-- What screens does the app need?
-- Which screen is the start/home screen?
-- What navigation paths exist between screens?
+**Who uses it:**
+- Who are the users — what roles exist? (e.g. regular staff, managers, admins)
+- How many people roughly?
+- Do different roles see different things or have different permissions?
 
-### Business rules
-- What filters or permissions apply? (e.g. regular users only see their own data)
-- What validation is required on forms?
-- Are there expiry, recurrence, or date calculations?
+**Workflow:**
+- Walk me through what a typical user does step by step when they open the app.
+- Walk me through what an admin does.
+- Are there any approval flows, manager relationships, or delegated actions?
 
-### Branding
-- What primary colour? (default: navy `RGBA(24,95,165,1)`)
-- Any specific fonts or logo requirements?
+**Business rules:**
+- Are there any date-based rules? (expiry dates, recurrence intervals, deadlines)
+- What makes a record complete vs incomplete?
+- Are there any status states a record can be in?
+- What happens when something expires or is overdue?
+
+**Outputs:**
+- Does anyone need to export or report on the data?
+- Are there any notifications or alerts needed?
+
+**Branding:**
+- Primary colour? (default: navy `RGBA(24,95,165,1)`)
+- Any specific name for the app?
+
+### What NOT to ask the user
+- List names, column names, column types — design these yourself in Phase 1.
+- How many lists are needed — derive this from the workflow.
+- What Choice options to use — propose sensible defaults and confirm only if the domain is specialised.
+- Screen names or navigation structure — design these yourself in Phase 2.
 
 ---
 
-## Phase 1 — SharePoint List Design
+## Phase 1 — SharePoint List Design (Builder's Responsibility)
 
-Define each list before writing any formulas. Column names used in the app must match SharePoint exactly (including spaces, capitalisation, and the Choice option strings).
+Based on the workflow the user described, design all SharePoint lists completely. Present the full design to the user as a setup checklist — column by column — so they can create it in SharePoint without needing to make any decisions.
+
+### Output format to the user
+
+For each list, produce a table like this:
+
+**List name: `AB ListName`**
+
+| Column name | Type | Options / Notes |
+|---|---|---|
+| Title | Single line of text | Built-in — rename to meaningful label if needed |
+| Status | Choice | Active, Archived |
+| Email | Single line of text | Store email in lowercase |
+| ... | ... | ... |
+
+Tell the user: exact column names (they must match in Power Fx), exact type to select in SharePoint, exact Choice option strings with their capitalisation, which columns to mark as Not Required (all of them — enforce required in the app).
 
 ### List name rules
 - Prefix all related lists with the app abbreviation: `TT Personnel`, `TT Courses`, etc.
 - List names with spaces must be wrapped in single quotes in Power Fx: `'TT Personnel'`
 - Never reference a list without the prefix in formulas.
+- Use 2–3 character abbreviation that won't clash with existing lists.
 
 ### Column type rules
 
@@ -59,14 +84,12 @@ Define each list before writing any formulas. Column names used in the app must 
 | Single choice | Choice | `record.ColumnName.Value` |
 | Multi-select choice | Choice (Allow multiple selections) | table of `{Value: "..."}` records |
 | Yes/No | Yes/No | `record.ColumnName` (boolean) |
-| Person/Group | Person or Group | returns a record; use specific fields |
+| Person/Group | Person or Group | returns a record; use specific sub-fields |
 | URL | Single line of text | `record.ColumnName` — NOT SharePoint Hyperlink type |
 | Attachment | Built-in (on SharePoint list) | accessed via Edit Form Attachments card only |
 
-### Required field warning
-If a SharePoint column is marked Required, Patch will fail with a network error if that field is blank. Either:
-- Mark the column as not required in SharePoint and enforce it in the app via validation, or
-- Add the Set-error-vars-then-If-guard pattern (see `ui-patterns.md`) before the Patch call.
+### Required field rule
+Mark ALL columns as Not Required in SharePoint. Enforce required fields in the app using the Set-error-vars-then-If-guard pattern (see `ui-patterns.md`). This gives users a clear red-border error instead of a vague network error from SharePoint.
 
 ---
 
