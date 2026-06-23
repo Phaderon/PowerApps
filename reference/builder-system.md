@@ -398,12 +398,13 @@ See `output-format.md` for the exact delivery sequence and `project-repo-workflo
    ```
 4. Create the `docs/` structure and push screens via `pa-yaml-wrap`:
    ```bash
-   pa-yaml-wrap /tmp/scrHome.yaml /var/home/Phaderon/PowerApps-Apps/app-slug/docs/screens/scrHome.html
+   pa-yaml-wrap /tmp/scrHome.yaml /var/home/Phaderon/PowerApps-Apps/app-slug/docs/screens/scrHome.html --version v1.0
    ```
-5. Build the `docs/index.html` from the template in `project-repo-workflow.md`.
-6. Commit and push to the project repo, enable GitHub Pages from `/docs`.
-7. Report: live URL, screen paste order, issues tracker URL.
-8. Ask user's permission to add a library card to `Phaderon/PowerApps/index.html`.
+5. Confirm every generated screen page shows the visible payload preview and that it starts `Screens:` -> `scrName:` -> `Properties:`.
+6. Build the `docs/index.html` from the template in `project-repo-workflow.md`; screen links must include the current version query string, e.g. `screens/scrHome.html?v=1.0`.
+7. Commit and push to the project repo, enable GitHub Pages from `/docs`.
+8. Report: live URL, screen paste order, issues tracker URL, and the exact version stamp to look for.
+9. Ask user's permission to add a library card to `Phaderon/PowerApps/index.html`.
 
 **App.OnStart separation rule — non-negotiable:**
 App.OnStart is ALWAYS delivered as a separate code block. If a formula belongs in `App.OnStart`, it does NOT appear anywhere in the screen YAML. No exceptions.

@@ -92,6 +92,32 @@ The quotes are YAML syntax only; the parsed Power Fx value still starts with `=`
 
 ---
 
+## Copy Pages Must Show and Guard the Actual Clipboard Payload
+
+A repeated paste error can be caused by stale browser page content or stale clipboard text even after the repository has the corrected YAML. Version stamps alone are not enough proof that the copied payload is the corrected payload.
+
+Every generated screen copy page should visibly show the first lines of the exact YAML string that the Copy button will write. For screen YAML, the preview must start:
+
+```yaml
+Screens:
+  scrName:
+    Properties:
+```
+
+The copy script should refuse to copy known-invalid screen payloads, especially:
+
+```yaml
+Screens:
+  scrName:
+    Control: Screen
+```
+
+If Power Apps reports `(3,5) Property 'Control' not found on type ... ScreenInstance`, the pasted clipboard text still contains a screen-level `Control: Screen`. Check the visible payload preview on the live copy page before changing YAML again.
+
+Use versioned or cache-busted links from index pages, for example `screens/scrDashboard.html?v=1.9`, so the browser does not reuse an older generated screen page.
+
+---
+
 ## PA1001 — `|-` Block Scalars Are Only Safe on Event Handlers and Items
 
 PaYaml (PowerApps' YAML dialect) does not reliably support `|-` block scalars on visual or style properties. Using `|-` on `Fill`, `Color`, `Visible`, `Text`, `DisabledFill`, `HoverFill`, or any similar property causes PA1001 YamlInvalidSyntax even when the YAML is structurally valid and passes a standard YAML parser.

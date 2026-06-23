@@ -57,6 +57,16 @@ pa-yaml-wrap /tmp/scrHome.yaml /var/home/Phaderon/PowerApps-Apps/APP-SLUG/docs/s
 
 The tool adds CRLF enforcement, produces a standalone copy-button HTML page, and stamps the bottom-right corner with e.g. `v1.0  —  Built 23 Jun 2026  11:02 BST` using the system local time.
 
+The generated page must also show the visible "Clipboard payload preview" block. For screen YAML, the first three preview lines must be:
+
+```yaml
+Screens:
+  scrHome:
+    Properties:
+```
+
+If the preview shows `Control: Screen` under the screen name, do not paste it and do not push it. SchemaV3 screen instances do not allow a screen-level `Control` property.
+
 **Version convention:**
 - Start every app at `v1.0`
 - Bump the minor number (`v1.1`, `v1.2`) for bug fixes and field-level changes
@@ -67,6 +77,12 @@ The tool adds CRLF enforcement, produces a standalone copy-button HTML page, and
 ```html
 <h1>APP_FULL_NAME <span style="font-size:0.65em;font-weight:400;color:#666;vertical-align:middle;margin-left:8px;">vX.Y</span></h1>
 <p style="font-size:0.75rem;color:#3a3a55;font-family:'Cascadia Code','Consolas',monospace;margin-bottom:4px;">Built DD Mon YYYY  HH:MM TZ</p>
+```
+
+Screen links in `docs/index.html` must include the same version query string to avoid stale browser pages:
+
+```html
+<a class="screen-card" href="screens/scrHome.html?v=1.0">
 ```
 
 Use `date '+%-d %b %Y  %H:%M %Z'` in the terminal to get the correct local timestamp string to paste in.
