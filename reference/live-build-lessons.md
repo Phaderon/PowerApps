@@ -750,26 +750,35 @@ This applies to all single-select Choice fields everywhere: gallery labels, filt
 
 ---
 
-## Yes/No (Boolean) Fields Must Use `= true` to Guard Against Blank
+## Toggle Bound to a SharePoint Choice Field — Use `.Value = "Yes"`, Not Boolean
 
-A SharePoint Yes/No column stores `true` or `false`. For records created before the column was added, the field returns `Blank()` rather than `false`.
+`Toggle@1.1.5` `Checked` requires a strict Boolean. If the underlying SharePoint column is a **Choice** type (not a true Yes/No checkbox), the data connector returns a Record `{Value: "Yes"}` or `{Value: "No"}` — comparing that Record to `true` throws:
 
-**Problem:** Binding a Boolean field directly to `Checked`, `Visible`, or `If()` fails on those older records:
-
-```yaml
-Checked: =varSelectedRecord.Upgrade_x0020_M365_x0020_License
+```
+Incompatible types for comparison. These types can't be compared: Record, Boolean.
 ```
 
-`Toggle@1.1.5` `Checked` requires a strict Boolean — `Blank()` causes `Expected Boolean value`.
+**How to tell:** If `field = true` causes the above error, the field is a Choice, not a Yes/No.
 
-**Fix:** Always compare the field to `= true`:
+**Fix for every formula touching the field:**
 
 ```yaml
-Checked: =varSelectedRecord.Upgrade_x0020_M365_x0020_License = true
-Visible: =varSelectedRecord.Upgrade_x0020_M365_x0020_License = true
-Label:   =If(varSelectedRecord.Upgrade_x0020_M365_x0020_License = true, "Yes", "No")
+Checked: =varSelectedRecord.FieldName.Value = "Yes"
+Visible: =varSelectedRecord.FieldName.Value = "Yes"
+Label:   =If(varSelectedRecord.FieldName.Value = "Yes", "Yes — upgrade needed", "No upgrade needed")
 ```
 
-`field = true` evaluates `Blank()` as false, so it is safe for all records regardless of when they were created.
+**Fix for Patch in OnCheck / OnUncheck:**
 
-Apply this pattern to every Yes/No field in every formula — Checked, Visible, If conditions, and text labels alike.
+```yaml
+OnCheck: |-
+  =Patch('List', varRecord, {FieldName: {Value: "Yes"}});
+  ...
+OnUncheck: |-
+  =Patch('List', varRecord, {FieldName: {Value: "No"}});
+  ...
+```
+
+`Blank().Value` returns blank (empty string), so `.Value = "Yes"` is safe for records where the field has never been set — it returns false, which is what the toggle needs.
+
+Do not use `field = true` or bare `field` for a SharePoint Choice field regardless of the column's display name. Check how the connector returns it before writing the formula.

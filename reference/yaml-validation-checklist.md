@@ -113,7 +113,7 @@ For every formula in the YAML, check:
 - [ ] No Notify-first validation pattern → use Set-error-vars-then-If-guard (see `builder-system.md` Phase 7)
 - [ ] `LookUp` by SharePoint ID through a collection: wrap with `Value()` → `LookUp('List', ID = Value(varRow.StoredID))`
 - [ ] **[PA2108] No `.Value1` on SharePoint Choice fields** → always use `.Value`. `.Value1` is an internal artifact, not the choice string, and will error.
-- [ ] **[Expected Boolean] Yes/No fields always compared with `= true`** → `field = true` instead of bare `field` in `Checked`, `Visible`, and `If()`. Bare field returns `Blank()` for records predating the column, which errors on Toggle and Visible.
+- [ ] **[Expected Boolean / Incompatible types] Toggle bound to a SharePoint Choice field** → use `field.Value = "Yes"` for `Checked`, `Visible`, `If()`, and `Label`; patch with `{Value: "Yes"}`/`{Value: "No"}`. If `field = true` causes "Incompatible types: Record, Boolean", the column is a Choice, not a Yes/No — switch to `.Value = "Yes"` throughout.
 
 ---
 
