@@ -112,6 +112,8 @@ For every formula in the YAML, check:
 - [ ] No `ThisItem.ItemIndex` in alternating row colours → use `Mod(ThisItem.ID, 2)` or stable field
 - [ ] No Notify-first validation pattern → use Set-error-vars-then-If-guard (see `builder-system.md` Phase 7)
 - [ ] `LookUp` by SharePoint ID through a collection: wrap with `Value()` → `LookUp('List', ID = Value(varRow.StoredID))`
+- [ ] **[PA2108] No `.Value1` on SharePoint Choice fields** → always use `.Value`. `.Value1` is an internal artifact, not the choice string, and will error.
+- [ ] **[Expected Boolean] Yes/No fields always compared with `= true`** → `field = true` instead of bare `field` in `Checked`, `Visible`, and `If()`. Bare field returns `Blank()` for records predating the column, which errors on Toggle and Visible.
 
 ---
 

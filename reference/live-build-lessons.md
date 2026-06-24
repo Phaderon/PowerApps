@@ -732,3 +732,44 @@ Fill = Switch(
 ```
 
 Strings in the `Switch` must match the SharePoint Choice values exactly, including capitalisation.
+
+---
+
+## SharePoint Choice Fields Always Use `.Value` — Never `.Value1`
+
+When accessing a SharePoint Choice field in a formula, always use `.Value`:
+
+```powerfx
+ThisItem.'Movement Type'.Value
+varSelectedRecord.'Position Type'.Value
+```
+
+Do not use `.Value1`. SharePoint's data connector exposes `.Value` (the selected choice string) and may also surface `.Value1` as an internal artifact on some field configurations, but `.Value1` is not the choice string and will error.
+
+This applies to all single-select Choice fields everywhere: gallery labels, filter conditions, dropdown defaults, patch records, and visibility formulas.
+
+---
+
+## Yes/No (Boolean) Fields Must Use `= true` to Guard Against Blank
+
+A SharePoint Yes/No column stores `true` or `false`. For records created before the column was added, the field returns `Blank()` rather than `false`.
+
+**Problem:** Binding a Boolean field directly to `Checked`, `Visible`, or `If()` fails on those older records:
+
+```yaml
+Checked: =varSelectedRecord.Upgrade_x0020_M365_x0020_License
+```
+
+`Toggle@1.1.5` `Checked` requires a strict Boolean — `Blank()` causes `Expected Boolean value`.
+
+**Fix:** Always compare the field to `= true`:
+
+```yaml
+Checked: =varSelectedRecord.Upgrade_x0020_M365_x0020_License = true
+Visible: =varSelectedRecord.Upgrade_x0020_M365_x0020_License = true
+Label:   =If(varSelectedRecord.Upgrade_x0020_M365_x0020_License = true, "Yes", "No")
+```
+
+`field = true` evaluates `Blank()` as false, so it is safe for all records regardless of when they were created.
+
+Apply this pattern to every Yes/No field in every formula — Checked, Visible, If conditions, and text labels alike.
