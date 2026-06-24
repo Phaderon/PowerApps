@@ -735,6 +735,30 @@ Strings in the `Switch` must match the SharePoint Choice values exactly, includi
 
 ---
 
+## SharePoint Rich Text Fields Return HTML — Always Wrap in PlainText()
+
+A SharePoint "Multiple lines of text" column set to Rich Text or Enhanced Rich Text returns raw HTML when read through the Power Apps connector:
+
+```
+<div class="ExternalClass..."><div style="font-family:Calibri...">Your text here.</div></div>
+```
+
+Displaying this directly in a `ModernTextInput.Default` or `Label.Text` shows the raw HTML markup to the user instead of the note content.
+
+**Fix:** Always wrap the field in `PlainText()` for any text input or label that displays notes, descriptions, or any multi-line text field:
+
+```yaml
+Default: =PlainText(varSelectedRecord.Notes)
+```
+
+`PlainText()` strips all HTML tags and decodes HTML entities, returning the readable text. `PlainText(Blank())` safely returns `""`.
+
+When the user edits and saves (`{Notes: Self.Text}`), the value is saved back as plain text — removing the rich text formatting permanently. This is acceptable for a notes field. If rich text round-tripping is required, use `HtmlViewer@2.1.0` for display instead.
+
+Apply to every multi-line text field in `Default` properties on `ModernTextInput` and `Text` properties on `Label`.
+
+---
+
 ## SharePoint Choice Fields Always Use `.Value` — Never `.Value1`
 
 When accessing a SharePoint Choice field in a formula, always use `.Value`:
