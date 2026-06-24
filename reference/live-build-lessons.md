@@ -759,6 +759,30 @@ Apply to every multi-line text field in `Default` properties on `ModernTextInput
 
 ---
 
+## ModernDropdown Default — Never Use `{Value: expr.Value}` (Value/Value1 Collision)
+
+**Error (in Power Apps Studio after paste):** Formula bar shows `Value1` instead of `Value`; dropdown errors when the formula tries to run.
+
+**Cause:** When the `Default` property of a `ModernDropdown@1.0.1` contains `{Value: someRecord.SomeField.Value}`, Power Apps sees a naming collision between the record literal key (`Value`) and the property accessor (`.Value`) on the right-hand side. It renames one to `Value1`, breaking the formula.
+
+**Wrong — triggers the collision:**
+```yaml
+Default: '=If(IsBlank(varSelectedRecord.''Movement Type''), {Value: ""}, {Value: varSelectedRecord.''Movement Type''.Value})'
+```
+
+**Fix — use `With()` to extract the string into a local variable first:**
+```yaml
+Default: '=With({_v: Coalesce(varSelectedRecord.''Movement Type''.Value, "")}, {Value: _v})'
+```
+
+`_v` is a plain string variable. `{Value: _v}` has no `.Value` on the right-hand side, so there is no collision. `Coalesce(..., "")` handles the blank case (records that predate the column).
+
+Apply this pattern to **every** `ModernDropdown.Default` that reads from a SharePoint Choice field via `varSelectedRecord.FieldName.Value`. This affects all edit/view panels where the dropdown pre-populates from a selected record.
+
+The `With()` pattern is safe: it evaluates to the correct `{Value: "choice string"}` record that `ModernDropdown` expects, without triggering the rename.
+
+---
+
 ## SharePoint Choice Fields Always Use `.Value` — Never `.Value1`
 
 When accessing a SharePoint Choice field in a formula, always use `.Value`:

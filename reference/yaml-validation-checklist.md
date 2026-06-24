@@ -112,6 +112,7 @@ For every formula in the YAML, check:
 - [ ] No `ThisItem.ItemIndex` in alternating row colours → use `Mod(ThisItem.ID, 2)` or stable field
 - [ ] No Notify-first validation pattern → use Set-error-vars-then-If-guard (see `builder-system.md` Phase 7)
 - [ ] `LookUp` by SharePoint ID through a collection: wrap with `Value()` → `LookUp('List', ID = Value(varRow.StoredID))`
+- [ ] **[Value1 collision] `ModernDropdown.Default` must never use `{Value: expr.Value}`** → use `With({_v: Coalesce(expr.Value, "")}, {Value: _v})` instead. The `{Value: …Value}` nesting causes PA to rename the accessor to `Value1`, breaking the formula.
 - [ ] **[PA2108] No `.Value1` on SharePoint Choice fields** → always use `.Value`. `.Value1` is an internal artifact, not the choice string, and will error.
 - [ ] **[Expected Boolean / Incompatible types] Toggle bound to a SharePoint Choice field** → use `field.Value = "Yes"` for `Checked`, `Visible`, `If()`, and `Label`; patch with `{Value: "Yes"}`/`{Value: "No"}`. If `field = true` causes "Incompatible types: Record, Boolean", the column is a Choice, not a Yes/No — switch to `.Value = "Yes"` throughout.
 
