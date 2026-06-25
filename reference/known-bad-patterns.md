@@ -1,6 +1,6 @@
 # Known Bad Patterns
 
-Last checked: 2026-06-20
+Last checked: 2026-06-25
 
 These are mistakes that must not reappear in this guide family.
 
@@ -42,6 +42,9 @@ These are mistakes that must not reappear in this guide family.
 - `SortByColumns` on a SharePoint Choice field. Use `Sort(..., Field.Value, SortOrder.Ascending)` to unwrap the Choice record.
 - `”value” in MultiChoiceField` for multi-select Choice filtering. Use `CountIf(MultiChoiceField, Value = “value”) > 0`.
 - `Launch(url)` without `LaunchTarget.New` — reuses current tab. Use `Launch(url, {}, LaunchTarget.New)`.
+- `ScrollTo(gallery, item)` in screen `OnVisible` or any behavior formula. **`ScrollTo` is not universally supported in canvas apps** — confirmed "unknown or unsupported function" in live build (Policy Tracker). Remove it entirely; restore scroll position via Navigate to the screen instead, or accept the gallery always resets to the top.
+- `SortByColumns(AddColumns(table, "SortKey", formula), "SortKey", ...)` pattern inside a **nested gallery's `Items` property** (where `table = ThisItem.GroupedItems`). The dynamically added column is not reliably resolved by `SortByColumns` in this context — confirmed error "column 'SortKey' does not exist" (Policy Tracker). Use `Sort(ThisItem.GroupedItems, formula, SortOrder.Ascending)` instead, referencing fields directly by bare name inside the formula.
+- Referencing a SharePoint field in YAML that has not been confirmed to exist in the list. Before using any field name in card/form YAML, verify it is in the live SP list. Confirmed error when `Status.Value` was used but the SP list only had `Published` (boolean) — Policy Tracker.
 - `ForAll(cmbControl.SelectedItems As T, {Value: T.Value})` for patching multi-select Choice. Prefer `ForAll(cmbControl.SelectedItems, {Value: Value})` — the alias form can cause type mismatches.
 - Notify-first validation pattern (checking fields then calling Notify before running Patch). Use Set-error-vars-then-If-guard pattern instead.
 
