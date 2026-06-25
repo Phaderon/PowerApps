@@ -31,7 +31,7 @@ These are mistakes that must not reappear in this guide family.
 
 - `ScreenTransition.Back`. Use `Back()` or a valid `ScreenTransition` enum.
 - Bare `Ascending` or `Descending`. Use `SortOrder.Ascending` or `SortOrder.Descending`.
-- Training Tracker day filters using bare `Days` or unverified `TimeUnit.Days`. Preserve the verified quoted string `”Days”` unless the live editor is rechecked.
+- Bare `Days`, `Months`, `Years` etc. or `TimeUnit.Days` as the unit argument to `DateAdd`/`DateDiff`. **Always use quoted strings: `”Days”`, `”Months”`, `”Years”`.** Confirmed broken in live builds (Training Tracker + Policy Tracker).
 - Schema-less `[]` where Power Apps must infer collection shape.
 - Gallery row index formulas. Use `ThisItem.ItemIndex` — it shifts when the gallery filters or sorts.
 - `ThisItem.ID` inside collection-backed galleries unless the collection explicitly contains `ID`.

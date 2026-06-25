@@ -23,15 +23,24 @@ SortByColumns(Source, "Created", SortOrder.Descending)
 
 Do not use bare `Ascending` or `Descending`.
 
-## DateAdd Day Filters
+## DateAdd / DateDiff Unit Argument — Always a Quoted String
 
-Microsoft Learn documents `TimeUnit.Days`, but the Training Tracker live build required the day-unit argument as a quoted string in expiring-soon filters:
+**Hard rule (confirmed broken in live builds — Training Tracker and Policy Tracker):**
+
+The time-unit argument to `DateAdd` and `DateDiff` must be a **quoted string**, not a bare identifier or enum:
 
 ```powerfx
-DateAdd(Today(), 60, "Days")
+// CORRECT
+DateAdd(Today(), 7, "Days")
+DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days")
+DateDiff(Today(), ExpiryDate, "Days")
+
+// WRONG — causes runtime error in canvas apps
+DateAdd(Today(), 7, Days)
+DateAdd(Today(), 7, TimeUnit.Days)
 ```
 
-Do not change those Training Tracker formulas to bare `Days` or `TimeUnit.Days` unless the live editor is rechecked.
+Microsoft Learn sometimes documents `TimeUnit.Days` but this does not work in the canvas app formula bar. Always use quoted string literals: `"Days"`, `"Months"`, `"Years"`, `"Hours"`, `"Minutes"`, `"Seconds"`.
 
 ## Filtering And Lookup
 
