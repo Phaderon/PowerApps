@@ -64,6 +64,7 @@ These are mistakes that must not reappear in this guide family.
 - `GroupContainer@1.5.0` without a `Variant:` keyword. **Every GroupContainer requires `Variant: ManualLayout` (or `Variant: AutoLayout`) between `Control:` and `Properties:`.** Omitting it causes PA1011 on paste. Confirmed broken in Overview build.
 - `LayoutMode: =LayoutMode.ManualLayout` inside a GroupContainer's Properties block. **Do not set LayoutMode as a property — `Variant: ManualLayout` already implies it.** Including it causes PA2108. Remove the property entirely.
 - `Gallery@2.15.0` without a `Variant:` keyword. **Every Gallery requires `Variant:` between `Control:` and `Properties:`.** Use `Variant: Vertical` for vertical galleries, `Variant: Horizontal` for horizontal galleries, `Variant: VariableHeight` for variable-height galleries. Confirmed PA1011 in Overview build.
+- `Layout: =Layout.Horizontal` or `Layout: =Layout.Vertical` inside a Gallery's Properties block. **Do not set Layout as a property — the Variant already implies it.** PA2108 if present. Same rule as LayoutMode on GroupContainers. Confirmed in Overview build.
 - `Image@2.2.0` — stale. **Always use `Image@2.2.3`.** PA2105 warns it may produce errors.
 
 ## Guide-Writing
