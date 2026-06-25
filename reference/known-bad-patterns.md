@@ -58,6 +58,10 @@ These are mistakes that must not reappear in this guide family.
 - Assuming a field exists in `varCourse` because it exists in SharePoint. The field only exists in `varCourse` if the `ForAll` projection that built `colMyTraining` included it.
 - Using Badge control to render repeating pills. Badge cannot loop over a collection — use Gallery + Classic Button.
 
+## YAML File Structure
+
+- Any screen YAML that does not start with `Screens:\n  ScreenName:`. The pa-yaml-wrap tool and PowerApps Studio paste both require this exact top-level format. **Never use `- ScreenName:` (list item).** Always use the dict form: `Screens:` at col 0, screen name at col 2, `Properties:` and `Children:` at col 4.
+
 ## Guide-Writing
 
 - “Same as above.”
