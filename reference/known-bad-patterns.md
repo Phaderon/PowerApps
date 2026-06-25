@@ -62,6 +62,8 @@ These are mistakes that must not reappear in this guide family.
 
 - Any screen YAML that does not start with `Screens:\n  ScreenName:`. The pa-yaml-wrap tool and PowerApps Studio paste both require this exact top-level format. **Never use `- ScreenName:` (list item).** Always use the dict form: `Screens:` at col 0, screen name at col 2, `Properties:` and `Children:` at col 4.
 - `GroupContainer@1.5.0` without a `Variant:` keyword. **Every GroupContainer requires `Variant: ManualLayout` (or `Variant: AutoLayout`) between `Control:` and `Properties:`.** Omitting it causes PA1011 on paste. Confirmed broken in Overview build.
+- `LayoutMode: =LayoutMode.ManualLayout` inside a GroupContainer's Properties block. **Do not set LayoutMode as a property — `Variant: ManualLayout` already implies it.** Including it causes PA2108. Remove the property entirely.
+- `Gallery@2.15.0` without a `Variant:` keyword. **Every Gallery requires `Variant:` between `Control:` and `Properties:`.** Use `Variant: Vertical` for vertical galleries, `Variant: Horizontal` for horizontal galleries, `Variant: VariableHeight` for variable-height galleries. Confirmed PA1011 in Overview build.
 - `Image@2.2.0` — stale. **Always use `Image@2.2.3`.** PA2105 warns it may produce errors.
 
 ## Guide-Writing
