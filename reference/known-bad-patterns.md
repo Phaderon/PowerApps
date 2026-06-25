@@ -33,7 +33,7 @@ These are mistakes that must not reappear in this guide family.
 - Bare `Ascending` or `Descending`. Use `SortOrder.Ascending` or `SortOrder.Descending`.
 - Bare `Days`, `Months`, `Years` etc. or `TimeUnit.Days` as the unit argument to `DateAdd`/`DateDiff`. **Always use quoted strings: `”Days”`, `”Months”`, `”Years”`.** Confirmed broken in live builds (Training Tracker + Policy Tracker).
 - Schema-less `[]` where Power Apps must infer collection shape.
-- `AddColumns(table, "ColumnName", formula)` with a **quoted string** for the column name. **Use a bare identifier: `AddColumns(table, ColumnName, formula)`.** Quoted strings fail at runtime. Confirmed in Overview build.
+- `AddColumns(table, "ColumnName", formula)` with a **quoted string** for the new column name argument. **The column name must be a bare identifier: `AddColumns(table, ColumnName, formula)`.** This rule applies only to the column name — other string arguments in the same formula (e.g. `"Days"` in `DateAdd`) remain quoted as normal. Confirmed in Overview build.
 - Gallery row index formulas. Use `ThisItem.ItemIndex` — it shifts when the gallery filters or sorts.
 - `ThisItem.ID` inside collection-backed galleries unless the collection explicitly contains `ID`.
 - Nested formulas that rely on ambiguous `ThisItem`; capture the row with `With` or use `As` aliases.
