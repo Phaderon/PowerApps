@@ -37,6 +37,7 @@ These are mistakes that must not reappear in this guide family.
 - Gallery row index formulas. Use `ThisItem.ItemIndex` — it shifts when the gallery filters or sorts.
 - `ThisItem.ID` inside collection-backed galleries unless the collection explicitly contains `ID`.
 - Nested formulas that rely on ambiguous `ThisItem`; capture the row with `With` or use `As` aliases.
+- Using bare `ThisItem.ColumnName` in a **nested gallery's `Items` formula** when there is a `GroupContainer` between the outer and inner gallery. `ThisItem` resolves to the inner gallery's own item, not the outer gallery's. **Always qualify with the outer gallery name: `outerGallery.ThisItem.ColumnName`.** Confirmed: all 4 columns showed identical data in Overview because `ThisItem.WeekDate` didn't scope to the outer `galWeeks` column.
 - Bare `DisplayMode=View`. Use `DisplayMode=DisplayMode.View` or set the property value to `DisplayMode.View`.
 - `\xB7` or any `\x` escape sequence in Power Apps strings. Use `Char(decimal)` instead. Middle dot is `Char(183)`.
 - `IsOdd()` — does not exist in Power Apps. Use `Mod(value, 2) = 1`.
