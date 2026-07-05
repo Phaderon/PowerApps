@@ -35,6 +35,7 @@ These are mistakes that must not reappear in this guide family.
 ## Power Fx
 
 - `ScreenTransition.Back`. Use `Back()` or a valid `ScreenTransition` enum.
+- **`Set(varName, Blank())` as the only or first-encountered assignment for a global variable.** Throws `No type found for variable 'varName'. Ensure that it is Set to a non-Blank value somewhere in the app` — even if the same variable genuinely is set to a real typed value elsewhere (e.g. `Set(varName, someTextExpression)`). Power Fx's type inference isn't reliably finding the typed assignment first. **Fix: replace `Blank()` with a properly-typed empty value that matches the real assignment** — `""` for Text, not `Blank()`, at every call site for that variable (reset/clear points, not just the first one). Confirmed: Policy Tracker `ViewItem_1`'s `varLinkDisplayNamePrefill` (also set to `varFileName`, a Text value, elsewhere) — 6 separate `Set(..., Blank())` call sites all needed changing to `Set(..., "")`. 2026-07-05.
 - Bare `Ascending` or `Descending`. Use `SortOrder.Ascending` or `SortOrder.Descending`.
 - Bare `Days`, `Months`, `Years` etc. or `TimeUnit.Days` as the unit argument to `DateAdd`/`DateDiff`. **Always use quoted strings: `”Days”`, `”Months”`, `”Years”`.** Confirmed broken in live builds (Training Tracker + Policy Tracker).
 - Schema-less `[]` where Power Apps must infer collection shape.
