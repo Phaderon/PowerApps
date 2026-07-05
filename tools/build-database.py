@@ -20,6 +20,8 @@ ORDER = [
     ("known-bad-patterns.md", "Known Bad Patterns"),
     ("verified-control-reference.md", "Verified Control Reference"),
     ("powerapps-control-defaults.md", "Control Defaults (Fresh-Control Lab)"),
+    ("external-research-notes.md", "External Research: ChatGPT Property Matrix (context + precedence rule)"),
+    ("external/powerapps_canvas_control_bible_v0_1.md", "ChatGPT Control Property Matrix (2026-07-05, docs-derived, unverified)"),
     ("live-build-lessons.md", "Live Build Lessons"),
     ("real-build-quirks.md", "Real Build Quirks"),
     ("ui-patterns.md", "UI Patterns"),

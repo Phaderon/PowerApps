@@ -1,0 +1,25 @@
+{
+  "title": "Power Apps Canvas Control Bible schema v0.1",
+  "fields": [
+    "family",
+    "control",
+    "insertable_status",
+    "source_page",
+    "property",
+    "property_category",
+    "description",
+    "value_type",
+    "enum_values",
+    "default",
+    "classic_or_modern_delta",
+    "source_confidence",
+    "verification_status",
+    "notes"
+  ],
+  "confidence_levels": {
+    "High": "Directly captured from current Microsoft control page or shared property page.",
+    "Medium": "Reasonable from Microsoft docs and control family, but exact per-control page/code-view verification needed.",
+    "Gap flagged": "Known control exists but property extraction is incomplete.",
+    "Community/tooling gap": "Reported by community/tooling issue or runtime behaviour, not standard public docs."
+  }
+}

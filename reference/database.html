@@ -73,6 +73,8 @@ hr { border: none; }
 <li><a href="#known-bad-patterns-md">Known Bad Patterns</a> <code>known-bad-patterns.md</code></li>
 <li><a href="#verified-control-reference-md">Verified Control Reference</a> <code>verified-control-reference.md</code></li>
 <li><a href="#powerapps-control-defaults-md">Control Defaults (Fresh-Control Lab)</a> <code>powerapps-control-defaults.md</code></li>
+<li><a href="#external-research-notes-md">External Research: ChatGPT Property Matrix (context + precedence rule)</a> <code>external-research-notes.md</code></li>
+<li><a href="#external-powerapps-canvas-control-bible-v0-1-md">ChatGPT Control Property Matrix (2026-07-05, docs-derived, unverified)</a> <code>external/powerapps_canvas_control_bible_v0_1.md</code></li>
 <li><a href="#live-build-lessons-md">Live Build Lessons</a> <code>live-build-lessons.md</code></li>
 <li><a href="#real-build-quirks-md">Real Build Quirks</a> <code>real-build-quirks.md</code></li>
 <li><a href="#ui-patterns-md">UI Patterns</a> <code>ui-patterns.md</code></li>
@@ -4107,6 +4109,1979 @@ Shape: ='BadgeCanvas.Shape'.Rounded
 </tr>
 </tbody>
 </table>
+</section>
+<hr/>
+<section id="external-research-notes-md">
+<div class="src-tag">external-research-notes.md</div>
+<h1>External Research: ChatGPT Property Matrix (context + precedence rule)</h1>
+<h1 id="external-research-chatgpt-control-property-matrix-2026-07-05">External Research: ChatGPT Control Property Matrix (2026-07-05)</h1>
+<p>Three files landed in <code>reference/external/</code> from a separate ChatGPT research pass:
+<code>powerapps_canvas_control_bible_v0_1.md</code> (curated summary, ~870 lines),
+<code>powerapps_canvas_control_property_matrix_v0_1.csv</code> (raw property matrix, 412 rows),
+and <code>powerapps_canvas_control_bible_schema_v0_1.json</code> (the CSV's column schema).</p>
+<h2 id="what-this-is-good-for">What this is good for</h2>
+<p>Much broader <strong>property-name coverage</strong> than this Bible had compiled by hand — 412
+property rows across every Modern and Classic control Microsoft documents, including
+controls this project hasn't touched yet (e.g. it flagged a <strong><code>Rating</code></strong> modern control
+that was missing from <code>CONTROL_VERIFICATION_CHECKLIST.md</code> in the Policy Tracker repo —
+added there now). Use it as a <strong>property-name dictionary</strong>: if you're not sure whether
+a property exists on a control, check here first before guessing.</p>
+<h2 id="what-this-is-not">What this is NOT</h2>
+<p>It is honest about its own limits (its own intro says exactly this): it's derived from
+Microsoft's documentation pages, the same source class that has been <strong>wrong or
+incomplete multiple times</strong> in this project's actual live builds — <code>ModernDatePicker.
+SelectedDate</code> not being settable, <code>ModernCombobox.Reset()</code> clearing the selection
+instead of restoring it, <code>Required</code> not suppressing the clear-X on <code>ModernDropdown</code>,
+<code>GroupContainer.DropShadow</code> defaulting on. None of those specific facts would have
+been caught by more thorough documentation scraping, because the documentation itself
+doesn't mention them — they were only found by touching the real, running control.</p>
+<p>Its own confidence levels reflect this: of the 412 rows, ~171 are "High" (from an
+individual control's docs page), ~180 are "Medium" (inferred/shared, not verified per
+control), and the rest are "Gap flagged" (property list not even fully harvested yet).
+None are independently runtime-verified.</p>
+<h2 id="precedence-rule">Precedence rule</h2>
+<p><strong>When this external research conflicts with <code>known-bad-patterns.md</code> or
+<code>live-build-lessons.md</code>, this project's own empirically-confirmed entries win, every
+time.</strong> This matrix is a starting point for coverage on controls we haven't verified
+yet, not a correction to anything we've already confirmed the hard way.</p>
+<h2 id="two-genuinely-useful-pointers-surfaced-by-this-research-not-yet-followed-up">Two genuinely useful pointers surfaced by this research (not yet followed up)</h2>
+<ul>
+<li><a href="https://github.com/microsoft/power-platform-skills/issues/101"><code>microsoft/power-platform-skills</code> issue 101</a> —
+  hidden/generated properties (e.g. <code>SearchItems</code> on searchable controls) that don't
+  show up via <code>describe_control</code>/standard tooling. Worth checking if a control ever
+  seems to have an internal property we can't find documented anywhere.</li>
+<li><a href="https://github.com/microsoft/power-platform-skills/issues/146"><code>microsoft/power-platform-skills</code> issue 146</a> —
+  <code>PowerBIIntegration</code>, a runtime-injected host object, not a normal insertable
+  control — can surprise an offline schema/compiler if ever encountered.</li>
+</ul>
+<p>Full raw files: <a href="external/powerapps_canvas_control_bible_v0_1.md"><code>bible.md</code></a> ·
+<a href="external/powerapps_canvas_control_property_matrix_v0_1.csv"><code>property matrix (CSV)</code></a> ·
+<a href="external/powerapps_canvas_control_bible_schema_v0_1.json"><code>schema (JSON)</code></a></p>
+</section>
+<hr/>
+<section id="external-powerapps-canvas-control-bible-v0-1-md">
+<div class="src-tag">external/powerapps_canvas_control_bible_v0_1.md</div>
+<h1>ChatGPT Control Property Matrix (2026-07-05, docs-derived, unverified)</h1>
+<h1 id="power-apps-canvas-control-bible-v01">Power Apps Canvas Control Bible v0.1</h1>
+<p>A local, source-backed reference for Power Apps canvas controls, classic and modern. Built from the research session on 5 July 2026.
+This is deliberately honest: it separates confirmed Microsoft documentation from inferred/common properties and known gaps. It is useful now, but it is not pretending Microsoft has published a perfect canonical metadata dump.</p>
+<h2 id="status">Status</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Control inventory</td>
+<td>Strong</td>
+<td>Modern and classic/legacy documented control pages are listed from Microsoft Learn and the MicrosoftDocs GitHub tree.</td>
+</tr>
+<tr>
+<td>Property dictionary</td>
+<td>Strong for shared/common properties</td>
+<td>Core, text, accessibility, size/location, colour/border and behaviour properties are normalised.</td>
+</tr>
+<tr>
+<td>Full per-control property lists</td>
+<td>Partial</td>
+<td>Text input and Button are captured in detail for both classic and modern. Other controls are inventoried and marked for extraction/verification.</td>
+</tr>
+<tr>
+<td>Enums and dropdown values</td>
+<td>Partial</td>
+<td>Some enum families are known, but exact accepted values vary by control/version. These must be checked in the individual page or Studio.</td>
+</tr>
+<tr>
+<td>Hidden/generated/runtime properties</td>
+<td>Known gap</td>
+<td>SearchItems, PowerBIIntegration and hostControl-style objects need live/tooling verification.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="source-map">Source map</h2>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microsoft Learn, controls and properties in canvas apps</td>
+<td>https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/reference-properties</td>
+</tr>
+<tr>
+<td>Microsoft Learn, modern controls reference</td>
+<td>https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-reference</td>
+</tr>
+<tr>
+<td>Microsoft Learn, modern control updates</td>
+<td>https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-updates</td>
+</tr>
+<tr>
+<td>Microsoft Learn, core properties</td>
+<td>https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/properties-core</td>
+</tr>
+<tr>
+<td>Microsoft Learn, text properties</td>
+<td>https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/properties-text</td>
+</tr>
+<tr>
+<td>Microsoft Learn, accessibility properties</td>
+<td>https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/properties-accessibility</td>
+</tr>
+<tr>
+<td>Microsoft Learn, size and location properties</td>
+<td>https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/properties-size-location</td>
+</tr>
+<tr>
+<td>Microsoft Learn, color and border properties</td>
+<td>https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/properties-color-border</td>
+</tr>
+<tr>
+<td>Microsoft Learn, code view</td>
+<td>https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/code-view</td>
+</tr>
+<tr>
+<td>Microsoft Learn, .pa.yaml source files</td>
+<td>https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/power-apps-yaml</td>
+</tr>
+<tr>
+<td>Microsoft Docs GitHub repo, classic controls folder</td>
+<td>https://github.com/MicrosoftDocs/powerapps-docs/tree/main/powerapps-docs/maker/canvas-apps/controls</td>
+</tr>
+<tr>
+<td>Microsoft Docs GitHub repo, modern controls folder</td>
+<td>https://github.com/MicrosoftDocs/powerapps-docs/tree/main/powerapps-docs/maker/canvas-apps/controls/modern-controls</td>
+</tr>
+<tr>
+<td>Power Platform Skills issue 101, hidden/generated property gap</td>
+<td>https://github.com/microsoft/power-platform-skills/issues/101</td>
+</tr>
+<tr>
+<td>Power Platform Skills issue 146, PowerBIIntegration host control gap</td>
+<td>https://github.com/microsoft/power-platform-skills/issues/146</td>
+</tr>
+<tr>
+<td>Hardit Bhatia, The Power Addict modern control posts</td>
+<td>https://thepoweraddict.com/text-input-everything-you-want-to-know-about-modern-control-21/</td>
+</tr>
+</tbody>
+</table>
+<h2 id="control-inventory-modern-controls">Control inventory: modern controls</h2>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Page slug</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Avatar</td>
+<td>modern-control-avatar</td>
+<td>Modern control. Public summary page lists it. Exact complete property list should be harvested from the individual page/code view.</td>
+</tr>
+<tr>
+<td>Badge</td>
+<td>modern-control-badge</td>
+<td>Modern control. Used for compact status/metadata labels.</td>
+</tr>
+<tr>
+<td>Button</td>
+<td>modern-control-button</td>
+<td>Modern control. Full property list captured from research report.</td>
+</tr>
+<tr>
+<td>Card</td>
+<td>modern-control-card</td>
+<td>Modern control. Separate page found in repo/docs.</td>
+</tr>
+<tr>
+<td>Checkbox</td>
+<td>modern-control-checkbox</td>
+<td>Modern control. Boolean input.</td>
+</tr>
+<tr>
+<td>Combobox</td>
+<td>modern-control-combobox</td>
+<td>Modern control. Choice picker with search, single or multiple selection depending configuration.</td>
+</tr>
+<tr>
+<td>Copilot answer</td>
+<td>modern-control-copilot-answer</td>
+<td>Modern control. AI response display/control. Preview and tenant availability can vary.</td>
+</tr>
+<tr>
+<td>Data Grid</td>
+<td>modern-control-data-grid</td>
+<td>Modern control. Page dated June 2026 in research. Uses Data Grid Column subcontrols.</td>
+</tr>
+<tr>
+<td>Date picker</td>
+<td>modern-control-date-picker</td>
+<td>Modern control. Date input.</td>
+</tr>
+<tr>
+<td>Dropdown</td>
+<td>modern-control-dropdown</td>
+<td>Modern control. Updated 2026 property naming noted in research.</td>
+</tr>
+<tr>
+<td>Header</td>
+<td>modern-control-header</td>
+<td>Modern control. App/page header.</td>
+</tr>
+<tr>
+<td>Icon</td>
+<td>modern-control-icon</td>
+<td>Modern control. Dedicated page found although not always listed on summary page.</td>
+</tr>
+<tr>
+<td>Info button</td>
+<td>modern-control-info-button</td>
+<td>Modern control. Contextual help flyout/info.</td>
+</tr>
+<tr>
+<td>Link</td>
+<td>modern-control-link</td>
+<td>Modern control. Hyperlink/clickable text.</td>
+</tr>
+<tr>
+<td>Number input</td>
+<td>modern-control-number-input</td>
+<td>Modern control. Numeric input.</td>
+</tr>
+<tr>
+<td>Progress bar</td>
+<td>modern-control-progress-bar</td>
+<td>Modern control. Progress/status display.</td>
+</tr>
+<tr>
+<td>Radio group</td>
+<td>modern-controls-radio-group</td>
+<td>Modern control. Single selection from list.</td>
+</tr>
+<tr>
+<td>Rating</td>
+<td>modern-control-rating</td>
+<td>Modern control. Dedicated page found although not always listed on summary page.</td>
+</tr>
+<tr>
+<td>Slider</td>
+<td>modern-control-slider</td>
+<td>Modern control. Numeric range selector.</td>
+</tr>
+<tr>
+<td>Spinner</td>
+<td>modern-control-spinner</td>
+<td>Modern control. Loading/progress indicator.</td>
+</tr>
+<tr>
+<td>Stream</td>
+<td>modern-control-stream</td>
+<td>Modern control. Stream video/media integration.</td>
+</tr>
+<tr>
+<td>Table</td>
+<td>modern-control-table</td>
+<td>Modern control. Preview status noted by Microsoft search snippet in research.</td>
+</tr>
+<tr>
+<td>Tabs or tab list</td>
+<td>modern-control-tabs-or-tabs-list</td>
+<td>Modern control. Tabbed navigation/selection.</td>
+</tr>
+<tr>
+<td>Text</td>
+<td>modern-control-text</td>
+<td>Modern control. Display text.</td>
+</tr>
+<tr>
+<td>Text input</td>
+<td>modern-control-text-input</td>
+<td>Modern control. Full property list captured from research report.</td>
+</tr>
+<tr>
+<td>Toggle</td>
+<td>modern-control-toggle</td>
+<td>Modern control. Boolean on/off input.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="control-inventory-classic-legacy-structural-and-related-objects">Control inventory: classic, legacy, structural and related objects</h2>
+<table>
+<thead>
+<tr>
+<th>Control/object</th>
+<th>Page slug</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Add picture</td>
+<td>control-add-picture</td>
+<td>Image upload/capture style input.</td>
+</tr>
+<tr>
+<td>Attachments</td>
+<td>control-attachments</td>
+<td>Dataverse/SharePoint attachment editing control.</td>
+</tr>
+<tr>
+<td>Audio</td>
+<td>control-audio-video</td>
+<td>Media playback.</td>
+</tr>
+<tr>
+<td>Barcode reader</td>
+<td>control-barcodereader</td>
+<td>Modern-ish scanner experience in canvas apps, device dependent.</td>
+</tr>
+<tr>
+<td>Barcode scanner</td>
+<td>control-new-barcode-scanner</td>
+<td>Legacy scanner control, platform dependent.</td>
+</tr>
+<tr>
+<td>Button</td>
+<td>control-button</td>
+<td>Classic action button. Full list captured.</td>
+</tr>
+<tr>
+<td>Camera</td>
+<td>control-camera</td>
+<td>Device camera capture. Platform limitations apply.</td>
+</tr>
+<tr>
+<td>Card</td>
+<td>control-card</td>
+<td>Form card structural object, not normal top-level insertable in the same sense as Button.</td>
+</tr>
+<tr>
+<td>Check box</td>
+<td>control-check-box</td>
+<td>Classic boolean input.</td>
+</tr>
+<tr>
+<td>Column chart</td>
+<td>control-column-line-chart</td>
+<td>Chart display.</td>
+</tr>
+<tr>
+<td>Line chart</td>
+<td>control-column-line-chart</td>
+<td>Chart display.</td>
+</tr>
+<tr>
+<td>Column</td>
+<td>control-column</td>
+<td>Data table column subcontrol/object.</td>
+</tr>
+<tr>
+<td>Combo box</td>
+<td>control-combo-box</td>
+<td>Classic searchable choice picker.</td>
+</tr>
+<tr>
+<td>Container</td>
+<td>control-container</td>
+<td>Manual layout container.</td>
+</tr>
+<tr>
+<td>Data table</td>
+<td>control-data-table</td>
+<td>Legacy data table display/editing surface with known limitations.</td>
+</tr>
+<tr>
+<td>Date Picker</td>
+<td>control-date-picker</td>
+<td>Classic date input.</td>
+</tr>
+<tr>
+<td>Drop down</td>
+<td>control-drop-down</td>
+<td>Classic single selection list.</td>
+</tr>
+<tr>
+<td>Export</td>
+<td>control-export-import</td>
+<td>Export data from collections.</td>
+</tr>
+<tr>
+<td>Import</td>
+<td>control-export-import</td>
+<td>Import data into collections.</td>
+</tr>
+<tr>
+<td>Display form</td>
+<td>control-form-detail</td>
+<td>Read-only form.</td>
+</tr>
+<tr>
+<td>Edit form</td>
+<td>control-form-detail</td>
+<td>Editable form.</td>
+</tr>
+<tr>
+<td>Gallery</td>
+<td>control-gallery</td>
+<td>Repeated layout/control template for records.</td>
+</tr>
+<tr>
+<td>Grid container</td>
+<td>control-grid-layout</td>
+<td>Layout container.</td>
+</tr>
+<tr>
+<td>Horizontal container</td>
+<td>control-horizontal-container</td>
+<td>Auto-layout container.</td>
+</tr>
+<tr>
+<td>HTML text</td>
+<td>control-html-text</td>
+<td>HTML rendering control.</td>
+</tr>
+<tr>
+<td>Image</td>
+<td>control-image</td>
+<td>Image display.</td>
+</tr>
+<tr>
+<td>List Box</td>
+<td>control-list-box</td>
+<td>List selector.</td>
+</tr>
+<tr>
+<td>Microphone</td>
+<td>control-microphone</td>
+<td>Audio recording input.</td>
+</tr>
+<tr>
+<td>PDF viewer</td>
+<td>control-pdf-viewer</td>
+<td>PDF display.</td>
+</tr>
+<tr>
+<td>Pen input</td>
+<td>control-pen-input</td>
+<td>Ink/drawing input.</td>
+</tr>
+<tr>
+<td>Pie chart</td>
+<td>control-pie-chart</td>
+<td>Chart display.</td>
+</tr>
+<tr>
+<td>Power BI tile</td>
+<td>control-power-bi-tile</td>
+<td>Power BI embed tile.</td>
+</tr>
+<tr>
+<td>Radio</td>
+<td>control-radio</td>
+<td>Classic single selection.</td>
+</tr>
+<tr>
+<td>Rating</td>
+<td>control-rating</td>
+<td>Classic rating input/display.</td>
+</tr>
+<tr>
+<td>Rich text editor</td>
+<td>control-richtexteditor</td>
+<td>HTML rich text input.</td>
+</tr>
+<tr>
+<td>Screen</td>
+<td>control-screen</td>
+<td>Canvas screen object.</td>
+</tr>
+<tr>
+<td>Shape</td>
+<td>control-shapes-icons</td>
+<td>Visual shape.</td>
+</tr>
+<tr>
+<td>Icon</td>
+<td>control-shapes-icons</td>
+<td>Classic icon.</td>
+</tr>
+<tr>
+<td>Label</td>
+<td>control-text-box</td>
+<td>Classic display text label.</td>
+</tr>
+<tr>
+<td>Slider</td>
+<td>control-slider</td>
+<td>Numeric range selector.</td>
+</tr>
+<tr>
+<td>Text input</td>
+<td>control-text-input</td>
+<td>Classic text input. Full list captured.</td>
+</tr>
+<tr>
+<td>Timer</td>
+<td>control-timer</td>
+<td>Timer for delayed/repeated actions.</td>
+</tr>
+<tr>
+<td>Toggle</td>
+<td>control-toggle</td>
+<td>Classic boolean toggle.</td>
+</tr>
+<tr>
+<td>Vertical container</td>
+<td>control-vertical-container</td>
+<td>Auto-layout container.</td>
+</tr>
+<tr>
+<td>Video</td>
+<td>control-audio-video</td>
+<td>Media playback.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="reliability-labels-used-in-this-bible">Reliability labels used in this Bible</h2>
+<table>
+<thead>
+<tr>
+<th>Label</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>High</td>
+<td>Directly listed in Microsoft docs or captured in the research report from a Microsoft page.</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>Supported by Microsoft docs/repo structure, but exact per-control applicability still needs verification.</td>
+</tr>
+<tr>
+<td>Gap flagged</td>
+<td>Control exists, but full property list has not yet been harvested.</td>
+</tr>
+<tr>
+<td>Community/tooling gap</td>
+<td>Known through community issue, MCP/tooling behaviour, or runtime host object behaviour.</td>
+</tr>
+<tr>
+<td>Studio verification required</td>
+<td>Must be checked by inserting the control into a current canvas app and using code view or exported .pa.yaml.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="master-property-dictionary">Master property dictionary</h2>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>What it does</th>
+<th>Applies to</th>
+<th>Value/options notes</th>
+<th>Source confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Default</td>
+<td>Initial value for an input/control before user interaction or reset.</td>
+<td>Input controls, many classic and modern controls</td>
+<td>Value type depends on control: text, number, Boolean, date, record, or table.</td>
+<td>Official/shared</td>
+</tr>
+<tr>
+<td>Text</td>
+<td>Displayed text or current typed text, depending on control.</td>
+<td>Labels, buttons, text input, text modern control, links</td>
+<td>For Text input, Text is output/current value, Default is initial value.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Value</td>
+<td>Current numeric/Boolean/rating value.</td>
+<td>Slider, toggle, rating, timer-like and numeric controls</td>
+<td>Often output/readable. Some controls use Checked or Selected instead.</td>
+<td>Official/shared</td>
+</tr>
+<tr>
+<td>Items</td>
+<td>Table/list of records or values displayed by a selector/data control.</td>
+<td>Gallery, dropdown, combo box, list box, radio, data table, table</td>
+<td>Usually a table formula. Column names and Selected shape depend on control.</td>
+<td>Official/shared</td>
+</tr>
+<tr>
+<td>Selected</td>
+<td>Currently selected record/item.</td>
+<td>Gallery, dropdown, radio, table, data table</td>
+<td>Shape depends on Items. Often read-only output.</td>
+<td>Official/shared</td>
+</tr>
+<tr>
+<td>SelectedItems</td>
+<td>Selected records when multi-select is enabled.</td>
+<td>Combo box and multi-select controls</td>
+<td>Usually a table of records.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>DefaultSelectedItems</td>
+<td>Initial selected records for multi-select controls.</td>
+<td>Combo box</td>
+<td>Must match Items record shape.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>DisplayFields</td>
+<td>Fields shown in list/search results.</td>
+<td>Combo box</td>
+<td>Array/table of field names depending syntax.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>SearchFields</td>
+<td>Fields searched by user input.</td>
+<td>Combo box</td>
+<td>Array/table of field names. Delegation can matter.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>SearchText</td>
+<td>Current search text entered into searchable selector.</td>
+<td>Combo box</td>
+<td>Output style property, not always shown by tooling.</td>
+<td>Needs Studio verification</td>
+</tr>
+<tr>
+<td>SearchItems</td>
+<td>Auto-generated searchable item table used internally by some combo/search controls.</td>
+<td>Combo box and searchable controls</td>
+<td>Community issue indicates describe_control may omit it. Treat as generated/hidden.</td>
+<td>Community/tooling gap</td>
+</tr>
+<tr>
+<td>OnSelect</td>
+<td>Formula run when user selects/clicks/taps a control.</td>
+<td>Button, gallery, icons, labels, many controls</td>
+<td>Behaviour property. Can contain Power Fx actions.</td>
+<td>Official/shared</td>
+</tr>
+<tr>
+<td>OnChange</td>
+<td>Formula run when a value changes.</td>
+<td>Input controls</td>
+<td>Modern Text input changed: fires on blur, with TriggerOutput controlling downstream updates.</td>
+<td>Official/update</td>
+</tr>
+<tr>
+<td>OnCheck</td>
+<td>Formula run when a checkbox/toggle becomes true.</td>
+<td>Classic check box/toggle</td>
+<td>Some modern controls use OnChange instead.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>OnUncheck</td>
+<td>Formula run when a checkbox/toggle becomes false.</td>
+<td>Classic check box/toggle</td>
+<td>Some modern controls use OnChange instead.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>OnTimerStart</td>
+<td>Formula run when a timer starts.</td>
+<td>Timer</td>
+<td>Behaviour.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>OnTimerEnd</td>
+<td>Formula run when a timer ends.</td>
+<td>Timer</td>
+<td>Behaviour.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Reset</td>
+<td>When true, resets control to default value.</td>
+<td>Many classic inputs; not all modern controls</td>
+<td>Modern controls often lack Reset property; use Reset(control) where available.</td>
+<td>Official/community</td>
+</tr>
+<tr>
+<td>DisplayMode</td>
+<td>Interaction state of control.</td>
+<td>Most interactive controls</td>
+<td>Common values: Edit, View, Disabled.</td>
+<td>Official/shared</td>
+</tr>
+<tr>
+<td>Visible</td>
+<td>Whether the control is shown.</td>
+<td>Almost all controls</td>
+<td>Boolean formula. Hidden controls usually do not receive input.</td>
+<td>Official/shared</td>
+</tr>
+<tr>
+<td>X</td>
+<td>Horizontal position.</td>
+<td>Most visual controls</td>
+<td>Number in canvas units.</td>
+<td>Official/size-location</td>
+</tr>
+<tr>
+<td>Y</td>
+<td>Vertical position.</td>
+<td>Most visual controls</td>
+<td>Number in canvas units.</td>
+<td>Official/size-location</td>
+</tr>
+<tr>
+<td>Width</td>
+<td>Control width.</td>
+<td>Most visual controls</td>
+<td>Number in canvas units.</td>
+<td>Official/size-location</td>
+</tr>
+<tr>
+<td>Height</td>
+<td>Control height.</td>
+<td>Most visual controls</td>
+<td>Number in canvas units.</td>
+<td>Official/size-location</td>
+</tr>
+<tr>
+<td>PaddingTop</td>
+<td>Internal top spacing.</td>
+<td>Many controls</td>
+<td>Number. Modern controls use same split padding names.</td>
+<td>Official/size-location</td>
+</tr>
+<tr>
+<td>PaddingBottom</td>
+<td>Internal bottom spacing.</td>
+<td>Many controls</td>
+<td>Number.</td>
+<td>Official/size-location</td>
+</tr>
+<tr>
+<td>PaddingLeft</td>
+<td>Internal left spacing.</td>
+<td>Many controls</td>
+<td>Number.</td>
+<td>Official/size-location</td>
+</tr>
+<tr>
+<td>PaddingRight</td>
+<td>Internal right spacing.</td>
+<td>Many controls</td>
+<td>Number.</td>
+<td>Official/size-location</td>
+</tr>
+<tr>
+<td>RadiusTopLeft</td>
+<td>Top-left corner radius.</td>
+<td>Buttons, inputs, modern controls</td>
+<td>Modern updates replaced some BorderRadius use with per-corner radius.</td>
+<td>Official/update</td>
+</tr>
+<tr>
+<td>RadiusTopRight</td>
+<td>Top-right corner radius.</td>
+<td>Buttons, inputs, modern controls</td>
+<td>Number.</td>
+<td>Official/update</td>
+</tr>
+<tr>
+<td>RadiusBottomLeft</td>
+<td>Bottom-left corner radius.</td>
+<td>Buttons, inputs, modern controls</td>
+<td>Number.</td>
+<td>Official/update</td>
+</tr>
+<tr>
+<td>RadiusBottomRight</td>
+<td>Bottom-right corner radius.</td>
+<td>Buttons, inputs, modern controls</td>
+<td>Number.</td>
+<td>Official/update</td>
+</tr>
+<tr>
+<td>BorderColor</td>
+<td>Border colour.</td>
+<td>Many visual controls</td>
+<td>Colour formula or theme token depending control.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>BorderStyle</td>
+<td>Border line style.</td>
+<td>Many visual controls</td>
+<td>Common values include Solid, Dashed, Dotted, None depending control/version.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>BorderThickness</td>
+<td>Border width.</td>
+<td>Many visual controls</td>
+<td>Number.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>Fill</td>
+<td>Background fill colour.</td>
+<td>Many visual controls</td>
+<td>Colour formula.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>Color</td>
+<td>Text/foreground colour.</td>
+<td>Textual controls, modern controls</td>
+<td>Modern update renamed FontColor to Color.</td>
+<td>Official/update</td>
+</tr>
+<tr>
+<td>Font</td>
+<td>Font family.</td>
+<td>Textual controls</td>
+<td>Text enum/name.</td>
+<td>Official/text</td>
+</tr>
+<tr>
+<td>Size</td>
+<td>Text size.</td>
+<td>Textual controls</td>
+<td>Modern update renamed FontSize to Size.</td>
+<td>Official/update</td>
+</tr>
+<tr>
+<td>FontWeight</td>
+<td>Weight of text.</td>
+<td>Textual controls</td>
+<td>Common values: Lighter, Normal, Semibold, Bold.</td>
+<td>Official/text</td>
+</tr>
+<tr>
+<td>Italic</td>
+<td>Italic text.</td>
+<td>Textual controls</td>
+<td>Boolean. Modern update renamed FontItalic to Italic.</td>
+<td>Official/update</td>
+</tr>
+<tr>
+<td>Underline</td>
+<td>Underlined text.</td>
+<td>Textual controls</td>
+<td>Boolean. Modern update renamed FontUnderline to Underline.</td>
+<td>Official/update</td>
+</tr>
+<tr>
+<td>Strikethrough</td>
+<td>Strikethrough text.</td>
+<td>Textual controls</td>
+<td>Boolean. Modern update renamed FontStrikethrough to Strikethrough.</td>
+<td>Official/update</td>
+</tr>
+<tr>
+<td>Align</td>
+<td>Horizontal text/content alignment.</td>
+<td>Textual controls, buttons, inputs</td>
+<td>Common values: Left, Center, Right, Justify depending control.</td>
+<td>Official/text</td>
+</tr>
+<tr>
+<td>VerticalAlign</td>
+<td>Vertical text/content alignment.</td>
+<td>Buttons/labels and some controls</td>
+<td>Common values: Top, Middle, Bottom.</td>
+<td>Official/text</td>
+</tr>
+<tr>
+<td>LineHeight</td>
+<td>Height of each text line.</td>
+<td>Text input, labels, rich text-like controls</td>
+<td>Number.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>AccessibleLabel</td>
+<td>Screen-reader label.</td>
+<td>Most interactive/non-text controls</td>
+<td>Required for accessibility if visible text is not enough.</td>
+<td>Official/accessibility</td>
+</tr>
+<tr>
+<td>Tooltip</td>
+<td>Hover/help text.</td>
+<td>Many controls</td>
+<td>Can improve accessibility and usability.</td>
+<td>Official/shared</td>
+</tr>
+<tr>
+<td>TabIndex</td>
+<td>Keyboard navigation order.</td>
+<td>Interactive classic controls</td>
+<td>Modern controls may differ. Values &lt;= -1 can remove from tab order in classic docs.</td>
+<td>Official/accessibility</td>
+</tr>
+<tr>
+<td>ContentLanguage</td>
+<td>Language tag for control content.</td>
+<td>Textual controls and modern controls</td>
+<td>Useful for screen readers/language handling.</td>
+<td>Official/accessibility</td>
+</tr>
+<tr>
+<td>FocusedBorderColor</td>
+<td>Border colour when focused.</td>
+<td>Classic controls</td>
+<td>Classic styling property. Modern controls may not expose same property.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>FocusedBorderThickness</td>
+<td>Border thickness when focused.</td>
+<td>Classic controls</td>
+<td>Classic styling property.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>HoverColor</td>
+<td>Foreground colour on hover.</td>
+<td>Classic buttons and inputs</td>
+<td>Classic interaction styling.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>HoverFill</td>
+<td>Background colour on hover.</td>
+<td>Classic buttons and inputs</td>
+<td>Classic interaction styling.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>HoverBorderColor</td>
+<td>Border colour on hover.</td>
+<td>Classic controls</td>
+<td>Classic interaction styling.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>PressedColor</td>
+<td>Foreground colour when pressed.</td>
+<td>Classic buttons/icons</td>
+<td>Classic interaction styling.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>PressedFill</td>
+<td>Background when pressed.</td>
+<td>Classic buttons/icons</td>
+<td>Classic interaction styling.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>PressedBorderColor</td>
+<td>Border colour when pressed.</td>
+<td>Classic buttons/icons</td>
+<td>Classic interaction styling.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>DisabledColor</td>
+<td>Foreground colour when disabled.</td>
+<td>Classic controls</td>
+<td>Classic disabled styling.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>DisabledFill</td>
+<td>Background when disabled.</td>
+<td>Classic controls</td>
+<td>Classic disabled styling.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>DisabledBorderColor</td>
+<td>Border when disabled.</td>
+<td>Classic controls</td>
+<td>Classic disabled styling.</td>
+<td>Official/color-border</td>
+</tr>
+<tr>
+<td>Appearance</td>
+<td>Modern visual style variant.</td>
+<td>Modern controls</td>
+<td>Enum-based after 2026 updates. Values vary by control, e.g. Primary/Secondary/Subtle/Transparent style families. Verify per control.</td>
+<td>Official/update, verify</td>
+</tr>
+<tr>
+<td>BasePaletteColor</td>
+<td>Modern theme palette base colour.</td>
+<td>Modern controls</td>
+<td>Theme/palette value. Exact accepted values should be validated in Studio.</td>
+<td>Official/modern</td>
+</tr>
+<tr>
+<td>Icon</td>
+<td>Icon name or icon value.</td>
+<td>Classic Icon, modern Icon, modern Button, Badge maybe</td>
+<td>Modern Icon page says Fluent icon library, approximately 180 icons.</td>
+<td>Official/modern</td>
+</tr>
+<tr>
+<td>IconStyle</td>
+<td>Modern icon style.</td>
+<td>Modern Button/Icon-like controls</td>
+<td>Enum. Exact values vary and should be harvested from individual page.</td>
+<td>Official/update</td>
+</tr>
+<tr>
+<td>IconRotation</td>
+<td>Rotation applied to icon.</td>
+<td>Modern Button/Icon-like controls</td>
+<td>Number/enum depending control. Verify.</td>
+<td>Official/modern</td>
+</tr>
+<tr>
+<td>Layout</td>
+<td>Arrangement of icon/text or options.</td>
+<td>Modern Button, radio, tabs, containers</td>
+<td>Enum values vary by control.</td>
+<td>Official/update</td>
+</tr>
+<tr>
+<td>Type</td>
+<td>Input type.</td>
+<td>Modern Text input</td>
+<td>Enum TextInputType. E.g. text/password/email/number style values should be verified from docs/Studio.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>TriggerOutput</td>
+<td>When Text input outputs updates to dependent formulas.</td>
+<td>Modern Text input</td>
+<td>Controls live vs delayed updates after 2026 behaviour changes.</td>
+<td>Official/update</td>
+</tr>
+<tr>
+<td>ValidationState</td>
+<td>Validation visual state.</td>
+<td>Modern inputs/dropdowns</td>
+<td>Enum, typically None/Error/Success/Warning style. Verify exact values.</td>
+<td>Official/modern</td>
+</tr>
+<tr>
+<td>Required</td>
+<td>Whether input is required.</td>
+<td>Modern input controls</td>
+<td>Boolean. Used for validation visuals, not always data enforcement alone.</td>
+<td>Official/modern</td>
+</tr>
+<tr>
+<td>Placeholder</td>
+<td>Placeholder text.</td>
+<td>Modern Text input and similar inputs</td>
+<td>Modern equivalent to HintText in many cases.</td>
+<td>Official/modern</td>
+</tr>
+<tr>
+<td>HintText</td>
+<td>Placeholder/hint text.</td>
+<td>Classic Text input, dropdown/search controls</td>
+<td>Classic text property.</td>
+<td>Official/text</td>
+</tr>
+<tr>
+<td>MaxLength</td>
+<td>Maximum text length.</td>
+<td>Text input controls</td>
+<td>Number. 0 or blank semantics should be verified.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Mode</td>
+<td>Control mode.</td>
+<td>Classic Text input and others</td>
+<td>For Text input: single-line, multi-line, password style options depending version.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Format</td>
+<td>Data/text format.</td>
+<td>Text input, date picker, numeric controls</td>
+<td>Enum/control-specific.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Clear</td>
+<td>Shows clear button.</td>
+<td>Classic Text input</td>
+<td>Boolean.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>DelayOutput</td>
+<td>Delay text output until user pauses typing.</td>
+<td>Classic Text input</td>
+<td>Boolean. Modern equivalent is not identical, see TriggerOutput.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>EnableSpellCheck</td>
+<td>Spellchecking.</td>
+<td>Classic Text input</td>
+<td>Boolean. Browser/platform dependent.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>VirtualKeyboardMode</td>
+<td>Mobile virtual keyboard preference.</td>
+<td>Classic Text input</td>
+<td>Enum/control-specific.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>AutoDisableOnSelect</td>
+<td>Temporarily disables button while OnSelect runs.</td>
+<td>Classic Button</td>
+<td>Boolean. Helps prevent double-submit.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Pressed</td>
+<td>Whether a button/control is being pressed.</td>
+<td>Classic Button and some controls</td>
+<td>Output Boolean.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Start</td>
+<td>Starts timer/media/camera behaviour depending control.</td>
+<td>Timer, media controls</td>
+<td>Control-specific.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Duration</td>
+<td>Timer duration.</td>
+<td>Timer</td>
+<td>Milliseconds.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Repeat</td>
+<td>Repeats timer.</td>
+<td>Timer</td>
+<td>Boolean.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>AutoStart</td>
+<td>Starts automatically when visible/screen opens.</td>
+<td>Timer/media controls</td>
+<td>Boolean.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>AutoPause</td>
+<td>Pauses media automatically.</td>
+<td>Audio/video</td>
+<td>Boolean.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Media</td>
+<td>Media file/stream source.</td>
+<td>Audio, Video, Image</td>
+<td>Type varies.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Image</td>
+<td>Image source.</td>
+<td>Image, Add picture, Avatar</td>
+<td>Media/image value.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Camera</td>
+<td>Selected device camera index.</td>
+<td>Camera control</td>
+<td>Number/device dependent.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Photo</td>
+<td>Captured camera/photo output.</td>
+<td>Camera/Add picture</td>
+<td>Media output.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Stream</td>
+<td>Live camera/video stream.</td>
+<td>Camera</td>
+<td>Media stream output.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>BarcodeType</td>
+<td>Barcode type/symbology.</td>
+<td>Barcode controls</td>
+<td>Enum/control-specific. Device support varies.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>DataSource</td>
+<td>Connected data source.</td>
+<td>Forms, galleries, data table, attachments</td>
+<td>Table/data source reference.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Item</td>
+<td>Current record.</td>
+<td>Forms, cards, galleries</td>
+<td>Record.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Updates</td>
+<td>Record of changes to submit.</td>
+<td>Edit form/Data card</td>
+<td>Record.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Valid</td>
+<td>Whether form/card data is valid.</td>
+<td>Forms/cards</td>
+<td>Boolean output.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>Error</td>
+<td>Current validation/data error.</td>
+<td>Forms/cards</td>
+<td>Text output.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>ErrorKind</td>
+<td>Kind/category of error.</td>
+<td>Forms</td>
+<td>Enum output.</td>
+<td>Official/control-specific</td>
+</tr>
+<tr>
+<td>SubmitForm</td>
+<td>Function, not property. Submits an Edit form.</td>
+<td>Forms</td>
+<td>Include in Bible because form controls depend on it.</td>
+<td>Official/function</td>
+</tr>
+<tr>
+<td>ResetForm</td>
+<td>Function, not property. Resets an Edit form.</td>
+<td>Forms</td>
+<td>Include in Bible because form controls depend on it.</td>
+<td>Official/function</td>
+</tr>
+</tbody>
+</table>
+<h2 id="confirmed-full-property-maps">Confirmed full property maps</h2>
+<h3 id="classic-text-input">Classic Text input</h3>
+<p>Captured from the classic Text input control page in the research report.
+| Property |
+| --- |
+| Default |
+| Text |
+| AccessibleLabel |
+| Align |
+| BorderColor |
+| BorderStyle |
+| BorderThickness |
+| Clear |
+| Color |
+| DelayOutput |
+| DisplayMode |
+| DisabledBorderColor |
+| DisabledColor |
+| DisabledFill |
+| EnableSpellCheck |
+| Fill |
+| FocusedBorderColor |
+| FocusedBorderThickness |
+| Font |
+| FontWeight |
+| Format |
+| Height |
+| HintText |
+| HoverBorderColor |
+| HoverColor |
+| HoverFill |
+| Italic |
+| LineHeight |
+| MaxLength |
+| Mode |
+| OnChange |
+| OnSelect |
+| PaddingBottom |
+| PaddingLeft |
+| PaddingRight |
+| PaddingTop |
+| PressedBorderColor |
+| PressedColor |
+| PressedFill |
+| RadiusBottomLeft |
+| RadiusBottomRight |
+| RadiusTopLeft |
+| RadiusTopRight |
+| Reset |
+| Size |
+| Strikethrough |
+| TabIndex |
+| Tooltip |
+| Underline |
+| VirtualKeyboardMode |
+| Visible |
+| Width |
+| X |
+| Y |</p>
+<h3 id="modern-text-input">Modern Text input</h3>
+<p>Captured from the modern Text input page and modern updates page in the research report.
+| Property |
+| --- |
+| Default |
+| Text |
+| Placeholder |
+| Visible |
+| OnChange |
+| OnSelect |
+| Type |
+| TriggerOutput |
+| MaxLength |
+| Required |
+| ValidationState |
+| DisplayMode |
+| Align |
+| X |
+| Y |
+| Width |
+| Height |
+| PaddingTop |
+| PaddingBottom |
+| PaddingLeft |
+| PaddingRight |
+| Appearance |
+| BasePaletteColor |
+| Font |
+| Size |
+| Color |
+| FontWeight |
+| Italic |
+| Underline |
+| Strikethrough |
+| Fill |
+| BorderColor |
+| BorderStyle |
+| BorderThickness |
+| RadiusTopLeft |
+| RadiusTopRight |
+| RadiusBottomLeft |
+| RadiusBottomRight |
+| AccessibleLabel |
+| ContentLanguage |</p>
+<h3 id="classic-button">Classic Button</h3>
+<p>Captured from the classic Button control page in the research report.
+| Property |
+| --- |
+| OnSelect |
+| Text |
+| Align |
+| AutoDisableOnSelect |
+| BorderColor |
+| BorderStyle |
+| BorderThickness |
+| Color |
+| ContentLanguage |
+| DisplayMode |
+| DisabledBorderColor |
+| DisabledColor |
+| DisabledFill |
+| FocusedBorderColor |
+| FocusedBorderThickness |
+| Fill |
+| Font |
+| FontWeight |
+| Height |
+| HoverBorderColor |
+| HoverColor |
+| HoverFill |
+| Italic |
+| PaddingBottom |
+| PaddingLeft |
+| PaddingRight |
+| PaddingTop |
+| Pressed |
+| PressedBorderColor |
+| PressedColor |
+| PressedFill |
+| RadiusBottomLeft |
+| RadiusBottomRight |
+| RadiusTopLeft |
+| RadiusTopRight |
+| Size |
+| Strikethrough |
+| TabIndex |
+| Tooltip |
+| Underline |
+| VerticalAlign |
+| Visible |
+| Width |
+| X |
+| Y |</p>
+<h3 id="modern-button">Modern Button</h3>
+<p>Captured from the modern Button page and modern updates page in the research report.
+| Property |
+| --- |
+| Text |
+| Visible |
+| OnSelect |
+| DisplayMode |
+| X |
+| Y |
+| Width |
+| Height |
+| Align |
+| VerticalAlign |
+| PaddingTop |
+| PaddingBottom |
+| PaddingLeft |
+| PaddingRight |
+| Appearance |
+| BasePaletteColor |
+| Icon |
+| IconStyle |
+| IconRotation |
+| Layout |
+| Font |
+| Size |
+| Color |
+| FontWeight |
+| Italic |
+| Underline |
+| Strikethrough |
+| BorderColor |
+| BorderStyle |
+| BorderThickness |
+| RadiusTopLeft |
+| RadiusTopRight |
+| RadiusBottomLeft |
+| RadiusBottomRight |
+| AccessibleLabel |
+| Tooltip |
+| ContentLanguage |</p>
+<h2 id="current-per-control-property-matrix">Current per-control property matrix</h2>
+<p>This is the practical working matrix. Rows marked as gaps are not safe to treat as exhaustive yet.
+| Family | Control | Property | Meaning | Confidence | Primary source |
+| --- | --- | --- | --- | --- | --- |
+| Modern | Avatar | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-avatar |
+| Modern | Badge | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-badge |
+| Modern | Button | Text | Displayed text or current typed text, depending on control. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Visible | Whether the control is shown. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | OnSelect | Formula run when user selects/clicks/taps a control. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | DisplayMode | Interaction state of control. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | X | Horizontal position. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Y | Vertical position. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Width | Control width. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Height | Control height. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Align | Horizontal text/content alignment. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | VerticalAlign | Vertical text/content alignment. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | PaddingTop | Internal top spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | PaddingBottom | Internal bottom spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | PaddingLeft | Internal left spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | PaddingRight | Internal right spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Appearance | Modern visual style variant. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | BasePaletteColor | Modern theme palette base colour. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Icon | Icon name or icon value. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | IconStyle | Modern icon style. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | IconRotation | Rotation applied to icon. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Layout | Arrangement of icon/text or options. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Font | Font family. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Size | Text size. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Color | Text/foreground colour. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | FontWeight | Weight of text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Italic | Italic text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Underline | Underlined text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Strikethrough | Strikethrough text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | BorderColor | Border colour. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | BorderStyle | Border line style. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | BorderThickness | Border width. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | RadiusTopLeft | Top-left corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | RadiusTopRight | Top-right corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | RadiusBottomLeft | Bottom-left corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | RadiusBottomRight | Bottom-right corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | AccessibleLabel | Screen-reader label. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | Tooltip | Hover/help text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Button | ContentLanguage | Language tag for control content. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-button |
+| Modern | Card | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-card |
+| Modern | Checkbox | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-checkbox |
+| Modern | Combobox | Items | Table/list of records or values displayed by a selector/data control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | DefaultSelectedItems | Initial selected records for multi-select controls. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | Selected | Currently selected record/item. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | SelectedItems | Selected records when multi-select is enabled. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | DisplayFields | Fields shown in list/search results. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | SearchFields | Fields searched by user input. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | SearchText | Current search text entered into searchable selector. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | OnChange | Formula run when a value changes. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | ValidationState | Validation visual state. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | DisplayMode | Interaction state of control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | Visible | Whether the control is shown. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | X | Horizontal position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | Y | Vertical position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | Width | Control width. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | Height | Control height. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | AccessibleLabel | Screen-reader label. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | ContentLanguage | Language tag for control content. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | Appearance | Modern visual style variant. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Combobox | BasePaletteColor | Modern theme palette base colour. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-combobox |
+| Modern | Copilot answer | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-copilot-answer |
+| Modern | Data Grid | Items | Table/list of records or values displayed by a selector/data control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-data-grid |
+| Modern | Data Grid | Selected | Currently selected record/item. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-data-grid |
+| Modern | Data Grid | OnSelect | Formula run when user selects/clicks/taps a control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-data-grid |
+| Modern | Data Grid | ReflowBehavior | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-data-grid |
+| Modern | Data Grid | Visible | Whether the control is shown. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-data-grid |
+| Modern | Data Grid | X | Horizontal position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-data-grid |
+| Modern | Data Grid | Y | Vertical position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-data-grid |
+| Modern | Data Grid | Width | Control width. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-data-grid |
+| Modern | Data Grid | Height | Control height. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-data-grid |
+| Modern | Data Grid | AccessibleLabel | Screen-reader label. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-data-grid |
+| Modern | Data Grid | ContentLanguage | Language tag for control content. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-data-grid |
+| Modern | Date picker | SelectedDate | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | DefaultSelectedDate | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | MinDate | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | MaxDate | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | Format | Data/text format. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | OnChange | Formula run when a value changes. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | ValidationState | Validation visual state. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | DisplayMode | Interaction state of control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | Visible | Whether the control is shown. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | X | Horizontal position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | Y | Vertical position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | Width | Control width. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | Height | Control height. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | AccessibleLabel | Screen-reader label. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | ContentLanguage | Language tag for control content. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | Appearance | Modern visual style variant. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Date picker | BasePaletteColor | Modern theme palette base colour. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-date-picker |
+| Modern | Dropdown | Items | Table/list of records or values displayed by a selector/data control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Dropdown | Default | Initial value for an input/control before user interaction or reset. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Dropdown | Selected | Currently selected record/item. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Dropdown | OnChange | Formula run when a value changes. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Dropdown | ValidationState | Validation visual state. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Dropdown | DisplayMode | Interaction state of control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Dropdown | Visible | Whether the control is shown. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Dropdown | X | Horizontal position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Dropdown | Y | Vertical position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Dropdown | Width | Control width. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Dropdown | Height | Control height. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Dropdown | AccessibleLabel | Screen-reader label. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Dropdown | ContentLanguage | Language tag for control content. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Dropdown | Appearance | Modern visual style variant. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Dropdown | BasePaletteColor | Modern theme palette base colour. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-dropdown |
+| Modern | Header | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-header |
+| Modern | Icon | Icon | Icon name or icon value. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-icon |
+| Modern | Icon | IconStyle | Modern icon style. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-icon |
+| Modern | Icon | IconRotation | Rotation applied to icon. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-icon |
+| Modern | Icon | DisplayMode | Interaction state of control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-icon |
+| Modern | Icon | Visible | Whether the control is shown. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-icon |
+| Modern | Icon | X | Horizontal position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-icon |
+| Modern | Icon | Y | Vertical position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-icon |
+| Modern | Icon | Width | Control width. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-icon |
+| Modern | Icon | Height | Control height. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-icon |
+| Modern | Icon | Color | Text/foreground colour. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-icon |
+| Modern | Icon | BasePaletteColor | Modern theme palette base colour. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-icon |
+| Modern | Icon | AccessibleLabel | Screen-reader label. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-icon |
+| Modern | Icon | Tooltip | Hover/help text. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-icon |
+| Modern | Icon | ContentLanguage | Language tag for control content. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-icon |
+| Modern | Info button | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-info-button |
+| Modern | Link | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-link |
+| Modern | Number input | Value | Current numeric/Boolean/rating value. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | Default | Initial value for an input/control before user interaction or reset. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | Min | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | Max | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | Step | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | OnChange | Formula run when a value changes. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | ValidationState | Validation visual state. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | DisplayMode | Interaction state of control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | Visible | Whether the control is shown. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | X | Horizontal position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | Y | Vertical position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | Width | Control width. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | Height | Control height. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | AccessibleLabel | Screen-reader label. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | ContentLanguage | Language tag for control content. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | Appearance | Modern visual style variant. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Number input | BasePaletteColor | Modern theme palette base colour. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-number-input |
+| Modern | Progress bar | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-progress-bar |
+| Modern | Radio group | Items | Table/list of records or values displayed by a selector/data control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | Selected | Currently selected record/item. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | Default | Initial value for an input/control before user interaction or reset. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | OnChange | Formula run when a value changes. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | Layout | Arrangement of icon/text or options. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | ValidationState | Validation visual state. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | DisplayMode | Interaction state of control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | Visible | Whether the control is shown. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | X | Horizontal position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | Y | Vertical position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | Width | Control width. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | Height | Control height. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | AccessibleLabel | Screen-reader label. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | ContentLanguage | Language tag for control content. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | Appearance | Modern visual style variant. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Radio group | BasePaletteColor | Modern theme palette base colour. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-controls-radio-group |
+| Modern | Rating | Value | Current numeric/Boolean/rating value. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | Default | Initial value for an input/control before user interaction or reset. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | Max | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | Precision | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | Icon | Icon name or icon value. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | OnChange | Formula run when a value changes. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | DisplayMode | Interaction state of control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | Visible | Whether the control is shown. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | X | Horizontal position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | Y | Vertical position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | Width | Control width. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | Height | Control height. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | AccessibleLabel | Screen-reader label. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | ContentLanguage | Language tag for control content. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | Appearance | Modern visual style variant. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Rating | BasePaletteColor | Modern theme palette base colour. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-rating |
+| Modern | Slider | Value | Current numeric/Boolean/rating value. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | Default | Initial value for an input/control before user interaction or reset. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | Min | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | Max | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | Step | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | OnChange | Formula run when a value changes. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | DisplayMode | Interaction state of control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | Visible | Whether the control is shown. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | X | Horizontal position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | Y | Vertical position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | Width | Control width. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | Height | Control height. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | AccessibleLabel | Screen-reader label. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | ContentLanguage | Language tag for control content. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | Appearance | Modern visual style variant. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Slider | BasePaletteColor | Modern theme palette base colour. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-slider |
+| Modern | Spinner | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-spinner |
+| Modern | Stream | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-stream |
+| Modern | Table | Items | Table/list of records or values displayed by a selector/data control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-table |
+| Modern | Table | Selected | Currently selected record/item. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-table |
+| Modern | Table | OnSelect | Formula run when user selects/clicks/taps a control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-table |
+| Modern | Table | ReflowBehavior | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-table |
+| Modern | Table | Visible | Whether the control is shown. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-table |
+| Modern | Table | X | Horizontal position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-table |
+| Modern | Table | Y | Vertical position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-table |
+| Modern | Table | Width | Control width. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-table |
+| Modern | Table | Height | Control height. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-table |
+| Modern | Table | AccessibleLabel | Screen-reader label. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-table |
+| Modern | Table | ContentLanguage | Language tag for control content. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-table |
+| Modern | Tabs or tab list | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-tabs-or-tabs-list |
+| Modern | Text | Text | Displayed text or current typed text, depending on control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | Size | Text size. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | Color | Text/foreground colour. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | Font | Font family. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | FontWeight | Weight of text. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | Italic | Italic text. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | Underline | Underlined text. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | Strikethrough | Strikethrough text. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | Align | Horizontal text/content alignment. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | Visible | Whether the control is shown. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | X | Horizontal position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | Y | Vertical position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | Width | Control width. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | Height | Control height. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | AccessibleLabel | Screen-reader label. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text | ContentLanguage | Language tag for control content. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text |
+| Modern | Text input | Default | Initial value for an input/control before user interaction or reset. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Text | Displayed text or current typed text, depending on control. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Placeholder | Placeholder text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Visible | Whether the control is shown. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | OnChange | Formula run when a value changes. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | OnSelect | Formula run when user selects/clicks/taps a control. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Type | Input type. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | TriggerOutput | When Text input outputs updates to dependent formulas. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | MaxLength | Maximum text length. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Required | Whether input is required. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | ValidationState | Validation visual state. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | DisplayMode | Interaction state of control. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Align | Horizontal text/content alignment. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | X | Horizontal position. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Y | Vertical position. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Width | Control width. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Height | Control height. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | PaddingTop | Internal top spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | PaddingBottom | Internal bottom spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | PaddingLeft | Internal left spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | PaddingRight | Internal right spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Appearance | Modern visual style variant. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | BasePaletteColor | Modern theme palette base colour. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Font | Font family. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Size | Text size. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Color | Text/foreground colour. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | FontWeight | Weight of text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Italic | Italic text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Underline | Underlined text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Strikethrough | Strikethrough text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | Fill | Background fill colour. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | BorderColor | Border colour. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | BorderStyle | Border line style. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | BorderThickness | Border width. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | RadiusTopLeft | Top-left corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | RadiusTopRight | Top-right corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | RadiusBottomLeft | Bottom-left corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | RadiusBottomRight | Bottom-right corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | AccessibleLabel | Screen-reader label. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Text input | ContentLanguage | Language tag for control content. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-text-input |
+| Modern | Toggle | Checked | Control-specific property. Definition should be verified against the current control page or Studio code view. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-toggle |
+| Modern | Toggle | Default | Initial value for an input/control before user interaction or reset. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-toggle |
+| Modern | Toggle | OnChange | Formula run when a value changes. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-toggle |
+| Modern | Toggle | DisplayMode | Interaction state of control. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-toggle |
+| Modern | Toggle | Visible | Whether the control is shown. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-toggle |
+| Modern | Toggle | X | Horizontal position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-toggle |
+| Modern | Toggle | Y | Vertical position. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-toggle |
+| Modern | Toggle | Width | Control width. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-toggle |
+| Modern | Toggle | Height | Control height. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-toggle |
+| Modern | Toggle | AccessibleLabel | Screen-reader label. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-toggle |
+| Modern | Toggle | ContentLanguage | Language tag for control content. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-toggle |
+| Modern | Toggle | Appearance | Modern visual style variant. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-toggle |
+| Modern | Toggle | BasePaletteColor | Modern theme palette base colour. | Medium, needs per-control verification | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/modern-controls/modern-control-toggle |
+| Classic | Add picture | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-add-picture |
+| Classic | Attachments | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-attachments |
+| Classic | Audio | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-audio-video |
+| Classic | Barcode reader | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-barcodereader |
+| Classic | Barcode scanner | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-new-barcode-scanner |
+| Classic | Button | OnSelect | Formula run when user selects/clicks/taps a control. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Text | Displayed text or current typed text, depending on control. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Align | Horizontal text/content alignment. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | AutoDisableOnSelect | Temporarily disables button while OnSelect runs. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | BorderColor | Border colour. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | BorderStyle | Border line style. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | BorderThickness | Border width. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Color | Text/foreground colour. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | ContentLanguage | Language tag for control content. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | DisplayMode | Interaction state of control. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | DisabledBorderColor | Border when disabled. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | DisabledColor | Foreground colour when disabled. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | DisabledFill | Background when disabled. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | FocusedBorderColor | Border colour when focused. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | FocusedBorderThickness | Border thickness when focused. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Fill | Background fill colour. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Font | Font family. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | FontWeight | Weight of text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Height | Control height. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | HoverBorderColor | Border colour on hover. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | HoverColor | Foreground colour on hover. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | HoverFill | Background colour on hover. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Italic | Italic text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | PaddingBottom | Internal bottom spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | PaddingLeft | Internal left spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | PaddingRight | Internal right spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | PaddingTop | Internal top spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Pressed | Whether a button/control is being pressed. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | PressedBorderColor | Border colour when pressed. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | PressedColor | Foreground colour when pressed. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | PressedFill | Background when pressed. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | RadiusBottomLeft | Bottom-left corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | RadiusBottomRight | Bottom-right corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | RadiusTopLeft | Top-left corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | RadiusTopRight | Top-right corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Size | Text size. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Strikethrough | Strikethrough text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | TabIndex | Keyboard navigation order. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Tooltip | Hover/help text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Underline | Underlined text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | VerticalAlign | Vertical text/content alignment. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Visible | Whether the control is shown. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Width | Control width. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | X | Horizontal position. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Button | Y | Vertical position. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-button |
+| Classic | Camera | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-camera |
+| Classic | Card | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-card |
+| Classic | Check box | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-check-box |
+| Classic | Column chart | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-column-line-chart |
+| Classic | Line chart | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-column-line-chart |
+| Classic | Column | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-column |
+| Classic | Combo box | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-combo-box |
+| Classic | Container | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-container |
+| Classic | Data table | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-data-table |
+| Classic | Date Picker | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-date-picker |
+| Classic | Drop down | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-drop-down |
+| Classic | Export | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-export-import |
+| Classic | Import | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-export-import |
+| Classic | Display form | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-form-detail |
+| Classic | Edit form | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-form-detail |
+| Classic | Gallery | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-gallery |
+| Classic | Grid container | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-grid-layout |
+| Classic | Horizontal container | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-horizontal-container |
+| Classic | HTML text | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-html-text |
+| Classic | Image | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-image |
+| Classic | List Box | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-list-box |
+| Classic | Microphone | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-microphone |
+| Classic | PDF viewer | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-pdf-viewer |
+| Classic | Pen input | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-pen-input |
+| Classic | Pie chart | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-pie-chart |
+| Classic | Power BI tile | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-power-bi-tile |
+| Classic | Radio | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-radio |
+| Classic | Rating | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-rating |
+| Classic | Rich text editor | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-richtexteditor |
+| Classic | Screen | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-screen |
+| Classic | Shape | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-shapes-icons |
+| Classic | Icon | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-shapes-icons |
+| Classic | Label | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-box |
+| Classic | Slider | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-slider |
+| Classic | Text input | Default | Initial value for an input/control before user interaction or reset. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Text | Displayed text or current typed text, depending on control. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | AccessibleLabel | Screen-reader label. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Align | Horizontal text/content alignment. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | BorderColor | Border colour. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | BorderStyle | Border line style. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | BorderThickness | Border width. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Clear | Shows clear button. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Color | Text/foreground colour. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | DelayOutput | Delay text output until user pauses typing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | DisplayMode | Interaction state of control. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | DisabledBorderColor | Border when disabled. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | DisabledColor | Foreground colour when disabled. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | DisabledFill | Background when disabled. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | EnableSpellCheck | Spellchecking. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Fill | Background fill colour. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | FocusedBorderColor | Border colour when focused. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | FocusedBorderThickness | Border thickness when focused. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Font | Font family. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | FontWeight | Weight of text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Format | Data/text format. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Height | Control height. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | HintText | Placeholder/hint text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | HoverBorderColor | Border colour on hover. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | HoverColor | Foreground colour on hover. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | HoverFill | Background colour on hover. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Italic | Italic text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | LineHeight | Height of each text line. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | MaxLength | Maximum text length. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Mode | Control mode. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | OnChange | Formula run when a value changes. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | OnSelect | Formula run when user selects/clicks/taps a control. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | PaddingBottom | Internal bottom spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | PaddingLeft | Internal left spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | PaddingRight | Internal right spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | PaddingTop | Internal top spacing. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | PressedBorderColor | Border colour when pressed. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | PressedColor | Foreground colour when pressed. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | PressedFill | Background when pressed. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | RadiusBottomLeft | Bottom-left corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | RadiusBottomRight | Bottom-right corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | RadiusTopLeft | Top-left corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | RadiusTopRight | Top-right corner radius. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Reset | When true, resets control to default value. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Size | Text size. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Strikethrough | Strikethrough text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | TabIndex | Keyboard navigation order. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Tooltip | Hover/help text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Underline | Underlined text. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | VirtualKeyboardMode | Mobile virtual keyboard preference. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Visible | Whether the control is shown. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Width | Control width. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | X | Horizontal position. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Text input | Y | Vertical position. | High | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-text-input |
+| Classic | Timer | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-timer |
+| Classic | Toggle | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-toggle |
+| Classic | Vertical container | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-vertical-container |
+| Classic | Video | PROPERTY SET NOT YET FULLY HARVESTED | Individual Microsoft page exists or is inferred from docs tree, but exact property list needs extraction from Learn/GitHub and Studio code view. | Gap flagged | https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-audio-video |</p>
+<h2 id="known-gaps-and-traps">Known gaps and traps</h2>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Why it matters</th>
+<th>How to verify/fill it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Modern controls summary is not a complete index</td>
+<td>Research found Icon and Rating dedicated pages even though the summary list can omit them.</td>
+<td>Use the MicrosoftDocs repo tree as the inventory, not only the Learn summary page.</td>
+</tr>
+<tr>
+<td>Shared property pages are separate from control pages</td>
+<td>A control page may not make every shared property obvious.</td>
+<td>Join control pages with core, text, accessibility, size/location and colour/border property pages.</td>
+</tr>
+<tr>
+<td>Modern 2026 property renames</td>
+<td>Older blogs/screenshots may use names such as FontColor, FontSize, FontItalic, BorderRadius.</td>
+<td>Map old names to Color, Size, Italic, Radius* etc using modern-control-updates.</td>
+</tr>
+<tr>
+<td>Modern Text input OnChange behaviour changed</td>
+<td>Older assumptions about per-keystroke OnChange can be wrong.</td>
+<td>Use TriggerOutput and test in Studio.</td>
+</tr>
+<tr>
+<td>SearchItems and generated properties</td>
+<td>Tooling issue reports hidden/generated properties not exposed by describe_control.</td>
+<td>Export .pa.yaml and compare Studio code view against authoring tooling.</td>
+</tr>
+<tr>
+<td>PowerBIIntegration host control</td>
+<td>Runtime-injected object, not normal insertable control, can break offline compiler schema.</td>
+<td>Keep runtime/host controls in a separate section.</td>
+</tr>
+<tr>
+<td>Custom components</td>
+<td>Properties are maker-defined, so there is no universal list.</td>
+<td>Document component schema and each component separately from built-in controls.</td>
+</tr>
+<tr>
+<td>Preview/tenant-gated controls</td>
+<td>Controls such as Copilot-related or table/grid variants can vary by environment.</td>
+<td>Record environment, Studio version, feature flags and tenant settings.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="recommended-harvesting-workflow">Recommended harvesting workflow</h2>
+<p>Use this workflow to turn v0.1 into a genuinely brutal local knowledge base.
+| Step | Action | Output |
+| --- | --- | --- |
+| 1 | Clone or download MicrosoftDocs/powerapps-docs controls folder and modern-controls subfolder. | Local markdown source cache. |
+| 2 | Parse every markdown page for Properties, Key properties, Additional properties and Applies to tables. | Raw property rows. |
+| 3 | Merge shared property pages into every control where the page says the property applies. | Normalised property matrix. |
+| 4 | Insert every control into a blank canvas app, open Code view, copy YAML, then export .msapp/.pa.yaml. | Studio-observed property baseline. |
+| 5 | Compare docs properties vs Studio properties vs .pa.yaml. | Gap report: missing, renamed, hidden, generated, runtime-only. |
+| 6 | Add community/tooling issues as annotations only, not as official truth. | Confidence notes. |
+| 7 | Regenerate Markdown, CSV and optional DOCX monthly or before major builds. | Versioned local Bible. |</p>
+<h2 id="copypaste-prompt-for-claude-or-codex-to-continue-the-extraction">Copy/paste prompt for Claude or Codex to continue the extraction</h2>
+<p>Use this as a build prompt if you want an agent to complete the harvester against a local clone:</p>
+<pre><code class="language-text">Build a Power Apps canvas control documentation harvester. Use the local MicrosoftDocs/powerapps-docs repository. Parse powerapps-docs/maker/canvas-apps/controls and controls/modern-controls. For every markdown file that represents a control, extract control name, classic/modern family, page path, description, key properties, additional properties, enum/value notes, deprecation/preview notes, and source line references where possible. Then parse shared property pages properties-core, properties-text, properties-accessibility, properties-size-location, and properties-color-border, and join shared properties to controls where the docs say they apply. Emit powerapps_controls.json, powerapps_properties.csv, gap_report.md, and bible.md. Mark each property confidence as direct, shared-inferred, community, runtime-only, or needs-studio-verification. Do not invent missing enum values.
+</code></pre>
+<h2 id="version-notes">Version notes</h2>
+<p>v0.1 is a grounded starter Bible, not a final canonical dump. It prioritises truthfulness over fake completeness. The next version should automate extraction from the docs repository and then validate by Studio Code View.</p>
 </section>
 <hr/>
 <section id="live-build-lessons-md">
