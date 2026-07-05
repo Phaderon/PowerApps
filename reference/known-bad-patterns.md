@@ -4,6 +4,15 @@ Last checked: 2026-06-25
 
 These are mistakes that must not reappear in this guide family.
 
+## Blacklisted Controls — Do Not Use, In Any Project
+
+- **`Copilot answer (preview)` modern control.** User directive 2026-07-05: do not
+  propose, verify, or insert this control anywhere, in any Power Apps project across
+  this whole family — not a "low priority, verify later" item, an outright blacklist.
+  Reason given: likely government/organisational cost or licensing tier attached to
+  AI/Copilot features at work. Do not suggest it as an option even when a feature
+  genuinely sounds like a good fit for it.
+
 ## Control Properties
 
 - **`GroupContainer@1.5.0` (both `ManualLayout` and `AutoLayout` variants) has `DropShadow` ON by default when the property is left unset.** Not a visible/obvious default — you have to explicitly write `DropShadow: =DropShadow.None` on every single container to turn it off, or every card/row/panel in a whole screen gets an unwanted shadow. Confirmed the hard way on Policy Tracker `ViewItem_1`: every container across the whole screen had a stray drop shadow because this was never set, and it had to be manually stripped from each one after the fact. **Always set `DropShadow: =DropShadow.None` explicitly on every `GroupContainer` unless a shadow is actually wanted for that specific one** (e.g. a modal card popping over a dimmed background) — never rely on the unset/default state being "no shadow."
