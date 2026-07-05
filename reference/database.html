@@ -184,6 +184,17 @@ python3 tools/index-msdocs.py --rebuild
   Reason given: likely government/organisational cost or licensing tier attached to
   AI/Copilot features at work. Do not suggest it as an option even when a feature
   genuinely sounds like a good fit for it.</li>
+<li><strong><code>Header</code> modern control (<code>ModernHeader</code>).</strong> Verified 2026-07-05 against Microsoft's
+  own docs: "Unsupported capabilities: Customization of colors, App navigation." It
+  only exposes <code>Title</code>/<code>Logo</code>/<code>IsProfilePictureVisible</code> — no way to add custom action
+  buttons (Save/Close/Delete etc.) or nav links. Cannot replace a hand-built action-bar
+  top bar. Don't propose it for that purpose again.</li>
+<li><strong><code>Card</code> modern control (<code>ModernCard@1.0.0</code>).</strong> Verified 2026-07-05: fixed,
+  non-composable template (<code>Title</code>/<code>Subtitle</code>/<code>Description</code>/<code>Image</code> + a single
+  <code>OnSelect</code> for the <em>whole</em> card). Does not support layering independent action
+  buttons (edit/delete icons, "Open in App") on top of a full-card click target — the
+  pattern every link/dashboard card in this app family actually needs. Don't propose
+  it as a replacement for hand-built card patterns.</li>
 </ul>
 <h2 id="control-properties">Control Properties</h2>
 <ul>

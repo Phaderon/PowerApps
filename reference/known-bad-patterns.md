@@ -12,6 +12,17 @@ These are mistakes that must not reappear in this guide family.
   Reason given: likely government/organisational cost or licensing tier attached to
   AI/Copilot features at work. Do not suggest it as an option even when a feature
   genuinely sounds like a good fit for it.
+- **`Header` modern control (`ModernHeader`).** Verified 2026-07-05 against Microsoft's
+  own docs: "Unsupported capabilities: Customization of colors, App navigation." It
+  only exposes `Title`/`Logo`/`IsProfilePictureVisible` — no way to add custom action
+  buttons (Save/Close/Delete etc.) or nav links. Cannot replace a hand-built action-bar
+  top bar. Don't propose it for that purpose again.
+- **`Card` modern control (`ModernCard@1.0.0`).** Verified 2026-07-05: fixed,
+  non-composable template (`Title`/`Subtitle`/`Description`/`Image` + a single
+  `OnSelect` for the *whole* card). Does not support layering independent action
+  buttons (edit/delete icons, "Open in App") on top of a full-card click target — the
+  pattern every link/dashboard card in this app family actually needs. Don't propose
+  it as a replacement for hand-built card patterns.
 
 ## Control Properties
 
