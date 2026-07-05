@@ -1,14 +1,28 @@
-# PowerApps Guide Library Agent Instructions
+# PowerApps Guide Library Agent Instructions — "The Power Apps Bible"
 
-Before creating or editing Power Apps guides in this repo, read:
+This repo is referred to as **the Power Apps Bible** in every project that uses it. If
+a user or another session says "consult the Power Apps Bible," this repo is what they
+mean.
 
+**Always start here:** `reference/database.html` — every reference document in this
+repo consolidated onto one page, in reading order (known-bad-patterns first, since
+that's the highest-signal "here's exactly what broke and how to fix it" content).
+Live at `https://phaderon.github.io/PowerApps/reference/database.html`. Fetch that one
+URL/file first for any Power Apps question — it replaces needing to guess which of the
+individual files below to check.
+
+The individual files remain the editable sources (edit these, then re-run
+`python3 tools/build-database.py` to republish `reference/database.html`):
+
+- `reference/known-bad-patterns.md` — confirmed-wrong properties/formulas/patterns, the single highest-value file
 - `reference/powerapps-bible.md` — entry point and reading order
+- `reference/verified-control-reference.md` — exact property lists per control, verified
+- `reference/powerapps-control-defaults.md` — lab-derived fresh-control defaults
 - `reference/real-build-quirks.md` — live editor confirmed quirks
 - `reference/live-build-lessons.md` — lessons from Training Tracker GitHub issues (priority read for new apps)
 - `reference/guide-authoring-rules.md`
-- `reference/verified-control-reference.md`
-- `reference/powerapps-control-defaults.md`
-- `reference/known-bad-patterns.md`
+- `reference/external/` — separately-produced (ChatGPT) research: broader property-name coverage, NOT independently runtime-verified. See `reference/external-research-notes.md` for the precedence rule — this project's own `known-bad-patterns.md`/`live-build-lessons.md` always win on conflict.
+- `docs/CONTROL_VERIFICATION_CHECKLIST.md` in the relevant per-project repo (e.g. `PhadeDev/policy-tracker`) — the ground-truth "look at it, poke it" verification checklist, scoped to controls that project actually uses or might use, as opposed to Microsoft's entire catalogue
 
 Load these when relevant:
 
