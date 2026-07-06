@@ -73,6 +73,44 @@ def find_dropdown_errors(text: str) -> list[tuple[int, str]]:
     return errors
 
 
+def find_radius_shape_errors(text: str) -> list[tuple[int, str]]:
+    """Rectangle and Label do not support any Radius* property in this app family, confirmed
+    three separate times (2026-06-23, 2026-07-04 issue #7, 2026-07-06 this guide's ChipBg/dots).
+    Classic Button with DisplayMode.View is the only confirmed-working rounded-shape substitute."""
+    errors: list[tuple[int, str]] = []
+    for row in re.finditer(r"<tr>.*?</tr>", text, flags=re.IGNORECASE | re.DOTALL):
+        row_text = row.group(0)
+        cells = re.findall(r"<td>(.*?)</td>", row_text, flags=re.IGNORECASE | re.DOTALL)
+        if len(cells) < 2:
+            continue
+        control_type_cell = cells[1]
+        is_rectangle = bool(re.search(r"\bRectangle\b", control_type_cell, re.IGNORECASE))
+        is_label = bool(re.search(r"^\s*Label\b", control_type_cell, re.IGNORECASE))
+        is_button_workaround = bool(re.search(r"Classic\s*/?\s*Button", control_type_cell, re.IGNORECASE))
+        has_radius = bool(re.search(r"radius", row_text, re.IGNORECASE))
+        if (is_rectangle or is_label) and not is_button_workaround and has_radius:
+            errors.append((
+                line_for_offset(text, row.start()),
+                "Rectangle/Label row mentions radius - neither control supports Radius* properties. "
+                "Use Classic Button with DisplayMode.View + Text=blank instead.",
+            ))
+    return errors
+
+
+def find_table_concat_errors(text: str) -> list[tuple[int, str]]:
+    """`&` only concatenates Text/Number/Date/etc scalars, never two tables. A Table({...})
+    literal immediately followed by `&` and an identifier is almost always someone trying to
+    union two tables the wrong way - confirmed on Policy Tracker Main, 2026-07-06."""
+    errors: list[tuple[int, str]] = []
+    for match in re.finditer(r"Table\(\s*\{[^{}]*\}\s*\)\s*&amp;\s*[A-Za-z_]", text):
+        errors.append((
+            line_for_offset(text, match.start()),
+            "Table({...}) & identifier - & cannot concatenate two tables. "
+            "Use ClearCollect(coll, {newRow}) then Collect(coll, existingTableOrForAll) instead.",
+        ))
+    return errors
+
+
 def find_toggle_errors(text: str) -> list[tuple[int, str]]:
     errors: list[tuple[int, str]] = []
     for row in re.finditer(r"<tr>.*?</tr>", text, flags=re.IGNORECASE | re.DOTALL):
@@ -107,6 +145,12 @@ def audit(path: Path) -> list[tuple[int, str, str]]:
 
     for line, message in find_toggle_errors(text):
         findings.append((line, "Toggle row", message))
+
+    for line, message in find_radius_shape_errors(text):
+        findings.append((line, "Radius on Rectangle/Label", message))
+
+    for line, message in find_table_concat_errors(text):
+        findings.append((line, "Table & concat", message))
 
     return sorted(findings, key=lambda item: item[0])
 
