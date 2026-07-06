@@ -23,6 +23,12 @@ These are mistakes that must not reappear in this guide family.
   buttons (edit/delete icons, "Open in App") on top of a full-card click target — the
   pattern every link/dashboard card in this app family actually needs. Don't propose
   it as a replacement for hand-built card patterns.
+- **`ModernTabList` (`TabListCanvas`) / Tabs modern control.** User directive
+  2026-07-06: blacklisted, do not use in any project. Confirmed broken even by
+  Microsoft's own standard — pasting Microsoft's own published example markup for this
+  control straight from their docs into the browser editor throws errors, it's not a
+  Policy Tracker-specific formula mistake. Don't propose it as a segmented-tab/filter
+  replacement for hand-built tab rows.
 
 ## Control Properties
 
