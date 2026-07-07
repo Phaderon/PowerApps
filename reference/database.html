@@ -174,8 +174,9 @@ python3 tools/index-msdocs.py --rebuild
 <div class="src-tag">known-bad-patterns.md</div>
 <h1>Known Bad Patterns</h1>
 <h1 id="known-bad-patterns">Known Bad Patterns</h1>
-<p>Last checked: 2026-06-25</p>
+<p>Last checked: 2026-07-08</p>
 <p>These are mistakes that must not reappear in this guide family.</p>
+<p><strong>Read this before generalizing any entry below into "avoid this whole control."</strong> Every entry here documents ONE specific broken property or pattern on a control, not a blanket verdict on the control itself. A control having one confirmed bug is not evidence that a <em>different</em> symptom on that same control shares the same root cause. Before recommending a full control swap because "this control is already known to be broken," re-check that the specific property causing the <em>current</em> symptom is the same one named in the entry — if it isn't, diagnose the new symptom fresh, don't reach for the existing fix. (This rule exists because a full <code>ModernDatePicker</code> swap got recommended for a one-character <code>Format</code> string bug, off the back of an entry below about a completely unrelated <code>SelectedDate</code> bug on the same control — see <code>feedback_minimal_fix_before_destructive</code> in memory.)</p>
 <h2 id="blacklisted-controls-do-not-use-in-any-project">Blacklisted Controls — Do Not Use, In Any Project</h2>
 <ul>
 <li><strong><code>Copilot answer (preview)</code> modern control.</strong> User directive 2026-07-05: do not

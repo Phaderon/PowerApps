@@ -1,8 +1,10 @@
 # Known Bad Patterns
 
-Last checked: 2026-06-25
+Last checked: 2026-07-08
 
 These are mistakes that must not reappear in this guide family.
+
+**Read this before generalizing any entry below into "avoid this whole control."** Every entry here documents ONE specific broken property or pattern on a control, not a blanket verdict on the control itself. A control having one confirmed bug is not evidence that a *different* symptom on that same control shares the same root cause. Before recommending a full control swap because "this control is already known to be broken," re-check that the specific property causing the *current* symptom is the same one named in the entry — if it isn't, diagnose the new symptom fresh, don't reach for the existing fix. (This rule exists because a full `ModernDatePicker` swap got recommended for a one-character `Format` string bug, off the back of an entry below about a completely unrelated `SelectedDate` bug on the same control — see `feedback_minimal_fix_before_destructive` in memory.)
 
 ## Blacklisted Controls — Do Not Use, In Any Project
 
