@@ -126,6 +126,65 @@ def find_radius_shape_errors_yaml(text: str) -> list[tuple[int, str]]:
     return errors
 
 
+def find_missing_fillportions_errors(text: str) -> list[tuple[int, str]]:
+    """A GroupContainer/control with an explicit Height or Width, nested directly under a
+    Variant: AutoLayout container's Children, needs FillPortions stated explicitly (0 for
+    fixed-size, 1+ for the one region meant to stretch) or it silently ignores its own
+    Height/Width and expands to fill the parent's remaining space -- confirmed root cause,
+    ViewItem_1 conTopBar1/conWarningBar1/conCompactStepper1 (2026-07-05) and again on
+    ThursdayPickerModal1's conThuModalCard1 (2026-07-10), both times the working reference
+    pattern (DeleteItemModal1: FillPortions: =0 on its fixed conModalData1/conHeaderPopUp1,
+    FillPortions: =1 on the one stretchy txtModalText1) was already available and not copied
+    over. Uses a real YAML parse of each <pre> block rather than regex, since this needs
+    actual parent/child structure, not line-adjacency guessing."""
+    import yaml
+
+    errors: list[tuple[int, str]] = []
+
+    def walk(node, in_autolayout_children: bool, block_start: int, block_text: str):
+        if isinstance(node, list):
+            for item in node:
+                if isinstance(item, dict):
+                    for ctrl_name, ctrl_def in item.items():
+                        if not isinstance(ctrl_def, dict):
+                            continue
+                        props = ctrl_def.get("Properties", {}) or {}
+                        if in_autolayout_children:
+                            has_size = any(k in props for k in ("Height", "Width"))
+                            has_fillportions = "FillPortions" in props
+                            if has_size and not has_fillportions:
+                                marker = f"{ctrl_name}:"
+                                pos = block_text.find(marker)
+                                offset = block_start + (pos if pos >= 0 else 0)
+                                errors.append((
+                                    line_for_offset(text, offset),
+                                    f"{ctrl_name} has Height/Width but no FillPortions, and its parent is Variant: AutoLayout -- "
+                                    "will silently ignore its own size and stretch to fill remaining space. State FillPortions "
+                                    "explicitly (0 to hold the fixed size, 1+ if this is the one region meant to stretch).",
+                                ))
+                        child_variant = ctrl_def.get("Variant")
+                        child_is_autolayout = child_variant == "AutoLayout"
+                        children = ctrl_def.get("Children")
+                        if children is not None:
+                            walk(children, child_is_autolayout, block_start, block_text)
+
+    for block in re.finditer(r"<pre>(.*?)</pre>", text, flags=re.IGNORECASE | re.DOTALL):
+        block_text = block.group(1)
+        block_start = block.start(1)
+        stripped = block_text.strip()
+        if not stripped.startswith("-"):
+            continue
+        try:
+            parsed = yaml.safe_load(block_text)
+        except Exception:
+            continue
+        if not isinstance(parsed, list):
+            continue
+        walk(parsed, False, block_start, block_text)
+
+    return errors
+
+
 def find_table_concat_errors(text: str) -> list[tuple[int, str]]:
     """`&` only concatenates Text/Number/Date/etc scalars, never two tables. A Table({...})
     literal immediately followed by `&` and an identifier is almost always someone trying to
@@ -183,6 +242,9 @@ def audit(path: Path) -> list[tuple[int, str, str]]:
 
     for line, message in find_table_concat_errors(text):
         findings.append((line, "Table & concat", message))
+
+    for line, message in find_missing_fillportions_errors(text):
+        findings.append((line, "Missing FillPortions in AutoLayout", message))
 
     return sorted(findings, key=lambda item: item[0])
 
