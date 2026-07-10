@@ -97,6 +97,35 @@ def find_radius_shape_errors(text: str) -> list[tuple[int, str]]:
     return errors
 
 
+def find_radius_shape_errors_yaml(text: str) -> list[tuple[int, str]]:
+    """Same rule as find_radius_shape_errors but for real pasteable YAML code blocks
+    (Control: Rectangle@2.3.0 / Control: Label@2.5.1 ...) rather than <table> guide rows.
+    Added 2026-07-10 after this exact mistake shipped in the Thursday Date Picker guide --
+    the table-row checker above only ever looked inside <tr> rows and had no way to see a
+    control type that only appears as a bare `Control: X@Y` line inside a <pre> block."""
+    errors: list[tuple[int, str]] = []
+    for block in re.finditer(r"<pre>(.*?)</pre>", text, flags=re.IGNORECASE | re.DOTALL):
+        block_text = block.group(1)
+        block_start = block.start(1)
+        pending_type: str | None = None
+        pending_offset = 0
+        for line_match in re.finditer(r"[^\n]*\n?", block_text):
+            line = line_match.group(0)
+            if not line:
+                continue
+            ctrl_match = re.search(r"Control:\s*(Rectangle|Label|Classic\s*/\s*Button|[A-Za-z]+)@", line)
+            if ctrl_match:
+                pending_type = ctrl_match.group(1).replace(" ", "")
+                pending_offset = block_start + line_match.start()
+                continue
+            if pending_type and pending_type.lower() in ("rectangle", "label") and re.search(r"\bRadius(TopLeft|TopRight|BottomLeft|BottomRight)?\s*:", line):
+                errors.append((
+                    line_for_offset(text, block_start + line_match.start()),
+                    f"YAML block: Control: {pending_type}@... (around line {line_for_offset(text, pending_offset)}) followed by a Radius* property -- neither Rectangle nor Label supports Radius. Use Classic/Button@2.2.0 with DisplayMode.View, or GroupContainer/ModernText if text-bearing.",
+                ))
+    return errors
+
+
 def find_table_concat_errors(text: str) -> list[tuple[int, str]]:
     """`&` only concatenates Text/Number/Date/etc scalars, never two tables. A Table({...})
     literal immediately followed by `&` and an identifier is almost always someone trying to
@@ -148,6 +177,9 @@ def audit(path: Path) -> list[tuple[int, str, str]]:
 
     for line, message in find_radius_shape_errors(text):
         findings.append((line, "Radius on Rectangle/Label", message))
+
+    for line, message in find_radius_shape_errors_yaml(text):
+        findings.append((line, "Radius on Rectangle/Label (YAML block)", message))
 
     for line, message in find_table_concat_errors(text):
         findings.append((line, "Table & concat", message))
