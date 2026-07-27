@@ -7,28 +7,28 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 32px 16px; }
     .kicker { font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #64748b; }
-    h1 { font-size: 1.8rem; font-weight: 700; color: #c7d2fe; letter-spacing: -.02em; }
-    h2 { font-size: 1.1rem; font-weight: 700; color: #94a3b8; letter-spacing: -.01em; margin-top: 8px; }
+    h1 { font-size: 1.8rem; font-weight: 700; color: #bfe8d2; letter-spacing: -.02em; }
+    h2 { font-size: 1.1rem; font-weight: 700; color: #9fb8ad; letter-spacing: -.01em; margin-top: 8px; }
     .meta { font-size: .85rem; color: #475569; }
     .btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
     button { padding: 13px 32px; font-size: 1rem; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; transition: opacity .15s; }
     button:hover { opacity: .88; }
-    .btn-copy { background: #4f46e5; color: #fff; }
+    .btn-copy { background: #004e42; color: #fff; }
     .btn-copy-sm { background: #0f766e; color: #fff; padding: 9px 22px; font-size: .88rem; }
-    .btn-back { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    .btn-back { background: #17352d; color: #9fb8ad; border: 1px solid #2f5147; }
     .status { font-size: .85rem; color: #475569; min-height: 1.2em; }
     .status.ok { color: #22c55e; }
-    .instructions { max-width: 540px; text-align: center; font-size: .82rem; color: #475569; line-height: 1.7; border: 1px solid #1e293b; border-radius: 12px; padding: 16px 20px; background: #0d1117; }
-    .instructions strong { color: #94a3b8; }
-    .section { max-width: 540px; width: 100%; background: #0d1117; border: 1px solid #1e293b; border-radius: 12px; padding: 20px 24px; display: flex; flex-direction: column; gap: 10px; }
+    .instructions { max-width: 540px; text-align: center; font-size: .82rem; color: #475569; line-height: 1.7; border: 1px solid #17352d; border-radius: 12px; padding: 16px 20px; background: #0d1117; }
+    .instructions strong { color: #9fb8ad; }
+    .section { max-width: 540px; width: 100%; background: #0d1117; border: 1px solid #17352d; border-radius: 12px; padding: 20px 24px; display: flex; flex-direction: column; gap: 10px; }
     .section-label { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #475569; }
-    .divider { width: 100%; max-width: 540px; border: none; border-top: 1px solid #1e293b; }
+    .divider { width: 100%; max-width: 540px; border: none; border-top: 1px solid #17352d; }
   </style>
 </head>
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 5 of 7</p>
   <h1>scrTeamMember</h1>
-  <p class="meta">v1.6 — multi-choice filters and quoted date units scrubbed · 24 Jul 2026</p>
+  <p class="meta">v1.7 — army green theme and quoted date units scrubbed · 27 Jul 2026</p>
 
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
@@ -160,7 +160,7 @@ const yaml = `Screens:
   scrTeamMember:
     Properties:
       Fill: =RGBA(247,249,252,1)
-      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      LoadingSpinnerColor: =RGBA(0,78,66,1)
       OnVisible: |-
         =ClearCollect(colAllPeople, Filter('TT Personnel', Active = true));
         ClearCollect(colAllRecords, 'TT TrainingRecords');
@@ -240,10 +240,10 @@ const yaml = `Screens:
           Properties:
             BorderThickness: =0
             DisplayMode: =DisplayMode.View
-            Fill: =RGBA(24,95,165,1)
+            Fill: =RGBA(0,78,66,1)
             Height: =72
-            HoverFill: =RGBA(24,95,165,1)
-            PressedFill: =RGBA(24,95,165,1)
+            HoverFill: =RGBA(0,78,66,1)
+            PressedFill: =RGBA(0,78,66,1)
             RadiusBottomLeft: =0
             RadiusBottomRight: =0
             RadiusTopLeft: =0
@@ -253,7 +253,7 @@ const yaml = `Screens:
       - icoTeamBack:
           Control: Classic/Icon@2.5.0
           Properties:
-            Color: =RGBA(230,241,251,1)
+            Color: =RGBA(232,244,239,1)
             Height: =24
             Icon: =Icon.ChevronLeft
             OnSelect: =Back()
@@ -263,7 +263,7 @@ const yaml = `Screens:
       - lblTeamTitle:
           Control: Label@2.5.1
           Properties:
-            Color: =RGBA(230,241,251,1)
+            Color: =RGBA(232,244,239,1)
             Fill: =RGBA(0,0,0,0)
             FontWeight: =FontWeight.Bold
             Height: =72
@@ -372,9 +372,9 @@ const yaml = `Screens:
                   BorderThickness: =0
                   Fill: =If(Mod(Len(ThisItem.Email),2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1))
                   Height: =63
-                  HoverFill: =RGBA(232,240,248,1)
+                  HoverFill: =RGBA(232,244,239,1)
                   OnSelect: =Select(Parent)
-                  PressedFill: =RGBA(218,232,246,1)
+                  PressedFill: =RGBA(214,235,227,1)
                   RadiusBottomLeft: =0
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
@@ -385,11 +385,11 @@ const yaml = `Screens:
                 Control: Classic/Button@2.2.0
                 Properties:
                   BorderThickness: =0
-                  Fill: =RGBA(240,244,255,1)
+                  Fill: =RGBA(241,248,244,1)
                   Height: =64
-                  HoverFill: =RGBA(240,244,255,1)
+                  HoverFill: =RGBA(241,248,244,1)
                   OnSelect: =Select(Parent)
-                  PressedFill: =RGBA(240,244,255,1)
+                  PressedFill: =RGBA(241,248,244,1)
                   RadiusBottomLeft: =0
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
@@ -399,7 +399,7 @@ const yaml = `Screens:
             - lblChainName:
                 Control: Label@2.5.1
                 Properties:
-                  Color: =RGBA(31,58,95,1)
+                  Color: =RGBA(20,45,38,1)
                   Fill: =RGBA(0,0,0,0)
                   FontWeight: =FontWeight.Semibold
                   Height: =24
@@ -471,7 +471,7 @@ const yaml = `Screens:
             - icoChainChevron:
                 Control: Classic/Icon@2.5.0
                 Properties:
-                  Color: =RGBA(170,187,204,1)
+                  Color: =RGBA(142,158,150,1)
                   Height: =24
                   Icon: =If(LookUp(colMyChain,Lower(Email)=Lower(ThisItem.Email),IsExpanded),Icon.ChevronDown,Icon.ChevronRight)
                   OnSelect: |-

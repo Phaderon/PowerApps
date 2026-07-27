@@ -18,7 +18,7 @@
       padding: 32px 16px;
     }
     .kicker { font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #64748b; }
-    h1 { font-size: 1.8rem; font-weight: 700; color: #c7d2fe; letter-spacing: -.02em; }
+    h1 { font-size: 1.8rem; font-weight: 700; color: #bfe8d2; letter-spacing: -.02em; }
     .meta { font-size: .85rem; color: #475569; }
     .btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
     button {
@@ -32,8 +32,8 @@
     }
     button:hover { opacity: .88; transform: translateY(-1px); }
     button:active { transform: translateY(0); }
-    .btn-copy { background: #4f46e5; color: #fff; }
-    .btn-back { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    .btn-copy { background: #004e42; color: #fff; }
+    .btn-back { background: #17352d; color: #9fb8ad; border: 1px solid #2f5147; }
     #status {
       font-size: .85rem;
       color: #475569;
@@ -48,18 +48,18 @@
       font-size: .82rem;
       color: #475569;
       line-height: 1.7;
-      border: 1px solid #1e293b;
+      border: 1px solid #17352d;
       border-radius: 12px;
       padding: 16px 20px;
       background: #0d1117;
     }
-    .instructions strong { color: #94a3b8; }
+    .instructions strong { color: #9fb8ad; }
   </style>
 </head>
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 4 of 7</p>
   <h1>scrCourseDetail</h1>
-  <p class="meta">v2.6 &mdash; Cleaner certificate editor and safer admin fixes &middot; 27 Jul 2026</p>
+  <p class="meta">v2.7 &mdash; Army green theme and cleaner certificate editor &middot; 27 Jul 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">← Guide library</button></a>
@@ -78,7 +78,7 @@ const yaml = `Screens:
   scrCourseDetail:
     Properties:
       Fill: =RGBA(247,249,252,1)
-      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      LoadingSpinnerColor: =RGBA(0,78,66,1)
       OnVisible: =ResetForm(frmCert)
     Children:
       - recHeaderCD:
@@ -89,15 +89,15 @@ const yaml = `Screens:
             Color: =RGBA(255, 255, 255, 1)
             DisabledBorderColor: =RGBA(166, 166, 166, 1)
             DisplayMode: =DisplayMode.View
-            Fill: =RGBA(24,95,165,1)
+            Fill: =RGBA(0,78,66,1)
             Font: =Font.'Open Sans'
             Height: =72
             HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
             HoverColor: =RGBA(255, 255, 255, 1)
-            HoverFill: =RGBA(24,95,165,1)
+            HoverFill: =RGBA(0,78,66,1)
             PressedBorderColor: =Self.Fill
             PressedColor: =Self.Fill
-            PressedFill: =RGBA(24,95,165,1)
+            PressedFill: =RGBA(0,78,66,1)
             RadiusBottomLeft: =0
             RadiusBottomRight: =0
             RadiusTopLeft: =0
@@ -107,8 +107,8 @@ const yaml = `Screens:
       - icoBack:
           Control: Classic/Icon@2.5.0
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
-            Color: =RGBA(230,241,251,1)
+            BorderColor: =RGBA(0,78,66,1)
+            Color: =RGBA(232,244,239,1)
             Height: =24
             Icon: =Icon.ChevronLeft
             OnSelect: =Back()
@@ -118,8 +118,8 @@ const yaml = `Screens:
       - lblDetailTitle:
           Control: Label@2.5.1
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
-            Color: =RGBA(230,241,251,1)
+            BorderColor: =RGBA(0,78,66,1)
+            Color: =RGBA(232,244,239,1)
             Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
             Size: =16
@@ -130,8 +130,8 @@ const yaml = `Screens:
       - lblDetailSub:
           Control: Label@2.5.1
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
-            Color: =RGBA(181,212,244,1)
+            BorderColor: =RGBA(0,78,66,1)
+            Color: =RGBA(196,230,214,1)
             Font: =Font.'Open Sans'
             Height: =24
             Size: =11
@@ -167,7 +167,7 @@ const yaml = `Screens:
       - lblCertPanelTitle:
           Control: Label@2.5.1
           Properties:
-            Color: =RGBA(31,58,95,1)
+            Color: =RGBA(20,45,38,1)
             Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
             Height: =28
@@ -190,7 +190,7 @@ const yaml = `Screens:
       - lblReplaceWarn:
           Control: Label@2.5.1
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
+            BorderColor: =RGBA(0,78,66,1)
             Color: =RGBA(99,56,6,1)
             Fill: =RGBA(250,238,218,1)
             Font: =Font.'Open Sans'
@@ -210,7 +210,7 @@ const yaml = `Screens:
           Variant: Classic
           Layout: Vertical
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
+            BorderColor: =RGBA(0,78,66,1)
             DataSource: ='TT TrainingRecords'
             Height: =250
             Item: =varRecord
@@ -241,7 +241,7 @@ const yaml = `Screens:
                 Control: TypedDataCard@1.0.7
                 Variant: ClassicDateEdit
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderColor: =RGBA(0,78,66,1)
                   DataField: ="DateCompleted"
                   DisplayName: ="Date of completion"
                   Required: =false
@@ -275,7 +275,7 @@ const yaml = `Screens:
                       Properties:
                         AutoHeight: =true
                         BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(31,58,95,1)
+                        Color: =RGBA(20,45,38,1)
                         Font: =Font.'Open Sans'
                         FontWeight: =FontWeight.Bold
                         Height: =34
@@ -299,7 +299,7 @@ const yaml = `Screens:
                       Control: DatePicker@0.0.46
                       MetadataKey: FieldValue
                       Properties:
-                        BorderColor: =If(IsBlank(Parent.Error), RGBA(183,195,209,1), Color.Red)
+                        BorderColor: =If(IsBlank(Parent.Error), RGBA(188,202,196,1), Color.Red)
                         BorderStyle: =BorderStyle.Solid
                         BorderThickness: =1
                         DisplayMode: =Parent.DisplayMode
@@ -342,7 +342,7 @@ const yaml = `Screens:
                       Properties:
                         Align: =Align.Center
                         BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(0,78,66,1)
                         Font: =Font.'Open Sans'
                         Height: =DataCardKey1.Height
                         Text: ="*"
@@ -354,7 +354,7 @@ const yaml = `Screens:
                 Control: TypedDataCard@1.0.7
                 Variant: ClassicAttachmentsEdit
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderColor: =RGBA(0,78,66,1)
                   DataField: ="{Attachments}"
                   Default: =ThisItem.Attachments
                   DisplayName: ="Certificate"
@@ -368,13 +368,13 @@ const yaml = `Screens:
                   - recAttachPanel:
                       Control: Classic/Button@2.2.0
                       Properties:
-                        BorderColor: =RGBA(204,219,235,1)
+                        BorderColor: =RGBA(192,222,210,1)
                         BorderThickness: =1
                         DisplayMode: =DisplayMode.View
-                        Fill: =RGBA(244,249,255,1)
+                        Fill: =RGBA(245,250,247,1)
                         Height: =138
-                        HoverFill: =RGBA(244,249,255,1)
-                        PressedFill: =RGBA(244,249,255,1)
+                        HoverFill: =RGBA(245,250,247,1)
+                        PressedFill: =RGBA(245,250,247,1)
                         RadiusBottomLeft: =10
                         RadiusBottomRight: =10
                         RadiusTopLeft: =10
@@ -386,7 +386,7 @@ const yaml = `Screens:
                   - icoUploadCert:
                       Control: Classic/Icon@2.5.0
                       Properties:
-                        Color: =RGBA(24,95,165,1)
+                        Color: =RGBA(0,78,66,1)
                         Height: =24
                         Icon: =Icon.PaperClip
                         Width: =24
@@ -398,7 +398,7 @@ const yaml = `Screens:
                       Properties:
                         AutoHeight: =true
                         BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(31,58,95,1)
+                        Color: =RGBA(20,45,38,1)
                         Font: =Font.'Open Sans'
                         FontWeight: =FontWeight.Bold
                         Height: =34
@@ -422,21 +422,21 @@ const yaml = `Screens:
                       Control: Attachments@2.3.0
                       MetadataKey: FieldValue
                       Properties:
-                        BorderColor: =If(IsBlank(Parent.Error), RGBA(183,195,209,1), Color.Red)
+                        BorderColor: =If(IsBlank(Parent.Error), RGBA(188,202,196,1), Color.Red)
                         DisplayMode: =Parent.DisplayMode
                         Font: =Font.'Open Sans'
                         Height: =64
-                        HoverFill: =RGBA(230,241,251,1)
+                        HoverFill: =RGBA(232,244,239,1)
                         ItemColor: =RGBA(255, 255, 255, 1)
-                        ItemFill: =RGBA(24,95,165,1)
-                        ItemHoverFill: =RGBA(213,226,245,1)
+                        ItemFill: =RGBA(0,78,66,1)
+                        ItemHoverFill: =RGBA(214,235,227,1)
                         Items: =Parent.Default
                         PaddingBottom: =5
                         PaddingLeft: =8
                         PaddingRight: =5
                         PaddingTop: =5
                         PressedColor: =RGBA(255, 255, 255, 1)
-                        PressedFill: =RGBA(12,68,124,1)
+                        PressedFill: =RGBA(0,78,66,1)
                         Tooltip: =Parent.DisplayName
                         Width: =360
                         X: =28
@@ -468,7 +468,7 @@ const yaml = `Screens:
                       Properties:
                         Align: =Align.Center
                         BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(0,78,66,1)
                         Font: =Font.'Open Sans'
                         Height: =DataCardKey2.Height
                         Text: ="*"
@@ -479,7 +479,7 @@ const yaml = `Screens:
       - btnSaveCert:
           Control: ModernButton@1.0.0
           Properties:
-            BasePaletteColor: =RGBA(24,95,165,1)
+            BasePaletteColor: =RGBA(0,78,66,1)
             Color: =RGBA(255,255,255,1)
             Height: =44
             OnSelect: |-
