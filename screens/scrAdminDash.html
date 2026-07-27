@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 6 of 7</p>
   <h1>scrAdminDash</h1>
-  <p class="meta">v3.0 &mdash; KPI dashboard, attention filters, risk bars, activity timeline and audit hooks · 25 Jul 2026</p>
+  <p class="meta">v3.1 &mdash; PDF flow parked and risk bars hardened · 27 Jul 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -270,25 +270,7 @@ const yaml = `Screens:
                   ) &
                   "</table></body></html>"
               );
-              ExportTrainingReport.Run(
-                  varHTML,
-                  "TrainingReport_" & Text(Now(),"yyyymmdd_hhmm")
-              );
-              Patch('TT AuditLog', Defaults('TT AuditLog'),
-                  {
-                      Title: "Admin exported compliance PDF",
-                      EntityType: "Report",
-                      EntityID: "",
-                      PersonEmail: "",
-                      CourseID: "",
-                      EventType: "PDF export",
-                      EventDescription: "Compliance report exported from admin dashboard.",
-                      ActorEmail: varMyEmail,
-                      EventDateTime: Now(),
-                      Notes: ""
-                  }
-              );
-              Notify("Report sent - check your inbox in about 30 seconds.", NotificationType.Success)
+              Notify("PDF export is parked for now. The report HTML is prepared in varHTML, but the Power Automate flow has not been connected yet.", NotificationType.Information)
             PressedColor: =RGBA(12,68,124,1)
             PressedFill: =RGBA(198,216,240,1)
             RadiusBottomLeft: =8
@@ -1071,7 +1053,7 @@ const yaml = `Screens:
                   RadiusTopLeft: =4
                   RadiusTopRight: =4
                   Text: =""
-                  Width: =If(Max(colRiskByType, RiskCount) = 0, 0, 210 * ThisItem.RiskCount / Max(colRiskByType, RiskCount))
+                  Width: =If(IsBlank(ThisItem.RiskCount) || ThisItem.RiskCount <= 0, 0, 210 * ThisItem.RiskCount / Max(1, Max(colRiskByType, RiskCount)))
                   X: =102
                   Y: =6
             - lblRiskCount:
