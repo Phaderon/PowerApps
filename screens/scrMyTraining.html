@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 3 of 7</p>
   <h1>scrMyTraining</h1>
-  <p class="meta">v2.3 &mdash; Current screen YAML with course detail fields and clean gallery date text &middot; 21 Jun 2026</p>
+  <p class="meta">v2.4 &mdash; Multi-choice filters, quoted date units and paste schema scrubbed &middot; 24 Jul 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -51,7 +51,7 @@ const yaml = `Screens:
                 ForAll(
                     Filter(colCourses,
                         Status.Value = "Active" &&
-                        varMe.StaffType.Value in ApplicableTo.Value
+                        CountIf(ApplicableTo, Value = varMe.StaffType.Value) > 0
                     ) As C,
                     With({rec: LookUp(colMyRecords, CourseID = C.ID)},
                     {
@@ -73,15 +73,15 @@ const yaml = `Screens:
                         ExpiresOn:   If(IsBlank(rec.DateCompleted) || C.RecurrenceMonths = 0,
                                          Blank(),
                                          DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                                                 TimeUnit.Months)),
+                                                 "Months")),
                         TrainingStatus:
                             If(IsBlank(rec.DateCompleted), "Not Started",
                                C.RecurrenceMonths = 0, "Complete",
                                DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                                       TimeUnit.Months) < Today(), "Expired",
+                                       "Months") < Today(), "Expired",
                                DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                                       TimeUnit.Months) <= DateAdd(Today(), 60,
-                                       TimeUnit.Days), "Expiring Soon",
+                                       "Months") <= DateAdd(Today(), 60,
+                                       "Days"), "Expiring Soon",
                                "In Date")
                     })
                 )
@@ -202,10 +202,7 @@ const yaml = `Screens:
             Font: =Font.'Open Sans'
             Height: =72
             Size: =14
-            Text: |-
-              =If(IsBlank(varViewingPerson),
-                  "Hello, " & First(Split(varMe.Title," ")).Value & " · " & varMe.StaffType.Value,
-                  "Viewing: " & varViewingPerson.Title)
+            Text: '=If(IsBlank(varViewingPerson), "Hello, " & First(Split(varMe.Title," ")).Value & " " & Char(183) & " " & varMe.StaffType.Value, "Viewing: " & varViewingPerson.Title)'
             Width: =500
             X: =If(IsBlank(varViewingPerson), 74, 114)
       - btnMyTeam:

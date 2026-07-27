@@ -28,7 +28,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 5 of 7</p>
   <h1>scrTeamMember</h1>
-  <p class="meta">v1.5 — current team member screen with row navigation handled by galMyChain.OnSelect</p>
+  <p class="meta">v1.6 — multi-choice filters and quoted date units scrubbed · 24 Jul 2026</p>
 
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
@@ -287,21 +287,21 @@ const yaml = `Screens:
                       CountRows(
                           Filter(colCourses,
                               Status.Value = "Active" &&
-                              P.StaffType in ApplicableTo.Value)
+                              CountIf(ApplicableTo, Value = P.StaffType) > 0)
                       ),
                       PersonInDate,
                       CountRows(
                           Filter(
                               Filter(colCourses,
                                   Status.Value = "Active" &&
-                                  P.StaffType in ApplicableTo.Value) As C,
+                                  CountIf(ApplicableTo, Value = P.StaffType) > 0) As C,
                               With({rec: LookUp(colAllRecords,
                                       Lower(PersonEmail) = P.Email &&
                                       CourseID = C.ID)},
                                   !IsBlank(rec.DateCompleted) &&
                                   (C.RecurrenceMonths = 0 ||
                                    DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                                           TimeUnit.Months) >= Today())
+                                           "Months") >= Today())
                               )
                           )
                       )
@@ -325,7 +325,7 @@ const yaml = `Screens:
                       Filter(
                           colCourses,
                           Status.Value = "Active" &&
-                          ThisItem.StaffType in ApplicableTo.Value
+                          CountIf(ApplicableTo, Value = ThisItem.StaffType) > 0
                       ) As C,
                       With(
                           {rec: LookUp(colViewRecords, CourseID = C.ID)},
@@ -344,15 +344,15 @@ const yaml = `Screens:
                               ExpiresOn:   If(IsBlank(rec.DateCompleted) || C.RecurrenceMonths = 0,
                                                Blank(),
                                                DateAdd(rec.DateCompleted,
-                                                       C.RecurrenceMonths, TimeUnit.Months)),
+                                                       C.RecurrenceMonths, "Months")),
                               TrainingStatus:
                                   If(IsBlank(rec.DateCompleted), "Not Started",
                                      C.RecurrenceMonths = 0, "Complete",
                                      DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                                             TimeUnit.Months) < Today(), "Expired",
+                                             "Months") < Today(), "Expired",
                                      DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                                             TimeUnit.Months) <= DateAdd(Today(), 60,
-                                             TimeUnit.Days), "Expiring Soon",
+                                             "Months") <= DateAdd(Today(), 60,
+                                             "Days"), "Expiring Soon",
                                      "In Date"),
                               CanEdit: ThisItem.ManagerCanEdit
                           }
@@ -541,7 +541,7 @@ Navigate(scrCourseDetail, ScreenTransition.Cover)`;
 
 const formula2 = `=If(
     IsBlank(varViewingPerson),
-    "Hello, " & First(Split(varMe.Title," ")).Value & "  \xB7  " & varMe.StaffType.Value,
+    "Hello, " & First(Split(varMe.Title," ")).Value & "  " & Char(183) & "  " & varMe.StaffType.Value,
     "Viewing: " & varViewingPerson.Title
 )`;
 
@@ -578,7 +578,7 @@ const formula6 = `=If(
         ForAll(
             Filter(colCourses,
                 Status.Value = "Active" &&
-                varMe.StaffType.Value in ApplicableTo.Value
+                CountIf(ApplicableTo, Value = varMe.StaffType.Value) > 0
             ) As C,
             With({rec: LookUp(colMyRecords, CourseID = C.ID)},
             {
@@ -596,15 +596,15 @@ const formula6 = `=If(
                 ExpiresOn:   If(IsBlank(rec.DateCompleted) || C.RecurrenceMonths = 0,
                                  Blank(),
                                  DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                                         TimeUnit.Months)),
+                                         "Months")),
                 TrainingStatus:
                     If(IsBlank(rec.DateCompleted), "Not Started",
                        C.RecurrenceMonths = 0, "Complete",
                        DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                               TimeUnit.Months) < Today(), "Expired",
+                               "Months") < Today(), "Expired",
                        DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                               TimeUnit.Months) <= DateAdd(Today(), 60,
-                               TimeUnit.Days), "Expiring Soon",
+                               "Months") <= DateAdd(Today(), 60,
+                               "Days"), "Expiring Soon",
                        "In Date")
             })
         )

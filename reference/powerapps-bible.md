@@ -21,6 +21,7 @@ This is the entry point for the local Power Apps knowledge base.
    - Real build quirks from the Training Tracker app.
    - Lab-derived fresh-control defaults from the live Power Apps editor.
    - Corrections discovered while building future guides.
+   - `external/powerappsui/` — pre-built copy-paste component YAML (MIT-licensed, from powerappsui.com) plus original condensed notes per component. Check here before building a data table, KPI cards, sidebar, stepper, etc. from scratch.
 
 4. Audit tooling under `tools/`
    - Blocks known bad guide patterns before publishing.
@@ -37,9 +38,10 @@ For building a new app from scratch:
 3. `live-build-lessons.md` — lessons from Training Tracker GitHub issues (bugs diagnosed and fixed in production)
 4. `ui-patterns.md` — reusable YAML patterns (panels, tab nav, error borders, pill galleries, status colours)
 5. `verified-control-reference.md` — exact property lists per control
-6. `powerfx-patterns.md` — formula reference
-7. `known-bad-patterns.md` — patterns that must never appear
-8. `sharepoint-office365users.md` — SharePoint list and connector patterns
+6. `external/powerappsui/README.md` — pre-built component library (data table, KPI cards, charts, sidebar, stepper, dialog, etc.) — check before hand-building a UI pattern this already covers
+7. `powerfx-patterns.md` — formula reference
+8. `known-bad-patterns.md` — patterns that must never appear
+9. `sharepoint-office365users.md` — SharePoint list and connector patterns
 
 ## Real Build Quirks To Preserve
 

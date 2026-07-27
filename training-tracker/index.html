@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Training Tracker — Power Apps Build Guide — v2.8 — inline formulas and row tracking</title>
+<title>Training Tracker — Power Apps Build Guide — v3.0 — admin dashboard and audit upgrade</title>
 <style>
 :root {
   --bg: #f6efe4;
@@ -717,13 +717,15 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <a class="toc-l3" href="#header">Header</a>
 <a class="toc-l3" href="#four-stat-cards">Four stat cards</a>
 <a class="toc-l3" href="#txtadminsearch-text-input-modern">txtAdminSearch — Text input (modern)</a>
-<a class="toc-l3" href="#drptypefilter-dropdown-modern">drpTypeFilter — Dropdown (modern)</a>
+<a class="toc-l3" href="#admin-filter-chips">Admin filter chips</a>
 <a class="toc-l3" href="#galcompliance-gallery-vertical-blank">galCompliance — Gallery (vertical, blank)</a>
 <a class="toc-l3" href="#drill-down-panel-right-side-appears-when-a-row-is-tapped">Drill-down panel — right side, appears when a row is tapped</a>
+<a class="toc-l3" href="#v3-admin-dashboard-surfaces">v3 admin dashboard surfaces</a>
 <a class="toc-l3" href="#formulas-3">Formulas</a>
 <a class="toc-l1" href="#phase-8-scradminmanage-people-tab">PHASE 8 — scrAdminManage · People tab</a>
 <a class="toc-l3" href="#tab-buttons">Tab buttons</a>
 <a class="toc-l3" href="#add-person-panel">Add person panel</a>
+<a class="toc-l3" href="#edit-person-panel">Edit person panel</a>
 <a class="toc-l3" href="#people-gallery">People gallery</a>
 <a class="toc-l3" href="#formulas-people-tab">Formulas — People tab</a>
 <a class="toc-l1" href="#phase-9-scradminmanage-courses-tab">PHASE 9 — scrAdminManage · Courses tab</a>
@@ -757,7 +759,7 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <a class="secondary" href="#phase-1-build-the-sharepoint-lists">Jump to Phase 1</a>
 <button class="secondary" onclick="window.print()">Print / save as PDF</button>
 </div>
-<div class="version-panel"><strong>Current guide version:</strong> v2.8 — inline formulas and row tracking<br/><span>If this line does not show v2.8, the work laptop is viewing an older cached copy. Hard refresh with Ctrl+F5.</span><br/><br/><strong>Changed from v2.7:</strong> added collapsed copyable formula blocks directly beside controls that need Items, OnSelect or OnChange formulas, split course archive formulas into separate gallery/edit-panel copy blocks, recorded Label Fill/BorderThickness default guidance, and added copied-row highlighting so the active property row is easier to follow.</div></section>
+<div class="version-panel"><strong>Current guide version:</strong> v3.0 — admin dashboard and audit upgrade<br/><span>If this line does not show v3.0, the work laptop is viewing an older cached copy. Hard refresh with Ctrl+F5.</span><br/><br/><strong>Changed from v2.9:</strong> upgraded the admin dashboard with KPI-style filter cards, attention chips, a table-style compliance gallery, risk-by-staff-type bars, a loading overlay, a modern manager-edit checkbox, activity timeline wiring and SharePoint audit fields.</div></section>
 <section aria-label="Build phases" class="phase-grid">
 <a class="phase-card" href="#phase-1-build-the-sharepoint-lists"><span>PHASE 1</span><strong>PHASE 1 — Build the SharePoint lists</strong></a>
 <a class="phase-card" href="#phase-2-app-shell-connections-and-app-onstart"><span>PHASE 2</span><strong>PHASE 2 — App shell, connections and App.OnStart</strong></a>
@@ -913,7 +915,7 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 </tbody>
 </table>
 <h3 id="architecture"><a aria-label="Link to section" class="anchor" href="#architecture">#</a>Architecture</h3>
-<p>Three SharePoint lists. Everything loaded into in-memory collections on screen entry. At 60–70 staff and ~20 courses this is trivially small — keeps formulas fast, simple, and free of delegation warnings.</p>
+<p>Four SharePoint lists. Operational data is loaded into in-memory collections on screen entry, with a small audit log for admin actions and certificate saves. At 60–70 staff and ~20 courses this is trivially small — keeps formulas fast, simple, and free of delegation warnings.</p>
 <table>
 <thead>
 <tr>
@@ -933,6 +935,10 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <tr>
 <td><strong>TT TrainingRecords</strong></td>
 <td>One row per person per course. Email key, CourseID, course name snapshot, date completed, uploaded-by audit. Certificates as list attachments.</td>
+</tr>
+<tr>
+<td><strong>TT AuditLog</strong></td>
+<td>Append-only activity trail for certificate saves, PDF exports, manager edit changes, person edits and course archive/restore actions.</td>
 </tr>
 <tr>
 <td><strong>Canvas app</strong></td>
@@ -998,7 +1004,7 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 </ul>
 <hr/>
 <h1 id="phase-1-build-the-sharepoint-lists"><span class="phase-kicker">Build phase</span><a aria-label="Link to section" class="anchor" href="#phase-1-build-the-sharepoint-lists">#</a>PHASE 1 — Build the SharePoint lists</h1>
-<p>Create all three as <strong>blank lists</strong> on the same SharePoint site. Create columns with the exact internal names shown — <strong>no spaces</strong> in any column name (spaces in internal names become <code>Column_x0020_Name</code> in Power Apps formulas, which is a nightmare to work with).</p>
+<p>Create all four as <strong>blank lists</strong> on the same SharePoint site. Create columns with the exact internal names shown — <strong>no spaces</strong> in any column name (spaces in internal names become <code>Column_x0020_Name</code> in Power Apps formulas, which is a nightmare to work with).</p>
 <h2 id="tt-personnel"><a aria-label="Link to section" class="anchor" href="#tt-personnel">#</a>TT Personnel</h2>
 <table>
 <thead>
@@ -1049,6 +1055,26 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <td>Yes/No</td>
 <td>Default: Yes. Set No for staff without M365 accounts — falls back to manually-entered name.</td>
 </tr>
+<tr>
+<td>LastUpdatedByEmail</td>
+<td>Single line</td>
+<td>Optional audit field. The app writes the admin/user email that last changed the row.</td>
+</tr>
+<tr>
+<td>LastUpdatedOn</td>
+<td>Date and time</td>
+<td>Optional audit field. Include date and time.</td>
+</tr>
+<tr>
+<td>LastStatus</td>
+<td>Single line</td>
+<td>Optional audit field. Short status such as Created, Updated, Reactivated or Deactivated.</td>
+</tr>
+<tr>
+<td>AdminNote</td>
+<td>Multiline plain text</td>
+<td>Optional admin note for later explanation.</td>
+</tr>
 </tbody>
 </table>
 <blockquote>
@@ -1088,6 +1114,26 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <td>CourseInfo</td>
 <td>Multiline plain text</td>
 <td>Optional description or link.</td>
+</tr>
+<tr>
+<td>LastUpdatedByEmail</td>
+<td>Single line</td>
+<td>Optional audit field. The app writes the admin email that last changed the row.</td>
+</tr>
+<tr>
+<td>LastUpdatedOn</td>
+<td>Date and time</td>
+<td>Optional audit field. Include date and time.</td>
+</tr>
+<tr>
+<td>LastStatus</td>
+<td>Single line</td>
+<td>Optional audit field. Short status such as Created, Updated, Archived or Restored.</td>
+</tr>
+<tr>
+<td>AdminNote</td>
+<td>Multiline plain text</td>
+<td>Optional admin note for later explanation.</td>
 </tr>
 </tbody>
 </table>
@@ -1131,11 +1177,93 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <td>Single line</td>
 <td>Optional. Blank if person uploaded themselves. Populated when a manager uploads on their behalf.</td>
 </tr>
+<tr>
+<td>LastUpdatedByEmail</td>
+<td>Single line</td>
+<td>Optional audit field. The app writes the account that last saved the record.</td>
+</tr>
+<tr>
+<td>LastUpdatedOn</td>
+<td>Date and time</td>
+<td>Optional audit field. Include date and time.</td>
+</tr>
+<tr>
+<td>LastStatus</td>
+<td>Single line</td>
+<td>Optional audit field. Short status such as Certificate saved.</td>
+</tr>
+<tr>
+<td>AdminNote</td>
+<td>Multiline plain text</td>
+<td>Optional admin note for later explanation.</td>
+</tr>
 </tbody>
 </table>
 <blockquote>
 <p><strong>Note:</strong> Enable attachments on TT TrainingRecords: List settings → Advanced settings → Attachments → Enabled.</p>
 </blockquote>
+<h2 id="tt-auditlog"><a aria-label="Link to section" class="anchor" href="#tt-auditlog">#</a>TT AuditLog</h2>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Settings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Title</td>
+<td>Single line (built-in)</td>
+<td>Short event title. Required.</td>
+</tr>
+<tr>
+<td>EntityType</td>
+<td>Single line</td>
+<td>Person, Course, TrainingRecord or Report.</td>
+</tr>
+<tr>
+<td>EntityID</td>
+<td>Single line</td>
+<td>ID of the row involved, stored as text so reports can also be logged.</td>
+</tr>
+<tr>
+<td>PersonEmail</td>
+<td>Single line</td>
+<td>Lowercase person email when the event is person-specific. Leave blank for course/report events.</td>
+</tr>
+<tr>
+<td>CourseID</td>
+<td>Single line</td>
+<td>Course ID when the event is course-specific. Leave blank otherwise.</td>
+</tr>
+<tr>
+<td>EventType</td>
+<td>Single line</td>
+<td>Short category shown by the timeline.</td>
+</tr>
+<tr>
+<td>EventDescription</td>
+<td>Multiline plain text</td>
+<td>Human-readable timeline text.</td>
+</tr>
+<tr>
+<td>ActorEmail</td>
+<td>Single line</td>
+<td>Email of the user/admin who caused the event.</td>
+</tr>
+<tr>
+<td>EventDateTime</td>
+<td>Date and time</td>
+<td>Include date and time.</td>
+</tr>
+<tr>
+<td>Notes</td>
+<td>Multiline plain text</td>
+<td>Optional extra context.</td>
+</tr>
+</tbody>
+</table>
 <hr/>
 <h1 id="phase-2-app-shell-connections-and-app-onstart"><span class="phase-kicker">Build phase</span><a aria-label="Link to section" class="anchor" href="#phase-2-app-shell-connections-and-app-onstart">#</a>PHASE 2 — App shell, connections and App.OnStart</h1>
 <h3 id="create-the-app"><a aria-label="Link to section" class="anchor" href="#create-the-app">#</a>Create the app</h3>
@@ -1150,6 +1278,7 @@ mark.search-hit { background: #ffe19a; color: inherit; border-radius: 4px; paddi
 <li>Connect <strong>TT Personnel</strong> (SharePoint connector, your site).</li>
 <li>Connect <strong>TT Courses</strong> (same site).</li>
 <li>Connect <strong>TT TrainingRecords</strong> (same site).</li>
+<li>Connect <strong>TT AuditLog</strong> (same site).</li>
 <li>Connect <strong>Office365Users</strong>.</li>
 </ol>
 <h3 id="create-the-screens"><a aria-label="Link to section" class="anchor" href="#create-the-screens">#</a>Create the screens</h3>
@@ -1190,7 +1319,20 @@ Set(varPillRed,      RGBA(252,235,235,1)); Set(varPillRedTxt,   RGBA(121,31,31,1
 Set(varPillAmber,    RGBA(250,238,218,1)); Set(varPillAmberTxt, RGBA(99,56,6,1));
 Set(varPillGreen,    RGBA(234,243,222,1)); Set(varPillGreenTxt, RGBA(39,80,10,1));
 Set(varPillBlue,     RGBA(230,241,251,1)); Set(varPillBlueTxt,  RGBA(12,68,124,1));
-Set(varPillGrey,     RGBA(241,239,232,1)); Set(varPillGreyTxt,  RGBA(68,68,65,1))</code></pre></div>
+Set(varPillGrey,     RGBA(241,239,232,1)); Set(varPillGreyTxt,  RGBA(68,68,65,1));
+
+Set(varTTTheme,
+    {
+        Primary: RGBA(24,95,165,1),
+        Success: RGBA(34,139,80,1),
+        Warning: RGBA(239,159,39,1),
+        Danger: RGBA(163,45,45,1),
+        Page: RGBA(247,249,252,1),
+        Panel: RGBA(255,255,255,1),
+        Border: RGBA(221,227,234,1),
+        Muted: RGBA(85,85,85,1)
+    }
+)</code></pre></div>
 <blockquote>
 <p><strong>Note:</strong> While editing in the studio, OnStart does not re-run automatically. Use the App three-dot menu → "Run OnStart" after changes, or save and reload.</p>
 </blockquote>
@@ -1731,7 +1873,7 @@ If(
 </tr>
 <tr>
 <td>Text</td>
-<td><code>"Hello, " &amp; First(Split(varMe.Title," ")).Value &amp; "  ·  " &amp; varMe.StaffType.Value</code></td>
+<td><code>"Hello, " &amp; First(Split(varMe.Title," ")).Value &amp; "  " &amp; Char(183) &amp; "  " &amp; varMe.StaffType.Value</code></td>
 </tr>
 <tr>
 <td>FontSize</td>
@@ -2316,7 +2458,7 @@ If(
 </tr>
 <tr>
 <td>Text</td>
-<td><code>If(IsBlank(ThisItem.DateDone), "Not yet completed", "Completed " &amp; Text(ThisItem.DateDone, "dd mmm yyyy") &amp; If(IsBlank(ThisItem.ExpiresOn), "", "  ·  expires " &amp; Text(ThisItem.ExpiresOn, "dd mmm yyyy")) &amp; If(!IsBlank(ThisItem.UploadedBy), "  ·  uploaded by " &amp; ThisItem.UploadedBy, ""))</code></td>
+<td><code>If(IsBlank(ThisItem.DateDone), "Not yet completed", "Completed " &amp; Text(ThisItem.DateDone, "dd mmm yyyy") &amp; If(IsBlank(ThisItem.ExpiresOn), "", "  " &amp; Char(183) &amp; "  expires " &amp; Text(ThisItem.ExpiresOn, "dd mmm yyyy")) &amp; If(!IsBlank(ThisItem.UploadedBy), "  " &amp; Char(183) &amp; "  uploaded by " &amp; ThisItem.UploadedBy, ""))</code></td>
 </tr>
 <tr>
 <td>FontSize</td>
@@ -2529,7 +2671,7 @@ If(
 <p>Inside galMyArchive template, two labels:</p>
 <ul>
 <li><strong>lblArchiveName</strong> — X=20, Y=6, W=700, H=20, Text=<code>ThisItem.CourseName</code>, FontSize=12, Color=<code>RGBA(136,135,128,1)</code>, Fill=<code>RGBA(0,0,0,0)</code></li>
-<li><strong>lblArchiveDate</strong> — X=20, Y=28, W=900, H=16, Text=<code>"Completed " &amp; Text(ThisItem.DateDone, "dd mmm yyyy") &amp; "  ·  no longer required"</code>, FontSize=10, Color=<code>RGBA(136,135,128,1)</code>, Fill=<code>RGBA(0,0,0,0)</code></li>
+<li><strong>lblArchiveDate</strong> — X=20, Y=28, W=900, H=16, Text=<code>"Completed " &amp; Text(ThisItem.DateDone, "dd mmm yyyy") &amp; "  " &amp; Char(183) &amp; "  no longer required"</code>, FontSize=10, Color=<code>RGBA(136,135,128,1)</code>, Fill=<code>RGBA(0,0,0,0)</code></li>
 </ul>
 <h2 id="section-e-formulas-set-after-all-controls-exist"><a aria-label="Link to section" class="anchor" href="#section-e-formulas-set-after-all-controls-exist">#</a>Section E — Formulas (set after all controls exist)</h2>
 <h3 id="scrmytraining-onvisible"><a aria-label="Link to section" class="anchor" href="#scrmytraining-onvisible">#</a>scrMyTraining.OnVisible</h3>
@@ -2540,7 +2682,7 @@ ClearCollect(colMyTraining,
     ForAll(
         Filter(colCourses,
             Status.Value = "Active" &amp;&amp;
-            varMe.StaffType.Value in ApplicableTo.Value
+            CountIf(ApplicableTo, Value = varMe.StaffType.Value) > 0
         ) As C,
         With({rec: LookUp(colMyRecords, CourseID = C.ID)},
         {
@@ -2559,14 +2701,14 @@ ClearCollect(colMyTraining,
             ExpiresOn:   If(IsBlank(rec.DateCompleted) || C.RecurrenceMonths = 0,
                              Blank(),
                              DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                                     TimeUnit.Months)),
+                                     "Months")),
             TrainingStatus:
                 If(IsBlank(rec.DateCompleted), "Not Started",
                    C.RecurrenceMonths = 0, "Complete",
                    DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                           TimeUnit.Months) &lt; Today(), "Expired",
+                           "Months") &lt; Today(), "Expired",
                    DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                           TimeUnit.Months) &lt;= DateAdd(Today(), 60,
+                           "Months") &lt;= DateAdd(Today(), 60,
                            "Days"), "Expiring Soon",
                    "In Date")
         })
@@ -2796,7 +2938,7 @@ Navigate(scrCourseDetail, ScreenTransition.Cover)</code></pre></div>
 </tr>
 <tr>
 <td>Text</td>
-<td><code>varCourse.RecurText &amp; If(IsBlank(varCourse.ExpiresOn), "", "  ·  current certificate expires " &amp; Text(varCourse.ExpiresOn, "dd mmm yyyy"))</code></td>
+<td><code>varCourse.RecurText &amp; If(IsBlank(varCourse.ExpiresOn), "", "  " &amp; Char(183) &amp; "  current certificate expires " &amp; Text(varCourse.ExpiresOn, "dd mmm yyyy"))</code></td>
 </tr>
 <tr>
 <td>FontSize</td>
@@ -3068,11 +3210,31 @@ Navigate(scrCourseDetail, ScreenTransition.Cover)</code></pre></div>
 <h3 id="formulas"><a aria-label="Link to section" class="anchor" href="#formulas">#</a>Formulas</h3>
 <p><strong>btnSaveCert.OnSelect</strong></p>
 <div class="code-card" id="code-7"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-7" type="button">Wrap</button><button class="copy-btn" data-target="code-text-7" type="button">Copy</button></div></div><pre id="code-pre-7"><code id="code-text-7">Patch('TT TrainingRecords', varRecord,
-    {UploadedByEmail: If(varViewingForSelf, "", varMyEmail)}
+    {
+        UploadedByEmail: If(varViewingForSelf, "", varMyEmail),
+        LastUpdatedByEmail: varMyEmail,
+        LastUpdatedOn: Now(),
+        LastStatus: "Certificate saved",
+        AdminNote: ""
+    }
 );
 SubmitForm(frmCert)</code></pre></div>
 <p><strong>frmCert.OnSuccess</strong></p>
-<div class="code-card" id="code-8"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-8" type="button">Wrap</button><button class="copy-btn" data-target="code-text-8" type="button">Copy</button></div></div><pre id="code-pre-8"><code id="code-text-8">Notify("Training record saved.", NotificationType.Success);
+<div class="code-card" id="code-8"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-8" type="button">Wrap</button><button class="copy-btn" data-target="code-text-8" type="button">Copy</button></div></div><pre id="code-pre-8"><code id="code-text-8">Patch('TT AuditLog', Defaults('TT AuditLog'),
+    {
+        Title: varCourse.CourseName &amp; " certificate saved",
+        EntityType: "TrainingRecord",
+        EntityID: Text(frmCert.LastSubmit.ID),
+        PersonEmail: Lower(varRecord.PersonEmail),
+        CourseID: Text(varCourse.CourseID),
+        EventType: "Certificate saved",
+        EventDescription: varCourse.CourseName &amp; " certificate saved.",
+        ActorEmail: varMyEmail,
+        EventDateTime: Now(),
+        Notes: If(varViewingForSelf, "", "Manager upload")
+    }
+);
+Notify("Training record saved.", NotificationType.Success);
 Back()</code></pre></div>
 <p><strong>frmCert.OnFailure</strong></p>
 <div class="code-card" id="code-9"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-9" type="button">Wrap</button><button class="copy-btn" data-target="code-text-9" type="button">Copy</button></div></div><pre id="code-pre-9"><code id="code-text-9">Notify("Save failed: " &amp; frmCert.Error, NotificationType.Error)</code></pre></div>
@@ -3231,7 +3393,7 @@ Back()</code></pre></div>
             Filter(
                 colCourses,
                 Status.Value = "Active" &amp;&amp;
-                personStaffType in ApplicableTo.Value
+                CountIf(ApplicableTo, Value = personStaffType) > 0
             ) As C,
             With(
                 {rec: LookUp(colViewRecords, CourseID = C.ID)},
@@ -3252,14 +3414,14 @@ Back()</code></pre></div>
                     ExpiresOn:   If(
                                      IsBlank(rec.DateCompleted) || C.RecurrenceMonths = 0,
                                      Blank(),
-                                     DateAdd(rec.DateCompleted, C.RecurrenceMonths, TimeUnit.Months)
+                                     DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months")
                                  ),
                     TrainingStatus:
                         If(
                             IsBlank(rec.DateCompleted), "Not Started",
                             C.RecurrenceMonths = 0, "Complete",
-                            DateAdd(rec.DateCompleted, C.RecurrenceMonths, TimeUnit.Months) &lt; Today(), "Expired",
-                            DateAdd(rec.DateCompleted, C.RecurrenceMonths, TimeUnit.Months) &lt;= DateAdd(Today(), 60, "Days"), "Expiring Soon",
+                            DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") &lt; Today(), "Expired",
+                            DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") &lt;= DateAdd(Today(), 60, "Days"), "Expiring Soon",
                             "In Date"
                         ),
                     CanEdit: personCanEdit
@@ -3354,7 +3516,7 @@ If(
             Filter(
                 colCourses,
                 Status.Value = "Active" &amp;&amp;
-                P.StaffType in ApplicableTo.Value
+                CountIf(ApplicableTo, Value = P.StaffType) > 0
             )
         ),
 
@@ -3364,7 +3526,7 @@ If(
                 Filter(
                     colCourses,
                     Status.Value = "Active" &amp;&amp;
-                    P.StaffType in ApplicableTo.Value
+                    CountIf(ApplicableTo, Value = P.StaffType) > 0
                 ) As C,
                 With(
                     {
@@ -3380,7 +3542,7 @@ If(
                         DateAdd(
                             rec.DateCompleted,
                             C.RecurrenceMonths,
-                            TimeUnit.Months
+                            "Months"
                         ) &gt;= Today()
                     )
                 )
@@ -3490,8 +3652,8 @@ If(
 </tbody></table>
 <h3 id="txtadminsearch-text-input-modern"><a aria-label="Link to section" class="anchor" href="#txtadminsearch-text-input-modern">#</a>txtAdminSearch — Text input (modern)</h3>
 <p>X=16, Y=202, W=500, H=40, Placeholder=<code>"Search staff..."</code>, FontSize=12</p>
-<h3 id="drptypefilter-dropdown-modern"><a aria-label="Link to section" class="anchor" href="#drptypefilter-dropdown-modern">#</a>drpTypeFilter — Dropdown (modern)</h3>
-<p>X=532, Y=202, W=200, H=40, Items=<code>["All", "Civil Servant", "Army", "Contractor"]</code>, FontSize=12</p>
+<h3 id="admin-filter-chips"><a aria-label="Link to section" class="anchor" href="#admin-filter-chips">#</a>Admin filter chips</h3>
+<p>v3.0 replaces the old type dropdown with segmented chip buttons. The paste-ready <code>scrAdminDash</code> YAML creates All, Civil, Army, Contractor and attention-state chips wired to <code>varAdminFilter</code> and <code>varAdminStatusFilter</code>.</p>
 <h3 id="galcompliance-gallery-vertical-blank"><a aria-label="Link to section" class="anchor" href="#galcompliance-gallery-vertical-blank">#</a>galCompliance — Gallery (vertical, blank)</h3>
 <p>X=0, Y=258, W=900, H=510, TemplateSize=60, TemplatePadding=0, ShowScrollbar=true, Fill=<code>RGBA(0,0,0,0)</code>, BorderThickness=0.</p>
 <details class="inline-formula" data-inline-formula="code-text-14"><summary><span class="formula-title">galCompliance.Items</span><button class="copy-btn" data-target="code-text-14" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details>
@@ -3550,7 +3712,7 @@ If(
 </tbody>
 </table>
 <h3 id="drill-down-panel-right-side-appears-when-a-row-is-tapped"><a aria-label="Link to section" class="anchor" href="#drill-down-panel-right-side-appears-when-a-row-is-tapped">#</a>Drill-down panel — right side, appears when a row is tapped</h3>
-<div class="callout"><strong>v2.4 correction:</strong> for modern Toggle controls, use the <code>Checked</code> property for the current/default on-off state in this build.</div>
+<div class="callout"><strong>v3.0 correction:</strong> the manager-edit control now uses <code>CheckBox@0.0.30</code>. Use <code>Checked</code>, not <code>Value</code>.</div>
 <table>
 <thead>
 <tr>
@@ -3593,10 +3755,10 @@ If(
 <td>X=932,Y=330,W=220,H=20, Text=<code>"Line manager can upload:"</code>, FontSize=10, Color=<code>RGBA(85,85,85,1)</code>, Fill=<code>RGBA(0,0,0,0)</code></td>
 </tr>
 <tr>
-<td>tglManagerEdit</td>
-<td>Toggle (modern)</td>
-<td>X=1160,Y=326,W=160,H=28, Checked=<code>varDrillPerson.ManagerEdit</code>
-<details class="inline-formula" data-inline-formula="code-text-16"><summary><span class="formula-title">tglManagerEdit.OnChange</span><button class="copy-btn" data-target="code-text-16" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
+<td>chkManagerEdit</td>
+<td>Checkbox (modern)</td>
+<td>X=1160,Y=370,W=160,H=32, Checked=<code>varDrillPerson.ManagerEdit</code>, CheckboxSize=<code>22</code>, BasePaletteColor=<code>RGBA(156,220,79,1)</code>
+<details class="inline-formula" data-inline-formula="code-text-16"><summary><span class="formula-title">chkManagerEdit.OnCheck / OnUncheck</span><button class="copy-btn" data-target="code-text-16" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 <tr>
 <td>icoCloseDrill</td>
@@ -3645,14 +3807,35 @@ If(
 <blockquote>
 <p>Note: btnDetailPill's formula is long — keep it as its own clearly labelled block in your output rather than cramming it into the table row, for readability.</p>
 </blockquote>
+<h3 id="v3-admin-dashboard-surfaces"><a aria-label="Link to section" class="anchor" href="#v3-admin-dashboard-surfaces">#</a>v3 admin dashboard surfaces</h3>
+<p>The paste-ready <code>scrAdminDash</code> YAML also creates these v3 controls. They are native controls inspired by the PowerApps UI data-table, KPI-card, bar-list, activity-timeline and loading-overlay patterns, so the screen works without importing custom components first.</p>
+<table>
+<thead><tr><th>Surface</th><th>Controls</th><th>Data/formula dependency</th></tr></thead>
+<tbody>
+<tr><td>Needs-attention command strip</td><td><code>recAttentionStrip</code>, <code>btnAttentionExpired</code>, <code>btnAttentionExpiring</code>, <code>btnAttentionMissing</code>, <code>btnAttentionOutstanding</code>, <code>btnAttentionClear</code></td><td>Uses <code>ExpiredItems</code>, <code>ExpiringItems</code>, <code>MissingRecords</code> and <code>Outstanding</code> from <code>colCompliance</code>. Buttons set <code>varAdminStatusFilter</code>.</td></tr>
+<tr><td>Table headers and row status pill</td><td><code>lblAdminTableHeadName</code>, <code>lblAdminTableHeadProgress</code>, <code>lblAdminTableHeadStatus</code>, <code>btnRowStatusPill</code></td><td><code>galCompliance.Items</code> filters by <code>varAdminFilter</code>, <code>varAdminStatusFilter</code> and search text.</td></tr>
+<tr><td>Risk-by-staff-type bars</td><td><code>recRiskPanel</code>, <code>lblRiskTitle</code>, <code>galRiskByType</code></td><td>Uses <code>colRiskByType</code>, built by <code>scrAdminDash.OnVisible</code> with <code>GroupBy(colCompliance, StaffType, RiskRows)</code>.</td></tr>
+<tr><td>Activity timeline</td><td><code>lblTimelineTitle</code>, <code>galPersonTimeline</code></td><td>Uses <code>colPersonTimeline</code>, populated from local <code>colAuditLog</code> when a compliance row is selected or manager-edit changes.</td></tr>
+<tr><td>Loading overlay</td><td><code>recAdminLoadingScrim</code>, <code>recAdminLoadingCard</code>, <code>spnAdminLoading</code>, <code>lblAdminLoading</code></td><td>Visible while <code>varAdminLoading</code> is true.</td></tr>
+</tbody>
+</table>
 <h3 id="formulas-3"><a aria-label="Link to section" class="anchor" href="#formulas-3">#</a>Formulas</h3>
 <p><strong>galCompliance.Items</strong></p>
 <div class="code-card" id="code-14"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-14" type="button">Wrap</button><button class="copy-btn" data-target="code-text-14" type="button">Copy</button></div></div><pre id="code-pre-14"><code id="code-text-14">SortByColumns(
     Filter(colCompliance,
-        (drpTypeFilter.Selected.Value = "All" ||
-         StaffType = drpTypeFilter.Selected.Value) &amp;&amp;
+        (varAdminFilter = "All" || StaffType = varAdminFilter) &amp;&amp;
+        Switch(
+            varAdminStatusFilter,
+            "Clear", Outstanding = 0,
+            "Outstanding", Outstanding > 0,
+            "Expired", ExpiredItems > 0,
+            "Expiring Soon", ExpiringItems > 0,
+            "Missing", MissingRecords > 0,
+            "Needs attention", AttentionState &lt;> "Clear",
+            true
+        ) &amp;&amp;
         (IsBlank(txtAdminSearch.Text) ||
-         txtAdminSearch.Text in Name)
+         Lower(txtAdminSearch.Text) in Lower(Name))
     ),
     "CompliancePct", SortOrder.Ascending,
     "Name", SortOrder.Ascending
@@ -3667,7 +3850,7 @@ If(
             Filter(
                 colCourses,
                 Status.Value = "Active" &amp;&amp;
-                selectedPerson.StaffType in ApplicableTo.Value
+                CountIf(ApplicableTo, Value = selectedPerson.StaffType) > 0
             ) As C,
             With(
                 {
@@ -3688,7 +3871,7 @@ If(
                                     DateAdd(
                                         rec.DateCompleted,
                                         C.RecurrenceMonths,
-                                        TimeUnit.Months
+                                        "Months"
                                     )
                                 ),
                     TrainingStatus:
@@ -3700,13 +3883,13 @@ If(
                             DateAdd(
                                 rec.DateCompleted,
                                 C.RecurrenceMonths,
-                                TimeUnit.Months
+                                "Months"
                             ) &lt; Today(),
                             "Expired",
                             DateAdd(
                                 rec.DateCompleted,
                                 C.RecurrenceMonths,
-                                TimeUnit.Months
+                                "Months"
                             ) &lt;= DateAdd(Today(), 60, "Days"),
                             "Expiring Soon",
                             "In Date"
@@ -3715,24 +3898,80 @@ If(
                 }
             )
         )
+    );
+    ClearCollect(
+        colPersonTimeline,
+        SortByColumns(
+            Filter(colAuditLog, Lower(PersonEmail) = varDrillPerson.Email),
+            "EventDateTime",
+            SortOrder.Descending
+        )
     )
 )</code></pre></div>
-<p><strong>tglManagerEdit.OnChange</strong></p>
+<p><strong>chkManagerEdit.OnCheck and OnUncheck</strong></p>
 <div class="code-card" id="code-16"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-16" type="button">Wrap</button><button class="copy-btn" data-target="code-text-16" type="button">Copy</button></div></div><pre id="code-pre-16"><code id="code-text-16">Patch('TT Personnel',
     LookUp('TT Personnel', ID = varDrillPerson.PersonID),
-    {ManagerCanEdit: tglManagerEdit.Checked}
+    {
+        ManagerCanEdit: chkManagerEdit.Checked,
+        LastUpdatedByEmail: varMyEmail,
+        LastUpdatedOn: Now(),
+        LastStatus: If(chkManagerEdit.Checked, "Manager edit enabled", "Manager edit disabled")
+    }
+);
+Patch('TT AuditLog', Defaults('TT AuditLog'),
+    {
+        Title: varDrillPerson.Name &amp; If(chkManagerEdit.Checked, " manager edit enabled", " manager edit disabled"),
+        EntityType: "Person",
+        EntityID: Text(varDrillPerson.PersonID),
+        PersonEmail: varDrillPerson.Email,
+        CourseID: "",
+        EventType: If(chkManagerEdit.Checked, "Manager edit enabled", "Manager edit disabled"),
+        EventDescription: If(chkManagerEdit.Checked, "Line manager certificate upload enabled.", "Line manager certificate upload disabled."),
+        ActorEmail: varMyEmail,
+        EventDateTime: Now(),
+        Notes: ""
+    }
 );
 Notify(varDrillPerson.Name &amp;
-    If(tglManagerEdit.Checked,
+    If(chkManagerEdit.Checked,
         "'s line manager can now upload on their behalf.",
         "'s line manager can no longer upload."),
-    NotificationType.Success)</code></pre></div>
+    NotificationType.Success);
+Set(varDrillPerson, Patch(varDrillPerson, {ManagerEdit: chkManagerEdit.Checked}));
+ClearCollect(colAuditLog, 'TT AuditLog');
+ClearCollect(
+    colPersonTimeline,
+    SortByColumns(
+        Filter(colAuditLog, Lower(PersonEmail) = varDrillPerson.Email),
+        "EventDateTime",
+        SortOrder.Descending
+    )
+)</code></pre></div>
 <p><strong>scrAdminDash.OnVisible</strong></p>
 <div class="code-card" id="code-17"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-17" type="button">Wrap</button><button class="copy-btn" data-target="code-text-17" type="button">Copy</button></div></div><pre id="code-pre-17"><code id="code-text-17">If(!varIsAdmin, Navigate(scrMyTraining, ScreenTransition.None));
 
-ClearCollect(colAllPeople, Filter('TT Personnel', Active = true));
+Set(varAdminLoading, true);
+Set(varAdminFilter, "All");
+Set(varAdminStatusFilter, "All");
+Set(varTTTheme,
+    {
+        Primary: RGBA(24,95,165,1),
+        Success: RGBA(34,139,80,1),
+        Warning: RGBA(239,159,39,1),
+        Danger: RGBA(163,45,45,1),
+        Page: RGBA(247,249,252,1),
+        Panel: RGBA(255,255,255,1),
+        Border: RGBA(221,227,234,1),
+        Muted: RGBA(85,85,85,1)
+    }
+);
+
+ClearCollect(colAllPersonnelRaw, 'TT Personnel');
+ClearCollect(colAllPeople, Filter(colAllPersonnelRaw, Active = true));
 ClearCollect(colAllRecords, 'TT TrainingRecords');
 ClearCollect(colCourses, 'TT Courses');
+ClearCollect(colAuditLog, 'TT AuditLog');
+ClearCollect(colPersonTimeline, Table({EventDateTime: Now(), EventDescription: "Select a person to view activity.", EventType: "Ready", ActorEmail: ""}));
 
 ClearCollect(
     colCompliance,
@@ -3743,7 +3982,7 @@ ClearCollect(
                 req: Filter(
                     colCourses,
                     Status.Value = "Active" &amp;&amp;
-                    P.StaffType.Value in ApplicableTo.Value
+                    CountIf(ApplicableTo, Value = P.StaffType.Value) > 0
                 )
             },
             With(
@@ -3762,7 +4001,7 @@ ClearCollect(
                                 !IsBlank(rec.DateCompleted) &amp;&amp;
                                 (
                                     C.RecurrenceMonths = 0 ||
-                                    DateAdd(rec.DateCompleted, C.RecurrenceMonths, TimeUnit.Months) &gt;= Today()
+                                    DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") &gt;= Today()
                                 )
                             )
                         )
@@ -3778,22 +4017,91 @@ ClearCollect(
                     Required:      CountRows(req),
                     InDate:        okCount,
                     Outstanding:   CountRows(req) - okCount,
+                    MissingRecords: CountRows(
+                        Filter(
+                            req As C,
+                            IsBlank(
+                                LookUp(
+                                    colAllRecords,
+                                    Lower(PersonEmail) = Lower(P.Email) &amp;&amp;
+                                    CourseID = C.ID
+                                ).ID
+                            )
+                        )
+                    ),
+                    ExpiredItems: CountRows(
+                        Filter(
+                            req As C,
+                            With(
+                                {
+                                    rec: LookUp(
+                                        colAllRecords,
+                                        Lower(PersonEmail) = Lower(P.Email) &amp;&amp;
+                                        CourseID = C.ID
+                                    )
+                                },
+                                !IsBlank(rec.DateCompleted) &amp;&amp;
+                                C.RecurrenceMonths > 0 &amp;&amp;
+                                DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") &lt; Today()
+                            )
+                        )
+                    ),
+                    ExpiringItems: CountRows(
+                        Filter(
+                            req As C,
+                            With(
+                                {
+                                    rec: LookUp(
+                                        colAllRecords,
+                                        Lower(PersonEmail) = Lower(P.Email) &amp;&amp;
+                                        CourseID = C.ID
+                                    )
+                                },
+                                !IsBlank(rec.DateCompleted) &amp;&amp;
+                                C.RecurrenceMonths > 0 &amp;&amp;
+                                DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") &gt;= Today() &amp;&amp;
+                                DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") &lt;= DateAdd(Today(), 60, "Days")
+                            )
+                        )
+                    ),
                     CompliancePct: If(
                                        CountRows(req) = 0,
                                        100,
                                        Round(100 * okCount / Max(CountRows(req), 1), 0)
-                                   )
+                                   ),
+                    AttentionState: If(
+                                        CountRows(req) - okCount = 0,
+                                        "Clear",
+                                        okCount = 0,
+                                        "Critical",
+                                        "Needs attention"
+                                    )
                 }
             )
         )
     )
-)</code></pre></div>
+);
+
+ClearCollect(
+    colRiskByType,
+    AddColumns(
+        GroupBy(colCompliance, StaffType, RiskRows),
+        RiskCount,
+        Sum(RiskRows, Outstanding),
+        StaffCount,
+        CountRows(RiskRows),
+        AvgCompliance,
+        Round(Average(RiskRows, CompliancePct), 0)
+    )
+);
+Set(varAdminLoading, false)</code></pre></div>
 <hr/>
 <h1 id="phase-8-scradminmanage-people-tab"><span class="phase-kicker">Build phase</span><a aria-label="Link to section" class="anchor" href="#phase-8-scradminmanage-people-tab">#</a>PHASE 8 — scrAdminManage · People tab</h1>
 <p><strong>Screen property:</strong> Fill = <code>RGBA(247,249,252,1)</code></p>
 <p><strong>scrAdminManage.OnVisible:</strong></p>
 <div class="code-card"><div class="code-toolbar"><span>Power Fx / formula</span></div><pre><code>If(!varIsAdmin, Navigate(scrMyTraining, ScreenTransition.None));
 If(IsBlank(varTab), Set(varTab, "People"));
+ClearCollect(colAllPeople, Filter('TT Personnel', Active = true));
 ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 <p><strong>Create these header controls directly on <code>scrAdminManage</code>.</strong> They are the same visual style as the admin dashboard header, but the full properties are listed here so you do not need to go back.</p>
 <h4>recAdminManageHeader — Button (classic)</h4>
@@ -3811,36 +4119,40 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 <h3 id="tab-buttons"><a aria-label="Link to section" class="anchor" href="#tab-buttons">#</a>Tab buttons</h3>
 <div class="callout"><strong>v2.5 clarity fix:</strong> create these two controls now. Do not group anything yet. These are the tab selector buttons that stay visible while you switch between People and Courses.</div>
 
-<h4>btnTabPeople — Button (modern)</h4>
+<h4>btnTabPeople — Button (classic)</h4>
 <table>
 <thead><tr><th>Property</th><th>Value</th></tr></thead>
 <tbody>
-<tr><td>Type</td><td>Button (modern)</td></tr>
+<tr><td>Type</td><td>Button (classic)</td></tr>
 <tr><td>X</td><td>16</td></tr>
 <tr><td>Y</td><td>88</td></tr>
 <tr><td>Width</td><td>120</td></tr>
 <tr><td>Height</td><td>40</td></tr>
 <tr><td>Text</td><td><code>"People"</code></td></tr>
 <tr><td>FontSize</td><td>12</td></tr>
-<tr><td>BasePaletteColor</td><td><code>If(varTab="People",RGBA(24,95,165,1),RGBA(244,246,248,1))</code></td></tr>
-<tr><td>Color</td><td><code>If(varTab="People",RGBA(255,255,255,1),RGBA(85,85,85,1))</code></td></tr>
+<tr><td>Fill</td><td><code>If(varTab="People",RGBA(24,95,165,1),RGBA(255,255,255,1))</code></td></tr>
+<tr><td>Color</td><td><code>If(varTab="People",RGBA(255,255,255,1),RGBA(24,95,165,1))</code></td></tr>
+<tr><td>BorderColor</td><td><code>RGBA(24,95,165,1)</code></td></tr>
+<tr><td>BorderThickness</td><td>1</td></tr>
 <tr><td>OnSelect</td><td><code>Set(varTab,"People")</code></td></tr>
 </tbody>
 </table>
 
-<h4>btnTabCourses — Button (modern)</h4>
+<h4>btnTabCourses — Button (classic)</h4>
 <table>
 <thead><tr><th>Property</th><th>Value</th></tr></thead>
 <tbody>
-<tr><td>Type</td><td>Button (modern)</td></tr>
+<tr><td>Type</td><td>Button (classic)</td></tr>
 <tr><td>X</td><td>152</td></tr>
 <tr><td>Y</td><td>88</td></tr>
 <tr><td>Width</td><td>120</td></tr>
 <tr><td>Height</td><td>40</td></tr>
 <tr><td>Text</td><td><code>"Courses"</code></td></tr>
 <tr><td>FontSize</td><td>12</td></tr>
-<tr><td>BasePaletteColor</td><td><code>If(varTab="Courses",RGBA(24,95,165,1),RGBA(244,246,248,1))</code></td></tr>
-<tr><td>Color</td><td><code>If(varTab="Courses",RGBA(255,255,255,1),RGBA(85,85,85,1))</code></td></tr>
+<tr><td>Fill</td><td><code>If(varTab="Courses",RGBA(24,95,165,1),RGBA(255,255,255,1))</code></td></tr>
+<tr><td>Color</td><td><code>If(varTab="Courses",RGBA(255,255,255,1),RGBA(24,95,165,1))</code></td></tr>
+<tr><td>BorderColor</td><td><code>RGBA(24,95,165,1)</code></td></tr>
+<tr><td>BorderThickness</td><td>1</td></tr>
 <tr><td>OnSelect</td><td><code>Set(varTab,"Courses")</code></td></tr>
 </tbody>
 </table>
@@ -3922,6 +4234,53 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 </tr>
 </tbody>
 </table>
+<h3 id="edit-person-panel"><a aria-label="Link to section" class="anchor" href="#edit-person-panel">#</a>Edit person panel</h3>
+<p>The paste-ready <code>scrAdminManage</code> YAML includes a full edit panel that appears when <code>varEditPerson</code> is set from the row edit icon. Set <code>Visible = varTab = "People" &amp;&amp; !IsBlank(varEditPerson)</code> on each edit-panel control.</p>
+<table>
+<thead><tr><th>Control</th><th>Type</th><th>Key properties</th></tr></thead>
+<tbody>
+<tr><td><code>recEditPersonPanel</code></td><td>Button (classic)</td><td>X=16,Y=144,W=640,H=330, Text=<code>""</code>, DisplayMode=<code>DisplayMode.View</code>, white fill, blue border, all radius=8.</td></tr>
+<tr><td><code>lblEditPersonTitle</code></td><td>Label</td><td>X=32,Y=156,W=400,H=24, Text=<code>"Edit person"</code>.</td></tr>
+<tr><td><code>lblEditPersonEmail</code></td><td>Label</td><td>X=32,Y=184,W=590,H=20, Text=<code>varEditPerson.Email</code>.</td></tr>
+<tr><td><code>txtEditPersonName</code></td><td>Text input (modern)</td><td>X=32,Y=210,W=590,H=40, Default=<code>varEditPerson.Title</code>.</td></tr>
+<tr><td><code>drpEditPersonType</code></td><td>Dropdown (modern)</td><td>X=32,Y=258,W=284, Items=<code>["Civil Servant", "Army", "Contractor"]</code>, Default=<code>LookUp(["Civil Servant", "Army", "Contractor"], Value = varEditPerson.StaffType.Value)</code>.</td></tr>
+<tr><td><code>txtEditPersonManager</code></td><td>Text input (modern)</td><td>X=326,Y=258,W=296,H=40, Default=<code>varEditPerson.LineManagerEmail</code>.</td></tr>
+<tr><td><code>tglEditAdmin</code></td><td>Toggle (modern)</td><td>X=32,Y=308,W=160,H=32, Checked=<code>varEditPerson.IsAdmin</code>, Label=<code>"Is admin"</code>.</td></tr>
+<tr><td><code>tglEditM365</code></td><td>Toggle (modern)</td><td>X=210,Y=308,W=200,H=32, Checked=<code>varEditPerson.HasM365Access</code>, Label=<code>"Has M365 account"</code>.</td></tr>
+<tr><td><code>btnSavePerson</code></td><td>Button (modern)</td><td>X=32,Y=356,W=440,H=44, Text=<code>"Save changes"</code>. Use <code>btnSavePerson.OnSelect</code> below.</td></tr>
+<tr><td><code>btnCancelEditPerson</code></td><td>Button (modern)</td><td>X=480,Y=356,W=140,H=44, Text=<code>"Cancel"</code>, OnSelect=<code>Set(varEditPerson, Blank())</code>.</td></tr>
+</tbody>
+</table>
+<p><strong>btnSavePerson.OnSelect</strong></p>
+<div class="code-card" id="code-29"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-29" type="button">Wrap</button><button class="copy-btn" data-target="code-text-29" type="button">Copy</button></div></div><pre id="code-pre-29"><code id="code-text-29">Patch('TT Personnel', varEditPerson,
+    {
+        Title:            Trim(txtEditPersonName.Text),
+        StaffType:        {Value: drpEditPersonType.Selected.Value},
+        LineManagerEmail: Lower(Trim(txtEditPersonManager.Text)),
+        IsAdmin:          tglEditAdmin.Checked,
+        HasM365Access:    tglEditM365.Checked,
+        LastUpdatedByEmail: varMyEmail,
+        LastUpdatedOn: Now(),
+        LastStatus: "Updated"
+    }
+);
+Patch('TT AuditLog', Defaults('TT AuditLog'),
+    {
+        Title: Trim(txtEditPersonName.Text) &amp; " updated",
+        EntityType: "Person",
+        EntityID: Text(varEditPerson.ID),
+        PersonEmail: Lower(varEditPerson.Email),
+        CourseID: "",
+        EventType: "Person updated",
+        EventDescription: Trim(txtEditPersonName.Text) &amp; " profile updated.",
+        ActorEmail: varMyEmail,
+        EventDateTime: Now(),
+        Notes: ""
+    }
+);
+Refresh('TT Personnel');
+Set(varEditPerson, Blank());
+Notify(Trim(txtEditPersonName.Text) &amp; " updated.", NotificationType.Success)</code></pre></div>
 <h3 id="people-gallery"><a aria-label="Link to section" class="anchor" href="#people-gallery">#</a>People gallery</h3>
 <div class="callout"><strong>v2.7 audit note:</strong> this gallery is bound directly to SharePoint personnel rows, so <code>ThisItem.ID</code> is available here. Use <code>Mod(ThisItem.ID,2)</code> for alternating row colours.</div>
 <table>
@@ -3968,7 +4327,7 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 <tr>
 <td>drpRowType</td>
 <td>Dropdown (modern)</td>
-<td>X=346,Y=14,W=170,H=32, Items=<code>["Civil Servant","Army","Contractor"]</code>, Default=<code>ThisItem.StaffType.Value</code>, FontSize=10
+<td>X=326,Y=14,W=170,H=32, Items=<code>["Civil Servant","Army","Contractor"]</code>, Default=<code>LookUp(["Civil Servant","Army","Contractor"], Value = ThisItem.StaffType.Value)</code>, ItemDisplayText=<code>ThisItem.Value</code>, FontSize=10
 <details class="inline-formula" data-inline-formula="code-text-20"><summary><span class="formula-title">drpRowType.OnChange</span><button class="copy-btn" data-target="code-text-20" type="button">Copy formula</button></summary><div class="inline-formula-body"></div></details></td>
 </tr>
 <tr>
@@ -3985,7 +4344,7 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 </tbody>
 </table>
 <h3 id="group-people-controls"><a aria-label="Link to section" class="anchor" href="#group-people-controls">#</a>Group People controls — do this after the People controls exist</h3>
-<div class="callout"><strong>v2.5 sequencing fix:</strong> do this only after you have created the Add person panel and the People gallery. Do not include the header or tab buttons in this group.</div>
+<div class="callout"><strong>v3.0 sequencing fix:</strong> do this only after you have created the Add person panel, Edit person panel and People gallery. Do not include the header or tab buttons in this group.</div>
 
 <p>Select these top-level controls in the tree view and group them as <code>grpPeople</code>:</p>
 <ul>
@@ -4001,6 +4360,16 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 <li><code>tglNewAdmin</code></li>
 <li><code>tglHasM365</code></li>
 <li><code>btnAddPerson</code></li>
+<li><code>recEditPersonPanel</code></li>
+<li><code>lblEditPersonTitle</code></li>
+<li><code>lblEditPersonEmail</code></li>
+<li><code>txtEditPersonName</code></li>
+<li><code>drpEditPersonType</code></li>
+<li><code>txtEditPersonManager</code></li>
+<li><code>tglEditAdmin</code></li>
+<li><code>tglEditM365</code></li>
+<li><code>btnSavePerson</code></li>
+<li><code>btnCancelEditPerson</code></li>
 <li><code>galPeople</code></li>
 </ul>
 
@@ -4046,17 +4415,62 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
         IsBlank(newEmail) || IsBlank(newName),
         Notify("Email and name are required.", NotificationType.Warning),
 
-        !IsBlank(LookUp('TT Personnel', Lower(Email) = newEmail)),
-        Patch('TT Personnel',
-            LookUp('TT Personnel', Lower(Email) = newEmail),
-            {Active: true});
+        !IsBlank(LookUp('TT Personnel', Email = newEmail)),
+        With(
+            {
+                savedPerson: Patch('TT Personnel',
+                    LookUp('TT Personnel', Email = newEmail),
+                    {
+                        Active: true,
+                        LastUpdatedByEmail: varMyEmail,
+                        LastUpdatedOn: Now(),
+                        LastStatus: "Reactivated"
+                    }
+                )
+            },
+            Patch('TT AuditLog', Defaults('TT AuditLog'),
+                {
+                    Title: newName &amp; " reactivated",
+                    EntityType: "Person",
+                    EntityID: Text(savedPerson.ID),
+                    PersonEmail: newEmail,
+                    CourseID: "",
+                    EventType: "Person reactivated",
+                    EventDescription: newName &amp; " reactivated in Training Tracker.",
+                    ActorEmail: varMyEmail,
+                    EventDateTime: Now(),
+                    Notes: ""
+                }
+            )
+        );
         Notify("Already in system — reactivated.", NotificationType.Warning),
 
-        Patch('TT Personnel', Defaults('TT Personnel'),
-            {Title:newName, Email:newEmail, StaffType:{Value:newType},
-             IsAdmin:tglNewAdmin.Checked, Active:true,
-             HasM365Access:newHasM365, LineManagerEmail:newManager,
-             ManagerCanEdit:false}
+        With(
+            {
+                savedPerson: Patch('TT Personnel', Defaults('TT Personnel'),
+                    {Title:newName, Email:newEmail, StaffType:{Value:newType},
+                     IsAdmin:tglNewAdmin.Checked, Active:true,
+                     HasM365Access:newHasM365, LineManagerEmail:newManager,
+                     ManagerCanEdit:false,
+                     LastUpdatedByEmail: varMyEmail,
+                     LastUpdatedOn: Now(),
+                     LastStatus: "Created"}
+                )
+            },
+            Patch('TT AuditLog', Defaults('TT AuditLog'),
+                {
+                    Title: newName &amp; " added",
+                    EntityType: "Person",
+                    EntityID: Text(savedPerson.ID),
+                    PersonEmail: newEmail,
+                    CourseID: "",
+                    EventType: "Person added",
+                    EventDescription: newName &amp; " added to Training Tracker.",
+                    ActorEmail: varMyEmail,
+                    EventDateTime: Now(),
+                    Notes: ""
+                }
+            )
         );
         Notify(newName &amp; " added.", NotificationType.Success);
         Reset(cmbNewPerson); Reset(txtManualEmail); Reset(txtManualName);
@@ -4065,13 +4479,54 @@ ClearCollect(colCourses, 'TT Courses')</code></pre></div>
 )</code></pre></div>
 <p><strong>drpRowType.OnChange</strong></p>
 <div class="code-card" id="code-20"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-20" type="button">Wrap</button><button class="copy-btn" data-target="code-text-20" type="button">Copy</button></div></div><pre id="code-pre-20"><code id="code-text-20">Patch('TT Personnel', ThisItem,
-    {StaffType: {Value: Self.Selected.Value}});
+    {
+        StaffType: {Value: Self.Selected.Value},
+        LastUpdatedByEmail: varMyEmail,
+        LastUpdatedOn: Now(),
+        LastStatus: "Staff type changed"
+    }
+);
+Patch('TT AuditLog', Defaults('TT AuditLog'),
+    {
+        Title: ThisItem.Title &amp; " staff type changed",
+        EntityType: "Person",
+        EntityID: Text(ThisItem.ID),
+        PersonEmail: Lower(ThisItem.Email),
+        CourseID: "",
+        EventType: "Person updated",
+        EventDescription: ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
+        ActorEmail: varMyEmail,
+        EventDateTime: Now(),
+        Notes: ""
+    }
+);
 Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
        NotificationType.Success)</code></pre></div>
 <p><strong>icoRemove.OnSelect (two-tap confirm)</strong></p>
 <div class="code-card" id="code-21"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-21" type="button">Wrap</button><button class="copy-btn" data-target="code-text-21" type="button">Copy</button></div></div><pre id="code-pre-21"><code id="code-text-21">If(
     varConfirmRemove = ThisItem.ID,
-    Patch('TT Personnel', ThisItem, {Active: false});
+    Patch('TT Personnel', ThisItem,
+        {
+            Active: false,
+            LastUpdatedByEmail: varMyEmail,
+            LastUpdatedOn: Now(),
+            LastStatus: "Deactivated"
+        }
+    );
+    Patch('TT AuditLog', Defaults('TT AuditLog'),
+        {
+            Title: ThisItem.Title &amp; " deactivated",
+            EntityType: "Person",
+            EntityID: Text(ThisItem.ID),
+            PersonEmail: Lower(ThisItem.Email),
+            CourseID: "",
+            EventType: "Person deactivated",
+            EventDescription: ThisItem.Title &amp; " deactivated. Records kept.",
+            ActorEmail: varMyEmail,
+            EventDateTime: Now(),
+            Notes: ""
+        }
+    );
     Set(varConfirmRemove, Blank());
     Notify(ThisItem.Title &amp; " deactivated. Records and certificates kept.",
            NotificationType.Success),
@@ -4240,7 +4695,7 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 <tr>
 <td>lblCrsDetail</td>
 <td>Label</td>
-<td>X=16,Y=32,W=380,H=18, Text=<code>Switch(ThisItem.RecurrenceMonths,0,"One-off",12,"Every year",24,"Every 2 years","Every " &amp; ThisItem.RecurrenceMonths &amp; " months") &amp; "  ·  " &amp; Concat(ThisItem.ApplicableTo, Value &amp; ", ")</code>, FontSize=9, Color=<code>RGBA(136,135,128,1)</code>, Fill=<code>RGBA(0,0,0,0)</code></td>
+<td>X=16,Y=32,W=380,H=18, Text=<code>Switch(ThisItem.RecurrenceMonths,0,"One-off",12,"Every year",24,"Every 2 years","Every " &amp; ThisItem.RecurrenceMonths &amp; " months") &amp; "  " &amp; Char(183) &amp; "  " &amp; Left(Concat(ThisItem.ApplicableTo, Value &amp; ", "), Max(Len(Concat(ThisItem.ApplicableTo, Value &amp; ", ")) - 2, 0))</code>, FontSize=9, Color=<code>RGBA(136,135,128,1)</code>, Fill=<code>RGBA(0,0,0,0)</code></td>
 </tr>
 <tr>
 <td>lblArchivedBadge</td>
@@ -4319,13 +4774,34 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
     IsBlank(txtNewCourse.Text) || CountRows(cmbNewApplic.SelectedItems) = 0,
     Notify("Course needs a name and at least one staff type.",
            NotificationType.Warning),
-    Patch('TT Courses', Defaults('TT Courses'),
+    With(
         {
-            Title:            Trim(txtNewCourse.Text),
-            ApplicableTo:     ForAll(cmbNewApplic.SelectedItems As T, {Value: T.Value}),
-            RecurrenceMonths: drpNewRecur.Selected.Months,
-            Status:           {Value: "Active"}
-        }
+            savedCourse: Patch('TT Courses', Defaults('TT Courses'),
+                {
+                    Title:            Trim(txtNewCourse.Text),
+                    ApplicableTo:     ForAll(cmbNewApplic.SelectedItems, {Value: Value}),
+                    RecurrenceMonths: drpNewRecur.Selected.Months,
+                    Status:           {Value: "Active"},
+                    LastUpdatedByEmail: varMyEmail,
+                    LastUpdatedOn: Now(),
+                    LastStatus: "Created"
+                }
+            )
+        },
+        Patch('TT AuditLog', Defaults('TT AuditLog'),
+            {
+                Title: savedCourse.Title &amp; " added",
+                EntityType: "Course",
+                EntityID: Text(savedCourse.ID),
+                PersonEmail: "",
+                CourseID: Text(savedCourse.ID),
+                EventType: "Course added",
+                EventDescription: savedCourse.Title &amp; " added to the mandatory course list.",
+                ActorEmail: varMyEmail,
+                EventDateTime: Now(),
+                Notes: ""
+            }
+        )
     );
     Notify("Course added.", NotificationType.Success);
     Reset(txtNewCourse); Reset(cmbNewApplic); Reset(drpNewRecur);
@@ -4335,8 +4811,25 @@ Notify(ThisItem.Title &amp; " is now " &amp; Self.Selected.Value &amp; ".",
 <div class="code-card" id="code-24"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-24" type="button">Wrap</button><button class="copy-btn" data-target="code-text-24" type="button">Copy</button></div></div><pre id="code-pre-24"><code id="code-text-24">Patch('TT Courses', varEditCourse,
     {
         Title:            Trim(txtEditCourse.Text),
-        ApplicableTo:     ForAll(cmbEditApplic.SelectedItems As T, {Value: T.Value}),
-        RecurrenceMonths: drpEditRecur.Selected.Months
+        ApplicableTo:     ForAll(cmbEditApplic.SelectedItems, {Value: Value}),
+        RecurrenceMonths: drpEditRecur.Selected.Months,
+        LastUpdatedByEmail: varMyEmail,
+        LastUpdatedOn: Now(),
+        LastStatus: "Updated"
+    }
+);
+Patch('TT AuditLog', Defaults('TT AuditLog'),
+    {
+        Title: Trim(txtEditCourse.Text) &amp; " updated",
+        EntityType: "Course",
+        EntityID: Text(varEditCourse.ID),
+        PersonEmail: "",
+        CourseID: Text(varEditCourse.ID),
+        EventType: "Course updated",
+        EventDescription: Trim(txtEditCourse.Text) &amp; " course settings updated.",
+        ActorEmail: varMyEmail,
+        EventDateTime: Now(),
+        Notes: ""
     }
 );
 Notify("Course updated. Expiry dates recalculate automatically.",
@@ -4346,7 +4839,28 @@ Set(varEditCourse, Blank())</code></pre></div>
 <p><strong>icoArchiveCourse.OnSelect</strong> — use this only for the gallery archive icon.</p>
 <div class="code-card" id="code-25"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-25" type="button">Wrap</button><button class="copy-btn" data-target="code-text-25" type="button">Copy</button></div></div><pre id="code-pre-25"><code id="code-text-25">If(
     varConfirmArchive = ThisItem.ID,
-    Patch('TT Courses', ThisItem, {Status: {Value: "Archived"}});
+    Patch('TT Courses', ThisItem,
+        {
+            Status: {Value: "Archived"},
+            LastUpdatedByEmail: varMyEmail,
+            LastUpdatedOn: Now(),
+            LastStatus: "Archived"
+        }
+    );
+    Patch('TT AuditLog', Defaults('TT AuditLog'),
+        {
+            Title: ThisItem.Title &amp; " archived",
+            EntityType: "Course",
+            EntityID: Text(ThisItem.ID),
+            PersonEmail: "",
+            CourseID: Text(ThisItem.ID),
+            EventType: "Course archived",
+            EventDescription: ThisItem.Title &amp; " archived. Records kept.",
+            ActorEmail: varMyEmail,
+            EventDateTime: Now(),
+            Notes: ""
+        }
+    );
     Set(varConfirmArchive, Blank());
     ClearCollect(colCourses, 'TT Courses');
     Notify("Course archived. Records and certificates kept forever.", NotificationType.Success),
@@ -4356,7 +4870,28 @@ Set(varEditCourse, Blank())</code></pre></div>
 <p><strong>btnArchive.OnSelect</strong> — use this only for the edit-panel Archive button.</p>
 <div class="code-card" id="code-28"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-28" type="button">Wrap</button><button class="copy-btn" data-target="code-text-28" type="button">Copy</button></div></div><pre id="code-pre-28"><code id="code-text-28">If(
     varConfirmArchive = varEditCourse.ID,
-    Patch('TT Courses', varEditCourse, {Status: {Value: "Archived"}});
+    Patch('TT Courses', varEditCourse,
+        {
+            Status: {Value: "Archived"},
+            LastUpdatedByEmail: varMyEmail,
+            LastUpdatedOn: Now(),
+            LastStatus: "Archived"
+        }
+    );
+    Patch('TT AuditLog', Defaults('TT AuditLog'),
+        {
+            Title: varEditCourse.Title &amp; " archived",
+            EntityType: "Course",
+            EntityID: Text(varEditCourse.ID),
+            PersonEmail: "",
+            CourseID: Text(varEditCourse.ID),
+            EventType: "Course archived",
+            EventDescription: varEditCourse.Title &amp; " archived. Records kept.",
+            ActorEmail: varMyEmail,
+            EventDateTime: Now(),
+            Notes: ""
+        }
+    );
     Set(varConfirmArchive, Blank());
     Set(varEditCourse, Blank());
     ClearCollect(colCourses, 'TT Courses');
@@ -4365,7 +4900,28 @@ Set(varEditCourse, Blank())</code></pre></div>
     Notify("Press Archive again to confirm.", NotificationType.Warning)
 )</code></pre></div>
 <p><strong>icoRestoreCourse.OnSelect</strong></p>
-<div class="code-card" id="code-26"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-26" type="button">Wrap</button><button class="copy-btn" data-target="code-text-26" type="button">Copy</button></div></div><pre id="code-pre-26"><code id="code-text-26">Patch('TT Courses', ThisItem, {Status: {Value: "Active"}});
+<div class="code-card" id="code-26"><div class="code-toolbar"><span>Power Fx / formula</span><div><button class="wrap-btn" data-target="code-pre-26" type="button">Wrap</button><button class="copy-btn" data-target="code-text-26" type="button">Copy</button></div></div><pre id="code-pre-26"><code id="code-text-26">Patch('TT Courses', ThisItem,
+    {
+        Status: {Value: "Active"},
+        LastUpdatedByEmail: varMyEmail,
+        LastUpdatedOn: Now(),
+        LastStatus: "Restored"
+    }
+);
+Patch('TT AuditLog', Defaults('TT AuditLog'),
+    {
+        Title: ThisItem.Title &amp; " restored",
+        EntityType: "Course",
+        EntityID: Text(ThisItem.ID),
+        PersonEmail: "",
+        CourseID: Text(ThisItem.ID),
+        EventType: "Course restored",
+        EventDescription: ThisItem.Title &amp; " restored to the mandatory list.",
+        ActorEmail: varMyEmail,
+        EventDateTime: Now(),
+        Notes: ""
+    }
+);
 ClearCollect(colCourses, 'TT Courses');
 Notify("Course restored to the mandatory list.", NotificationType.Success)</code></pre></div>
 <hr/>
@@ -4582,7 +5138,7 @@ Notify("Report sent — check your inbox in ~30 seconds.", NotificationType.Succ
 </div>
 </details>
 </article>
-<p class="footer">Generated from the uploaded Markdown handoff. Current HTML guide version: v2.8 — inline formulas and row tracking. Standalone HTML: no external scripts, fonts, or tracking.</p>
+<p class="footer">Generated from the uploaded Markdown handoff. Current HTML guide version: v3.0 — admin dashboard and audit upgrade. Standalone HTML: no external scripts, fonts, or tracking.</p>
 </main>
 </div>
 <a aria-label="Back to top" class="to-top" href="#top">↑</a>

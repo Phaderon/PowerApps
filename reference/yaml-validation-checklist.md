@@ -93,6 +93,7 @@ Controls appear in the order listed — later = on top. Verify:
 **ModernDropdown@1.0.1 — verify:**
 - [ ] `Default` is a record `{Value: "..."}` not a plain string — a plain string causes blank display on load
 - [ ] If `Items` is table-shaped, `ItemDisplayText` is set explicitly
+- [ ] If `Default` is being seeded from a **SharePoint Choice column** (e.g. `ThisItem.ChoiceField`), pass the field directly — it is *already* the `{Value: "..."}` record. Adding `.Value` unwraps it to a plain string, which then fails to match `Items`' `{Value: "..."}` row shape with "invalid formula, expected a value compatible with Items." Confirmed in Branch Contact Groups (`drpEditThursdayBatch`, `ThisItem.ThursdayBatch.Value` → fix: `ThisItem.ThursdayBatch`). 2026-07-23.
 
 ---
 

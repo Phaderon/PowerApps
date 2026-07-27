@@ -249,13 +249,20 @@ Verified key properties (per docs, not live-confirmed):
 
 Get a live export before using in a full-screen paste — exact enum syntax (typed vs. string literal) unconfirmed, same caveat as everything below not yet used live in this app family.
 
-## Modern Checkbox
+## Modern Checkbox (`CheckBox@0.0.30` — note the type name has no "Modern" prefix, unlike Button/Dropdown/TextInput)
 
 Same trap as Modern Toggle above:
 
 - Read/set state via `Checked`, not `.Value` and not `Default`.
 - `Label` is the caption text (not `Text`).
 - `OnCheck` / `OnUncheck` / `OnSelect`.
+
+**Confirmed live 2026-07-24** (Branch Contact Groups `recCheckBox`, real Studio export via GitHub issue) — Layer A (Microsoft's real parser) accepted the control cleanly, and it renders/behaves correctly in Studio (first live confirmation of this control in this app family):
+- `BasePaletteColor` — sets the checkbox's accent colour, e.g. `=RGBA(156, 220, 79, 1)` for green. Same property name/pattern as ModernButton's colour property.
+- `CheckboxSize` — controls the size of the checkbox glyph itself, independent of the control's own `Width`/`Height` (which set the overall hit-target/bounding box). Confirmed live at `=22` with `Width`/`Height` at `=38`.
+- Standard `X`/`Y`/`Width`/`Height` all behave as expected.
+
+**Standing default for this app family, per explicit user instruction 2026-07-24**: every `CheckBox@0.0.30` in Branch Contact Groups should use `BasePaletteColor: =RGBA(156, 220, 79, 1)` and `CheckboxSize: =22` — this is the confirmed, user-approved house style, not just a one-off. Apply it by default to any new Modern Checkbox in this app, not only when asked. `Width`/`Height` stay context-dependent (a standalone tick-square like `recCheckBox` used `=38`/`=38`; a checkbox whose own `Label` also carries a long line of text inline, like `chkGroupMember`/`chkAddPersonGroup`, keeps a shorter `Height` — e.g. `=32` — sized to the surrounding row/template instead).
 
 ## Modern Date Picker
 
@@ -347,3 +354,7 @@ Already in live use throughout `Main.yaml` (the `Published`/`ReadyForRelease`/`A
 - `Direction` (prose) / `LayoutDirection` (example) — same naming inconsistency as above, `LayoutDirection.Horizontal` is what the actual YAML examples use.
 - `Fill` auto-contrasts title/subtitle/description text colour unless `TitleColor`/`SubtitleColor`/`DescriptionColor` are set explicitly.
 - Could be a real upgrade path for Policy Tracker's hand-built release-list item cards eventually, but not until this control's real property names are confirmed live — don't use it in a full-paste screen override until then.
+
+## Label (`Label@2.5.1`) — `Tooltip` property
+
+**Confirmed live 2026-07-24** (Branch Contact Groups, `lblRowTitle`/`lblGroupName`) via an isolated `payaml-validate` Layer A test before use — `Tooltip` is a valid property on `Label@2.5.1`, showing the given text on hover. Useful pattern: combine with a character-cap truncation formula on `Text` (e.g. `=If(Len(full) > N, Left(full, N) & "...", full)`) so long dynamic text gets a visible "..." cutoff plus a full-text tooltip on hover, rather than silently clipping via `Wrap: =false` alone with no way to see the rest.

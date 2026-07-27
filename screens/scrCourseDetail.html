@@ -59,7 +59,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 4 of 7</p>
   <h1>scrCourseDetail</h1>
-  <p class="meta">v2.2 &mdash; Added OnVisible: ResetForm(frmCert) so the form reloads between course visits &middot; 21 Jun 2026</p>
+  <p class="meta">v2.5 &mdash; Audit fields and activity timeline hooks added &middot; 25 Jul 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">← Guide library</button></a>
@@ -135,7 +135,7 @@ const yaml = `Screens:
             Font: =Font.'Open Sans'
             Height: =24
             Size: =11
-            Text: =varCourse.RecurText & If(IsBlank(varCourse.ExpiresOn), "", " · current certificate expires " & Text(varCourse.ExpiresOn, "dd mmm yyyy"))
+            Text: =varCourse.RecurText & If(IsBlank(varCourse.ExpiresOn), "", " " & Char(183) & " current certificate expires " & Text(varCourse.ExpiresOn, "dd mmm yyyy"))
             Width: =900
             X: =52
             Y: =44
@@ -194,7 +194,21 @@ const yaml = `Screens:
             OnFailure: |-
               =Notify("Save failed: " & frmCert.Error, NotificationType.Error)
             OnSuccess: |-
-              =Notify("Training record saved.", NotificationType.Success);
+              =Patch('TT AuditLog', Defaults('TT AuditLog'),
+                  {
+                      Title: varCourse.CourseName & " certificate saved",
+                      EntityType: "TrainingRecord",
+                      EntityID: Text(frmCert.LastSubmit.ID),
+                      PersonEmail: Lower(varRecord.PersonEmail),
+                      CourseID: Text(varCourse.CourseID),
+                      EventType: "Certificate saved",
+                      EventDescription: varCourse.CourseName & " certificate saved.",
+                      ActorEmail: varMyEmail,
+                      EventDateTime: Now(),
+                      Notes: If(varViewingForSelf, "", "Manager upload")
+                  }
+              );
+              Notify("Training record saved.", NotificationType.Success);
               Back()
             Width: =736
             X: =315
@@ -373,11 +387,16 @@ const yaml = `Screens:
           Properties:
             BasePaletteColor: =RGBA(24,95,165,1)
             Color: =RGBA(255,255,255,1)
-            FontWeight: =FontWeight.Bold
             Height: =44
             OnSelect: |-
               =Patch('TT TrainingRecords', varRecord,
-                  {UploadedByEmail: If(varViewingForSelf, "", varMyEmail)}
+                  {
+                      UploadedByEmail: If(varViewingForSelf, "", varMyEmail),
+                      LastUpdatedByEmail: varMyEmail,
+                      LastUpdatedOn: Now(),
+                      LastStatus: "Certificate saved",
+                      AdminNote: ""
+                  }
               );
               SubmitForm(frmCert)
             Size: =13

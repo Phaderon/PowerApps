@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 6 of 7</p>
   <h1>scrAdminDash</h1>
-  <p class="meta">v1.9 &mdash; Status pill Label (solid colour + white text) · 21 Jun 2026</p>
+  <p class="meta">v3.0 &mdash; KPI dashboard, attention filters, risk bars, activity timeline and audit hooks · 25 Jul 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -32,7 +32,7 @@
   <div class="instructions">
     <strong>How to paste into Power Apps Studio</strong><br>
     Tree View &rarr; click screen &rarr; Ctrl+A &rarr; Delete &rarr; Ctrl+V.<br><br>
-    <strong>After pasting:</strong> drag recRowBGCom to the bottom of galCompliance children in Tree View (Z-order).
+    <strong>After pasting:</strong> if any row background covers text, send that background control behind the row labels inside the gallery template.
   </div>
   <script>
 const yaml = `Screens:
@@ -41,9 +41,29 @@ const yaml = `Screens:
       Fill: =RGBA(247,249,252,1)
       LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
       OnVisible: |-
-        =ClearCollect(colAllPeople, Filter('TT Personnel', Active = true));
+        =If(!varIsAdmin, Navigate(scrMyTraining, ScreenTransition.None));
+        Set(varAdminLoading, true);
+        Set(varAdminFilter, "All");
+        Set(varAdminStatusFilter, "All");
+        Set(varTTTheme,
+            {
+                Primary: RGBA(24,95,165,1),
+                Success: RGBA(34,139,80,1),
+                Warning: RGBA(239,159,39,1),
+                Danger: RGBA(163,45,45,1),
+                Page: RGBA(247,249,252,1),
+                Panel: RGBA(255,255,255,1),
+                Border: RGBA(221,227,234,1),
+                Muted: RGBA(85,85,85,1)
+            }
+        );
+
+        ClearCollect(colAllPersonnelRaw, 'TT Personnel');
+        ClearCollect(colAllPeople, Filter(colAllPersonnelRaw, Active = true));
         ClearCollect(colAllRecords, 'TT TrainingRecords');
         ClearCollect(colCourses, 'TT Courses');
+        ClearCollect(colAuditLog, 'TT AuditLog');
+        ClearCollect(colPersonTimeline, Table({EventDateTime: Now(), EventDescription: "Select a person to view activity.", EventType: "Ready", ActorEmail: ""}));
 
         ClearCollect(
             colCompliance,
@@ -54,7 +74,7 @@ const yaml = `Screens:
                         req: Filter(
                             colCourses,
                             Status.Value = "Active" &&
-                            P.StaffType.Value in ApplicableTo.Value
+                            CountIf(ApplicableTo, Value = P.StaffType.Value) > 0
                         )
                     },
                     With(
@@ -73,7 +93,7 @@ const yaml = `Screens:
                                         !IsBlank(rec.DateCompleted) &&
                                         (
                                             C.RecurrenceMonths = 0 ||
-                                            DateAdd(rec.DateCompleted, C.RecurrenceMonths, TimeUnit.Months) >= Today()
+                                            DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") >= Today()
                                         )
                                     )
                                 )
@@ -89,16 +109,84 @@ const yaml = `Screens:
                             Required:      CountRows(req),
                             InDate:        okCount,
                             Outstanding:   CountRows(req) - okCount,
+                            MissingRecords: CountRows(
+                                Filter(
+                                    req As C,
+                                    IsBlank(
+                                        LookUp(
+                                            colAllRecords,
+                                            Lower(PersonEmail) = Lower(P.Email) &&
+                                            CourseID = C.ID
+                                        ).ID
+                                    )
+                                )
+                            ),
+                            ExpiredItems: CountRows(
+                                Filter(
+                                    req As C,
+                                    With(
+                                        {
+                                            rec: LookUp(
+                                                colAllRecords,
+                                                Lower(PersonEmail) = Lower(P.Email) &&
+                                                CourseID = C.ID
+                                            )
+                                        },
+                                        !IsBlank(rec.DateCompleted) &&
+                                        C.RecurrenceMonths > 0 &&
+                                        DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") < Today()
+                                    )
+                                )
+                            ),
+                            ExpiringItems: CountRows(
+                                Filter(
+                                    req As C,
+                                    With(
+                                        {
+                                            rec: LookUp(
+                                                colAllRecords,
+                                                Lower(PersonEmail) = Lower(P.Email) &&
+                                                CourseID = C.ID
+                                            )
+                                        },
+                                        !IsBlank(rec.DateCompleted) &&
+                                        C.RecurrenceMonths > 0 &&
+                                        DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") >= Today() &&
+                                        DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") <= DateAdd(Today(), 60, "Days")
+                                    )
+                                )
+                            ),
                             CompliancePct: If(
                                                CountRows(req) = 0,
                                                100,
                                                Round(100 * okCount / Max(CountRows(req), 1), 0)
-                                           )
+                                           ),
+                            AttentionState: If(
+                                                CountRows(req) - okCount = 0,
+                                                "Clear",
+                                                okCount = 0,
+                                                "Critical",
+                                                "Needs attention"
+                                            )
                         }
                     )
                 )
             )
-        )
+        );
+
+        ClearCollect(
+            colRiskByType,
+            AddColumns(
+                GroupBy(colCompliance, StaffType, RiskRows),
+                RiskCount,
+                Sum(RiskRows, Outstanding),
+                StaffCount,
+                CountRows(RiskRows),
+                AvgCompliance,
+                Round(Average(RiskRows, CompliancePct), 0)
+            )
+        );
+        Set(varAdminLoading, false)
     Children:
       - recAdminDashHeader:
           Control: Classic/Button@2.2.0
@@ -121,7 +209,7 @@ const yaml = `Screens:
             RadiusBottomRight: =0
             RadiusTopLeft: =0
             RadiusTopRight: =0
-            Text: =
+            Text: =""
             Width: =1366
       - icoAdminDashBack:
           Control: Classic/Icon@2.5.0
@@ -147,11 +235,66 @@ const yaml = `Screens:
             Width: =600
             X: =52
       - btnExportPDF:
-          Control: ModernButton@1.0.0
+          Control: Classic/Button@2.2.0
           Properties:
-            BasePaletteColor: =RGBA(230,241,251,1)
+            BorderColor: =RGBA(230,241,251,1)
+            BorderThickness: =1
             Color: =RGBA(12,68,124,1)
+            Fill: =RGBA(230,241,251,1)
+            Font: =Font.'Open Sans'
             Height: =40
+            HoverColor: =RGBA(12,68,124,1)
+            HoverFill: =RGBA(213,226,245,1)
+            OnSelect: |-
+              =Set(varHTML,
+                  "<html><head><style>" &
+                  "body{font-family:Segoe UI,Arial,sans-serif;margin:24px;}" &
+                  "h2{color:#1F3A5F;}" &
+                  "table{border-collapse:collapse;width:100%;}" &
+                  "th,td{border:1px solid #999;padding:6px;font-size:12px;text-align:left;}" &
+                  "th{background:#1F3A5F;color:#fff;}" &
+                  "</style></head><body>" &
+                  "<h2>Training Compliance Report - " & Text(Today(),"dd mmm yyyy") & "</h2>" &
+                  "<p><b>" &
+                      Round(100*CountRows(Filter(colCompliance,Outstanding=0))/
+                            Max(CountRows(colCompliance),1),0) &
+                      "%</b> of staff fully in date. Outstanding items: " &
+                      Sum(colCompliance,Outstanding) & ".</p>" &
+                  "<table><tr><th>Name</th><th>Staff type</th><th>Line manager</th>" &
+                  "<th>Required</th><th>In date</th><th>Outstanding</th><th>%</th></tr>" &
+                  Concat(
+                      SortByColumns(colCompliance,"CompliancePct",SortOrder.Ascending),
+                      "<tr><td>" & Name & "</td><td>" & StaffType & "</td><td>" &
+                      LineManager & "</td><td>" & Required & "</td><td>" & InDate &
+                      "</td><td>" & Outstanding & "</td><td>" & CompliancePct & "%</td></tr>"
+                  ) &
+                  "</table></body></html>"
+              );
+              ExportTrainingReport.Run(
+                  varHTML,
+                  "TrainingReport_" & Text(Now(),"yyyymmdd_hhmm")
+              );
+              Patch('TT AuditLog', Defaults('TT AuditLog'),
+                  {
+                      Title: "Admin exported compliance PDF",
+                      EntityType: "Report",
+                      EntityID: "",
+                      PersonEmail: "",
+                      CourseID: "",
+                      EventType: "PDF export",
+                      EventDescription: "Compliance report exported from admin dashboard.",
+                      ActorEmail: varMyEmail,
+                      EventDateTime: Now(),
+                      Notes: ""
+                  }
+              );
+              Notify("Report sent - check your inbox in about 30 seconds.", NotificationType.Success)
+            PressedColor: =RGBA(12,68,124,1)
+            PressedFill: =RGBA(198,216,240,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
             Size: =12
             Text: ="Export PDF"
             Width: =164
@@ -164,13 +307,14 @@ const yaml = `Screens:
             BorderThickness: =1
             Color: =RGBA(255, 255, 255, 1)
             DisabledBorderColor: =RGBA(166, 166, 166, 1)
-            DisplayMode: =DisplayMode.View
+            DisplayMode: =DisplayMode.Edit
             Fill: =RGBA(255,255,255,1)
             Font: =Font.'Open Sans'
             Height: =90
             HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
             HoverColor: =RGBA(255, 255, 255, 1)
-            HoverFill: =RGBA(255,255,255,1)
+            HoverFill: =RGBA(245,249,253,1)
+            OnSelect: =Set(varAdminFilter, "All"); Set(varAdminStatusFilter, "All")
             PressedBorderColor: =Self.Fill
             PressedColor: =Self.Fill
             PressedFill: =RGBA(255,255,255,1)
@@ -178,7 +322,7 @@ const yaml = `Screens:
             RadiusBottomRight: =8
             RadiusTopLeft: =8
             RadiusTopRight: =8
-            Text: =
+            Text: =""
             Width: =321
             X: =16
             Y: =88
@@ -189,13 +333,14 @@ const yaml = `Screens:
             BorderThickness: =1
             Color: =RGBA(255, 255, 255, 1)
             DisabledBorderColor: =RGBA(166, 166, 166, 1)
-            DisplayMode: =DisplayMode.View
+            DisplayMode: =DisplayMode.Edit
             Fill: =RGBA(255,255,255,1)
             Font: =Font.'Open Sans'
             Height: =90
             HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
             HoverColor: =RGBA(255, 255, 255, 1)
-            HoverFill: =RGBA(255,255,255,1)
+            HoverFill: =RGBA(245,249,253,1)
+            OnSelect: =Set(varAdminStatusFilter, "Clear")
             PressedBorderColor: =Self.Fill
             PressedColor: =Self.Fill
             PressedFill: =RGBA(255,255,255,1)
@@ -203,7 +348,7 @@ const yaml = `Screens:
             RadiusBottomRight: =8
             RadiusTopLeft: =8
             RadiusTopRight: =8
-            Text: =
+            Text: =""
             Width: =321
             X: =349
             Y: =88
@@ -214,13 +359,14 @@ const yaml = `Screens:
             BorderThickness: =1
             Color: =RGBA(255, 255, 255, 1)
             DisabledBorderColor: =RGBA(166, 166, 166, 1)
-            DisplayMode: =DisplayMode.View
+            DisplayMode: =DisplayMode.Edit
             Fill: =RGBA(255,255,255,1)
             Font: =Font.'Open Sans'
             Height: =90
             HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
             HoverColor: =RGBA(255, 255, 255, 1)
-            HoverFill: =RGBA(255,255,255,1)
+            HoverFill: =RGBA(245,249,253,1)
+            OnSelect: =Set(varAdminStatusFilter, "Needs attention")
             PressedBorderColor: =Self.Fill
             PressedColor: =Self.Fill
             PressedFill: =RGBA(255,255,255,1)
@@ -228,7 +374,7 @@ const yaml = `Screens:
             RadiusBottomRight: =8
             RadiusTopLeft: =8
             RadiusTopRight: =8
-            Text: =
+            Text: =""
             Width: =321
             X: =682
             Y: =88
@@ -239,13 +385,14 @@ const yaml = `Screens:
             BorderThickness: =1
             Color: =RGBA(255, 255, 255, 1)
             DisabledBorderColor: =RGBA(166, 166, 166, 1)
-            DisplayMode: =DisplayMode.View
+            DisplayMode: =DisplayMode.Edit
             Fill: =RGBA(255,255,255,1)
             Font: =Font.'Open Sans'
             Height: =90
             HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
             HoverColor: =RGBA(255, 255, 255, 1)
-            HoverFill: =RGBA(255,255,255,1)
+            HoverFill: =RGBA(245,249,253,1)
+            OnSelect: =Set(varAdminStatusFilter, "Outstanding")
             PressedBorderColor: =Self.Fill
             PressedColor: =Self.Fill
             PressedFill: =RGBA(255,255,255,1)
@@ -253,7 +400,7 @@ const yaml = `Screens:
             RadiusBottomRight: =8
             RadiusTopLeft: =8
             RadiusTopRight: =8
-            Text: =
+            Text: =""
             Width: =321
             X: =1015
             Y: =88
@@ -365,6 +512,131 @@ const yaml = `Screens:
             Width: =321
             X: =16
             Y: =144
+      - recAttentionStrip:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(221,227,234,1)
+            BorderThickness: =1
+            Color: =RGBA(255,255,255,1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255,255,255,1)
+            Height: =44
+            HoverFill: =RGBA(255,255,255,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            Text: =""
+            Width: =884
+            X: =16
+            Y: =188
+      - lblAttentionTitle:
+          Control: Label@2.5.1
+          Properties:
+            Color: =RGBA(31,58,95,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =24
+            Size: =11
+            Text: ="Needs attention"
+            Width: =130
+            X: =32
+            Y: =198
+      - btnAttentionExpired:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(163,45,45,1)
+            BorderThickness: =1
+            Color: =If(varAdminStatusFilter = "Expired", RGBA(255,255,255,1), RGBA(121,31,31,1))
+            Fill: =If(varAdminStatusFilter = "Expired", RGBA(163,45,45,1), RGBA(252,235,235,1))
+            Height: =28
+            HoverFill: =RGBA(243,218,218,1)
+            OnSelect: =Set(varAdminStatusFilter, "Expired")
+            RadiusBottomLeft: =14
+            RadiusBottomRight: =14
+            RadiusTopLeft: =14
+            RadiusTopRight: =14
+            Size: =9
+            Text: ="Expired " & Sum(colCompliance, ExpiredItems)
+            Width: =118
+            X: =172
+            Y: =196
+      - btnAttentionExpiring:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(239,159,39,1)
+            BorderThickness: =1
+            Color: =If(varAdminStatusFilter = "Expiring Soon", RGBA(255,255,255,1), RGBA(99,56,6,1))
+            Fill: =If(varAdminStatusFilter = "Expiring Soon", RGBA(239,159,39,1), RGBA(250,238,218,1))
+            Height: =28
+            HoverFill: =RGBA(244,228,199,1)
+            OnSelect: =Set(varAdminStatusFilter, "Expiring Soon")
+            RadiusBottomLeft: =14
+            RadiusBottomRight: =14
+            RadiusTopLeft: =14
+            RadiusTopRight: =14
+            Size: =9
+            Text: ="Expiring " & Sum(colCompliance, ExpiringItems)
+            Width: =126
+            X: =300
+            Y: =196
+      - btnAttentionMissing:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(136,135,128,1)
+            BorderThickness: =1
+            Color: =If(varAdminStatusFilter = "Missing", RGBA(255,255,255,1), RGBA(68,68,65,1))
+            Fill: =If(varAdminStatusFilter = "Missing", RGBA(136,135,128,1), RGBA(241,239,232,1))
+            Height: =28
+            HoverFill: =RGBA(229,227,220,1)
+            OnSelect: =Set(varAdminStatusFilter, "Missing")
+            RadiusBottomLeft: =14
+            RadiusBottomRight: =14
+            RadiusTopLeft: =14
+            RadiusTopRight: =14
+            Size: =9
+            Text: ="Missing " & Sum(colCompliance, MissingRecords)
+            Width: =118
+            X: =436
+            Y: =196
+      - btnAttentionOutstanding:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(24,95,165,1)
+            BorderThickness: =1
+            Color: =If(varAdminStatusFilter = "Outstanding", RGBA(255,255,255,1), RGBA(12,68,124,1))
+            Fill: =If(varAdminStatusFilter = "Outstanding", RGBA(24,95,165,1), RGBA(230,241,251,1))
+            Height: =28
+            HoverFill: =RGBA(213,226,245,1)
+            OnSelect: =Set(varAdminStatusFilter, "Outstanding")
+            RadiusBottomLeft: =14
+            RadiusBottomRight: =14
+            RadiusTopLeft: =14
+            RadiusTopRight: =14
+            Size: =9
+            Text: ="Outstanding " & Sum(colCompliance, Outstanding)
+            Width: =144
+            X: =564
+            Y: =196
+      - btnAttentionClear:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(221,227,234,1)
+            BorderThickness: =1
+            Color: =RGBA(31,58,95,1)
+            Fill: =RGBA(255,255,255,1)
+            Height: =28
+            HoverFill: =RGBA(245,249,253,1)
+            OnSelect: =Set(varAdminStatusFilter, "All")
+            RadiusBottomLeft: =14
+            RadiusBottomRight: =14
+            RadiusTopLeft: =14
+            RadiusTopRight: =14
+            Size: =9
+            Text: ="Clear filter"
+            Width: =112
+            X: =720
+            Y: =196
       - txtAdminSearch:
           Control: ModernTextInput@1.1.0
           Properties:
@@ -373,29 +645,141 @@ const yaml = `Screens:
             Size: =12
             Width: =500
             X: =16
-            Y: =202
-      - drpTypeFilter:
-          Control: ModernDropdown@1.0.1
+            Y: =244
+      - btnFilterAll:
+          Control: Classic/Button@2.2.0
           Properties:
-            Height: =40
-            ItemDisplayText: =ThisItem.Value
-            Items: =["All", "Civil Servant", "Army", "Contractor"]
-            Size: =12
-            Width: =200
+            BorderColor: =If(varAdminFilter = "All" && varAdminStatusFilter = "All", RGBA(24,95,165,1), RGBA(221,227,234,1))
+            BorderThickness: =1
+            Color: =If(varAdminFilter = "All" && varAdminStatusFilter = "All", RGBA(255,255,255,1), RGBA(31,58,95,1))
+            Fill: =If(varAdminFilter = "All" && varAdminStatusFilter = "All", RGBA(24,95,165,1), RGBA(255,255,255,1))
+            Height: =34
+            HoverFill: =RGBA(230,241,251,1)
+            OnSelect: =Set(varAdminFilter, "All"); Set(varAdminStatusFilter, "All")
+            RadiusBottomLeft: =17
+            RadiusBottomRight: =17
+            RadiusTopLeft: =17
+            RadiusTopRight: =17
+            Size: =10
+            Text: ="All"
+            Width: =64
             X: =532
-            Y: =202
+            Y: =247
+      - btnFilterCivil:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(varAdminFilter = "Civil Servant", RGBA(24,95,165,1), RGBA(221,227,234,1))
+            BorderThickness: =1
+            Color: =If(varAdminFilter = "Civil Servant", RGBA(255,255,255,1), RGBA(31,58,95,1))
+            Fill: =If(varAdminFilter = "Civil Servant", RGBA(24,95,165,1), RGBA(255,255,255,1))
+            Height: =34
+            HoverFill: =RGBA(230,241,251,1)
+            OnSelect: =Set(varAdminFilter, "Civil Servant"); Set(varAdminStatusFilter, "All")
+            RadiusBottomLeft: =17
+            RadiusBottomRight: =17
+            RadiusTopLeft: =17
+            RadiusTopRight: =17
+            Size: =10
+            Text: ="Civil"
+            Width: =72
+            X: =604
+            Y: =247
+      - btnFilterArmy:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(varAdminFilter = "Army", RGBA(24,95,165,1), RGBA(221,227,234,1))
+            BorderThickness: =1
+            Color: =If(varAdminFilter = "Army", RGBA(255,255,255,1), RGBA(31,58,95,1))
+            Fill: =If(varAdminFilter = "Army", RGBA(24,95,165,1), RGBA(255,255,255,1))
+            Height: =34
+            HoverFill: =RGBA(230,241,251,1)
+            OnSelect: =Set(varAdminFilter, "Army"); Set(varAdminStatusFilter, "All")
+            RadiusBottomLeft: =17
+            RadiusBottomRight: =17
+            RadiusTopLeft: =17
+            RadiusTopRight: =17
+            Size: =10
+            Text: ="Army"
+            Width: =72
+            X: =684
+            Y: =247
+      - btnFilterContractor:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(varAdminFilter = "Contractor", RGBA(24,95,165,1), RGBA(221,227,234,1))
+            BorderThickness: =1
+            Color: =If(varAdminFilter = "Contractor", RGBA(255,255,255,1), RGBA(31,58,95,1))
+            Fill: =If(varAdminFilter = "Contractor", RGBA(24,95,165,1), RGBA(255,255,255,1))
+            Height: =34
+            HoverFill: =RGBA(230,241,251,1)
+            OnSelect: =Set(varAdminFilter, "Contractor"); Set(varAdminStatusFilter, "All")
+            RadiusBottomLeft: =17
+            RadiusBottomRight: =17
+            RadiusTopLeft: =17
+            RadiusTopRight: =17
+            Size: =10
+            Text: ="Contractor"
+            Width: =118
+            X: =764
+            Y: =247
+      - lblAdminTableHeadName:
+          Control: Label@2.5.1
+          Properties:
+            Color: =RGBA(85,85,85,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Semibold
+            Height: =22
+            Size: =9
+            Text: ="Name"
+            Width: =260
+            X: =32
+            Y: =284
+      - lblAdminTableHeadProgress:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =RGBA(85,85,85,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Semibold
+            Height: =22
+            Size: =9
+            Text: ="Progress"
+            Width: =200
+            X: =380
+            Y: =284
+      - lblAdminTableHeadStatus:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(85,85,85,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Semibold
+            Height: =22
+            Size: =9
+            Text: ="Status"
+            Width: =126
+            X: =666
+            Y: =284
       - galCompliance:
           Control: Gallery@2.15.0
           Variant: Vertical
           Properties:
             BorderColor: =RGBA(0, 18, 107, 1)
-            Height: =510
+            Height: =464
             Items: |-
               =SortByColumns(
                   Filter(colCompliance,
-                      (IsBlank(drpTypeFilter.Selected.Value) ||
-                       drpTypeFilter.Selected.Value = "All" ||
-                       StaffType = drpTypeFilter.Selected.Value) &&
+                      (varAdminFilter = "All" || StaffType = varAdminFilter) &&
+                      Switch(
+                          varAdminStatusFilter,
+                          "Clear", Outstanding = 0,
+                          "Outstanding", Outstanding > 0,
+                          "Expired", ExpiredItems > 0,
+                          "Expiring Soon", ExpiringItems > 0,
+                          "Missing", MissingRecords > 0,
+                          "Needs attention", AttentionState <> "Clear",
+                          true
+                      ) &&
                       (IsBlank(txtAdminSearch.Text) ||
                        Lower(txtAdminSearch.Text) in Lower(Name))
                   ),
@@ -408,7 +792,7 @@ const yaml = `Screens:
                   ForAll(
                       Filter(colCourses,
                           Status.Value = "Active" &&
-                          varDrillPerson.StaffType in ApplicableTo.Value) As C,
+                          CountIf(ApplicableTo, Value = varDrillPerson.StaffType) > 0) As C,
                       With({rec: LookUp(colAllRecords,
                                     Lower(PersonEmail) = varDrillPerson.Email && CourseID = C.ID)},
                       {
@@ -416,21 +800,29 @@ const yaml = `Screens:
                           DateDone:   rec.DateCompleted,
                           UploadedBy: rec.UploadedByEmail,
                           ExpiresOn:  If(IsBlank(rec.DateCompleted)||C.RecurrenceMonths=0,Blank(),
-                                         DateAdd(rec.DateCompleted,C.RecurrenceMonths,TimeUnit.Months)),
+                                         DateAdd(rec.DateCompleted,C.RecurrenceMonths,"Months")),
                           TrainingStatus:
                               If(IsBlank(rec.DateCompleted),"Not Started",
                                  C.RecurrenceMonths=0,"Complete",
-                                 DateAdd(rec.DateCompleted,C.RecurrenceMonths,TimeUnit.Months)<Today(),"Expired",
-                                 DateAdd(rec.DateCompleted,C.RecurrenceMonths,TimeUnit.Months)<=DateAdd(Today(),60,TimeUnit.Days),"Expiring Soon",
+                                 DateAdd(rec.DateCompleted,C.RecurrenceMonths,"Months")<Today(),"Expired",
+                                 DateAdd(rec.DateCompleted,C.RecurrenceMonths,"Months")<=DateAdd(Today(),60,"Days"),"Expiring Soon",
                                  "In Date"),
                           RecordID: rec.ID
                       })
+                  )
+              );
+              ClearCollect(
+                  colPersonTimeline,
+                  SortByColumns(
+                      Filter(colAuditLog, Lower(PersonEmail) = varDrillPerson.Email),
+                      "EventDateTime",
+                      SortOrder.Descending
                   )
               )
             TemplatePadding: =0
             TemplateSize: =60
             Width: =900
-            Y: =258
+            Y: =304
           Children:
             - recRowBGCom:
                 Control: Classic/Button@2.2.0
@@ -439,7 +831,6 @@ const yaml = `Screens:
                   BorderThickness: =0
                   Color: =RGBA(255, 255, 255, 1)
                   DisabledBorderColor: =RGBA(166, 166, 166, 1)
-                  DisplayMode: =DisplayMode.View
                   Fill: =If(Mod(Len(ThisItem.Email),2)=0,RGBA(255,255,255,1),RGBA(247,249,252,1))
                   Font: =Font.'Open Sans'
                   Height: =59
@@ -454,7 +845,7 @@ const yaml = `Screens:
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
                   RadiusTopRight: =0
-                  Text: =
+                  Text: =""
                   Width: =900
             - icoChevronCom:
                 Control: Classic/Icon@2.5.0
@@ -467,6 +858,33 @@ const yaml = `Screens:
                   Width: =24
                   X: =864
                   Y: =18
+            - btnRowStatusPill:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =RGBA(0,0,0,0)
+                  BorderThickness: =0
+                  Color: =Switch(ThisItem.AttentionState,
+                      "Clear", RGBA(39,80,10,1),
+                      "Critical", RGBA(121,31,31,1),
+                      RGBA(99,56,6,1))
+                  Fill: =Switch(ThisItem.AttentionState,
+                      "Clear", RGBA(234,243,222,1),
+                      "Critical", RGBA(252,235,235,1),
+                      RGBA(250,238,218,1))
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =28
+                  HoverFill: =Self.Fill
+                  OnSelect: =Select(Parent)
+                  RadiusBottomLeft: =14
+                  RadiusBottomRight: =14
+                  RadiusTopLeft: =14
+                  RadiusTopRight: =14
+                  Size: =9
+                  Text: =ThisItem.AttentionState
+                  Width: =126
+                  X: =666
+                  Y: =16
             - lblCompPct:
                 Control: Label@2.5.1
                 Properties:
@@ -488,7 +906,6 @@ const yaml = `Screens:
                   BorderColor: =ColorFade(Self.Fill, -15%)
                   Color: =RGBA(255, 255, 255, 1)
                   DisabledBorderColor: =RGBA(166, 166, 166, 1)
-                  DisplayMode: =DisplayMode.View
                   Fill: =If(ThisItem.CompliancePct=100,RGBA(99,153,34,1),ThisItem.CompliancePct>=60,RGBA(239,159,39,1),RGBA(226,75,74,1))
                   Font: =Font.'Open Sans'
                   Height: =10
@@ -503,7 +920,7 @@ const yaml = `Screens:
                   RadiusBottomRight: =5
                   RadiusTopLeft: =5
                   RadiusTopRight: =5
-                  Text: =
+                  Text: =""
                   Width: =200*ThisItem.CompliancePct/100
                   X: =380
                   Y: =34
@@ -513,7 +930,6 @@ const yaml = `Screens:
                   BorderColor: =ColorFade(Self.Fill, -15%)
                   Color: =RGBA(255, 255, 255, 1)
                   DisabledBorderColor: =RGBA(166, 166, 166, 1)
-                  DisplayMode: =DisplayMode.View
                   Fill: =RGBA(221,227,234,1)
                   Font: =Font.'Open Sans'
                   Height: =10
@@ -528,7 +944,7 @@ const yaml = `Screens:
                   RadiusBottomRight: =5
                   RadiusTopLeft: =5
                   RadiusTopRight: =5
-                  Text: =
+                  Text: =""
                   Width: =200
                   X: =380
                   Y: =34
@@ -572,6 +988,104 @@ const yaml = `Screens:
                   Width: =360
                   X: =16
                   Y: =8
+      - recRiskPanel:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(221,227,234,1)
+            BorderThickness: =1
+            Color: =RGBA(255,255,255,1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255,255,255,1)
+            Height: =96
+            HoverFill: =RGBA(255,255,255,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            Text: =""
+            Visible: =IsBlank(varDrillPerson)
+            Width: =434
+            X: =916
+            Y: =188
+      - lblRiskTitle:
+          Control: Label@2.5.1
+          Properties:
+            Color: =RGBA(31,58,95,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =20
+            Size: =11
+            Text: ="Risk by staff type"
+            Visible: =IsBlank(varDrillPerson)
+            Width: =220
+            X: =932
+            Y: =196
+      - galRiskByType:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            Height: =60
+            Items: =SortByColumns(colRiskByType, "RiskCount", SortOrder.Descending)
+            TemplatePadding: =0
+            TemplateSize: =20
+            Visible: =IsBlank(varDrillPerson)
+            Width: =402
+            X: =932
+            Y: =220
+          Children:
+            - lblRiskType:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =RGBA(31,58,95,1)
+                  Font: =Font.'Open Sans'
+                  Height: =18
+                  Size: =9
+                  Text: =ThisItem.StaffType
+                  Width: =96
+                  X: =0
+                  Y: =1
+            - recRiskBack:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderThickness: =0
+                  DisplayMode: =DisplayMode.View
+                  Fill: =RGBA(221,227,234,1)
+                  Height: =8
+                  RadiusBottomLeft: =4
+                  RadiusBottomRight: =4
+                  RadiusTopLeft: =4
+                  RadiusTopRight: =4
+                  Text: =""
+                  Width: =210
+                  X: =102
+                  Y: =6
+            - recRiskFill:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderThickness: =0
+                  DisplayMode: =DisplayMode.View
+                  Fill: =If(ThisItem.RiskCount = 0, RGBA(99,153,34,1), If(ThisItem.AvgCompliance < 60, RGBA(226,75,74,1), RGBA(239,159,39,1)))
+                  Height: =8
+                  RadiusBottomLeft: =4
+                  RadiusBottomRight: =4
+                  RadiusTopLeft: =4
+                  RadiusTopRight: =4
+                  Text: =""
+                  Width: =If(Max(colRiskByType, RiskCount) = 0, 0, 210 * ThisItem.RiskCount / Max(colRiskByType, RiskCount))
+                  X: =102
+                  Y: =6
+            - lblRiskCount:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  Color: =RGBA(85,85,85,1)
+                  Font: =Font.'Open Sans'
+                  Height: =18
+                  Size: =9
+                  Text: =ThisItem.RiskCount & " due"
+                  Width: =76
+                  X: =320
+                  Y: =1
       - recDrillPanel:
           Control: Classic/Button@2.2.0
           Properties:
@@ -582,7 +1096,7 @@ const yaml = `Screens:
             DisplayMode: =DisplayMode.View
             Fill: =RGBA(255,255,255,1)
             Font: =Font.'Open Sans'
-            Height: =510
+            Height: =464
             HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
             HoverColor: =RGBA(255, 255, 255, 1)
             HoverFill: =RGBA(255,255,255,1)
@@ -593,11 +1107,11 @@ const yaml = `Screens:
             RadiusBottomRight: =8
             RadiusTopLeft: =8
             RadiusTopRight: =8
-            Text: =
+            Text: =""
             Visible: =!IsBlank(varDrillPerson)
             Width: =434
             X: =916
-            Y: =258
+            Y: =304
       - lblDrillName:
           Control: Label@2.5.1
           Properties:
@@ -610,7 +1124,7 @@ const yaml = `Screens:
             Text: =varDrillPerson.Name
             Width: =360
             X: =932
-            Y: =274
+            Y: =320
       - lblDrillType:
           Control: Label@2.5.1
           Properties:
@@ -622,7 +1136,7 @@ const yaml = `Screens:
             Text: =varDrillPerson.StaffType
             Width: =360
             X: =932
-            Y: =304
+            Y: =350
       - lblDrillMgrLbl:
           Control: Label@2.5.1
           Properties:
@@ -634,35 +1148,96 @@ const yaml = `Screens:
             Text: ="Line manager can upload:"
             Width: =220
             X: =932
-            Y: =330
-      - tglManagerEdit:
-          Control: Toggle@1.1.5
+            Y: =376
+      - chkManagerEdit:
+          Control: CheckBox@0.0.30
           Properties:
+            BasePaletteColor: =RGBA(156,220,79,1)
             Checked: =varDrillPerson.ManagerEdit
-            Height: =28
+            CheckboxSize: =22
+            Height: =32
+            Label: =""
             OnCheck: |-
               =Patch('TT Personnel',
                   LookUp('TT Personnel', ID = varDrillPerson.PersonID),
-                  {ManagerCanEdit: tglManagerEdit.Checked}
+                  {
+                      ManagerCanEdit: chkManagerEdit.Checked,
+                      LastUpdatedByEmail: varMyEmail,
+                      LastUpdatedOn: Now(),
+                      LastStatus: "Manager edit enabled"
+                  }
+              );
+              Patch('TT AuditLog', Defaults('TT AuditLog'),
+                  {
+                      Title: varDrillPerson.Name & " manager edit enabled",
+                      EntityType: "Person",
+                      EntityID: Text(varDrillPerson.PersonID),
+                      PersonEmail: varDrillPerson.Email,
+                      CourseID: "",
+                      EventType: "Manager edit enabled",
+                      EventDescription: "Line manager certificate upload enabled.",
+                      ActorEmail: varMyEmail,
+                      EventDateTime: Now(),
+                      Notes: ""
+                  }
               );
               Notify(varDrillPerson.Name &
-                  If(tglManagerEdit.Checked,
+                  If(chkManagerEdit.Checked,
                       "'s line manager can now upload on their behalf.",
                       "'s line manager can no longer upload."),
-                  NotificationType.Success)
+                  NotificationType.Success);
+              Set(varDrillPerson, Patch(varDrillPerson, {ManagerEdit: chkManagerEdit.Checked}));
+              ClearCollect(colAuditLog, 'TT AuditLog');
+              ClearCollect(
+                  colPersonTimeline,
+                  SortByColumns(
+                      Filter(colAuditLog, Lower(PersonEmail) = varDrillPerson.Email),
+                      "EventDateTime",
+                      SortOrder.Descending
+                  )
+              )
             OnUncheck: |-
               =Patch('TT Personnel',
                   LookUp('TT Personnel', ID = varDrillPerson.PersonID),
-                  {ManagerCanEdit: tglManagerEdit.Checked}
+                  {
+                      ManagerCanEdit: chkManagerEdit.Checked,
+                      LastUpdatedByEmail: varMyEmail,
+                      LastUpdatedOn: Now(),
+                      LastStatus: "Manager edit disabled"
+                  }
+              );
+              Patch('TT AuditLog', Defaults('TT AuditLog'),
+                  {
+                      Title: varDrillPerson.Name & " manager edit disabled",
+                      EntityType: "Person",
+                      EntityID: Text(varDrillPerson.PersonID),
+                      PersonEmail: varDrillPerson.Email,
+                      CourseID: "",
+                      EventType: "Manager edit disabled",
+                      EventDescription: "Line manager certificate upload disabled.",
+                      ActorEmail: varMyEmail,
+                      EventDateTime: Now(),
+                      Notes: ""
+                  }
               );
               Notify(varDrillPerson.Name &
-                  If(tglManagerEdit.Checked,
+                  If(chkManagerEdit.Checked,
                       "'s line manager can now upload on their behalf.",
                       "'s line manager can no longer upload."),
-                  NotificationType.Success)
+                  NotificationType.Success);
+              Set(varDrillPerson, Patch(varDrillPerson, {ManagerEdit: chkManagerEdit.Checked}));
+              ClearCollect(colAuditLog, 'TT AuditLog');
+              ClearCollect(
+                  colPersonTimeline,
+                  SortByColumns(
+                      Filter(colAuditLog, Lower(PersonEmail) = varDrillPerson.Email),
+                      "EventDateTime",
+                      SortOrder.Descending
+                  )
+              )
             Width: =160
             X: =1160
-            Y: =326
+            Y: =370
       - icoCloseDrill:
           Control: Classic/Icon@2.5.0
           Properties:
@@ -673,18 +1248,18 @@ const yaml = `Screens:
             OnSelect: =Set(varDrillPerson,Blank())
             Width: =20
             X: =1318
-            Y: =270
+            Y: =316
       - galPersonDetail:
           Control: Gallery@2.15.0
           Variant: Vertical
           Properties:
             BorderColor: =RGBA(0, 18, 107, 1)
-            Height: =394
+            Height: =210
             Items: =colPersonDetail
             TemplateSize: =52
             Width: =434
             X: =916
-            Y: =358
+            Y: =404
           Children:
             - btnDetailPill:
                 Control: Classic/Button@2.2.0
@@ -693,7 +1268,6 @@ const yaml = `Screens:
                   BorderThickness: =0
                   Color: =RGBA(255,255,255,1)
                   DisabledBorderColor: =RGBA(0,0,0,0)
-                  DisplayMode: =DisplayMode.View
                   Fill: =Switch(ThisItem.TrainingStatus,
                       "Expired",       RGBA(226,75,74,1),
                       "Expiring Soon", RGBA(239,159,39,1),
@@ -753,7 +1327,6 @@ const yaml = `Screens:
                   BorderThickness: =0
                   Color: =RGBA(255, 255, 255, 1)
                   DisabledBorderColor: =RGBA(166, 166, 166, 1)
-                  DisplayMode: =DisplayMode.View
                   Fill: =Switch(ThisItem.TrainingStatus,"Expired",RGBA(226,75,74,1),"Expiring Soon",RGBA(239,159,39,1),"Not Started",RGBA(136,135,128,1),"Complete",RGBA(55,138,221,1),RGBA(99,153,34,1))
                   Font: =Font.'Open Sans'
                   Height: =52
@@ -768,8 +1341,76 @@ const yaml = `Screens:
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
                   RadiusTopRight: =0
-                  Text: =
+                  Text: =""
                   Width: =5
+      - lblTimelineTitle:
+          Control: Label@2.5.1
+          Properties:
+            Color: =RGBA(31,58,95,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =22
+            Size: =11
+            Text: ="Activity"
+            Visible: =!IsBlank(varDrillPerson)
+            Width: =180
+            X: =932
+            Y: =622
+      - galPersonTimeline:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            Height: =128
+            Items: =FirstN(colPersonTimeline, 4)
+            TemplatePadding: =0
+            TemplateSize: =32
+            Visible: =!IsBlank(varDrillPerson)
+            Width: =402
+            X: =932
+            Y: =646
+          Children:
+            - recTimelineDot:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderThickness: =0
+                  DisplayMode: =DisplayMode.View
+                  Fill: =Switch(ThisItem.EventType,
+                      "Certificate saved", RGBA(99,153,34,1),
+                      "PDF export", RGBA(55,138,221,1),
+                      "Manager edit enabled", RGBA(34,139,80,1),
+                      "Manager edit disabled", RGBA(136,135,128,1),
+                      RGBA(239,159,39,1))
+                  Height: =10
+                  RadiusBottomLeft: =5
+                  RadiusBottomRight: =5
+                  RadiusTopLeft: =5
+                  RadiusTopRight: =5
+                  Text: =""
+                  Width: =10
+                  X: =0
+                  Y: =10
+            - lblTimelineEvent:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =RGBA(31,58,95,1)
+                  Font: =Font.'Open Sans'
+                  Height: =16
+                  Size: =9
+                  Text: =ThisItem.EventDescription
+                  Width: =286
+                  X: =20
+                  Y: =2
+            - lblTimelineMeta:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =RGBA(136,135,128,1)
+                  Font: =Font.'Open Sans'
+                  Height: =14
+                  Size: =8
+                  Text: =Text(ThisItem.EventDateTime, "dd mmm yyyy") & If(!IsBlank(ThisItem.ActorEmail), " " & Char(183) & " " & ThisItem.ActorEmail, "")
+                  Width: =360
+                  X: =20
+                  Y: =17
       - tmrAdminDash:
           Control: Timer@2.1.0
           Properties:
@@ -792,11 +1433,10 @@ const yaml = `Screens:
             Visible: =false
             X: =40
             Y: =40
-      - btnExportPDF_1:
+      - btnManageAdmin:
           Control: ModernButton@1.0.0
           Properties:
-            BasePaletteColor: =RGBA(8, 222, 8, 1)
-            Color: =RGBA(255, 255, 255, 1)
+            BasePaletteColor: =RGBA(34,139,80,1)
             Height: =40
             OnSelect: =Navigate(scrAdminManage, ScreenTransition.Cover)
             Size: =11
@@ -804,6 +1444,60 @@ const yaml = `Screens:
             Width: =180
             X: =986
             Y: =16
+      - recAdminLoadingScrim:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderThickness: =0
+            Color: =RGBA(255,255,255,1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(15,23,42,0.28)
+            Height: =768
+            HoverFill: =RGBA(15,23,42,0.28)
+            PressedFill: =RGBA(15,23,42,0.28)
+            Text: =""
+            Visible: =varAdminLoading
+            Width: =1366
+      - recAdminLoadingCard:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(221,227,234,1)
+            BorderThickness: =1
+            Color: =RGBA(255,255,255,1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255,255,255,1)
+            Height: =132
+            HoverFill: =RGBA(255,255,255,1)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            Text: =""
+            Visible: =varAdminLoading
+            Width: =300
+            X: =533
+            Y: =318
+      - spnAdminLoading:
+          Control: Spinner@1.4.6
+          Properties:
+            Height: =42
+            Visible: =varAdminLoading
+            Width: =42
+            X: =662
+            Y: =344
+      - lblAdminLoading:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(31,58,95,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            Size: =11
+            Text: ="Refreshing dashboard"
+            Visible: =varAdminLoading
+            Width: =260
+            X: =553
+            Y: =398
 `;
 function copyYAML() {
   const crlf = yaml.replace(/\n/g, '\r\n');

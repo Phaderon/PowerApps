@@ -21,6 +21,7 @@ This is not a copied mirror of Microsoft Learn. It is a practical local referenc
 - `guide-authoring-rules.md` - required workflow for future guide creation.
 - `future-guide-template.md` - guide structure and landing-page card pattern.
 - `known-bad-patterns.md` - recurring mistakes to block before publishing.
+- `external/powerappsui/` - pre-built copy-paste component YAML from powerappsui.com (MIT-licensed open-source Power Apps component library), plus original condensed notes per component. See `external/powerappsui/README.md` for the full component index (data table, KPI cards, charts, sidebar, stepper, dialog, breadcrumbs, etc.). Check here before hand-building a UI pattern one of these components already covers.
 
 ## Rule
 

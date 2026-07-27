@@ -233,6 +233,10 @@ If(IsBlank(varViewingForSelf), Set(varViewingForSelf, true));
 
 ## Phase 5 — Control Patterns
 
+### Check the component library first
+
+Before hand-building a data table, KPI cards, chart, sidebar, nav menu, breadcrumbs, stepper, dialog, loading state, badge, chips, date picker, file/photo upload, or floating action button, check `reference/external/powerappsui/README.md` — these already exist as pre-built copy-paste YAML (MIT-licensed, from powerappsui.com) with notes on props/events/behavior per component. Adapt the YAML to the app's naming conventions and colour palette rather than rebuilding the pattern from scratch.
+
 ### Use Classic Button for
 - Panel backgrounds / card backgrounds
 - Gallery row backgrounds (alternating colour, status stripe)

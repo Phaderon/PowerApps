@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 7 of 7</p>
   <h1>scrAdminManage</h1>
-  <p class="meta">v1.9 &mdash; Current admin management screen with dropdowns, toggle state and edit person panel · 20 Jun 2026</p>
+  <p class="meta">v2.1 &mdash; Audit fields and TT AuditLog hooks added · 25 Jul 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -41,6 +41,7 @@ const yaml = `Screens:
       Fill: =RGBA(247,249,252,1)
       OnVisible: |-
         =If(IsBlank(varTab), Set(varTab, "People"));
+        ClearCollect(colAllPeople, Filter('TT Personnel', Active = true));
         ClearCollect(colCourses, 'TT Courses')
     Children:
       - recAdminManageHeader:
@@ -64,7 +65,7 @@ const yaml = `Screens:
             RadiusBottomRight: =0
             RadiusTopLeft: =0
             RadiusTopRight: =0
-            Text: =
+            Text: =""
             Width: =1366
       - icoAdminManageBack:
           Control: Classic/Icon@2.5.0
@@ -91,24 +92,46 @@ const yaml = `Screens:
             Width: =600
             X: =52
       - btnTabPeople:
-          Control: ModernButton@1.0.0
+          Control: Classic/Button@2.2.0
           Properties:
-            BasePaletteColor: =If(varTab="People",RGBA(24,95,165,1),RGBA(220,230,245,1))
+            BorderColor: =RGBA(24,95,165,1)
+            BorderThickness: =1
             Color: =If(varTab="People", RGBA(255,255,255,1), RGBA(24,95,165,1))
+            Fill: =If(varTab="People",RGBA(24,95,165,1),RGBA(255,255,255,1))
+            Font: =Font.'Open Sans'
             Height: =40
+            HoverColor: =Self.Color
+            HoverFill: =If(varTab="People",RGBA(20,80,138,1),RGBA(235,241,250,1))
             OnSelect: =Set(varTab,"People")
+            PressedColor: =Self.Color
+            PressedFill: =If(varTab="People",RGBA(16,66,114,1),RGBA(213,226,245,1))
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
             Size: =12
             Text: ="People"
             Width: =120
             X: =16
             Y: =88
       - btnTabCourses:
-          Control: ModernButton@1.0.0
+          Control: Classic/Button@2.2.0
           Properties:
-            BasePaletteColor: =If(varTab="Courses",RGBA(24,95,165,1),RGBA(220,230,245,1))
+            BorderColor: =RGBA(24,95,165,1)
+            BorderThickness: =1
             Color: =If(varTab="Courses", RGBA(255,255,255,1), RGBA(24,95,165,1))
+            Fill: =If(varTab="Courses",RGBA(24,95,165,1),RGBA(255,255,255,1))
+            Font: =Font.'Open Sans'
             Height: =40
+            HoverColor: =Self.Color
+            HoverFill: =If(varTab="Courses",RGBA(20,80,138,1),RGBA(235,241,250,1))
             OnSelect: =Set(varTab,"Courses")
+            PressedColor: =Self.Color
+            PressedFill: =If(varTab="Courses",RGBA(16,66,114,1),RGBA(213,226,245,1))
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
             Size: =12
             Text: ="Courses"
             Width: =120
@@ -135,7 +158,7 @@ const yaml = `Screens:
             RadiusBottomRight: =8
             RadiusTopLeft: =8
             RadiusTopRight: =8
-            Text: =
+            Text: =""
             Visible: =varTab = "People" && IsBlank(varEditPerson)
             Width: =640
             X: =16
@@ -233,6 +256,7 @@ const yaml = `Screens:
       - drpNewType:
           Control: ModernDropdown@1.0.1
           Properties:
+            Default: =LookUp(["Civil Servant", "Army", "Contractor"], Value = "Civil Servant")
             Height: =40
             ItemDisplayText: =ThisItem.Value
             Items: =["Civil Servant", "Army", "Contractor"]
@@ -290,17 +314,62 @@ const yaml = `Screens:
                       IsBlank(newEmail) || IsBlank(newName),
                       Notify("Email and name are required.", NotificationType.Warning),
 
-                      !IsBlank(LookUp('TT Personnel', Lower(Email) = newEmail)),
-                      Patch('TT Personnel',
-                          LookUp('TT Personnel', Lower(Email) = newEmail),
-                          {Active: true});
+                      !IsBlank(LookUp('TT Personnel', Email = newEmail)),
+                      With(
+                          {
+                              savedPerson: Patch('TT Personnel',
+                                  LookUp('TT Personnel', Email = newEmail),
+                                  {
+                                      Active: true,
+                                      LastUpdatedByEmail: varMyEmail,
+                                      LastUpdatedOn: Now(),
+                                      LastStatus: "Reactivated"
+                                  }
+                              )
+                          },
+                          Patch('TT AuditLog', Defaults('TT AuditLog'),
+                              {
+                                  Title: newName & " reactivated",
+                                  EntityType: "Person",
+                                  EntityID: Text(savedPerson.ID),
+                                  PersonEmail: newEmail,
+                                  CourseID: "",
+                                  EventType: "Person reactivated",
+                                  EventDescription: newName & " reactivated in Training Tracker.",
+                                  ActorEmail: varMyEmail,
+                                  EventDateTime: Now(),
+                                  Notes: ""
+                              }
+                          )
+                      );
                       Notify("Already in system - reactivated.", NotificationType.Warning),
 
-                      Patch('TT Personnel', Defaults('TT Personnel'),
-                          {Title:newName, Email:newEmail, StaffType:{Value:newType},
-                           IsAdmin:tglNewAdmin.Checked, Active:true,
-                           HasM365Access:newHasM365, LineManagerEmail:newManager,
-                           ManagerCanEdit:false}
+                      With(
+                          {
+                              savedPerson: Patch('TT Personnel', Defaults('TT Personnel'),
+                                  {Title:newName, Email:newEmail, StaffType:{Value:newType},
+                                   IsAdmin:tglNewAdmin.Checked, Active:true,
+                                   HasM365Access:newHasM365, LineManagerEmail:newManager,
+                                   ManagerCanEdit:false,
+                                   LastUpdatedByEmail: varMyEmail,
+                                   LastUpdatedOn: Now(),
+                                   LastStatus: "Created"}
+                              )
+                          },
+                          Patch('TT AuditLog', Defaults('TT AuditLog'),
+                              {
+                                  Title: newName & " added",
+                                  EntityType: "Person",
+                                  EntityID: Text(savedPerson.ID),
+                                  PersonEmail: newEmail,
+                                  CourseID: "",
+                                  EventType: "Person added",
+                                  EventDescription: newName & " added to Training Tracker.",
+                                  ActorEmail: varMyEmail,
+                                  EventDateTime: Now(),
+                                  Notes: ""
+                              }
+                          )
                       );
                       Notify(newName & " added.", NotificationType.Success);
                       Reset(cmbNewPerson); Reset(txtManualEmail); Reset(txtManualName);
@@ -334,7 +403,7 @@ const yaml = `Screens:
             RadiusBottomRight: =8
             RadiusTopLeft: =8
             RadiusTopRight: =8
-            Text: =
+            Text: =""
             Visible: =varTab = "People" && !IsBlank(varEditPerson)
             Width: =640
             X: =16
@@ -381,6 +450,7 @@ const yaml = `Screens:
       - drpEditPersonType:
           Control: ModernDropdown@1.0.1
           Properties:
+            Default: =LookUp(["Civil Servant", "Army", "Contractor"], Value = varEditPerson.StaffType.Value)
             ItemDisplayText: =ThisItem.Value
             Items: =["Civil Servant", "Army", "Contractor"]
             Size: =12
@@ -431,7 +501,24 @@ const yaml = `Screens:
                       StaffType:        {Value: drpEditPersonType.Selected.Value},
                       LineManagerEmail: Lower(Trim(txtEditPersonManager.Text)),
                       IsAdmin:          tglEditAdmin.Checked,
-                      HasM365Access:    tglEditM365.Checked
+                      HasM365Access:    tglEditM365.Checked,
+                      LastUpdatedByEmail: varMyEmail,
+                      LastUpdatedOn: Now(),
+                      LastStatus: "Updated"
+                  }
+              );
+              Patch('TT AuditLog', Defaults('TT AuditLog'),
+                  {
+                      Title: Trim(txtEditPersonName.Text) & " updated",
+                      EntityType: "Person",
+                      EntityID: Text(varEditPerson.ID),
+                      PersonEmail: Lower(varEditPerson.Email),
+                      CourseID: "",
+                      EventType: "Person updated",
+                      EventDescription: Trim(txtEditPersonName.Text) & " profile updated.",
+                      ActorEmail: varMyEmail,
+                      EventDateTime: Now(),
+                      Notes: ""
                   }
               );
               Refresh('TT Personnel');
@@ -492,7 +579,7 @@ const yaml = `Screens:
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
                   RadiusTopRight: =0
-                  Text: =
+                  Text: =""
                   Width: =678
             - lblPersonName:
                 Control: Label@2.5.1
@@ -523,11 +610,32 @@ const yaml = `Screens:
             - drpRowType:
                 Control: ModernDropdown@1.0.1
                 Properties:
+                  Default: =LookUp(["Civil Servant","Army","Contractor"], Value = ThisItem.StaffType.Value)
                   ItemDisplayText: =ThisItem.Value
                   Items: =["Civil Servant","Army","Contractor"]
                   OnChange: |-
                     =Patch('TT Personnel', ThisItem,
-                        {StaffType: {Value: drpRowType.Selected.Value}});
+                        {
+                            StaffType: {Value: drpRowType.Selected.Value},
+                            LastUpdatedByEmail: varMyEmail,
+                            LastUpdatedOn: Now(),
+                            LastStatus: "Staff type changed"
+                        }
+                    );
+                    Patch('TT AuditLog', Defaults('TT AuditLog'),
+                        {
+                            Title: ThisItem.Title & " staff type changed",
+                            EntityType: "Person",
+                            EntityID: Text(ThisItem.ID),
+                            PersonEmail: Lower(ThisItem.Email),
+                            CourseID: "",
+                            EventType: "Person updated",
+                            EventDescription: ThisItem.Title & " is now " & drpRowType.Selected.Value & ".",
+                            ActorEmail: varMyEmail,
+                            EventDateTime: Now(),
+                            Notes: ""
+                        }
+                    );
                     Patch(colAllPeople, LookUp(colAllPeople, ID = ThisItem.ID),
                         {StaffType: {Value: drpRowType.Selected.Value}});
                     Notify(ThisItem.Title & " is now " & drpRowType.Selected.Value & ".",
@@ -571,7 +679,28 @@ const yaml = `Screens:
                   OnSelect: |-
                     =If(
                         varConfirmRemove = ThisItem.ID,
-                        Patch('TT Personnel', ThisItem, {Active: false});
+                        Patch('TT Personnel', ThisItem,
+                            {
+                                Active: false,
+                                LastUpdatedByEmail: varMyEmail,
+                                LastUpdatedOn: Now(),
+                                LastStatus: "Deactivated"
+                            }
+                        );
+                        Patch('TT AuditLog', Defaults('TT AuditLog'),
+                            {
+                                Title: ThisItem.Title & " deactivated",
+                                EntityType: "Person",
+                                EntityID: Text(ThisItem.ID),
+                                PersonEmail: Lower(ThisItem.Email),
+                                CourseID: "",
+                                EventType: "Person deactivated",
+                                EventDescription: ThisItem.Title & " deactivated. Records kept.",
+                                ActorEmail: varMyEmail,
+                                EventDateTime: Now(),
+                                Notes: ""
+                            }
+                        );
                         Set(varConfirmRemove, Blank());
                         Notify(ThisItem.Title & " deactivated. Records and certificates kept.",
                                NotificationType.Success),
@@ -603,7 +732,7 @@ const yaml = `Screens:
             RadiusBottomRight: =8
             RadiusTopLeft: =8
             RadiusTopRight: =8
-            Text: =
+            Text: =""
             Visible: =varTab = "Courses" && IsBlank(varEditCourse)
             Width: =640
             X: =16
@@ -647,6 +776,7 @@ const yaml = `Screens:
       - drpNewRecur:
           Control: ModernDropdown@1.0.1
           Properties:
+            Default: '=LookUp(Table({Label: "One-off (never expires)", Months: 0}, {Label: "Every 6 months", Months: 6}, {Label: "Every year", Months: 12}, {Label: "Every 18 months", Months: 18}, {Label: "Every 2 years", Months: 24}, {Label: "Every 3 years", Months: 36}), Months = 12)'
             Height: =40
             ItemDisplayText: =ThisItem.Label
             Items: |-
@@ -673,13 +803,34 @@ const yaml = `Screens:
                   IsBlank(txtNewCourse.Text) || CountRows(cmbNewApplic.SelectedItems) = 0,
                   Notify("Course needs a name and at least one staff type.",
                          NotificationType.Warning),
-                  Patch('TT Courses', Defaults('TT Courses'),
+                  With(
                       {
-                          Title:            Trim(txtNewCourse.Text),
-                          ApplicableTo:     ForAll(cmbNewApplic.SelectedItems As T, {Value: T.Value}),
-                          RecurrenceMonths: drpNewRecur.Selected.Months,
-                          Status:           {Value: "Active"}
-                      }
+                          savedCourse: Patch('TT Courses', Defaults('TT Courses'),
+                              {
+                                  Title:            Trim(txtNewCourse.Text),
+                                  ApplicableTo:     ForAll(cmbNewApplic.SelectedItems, {Value: Value}),
+                                  RecurrenceMonths: drpNewRecur.Selected.Months,
+                                  Status:           {Value: "Active"},
+                                  LastUpdatedByEmail: varMyEmail,
+                                  LastUpdatedOn: Now(),
+                                  LastStatus: "Created"
+                              }
+                          )
+                      },
+                      Patch('TT AuditLog', Defaults('TT AuditLog'),
+                          {
+                              Title: savedCourse.Title & " added",
+                              EntityType: "Course",
+                              EntityID: Text(savedCourse.ID),
+                              PersonEmail: "",
+                              CourseID: Text(savedCourse.ID),
+                              EventType: "Course added",
+                              EventDescription: savedCourse.Title & " added to the mandatory course list.",
+                              ActorEmail: varMyEmail,
+                              EventDateTime: Now(),
+                              Notes: ""
+                          }
+                      )
                   );
                   Notify("Course added.", NotificationType.Success);
                   Reset(txtNewCourse); Reset(cmbNewApplic); Reset(drpNewRecur);
@@ -711,7 +862,7 @@ const yaml = `Screens:
             RadiusBottomRight: =8
             RadiusTopLeft: =8
             RadiusTopRight: =8
-            Text: =
+            Text: =""
             Visible: =varTab = "Courses" && !IsBlank(varEditCourse)
             Width: =640
             X: =16
@@ -754,6 +905,7 @@ const yaml = `Screens:
       - drpEditRecur:
           Control: ModernDropdown@1.0.1
           Properties:
+            Default: '=LookUp(Table({Label: "One-off (never expires)", Months: 0}, {Label: "Every 6 months", Months: 6}, {Label: "Every year", Months: 12}, {Label: "Every 18 months", Months: 18}, {Label: "Every 2 years", Months: 24}, {Label: "Every 3 years", Months: 36}), Months = varEditCourse.RecurrenceMonths)'
             Height: =40
             ItemDisplayText: =ThisItem.Label
             Items: |-
@@ -779,8 +931,25 @@ const yaml = `Screens:
               =Patch('TT Courses', varEditCourse,
                   {
                       Title:            Trim(txtEditCourse.Text),
-                      ApplicableTo:     ForAll(cmbEditApplic.SelectedItems As T, {Value: T.Value}),
-                      RecurrenceMonths: drpEditRecur.Selected.Months
+                      ApplicableTo:     ForAll(cmbEditApplic.SelectedItems, {Value: Value}),
+                      RecurrenceMonths: drpEditRecur.Selected.Months,
+                      LastUpdatedByEmail: varMyEmail,
+                      LastUpdatedOn: Now(),
+                      LastStatus: "Updated"
+                  }
+              );
+              Patch('TT AuditLog', Defaults('TT AuditLog'),
+                  {
+                      Title: Trim(txtEditCourse.Text) & " updated",
+                      EntityType: "Course",
+                      EntityID: Text(varEditCourse.ID),
+                      PersonEmail: "",
+                      CourseID: Text(varEditCourse.ID),
+                      EventType: "Course updated",
+                      EventDescription: Trim(txtEditCourse.Text) & " course settings updated.",
+                      ActorEmail: varMyEmail,
+                      EventDateTime: Now(),
+                      Notes: ""
                   }
               );
               Notify("Course updated. Expiry dates recalculate automatically.",
@@ -814,7 +983,28 @@ const yaml = `Screens:
             OnSelect: |-
               =If(
                   varConfirmArchive = varEditCourse.ID,
-                  Patch('TT Courses', varEditCourse, {Status: {Value: "Archived"}});
+                  Patch('TT Courses', varEditCourse,
+                      {
+                          Status: {Value: "Archived"},
+                          LastUpdatedByEmail: varMyEmail,
+                          LastUpdatedOn: Now(),
+                          LastStatus: "Archived"
+                      }
+                  );
+                  Patch('TT AuditLog', Defaults('TT AuditLog'),
+                      {
+                          Title: varEditCourse.Title & " archived",
+                          EntityType: "Course",
+                          EntityID: Text(varEditCourse.ID),
+                          PersonEmail: "",
+                          CourseID: Text(varEditCourse.ID),
+                          EventType: "Course archived",
+                          EventDescription: varEditCourse.Title & " archived. Records kept.",
+                          ActorEmail: varMyEmail,
+                          EventDateTime: Now(),
+                          Notes: ""
+                      }
+                  );
                   Set(varConfirmArchive, Blank());
                   Set(varEditCourse, Blank());
                   ClearCollect(colCourses, 'TT Courses');
@@ -868,7 +1058,7 @@ const yaml = `Screens:
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
                   RadiusTopRight: =0
-                  Text: =
+                  Text: =""
                   Width: =678
             - lblCrsName:
                 Control: Label@2.5.1
@@ -893,7 +1083,7 @@ const yaml = `Screens:
                   Font: =Font.'Open Sans'
                   Height: =18
                   Size: =9
-                  Text: =Switch(ThisItem.RecurrenceMonths,0,"One-off",12,"Every year",24,"Every 2 years","Every " & ThisItem.RecurrenceMonths & " months") & "  ·  " & Concat(ThisItem.ApplicableTo, Value & ", ")
+                  Text: =Switch(ThisItem.RecurrenceMonths,0,"One-off",12,"Every year",24,"Every 2 years","Every " & ThisItem.RecurrenceMonths & " months") & "  " & Char(183) & "  " & Left(Concat(ThisItem.ApplicableTo, Value & ", "), Max(Len(Concat(ThisItem.ApplicableTo, Value & ", ")) - 2, 0))
                   Width: =380
                   X: =16
                   Y: =32
@@ -934,7 +1124,28 @@ const yaml = `Screens:
                   OnSelect: |-
                     =If(
                         varConfirmArchive = ThisItem.ID,
-                        Patch('TT Courses', ThisItem, {Status: {Value: "Archived"}});
+                        Patch('TT Courses', ThisItem,
+                            {
+                                Status: {Value: "Archived"},
+                                LastUpdatedByEmail: varMyEmail,
+                                LastUpdatedOn: Now(),
+                                LastStatus: "Archived"
+                            }
+                        );
+                        Patch('TT AuditLog', Defaults('TT AuditLog'),
+                            {
+                                Title: ThisItem.Title & " archived",
+                                EntityType: "Course",
+                                EntityID: Text(ThisItem.ID),
+                                PersonEmail: "",
+                                CourseID: Text(ThisItem.ID),
+                                EventType: "Course archived",
+                                EventDescription: ThisItem.Title & " archived. Records kept.",
+                                ActorEmail: varMyEmail,
+                                EventDateTime: Now(),
+                                Notes: ""
+                            }
+                        );
                         Set(varConfirmArchive, Blank());
                         ClearCollect(colCourses, 'TT Courses');
                         Notify("Course archived. Records and certificates kept forever.", NotificationType.Success),
@@ -953,7 +1164,28 @@ const yaml = `Screens:
                   Height: =24
                   Icon: =Icon.Redo
                   OnSelect: |-
-                    =Patch('TT Courses', ThisItem, {Status: {Value: "Active"}});
+                    =Patch('TT Courses', ThisItem,
+                        {
+                            Status: {Value: "Active"},
+                            LastUpdatedByEmail: varMyEmail,
+                            LastUpdatedOn: Now(),
+                            LastStatus: "Restored"
+                        }
+                    );
+                    Patch('TT AuditLog', Defaults('TT AuditLog'),
+                        {
+                            Title: ThisItem.Title & " restored",
+                            EntityType: "Course",
+                            EntityID: Text(ThisItem.ID),
+                            PersonEmail: "",
+                            CourseID: Text(ThisItem.ID),
+                            EventType: "Course restored",
+                            EventDescription: ThisItem.Title & " restored to the mandatory list.",
+                            ActorEmail: varMyEmail,
+                            EventDateTime: Now(),
+                            Notes: ""
+                        }
+                    );
                     ClearCollect(colCourses, 'TT Courses');
                     Notify("Course restored to the mandatory list.", NotificationType.Success)
                   Visible: =ThisItem.Status.Value = "Archived"
