@@ -28,7 +28,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 5 of 7</p>
   <h1>scrTeamMember</h1>
-  <p class="meta">v1.7 — army green theme and quoted date units scrubbed · 27 Jul 2026</p>
+  <p class="meta">v1.8 — initialises chain depth before building team view · 27 Jul 2026</p>
 
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
@@ -162,7 +162,8 @@ const yaml = `Screens:
       Fill: =RGBA(247,249,252,1)
       LoadingSpinnerColor: =RGBA(0,78,66,1)
       OnVisible: |-
-        =ClearCollect(colAllPeople, Filter('TT Personnel', Active = true));
+        =Set(varChainDepth, 3);
+        ClearCollect(colAllPeople, Filter('TT Personnel', Active = true));
         ClearCollect(colAllRecords, 'TT TrainingRecords');
 
         ClearCollect(
