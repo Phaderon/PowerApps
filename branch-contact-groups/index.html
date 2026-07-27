@@ -399,9 +399,20 @@ Set(varLightboxGroupID, Blank())</pre>
           const response = await fetch(button.dataset.yamlUrl, { cache: 'no-store' });
           if (!response.ok) throw new Error('Screen page could not be loaded.');
           const html = await response.text();
-          const match = html.match(/const yaml = `([\s\S]*?)`;\s*function copyYAML/);
-          if (!match) throw new Error('YAML block was not found.');
-          await navigator.clipboard.writeText(match[1].replace(/\r?\n/g, '\r\n'));
+          const templateMatch = html.match(/const yaml = `([\s\S]*?)`;\s*(?:const stamp|function copyYAML)/);
+          const stringMatch = html.match(/const yaml = ("(?:\\.|[^"\\])*");\s*(?:const stamp|function copyYAML)/);
+          let yaml = '';
+          if (templateMatch) {
+            yaml = templateMatch[1].replace(/\\`/g, '`').replace(/\\\$\{/g, '${').replace(/\\\\/g, '\\');
+          } else if (stringMatch) {
+            yaml = Function('"use strict"; return ' + stringMatch[1] + ';')();
+          } else {
+            throw new Error('YAML block was not found.');
+          }
+          if (!yaml.startsWith('Screens:\r\n  ') && !yaml.startsWith('Screens:\n  ')) {
+            throw new Error('Extracted YAML did not start with Screens:.');
+          }
+          await navigator.clipboard.writeText(yaml.replace(/\r?\n/g, '\r\n'));
           button.textContent = 'Copied';
         } catch (error) {
           button.textContent = 'Copy failed';
