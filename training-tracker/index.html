@@ -11,7 +11,8 @@
       --ink: #172033;
       --muted: #637084;
       --line: #d9e1ec;
-      --blue: #185a9d;
+      --primary: #004e42;
+      --primary-soft: #e8f4ef;
       --green: #1f7a4d;
       --amber: #a86500;
       --red: #a33a3a;
@@ -31,7 +32,7 @@
       font-family: var(--sans);
       line-height: 1.6;
     }
-    a { color: var(--blue); }
+    a { color: var(--primary); }
     .shell {
       display: grid;
       grid-template-columns: 280px minmax(0, 1fr);
@@ -62,7 +63,7 @@
       padding: 7px 9px;
       font-size: .9rem;
     }
-    nav a:hover { background: #eef4fb; color: var(--blue); }
+    nav a:hover { background: var(--primary-soft); color: var(--primary); }
     main {
       min-width: 0;
       background: var(--paper);
@@ -83,8 +84,8 @@
       min-height: 28px;
       padding: 4px 10px;
       border-radius: 999px;
-      background: #eef4fb;
-      color: var(--blue);
+      background: var(--primary-soft);
+      color: var(--primary);
       font-size: .82rem;
       font-weight: 700;
     }
@@ -108,8 +109,8 @@
     h2 { margin: 0 0 12px; font-size: 1.55rem; }
     h3 { margin: 24px 0 10px; font-size: 1.15rem; }
     .callout {
-      border-left: 4px solid var(--blue);
-      background: #f2f7fd;
+      border-left: 4px solid var(--primary);
+      background: var(--primary-soft);
       border-radius: 8px;
       padding: 14px 16px;
       margin: 16px 0;
@@ -174,8 +175,8 @@
       border-radius: 8px;
       padding: 7px 10px;
       font-weight: 700;
-      background: #dbeafe;
-      color: #174472;
+      background: var(--primary-soft);
+      color: var(--primary);
       cursor: pointer;
     }
     pre {
@@ -226,6 +227,7 @@
         <a href="#add-list">Create TT AuditLog</a>
         <a href="#add-columns">Add Existing List Columns</a>
         <a href="#connect-refresh">Connect And Refresh</a>
+        <a href="#app-setup">App Setup</a>
         <a href="#yaml-links">YAML Pages</a>
         <a href="#checklist">Checklist</a>
       </nav>
@@ -233,7 +235,7 @@
 
     <main>
       <div class="topline">
-        <span class="pill">Current step: schema fix</span>
+        <span class="pill">Current step: schema and app setup</span>
         <span class="pill">Updated 27 Jul 2026</span>
         <span class="pill">Training Tracker only</span>
       </div>
@@ -330,6 +332,64 @@
         </div>
       </section>
 
+      <section id="app-setup">
+        <h2>App Setup</h2>
+        <p>After the SharePoint schema is in place, check the app-level setup before pasting or troubleshooting the screens.</p>
+
+        <h3>Data Sources Required</h3>
+        <ul>
+          <li><code>TT Personnel</code></li>
+          <li><code>TT Courses</code></li>
+          <li><code>TT TrainingRecords</code></li>
+          <li><code>TT AuditLog</code></li>
+          <li><code>Office365Users</code></li>
+        </ul>
+
+        <h3>App Formulas Dropdown</h3>
+        <p>No named formulas are required for the current v3 YAML. If the app already has old named formulas, leave them alone unless they reference a removed data source or hard-code the old blue theme.</p>
+
+        <h3>App.OnStart</h3>
+        <p>Paste this into <strong>App → OnStart</strong>, then run OnStart from Power Apps Studio. This initialises the shared variables the screens read. It does not globally load <code>TT AuditLog</code>; the admin dashboard loads that timeline data when the admin screen opens.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>Power Fx - App.OnStart</span>
+            <button data-copy="onstart-code" type="button">Copy</button>
+          </div>
+<pre id="onstart-code">Set(varMyEmail, Lower(User().Email));
+Set(varMe, LookUp('TT Personnel', Lower(Email) = varMyEmail));
+Set(varIsAdmin, If(IsBlank(varMe), false, Coalesce(varMe.IsAdmin, false)));
+Set(varViewingForSelf, true);
+Set(varViewingPerson, LookUp('TT Personnel', ID = -1));
+Set(varDrillPerson, LookUp('TT Personnel', ID = -1));
+Set(varShowArchive, false);
+Set(varTab, "People");
+Set(varAdminFilter, "All");
+Set(varAdminStatusFilter, "All");
+Set(varAdminLoading, false);
+Set(varHTML, "");
+Set(varTTTheme,
+    {
+        Primary: RGBA(0,78,66,1),
+        Success: RGBA(34,139,80,1),
+        Warning: RGBA(239,159,39,1),
+        Danger: RGBA(163,45,45,1),
+        Page: RGBA(247,249,252,1),
+        Panel: RGBA(255,255,255,1),
+        Border: RGBA(221,227,234,1),
+        Muted: RGBA(85,85,85,1),
+        Soft: RGBA(232,244,239,1)
+    }
+);
+ClearCollect(colCourses, 'TT Courses');
+ClearCollect(colAllPeople, Filter('TT Personnel', Active = true));
+ClearCollect(colAllRecords, 'TT TrainingRecords')</pre>
+        </div>
+
+        <div class="callout">
+          <strong>Why <code>TT AuditLog</code> is not collected here:</strong> admins read the timeline on <code>scrAdminDash.OnVisible</code>. Normal users only write audit entries when saving certificates, so keeping the read out of <code>App.OnStart</code> avoids unnecessary permission pain.
+        </div>
+      </section>
+
       <section id="yaml-links">
         <h2>Paste-Ready YAML Pages</h2>
         <p>Use these after the schema fix is complete. For big replacements, delete the controls on the target screen first, then paste the YAML fresh.</p>
@@ -353,7 +413,10 @@
           <li><code>TT Courses</code> has the four audit columns.</li>
           <li><code>TT TrainingRecords</code> has the four audit columns.</li>
           <li><code>TT AuditLog</code> is added as a Power Apps data source.</li>
+          <li><code>Office365Users</code> is still connected.</li>
           <li>All four SharePoint data sources have been refreshed in Power Apps Studio.</li>
+          <li><code>App.OnStart</code> has been updated and run once.</li>
+          <li>The App formulas dropdown has no required v3 named formula changes.</li>
         </ul>
         <p>Once those are done, send over the first remaining error exactly as Power Apps shows it and we will fix the YAML/formula directly.</p>
       </section>
