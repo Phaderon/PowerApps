@@ -204,20 +204,17 @@ A Patch against a SharePoint column marked Required with a blank value returns "
 
 Confirmed live in Branch Contact Groups, 2026-07-27: several groups showed `0 members` in `scrSendEmail` while SharePoint `BM Memberships` had real rows. The groups whose membership rows appeared early in the SharePoint list counted correctly; later groups did not.
 
-For this app, load `BM Memberships` in delegable ID windows:
+The first attempted fix used delegable ID windows, but the live app still cut off around the C groups. The more robust pattern for this app is to load memberships group-by-group, because each group roster is small:
 
 ```powerfx
-ClearCollect(colMemberships, Filter('BM Memberships', ID <= 500));
+ClearCollect(colMemberships, Filter('BM Memberships', false));
 ForAll(
-    Sequence(39) As rng,
-    With(
-        {lo: rng.Value * 500, hi: (rng.Value + 1) * 500},
-        Collect(colMemberships, Filter('BM Memberships', ID > lo && ID <= hi))
-    )
+    colGroups As grp,
+    Collect(colMemberships, Filter('BM Memberships', GroupName = grp.Title))
 )
 ```
 
-This covers SharePoint item IDs through 20,000. If future item IDs exceed that, increase `Sequence(39)`.
+This depends on the app's intended data contract: `BM Memberships.GroupName` must match `BM Groups.Title`. After the rows are in `colMemberships`, local formulas can still use trim/case-insensitive comparison defensively.
 
 ## Notify-First Validation Pattern Breaks Error Borders
 

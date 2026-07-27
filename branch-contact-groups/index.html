@@ -265,7 +265,7 @@
 
     <main>
       <div class="topline">
-        <span class="pill">Current step: v2.31 row-limit fix</span>
+        <span class="pill">Current step: v2.32 membership loader fix</span>
         <span class="pill">Updated 27 Jul 2026</span>
         <span class="pill">Branch Contact Groups</span>
       </div>
@@ -281,12 +281,12 @@
       </section>
 
       <section id="current-fix">
-        <h2>Current Fix - Membership Row Limit</h2>
-        <p>The app previously loaded memberships with <code>ClearCollect(colMemberships, 'BM Memberships')</code>. That only cached the first client-side page of the SharePoint list. Groups whose membership rows sat later in SharePoint then showed <code>0 members</code> inside the app, even though the SharePoint list genuinely had rows.</p>
+        <h2>Current Fix - Membership Loader</h2>
+        <p>The app originally loaded memberships with <code>ClearCollect(colMemberships, 'BM Memberships')</code>. That only cached the first client-side page of the SharePoint list. The first attempted fix used SharePoint ID windows, but the live app still cut off around the C groups, which means item-ID ranges were still the wrong shape for this tenant.</p>
         <div class="callout warn">
           <strong>Replace all four areas:</strong> paste the updated <code>App.OnStart</code>, then replace <code>scrSendEmail</code>, <code>scrManageGroups</code>, and <code>scrManagePeople</code>. Updating only the front screen leaves stale membership-loading formulas on the other screens.
         </div>
-        <p>The fix loads <code>BM Memberships</code> in SharePoint ID windows. Current coverage is item IDs up to 20,000. If the list ever grows beyond that, increase <code>Sequence(39)</code>.</p>
+        <p>v2.32 loads <code>BM Memberships</code> group-by-group. Each SharePoint query only asks for one group's roster, so it avoids the global row cap and SharePoint item-ID churn.</p>
       </section>
 
       <section id="app-onstart">
@@ -302,7 +302,7 @@ Set(varMyEmail, Lower(User().Email));
 ClearCollect(colMaintainers, 'BM Maintainers');
 Set(varIsMaintainer, CountRows(Filter(colMaintainers, Lower(Email) = varMyEmail)) > 0);
 ClearCollect(colGroups, AddColumns(Sort('BM Groups', SortOrder, SortOrder.Ascending), Ticked, false));
-ClearCollect(colMemberships, Filter('BM Memberships', ID &lt;= 500)); ForAll(Sequence(39) As rng, With({lo: rng.Value * 500, hi: (rng.Value + 1) * 500}, Collect(colMemberships, Filter('BM Memberships', ID &gt; lo &amp;&amp; ID &lt;= hi))));
+ClearCollect(colMemberships, Filter('BM Memberships', false)); ForAll(colGroups As grp, Collect(colMemberships, Filter('BM Memberships', GroupName = grp.Title)));
 ClearCollect(colThursdayBatchOptions, ["None", "Batch 1", "Batch 2"]);
 Set(varRecipientField, "bcc");
 Set(varBccForcedByBatch, false);
@@ -319,16 +319,16 @@ Set(varLightboxGroupID, Blank())</pre>
         <p>These are the live generated copy pages from the Branch Contact Groups app repository.</p>
         <div class="links">
           <div class="link-card">
-            <a href="screens/scrSendEmail.html?v=2.21"><strong>scrSendEmail</strong><span>Landing page, selected groups, recipient counts, Outlook and clipboard actions.</span></a>
-            <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.21">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.21">Copy YAML</button></div>
+            <a href="screens/scrSendEmail.html?v=2.22"><strong>scrSendEmail</strong><span>Landing page, selected groups, recipient counts, Outlook and clipboard actions.</span></a>
+            <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.22">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.22">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManageGroups.html?v=2.18"><strong>scrManageGroups</strong><span>Group creation, edit lightbox, membership management, history and Thursday settings.</span></a>
-            <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.18">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.18">Copy YAML</button></div>
+            <a href="screens/scrManageGroups.html?v=2.19"><strong>scrManageGroups</strong><span>Group creation, edit lightbox, membership management, history and Thursday settings.</span></a>
+            <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.19">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.19">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManagePeople.html?v=2.20"><strong>scrManagePeople</strong><span>People management, GAL search, edit-person group checklist and leaver cleanup.</span></a>
-            <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.20">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.20">Copy YAML</button></div>
+            <a href="screens/scrManagePeople.html?v=2.21"><strong>scrManagePeople</strong><span>People management, GAL search, edit-person group checklist and leaver cleanup.</span></a>
+            <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.21">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.21">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="https://phadedev.github.io/branch-contact-groups/"><strong>Full App Guide</strong><span>SharePoint schema, data sources, full app notes and generated screen docs.</span></a>
@@ -346,10 +346,10 @@ Set(varLightboxGroupID, Blank())</pre>
       <section id="checklist">
         <h2>Checklist Before Testing</h2>
         <ul>
-          <li><code>App.OnStart</code> has the chunked <code>colMemberships</code> load.</li>
-          <li><code>scrSendEmail</code> has been replaced from v2.21 or newer.</li>
-          <li><code>scrManageGroups</code> has been replaced from v2.18 or newer.</li>
-          <li><code>scrManagePeople</code> has been replaced from v2.20 or newer.</li>
+          <li><code>App.OnStart</code> has the group-by-group <code>colMemberships</code> load.</li>
+          <li><code>scrSendEmail</code> has been replaced from v2.22 or newer.</li>
+          <li><code>scrManageGroups</code> has been replaced from v2.19 or newer.</li>
+          <li><code>scrManagePeople</code> has been replaced from v2.21 or newer.</li>
           <li>Run <code>App.OnStart</code> once after pasting.</li>
           <li>Refresh the <code>BM Memberships</code> data source in Power Apps Studio.</li>
           <li>Test one known later group, for example CTC Frimley, before changing unrelated UI formulas.</li>
