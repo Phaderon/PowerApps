@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 6 of 7</p>
   <h1>scrAdminDash</h1>
-  <p class="meta">v3.2 &mdash; Army green theme rolled across admin dashboard · 27 Jul 2026</p>
+  <p class="meta">v3.3 &mdash; Fixes admin drill selection initialisation · 27 Jul 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -173,6 +173,8 @@ const yaml = `Screens:
                 )
             )
         );
+
+        Set(varDrillPerson, LookUp(colCompliance, false));
 
         ClearCollect(
             colRiskByType,

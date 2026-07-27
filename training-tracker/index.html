@@ -360,7 +360,6 @@ Set(varMe, LookUp('TT Personnel', Lower(Email) = varMyEmail));
 Set(varIsAdmin, If(IsBlank(varMe), false, Coalesce(varMe.IsAdmin, false)));
 Set(varViewingForSelf, true);
 Set(varViewingPerson, LookUp('TT Personnel', ID = -1));
-Set(varDrillPerson, LookUp('TT Personnel', ID = -1));
 Set(varShowArchive, false);
 Set(varTab, "People");
 Set(varAdminFilter, "All");
@@ -394,7 +393,7 @@ ClearCollect(colAllRecords, 'TT TrainingRecords')</pre>
         <h2>Paste-Ready YAML Pages</h2>
         <p>Use these after the schema fix is complete. For big replacements, delete the controls on the target screen first, then paste the YAML fresh.</p>
         <div class="links">
-          <a class="link-card" href="../screens/scrAdminDash.html?v=3.2"><strong>scrAdminDash</strong><span>Admin dashboard, KPI cards, attention filters, risk bars and timeline.</span></a>
+          <a class="link-card" href="../screens/scrAdminDash.html?v=3.3"><strong>scrAdminDash</strong><span>Admin dashboard, KPI cards, attention filters, risk bars and timeline.</span></a>
           <a class="link-card" href="../screens/scrAdminManage.html?v=2.2"><strong>scrAdminManage</strong><span>People/course management with audit hooks.</span></a>
           <a class="link-card" href="../screens/scrCourseDetail.html?v=2.7"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
           <a class="link-card" href="../screens/scrMyTraining.html?v=2.5"><strong>scrMyTraining</strong><span>Personal training dashboard.</span></a>
