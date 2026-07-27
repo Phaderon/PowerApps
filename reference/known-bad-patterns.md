@@ -134,6 +134,7 @@ These are mistakes that must not reappear in this guide family.
 ## Architecture
 
 - Loading collections only in `App.OnStart` and not reloading in screen `OnVisible`. Collections go stale when data is added in a different screen or session.
+- **Using `ClearCollect(colMemberships, 'BM Memberships')` as if it loads the whole SharePoint list.** It only caches the first client-side page, so later membership rows never reach the app. Confirmed 2026-07-27 on Branch Contact Groups: `scrSendEmail` showed `0 members` for groups such as CTC Frimley even though SharePoint `BM Memberships` had real rows. Counts and recipient generation were reading the incomplete local `colMemberships` collection. **Fix:** use delegable SharePoint `ID` windows, e.g. first collect `Filter('BM Memberships', ID <= 500)`, then `ForAll(Sequence(39) As rng, With({lo: rng.Value * 500, hi: (rng.Value + 1) * 500}, Collect(colMemberships, Filter('BM Memberships', ID > lo && ID <= hi))))`. Increase the sequence if SharePoint item IDs exceed 20,000.
 - Not initialising `varViewingForSelf` at the top of `OnVisible`. If it is blank, a self-view/team-view screen will show nothing.
 - Hard-coding `Set(varViewingForSelf, true)` in a gallery row `OnSelect`. This breaks team-member viewing.
 - Not calling `ResetForm(frmCert)` in a form screen's `OnVisible`. The form shows stale data on revisit.

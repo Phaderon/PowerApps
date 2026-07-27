@@ -198,6 +198,27 @@ Add `ResetForm(frmCert)` to a form screen's `OnVisible`. Without it, the form sh
 
 A Patch against a SharePoint column marked Required with a blank value returns "Network error: Field 'X' is required." Unmark the column as Required in SharePoint, or add app-level validation to prevent Patch from running when the field is blank.
 
+## SharePoint Collection Row Limit
+
+`ClearCollect(localCollection, 'Large SharePoint List')` does not guarantee the app has every SharePoint row. It only caches the first client-side page. If downstream formulas count, filter, or build email recipients from that local collection, any rows outside the loaded page are invisible to the app even though SharePoint is correct.
+
+Confirmed live in Branch Contact Groups, 2026-07-27: several groups showed `0 members` in `scrSendEmail` while SharePoint `BM Memberships` had real rows. The groups whose membership rows appeared early in the SharePoint list counted correctly; later groups did not.
+
+For this app, load `BM Memberships` in delegable ID windows:
+
+```powerfx
+ClearCollect(colMemberships, Filter('BM Memberships', ID <= 500));
+ForAll(
+    Sequence(39) As rng,
+    With(
+        {lo: rng.Value * 500, hi: (rng.Value + 1) * 500},
+        Collect(colMemberships, Filter('BM Memberships', ID > lo && ID <= hi))
+    )
+)
+```
+
+This covers SharePoint item IDs through 20,000. If future item IDs exceed that, increase `Sequence(39)`.
+
 ## Notify-First Validation Pattern Breaks Error Borders
 
 If validation calls `Notify(...)` before setting error variables, the Notify message appears but the error borders (Visible driven by error variables) never show because the success path immediately clears everything. Set all error variables first, then check them in an If guard. See `ui-patterns.md` for the correct pattern.
