@@ -28,7 +28,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 5 of 7</p>
   <h1>scrTeamMember</h1>
-  <p class="meta">v1.8 — initialises chain depth before building team view · 27 Jul 2026</p>
+  <p class="meta">v1.9 — keeps course delivery metadata in helper formulas · 29 Jul 2026</p>
 
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
@@ -145,7 +145,7 @@
   <hr class="divider"/>
 
   <h2>Step 4 — Fix scrMyTraining.OnVisible</h2>
-  <p class="meta" style="max-width:540px;text-align:center">The OnVisible in your app is out of date — it references colMyRecords before defining it, and includes removed columns (CourseURL etc). Select <strong>scrMyTraining</strong> in the Tree View, click <strong>OnVisible</strong> in the formula bar, select all, paste the full replacement below.</p>
+  <p class="meta" style="max-width:540px;text-align:center">The OnVisible in your app is out of date if it references colMyRecords before defining it. Select <strong>scrMyTraining</strong> in the Tree View, click <strong>OnVisible</strong> in the formula bar, select all, paste the full replacement below.</p>
 
   <div class="section">
     <p class="section-label">scrMyTraining → OnVisible — full replacement</p>
@@ -331,9 +331,12 @@ const yaml = `Screens:
                       With(
                           {rec: LookUp(colViewRecords, CourseID = C.ID)},
                           {
-                              CourseID:    C.ID,
-                              CourseName:  C.Title,
-                              RecurMonths: C.RecurrenceMonths,
+                    CourseID:    C.ID,
+                    CourseName:  C.Title,
+                    CourseURL:   C.CourseURL,
+                    CourseHost:  C.CourseHost,
+                    CourseDescription: C.CourseDescription,
+                    RecurMonths: C.RecurrenceMonths,
                               RecurText:   Switch(C.RecurrenceMonths,
                                                0,  "One-off",
                                                12, "Every year",

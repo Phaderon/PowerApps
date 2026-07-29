@@ -345,6 +345,19 @@
         <div class="callout warn">
           <strong>Internal names matter:</strong> create the column with the exact no-space name first. You can change the display name later if needed, but do not create names like <code>Last Updated By Email</code>.
         </div>
+
+        <h3>Confirm Course Delivery Columns</h3>
+        <p>The restored course launch feature needs these columns on <code>TT Courses</code>. They existed in the earlier Training Tracker design, but check them before pasting the updated admin/course screens.</p>
+        <table>
+          <thead>
+            <tr><th>Column internal name</th><th>Type</th><th>Required?</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>CourseHost</code></td><td>Choice</td><td>Yes. Suggested choices: Defence Learning Environment, Civil Service Learning, SharePoint, Teams, External provider, Local file, Other.</td></tr>
+            <tr><td><code>CourseURL</code></td><td>Single line text</td><td>Yes. Used by the Open course button.</td></tr>
+            <tr><td><code>CourseDescription</code></td><td>Multiple lines of text, plain text</td><td>No. Hidden on the course screen when blank.</td></tr>
+          </tbody>
+        </table>
       </section>
 
       <section id="connect-refresh">
@@ -428,20 +441,20 @@ ClearCollect(colAllRecords, 'TT TrainingRecords')</pre>
             <div class="card-actions"><a href="../screens/scrAdminDash.html?v=3.3">Open</a><button type="button" data-yaml-url="../screens/scrAdminDash.html?v=3.3">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrAdminManage.html?v=2.2"><strong>scrAdminManage</strong><span>People/course management with audit hooks.</span></a>
-            <div class="card-actions"><a href="../screens/scrAdminManage.html?v=2.2">Open</a><button type="button" data-yaml-url="../screens/scrAdminManage.html?v=2.2">Copy YAML</button></div>
+            <a href="../screens/scrAdminManage.html?v=2.3"><strong>scrAdminManage</strong><span>People/course management with audit hooks.</span></a>
+            <div class="card-actions"><a href="../screens/scrAdminManage.html?v=2.3">Open</a><button type="button" data-yaml-url="../screens/scrAdminManage.html?v=2.3">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrCourseDetail.html?v=2.8"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
-            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=2.8">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=2.8">Copy YAML</button></div>
+            <a href="../screens/scrCourseDetail.html?v=2.9"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
+            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=2.9">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=2.9">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrMyTraining.html?v=2.5"><strong>scrMyTraining</strong><span>Personal training dashboard.</span></a>
-            <div class="card-actions"><a href="../screens/scrMyTraining.html?v=2.5">Open</a><button type="button" data-yaml-url="../screens/scrMyTraining.html?v=2.5">Copy YAML</button></div>
+            <a href="../screens/scrMyTraining.html?v=2.6"><strong>scrMyTraining</strong><span>Personal training dashboard.</span></a>
+            <div class="card-actions"><a href="../screens/scrMyTraining.html?v=2.6">Open</a><button type="button" data-yaml-url="../screens/scrMyTraining.html?v=2.6">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrTeamMember.html?v=1.8"><strong>scrTeamMember</strong><span>Line manager chain view.</span></a>
-            <div class="card-actions"><a href="../screens/scrTeamMember.html?v=1.8">Open</a><button type="button" data-yaml-url="../screens/scrTeamMember.html?v=1.8">Copy YAML</button></div>
+            <a href="../screens/scrTeamMember.html?v=1.9"><strong>scrTeamMember</strong><span>Line manager chain view.</span></a>
+            <div class="card-actions"><a href="../screens/scrTeamMember.html?v=1.9">Open</a><button type="button" data-yaml-url="../screens/scrTeamMember.html?v=1.9">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrNoRecord.html?v=2.5"><strong>scrNoRecord</strong><span>No Personnel record screen.</span></a>
@@ -461,6 +474,7 @@ ClearCollect(colAllRecords, 'TT TrainingRecords')</pre>
           <li>All ten <code>TT AuditLog</code> columns exist with exact internal names.</li>
           <li><code>TT Personnel</code> has the four audit columns.</li>
           <li><code>TT Courses</code> has the four audit columns.</li>
+          <li><code>TT Courses</code> has <code>CourseHost</code>, <code>CourseURL</code> and optional <code>CourseDescription</code>.</li>
           <li><code>TT TrainingRecords</code> has the four audit columns.</li>
           <li><code>TT AuditLog</code> is added as a Power Apps data source.</li>
           <li><code>Office365Users</code> is still connected.</li>
