@@ -260,6 +260,7 @@
         <a href="#app-setup">App Setup</a>
         <a href="#date-prefill-fix">Date Pre-fill Fix</a>
         <a href="#add-course-validation-fix">Add Course Validation</a>
+        <a href="#blank-admin-dashboard-fix">Blank Admin Dashboard</a>
         <a href="#yaml-links">YAML Pages</a>
         <a href="#checklist">Checklist</a>
       </nav>
@@ -425,7 +426,7 @@ Set(varTTTheme,
     }
 );
 ClearCollect(colCourses, 'TT Courses');
-ClearCollect(colAllPeople, Filter('TT Personnel', Active = true));
+ClearCollect(colAllPeople, Filter('TT Personnel', Coalesce(Active, true) = true));
 ClearCollect(colAllRecords, 'TT TrainingRecords')</pre>
         </div>
 
@@ -532,13 +533,53 @@ ClearCollect(colAllRecords, 'TT TrainingRecords')</pre>
         </div>
       </section>
 
+      <section id="blank-admin-dashboard-fix">
+        <h2>Fix 4 - Blank Admin Dashboard</h2>
+        <p>If the admin dashboard opens but every KPI says <code>0</code> even though SharePoint has people and courses, this is usually old rows having blank upgrade fields. Treat blank <code>Active</code> as active, and blank course <code>Status</code> as active.</p>
+
+        <ol>
+          <li>Select <code>scrAdminDash</code>.</li>
+          <li>Open its <code>OnVisible</code> formula.</li>
+          <li>Replace the old personnel collection line with this one.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>scrAdminDash.OnVisible - personnel line</span>
+            <button data-copy="dashboard-people-line" type="button">Copy</button>
+          </div>
+<pre id="dashboard-people-line">ClearCollect(colAllPeople, Filter(colAllPersonnelRaw, Coalesce(Active, true) = true));</pre>
+        </div>
+
+        <ol start="4">
+          <li>Still in <code>scrAdminDash.OnVisible</code>, find the course requirement filter line.</li>
+          <li>Replace <code>Status.Value = "Active" &amp;&amp;</code> with this safer version.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>scrAdminDash.OnVisible - course status line</span>
+            <button data-copy="dashboard-status-line" type="button">Copy</button>
+          </div>
+<pre id="dashboard-status-line">Coalesce(Status.Value, "Active") = "Active" &amp;&amp;</pre>
+        </div>
+
+        <ol start="6">
+          <li>Select <code>galCompliance</code>.</li>
+          <li>Open its <code>OnSelect</code> formula.</li>
+          <li>Replace its <code>Status.Value = "Active" &amp;&amp;</code> line with the same safer line above.</li>
+        </ol>
+
+        <div class="callout">
+          <strong>Expected result:</strong> existing people created before the <code>Active</code> column was added appear on the dashboard again. Existing courses created before the <code>Status</code> column was added count as active unless you explicitly archive them.
+        </div>
+      </section>
+
       <section id="yaml-links">
         <h2>Paste-Ready YAML Pages</h2>
         <p>Use these after the schema fix is complete. For big replacements, delete the controls on the target screen first, then paste the YAML fresh.</p>
         <div class="links">
           <div class="link-card">
-            <a href="../screens/scrAdminDash.html?v=3.3"><strong>scrAdminDash</strong><span>Admin dashboard, KPI cards, attention filters, risk bars and timeline.</span></a>
-            <div class="card-actions"><a href="../screens/scrAdminDash.html?v=3.3">Open</a><button type="button" data-yaml-url="../screens/scrAdminDash.html?v=3.3">Copy YAML</button></div>
+            <a href="../screens/scrAdminDash.html?v=3.4"><strong>scrAdminDash</strong><span>Admin dashboard, KPI cards, attention filters, risk bars and timeline.</span></a>
+            <div class="card-actions"><a href="../screens/scrAdminDash.html?v=3.4">Open</a><button type="button" data-yaml-url="../screens/scrAdminDash.html?v=3.4">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrAdminManage.html?v=2.4"><strong>scrAdminManage</strong><span>People/course management with audit hooks.</span></a>
