@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Policy Tracker - Fix Guide</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --paper: #ffffff;
+      --ink: #172033;
+      --muted: #637084;
+      --line: #d9e1ec;
+      --primary: #004e42;
+      --primary-soft: #e8f4ef;
+      --green: #1f7a4d;
+      --amber: #a86500;
+      --red: #a33a3a;
+      --code-bg: #111827;
+      --code-ink: #f8fafc;
+      --radius: 10px;
+      --shadow: 0 12px 32px rgba(20, 34, 56, .10);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+    }
+    a { color: var(--primary); }
+    .shell {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 24px;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    aside {
+      position: sticky;
+      top: 18px;
+      align-self: start;
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    aside h2 { margin: 0 0 4px; font-size: 1.05rem; }
+    aside p { margin: 0 0 14px; color: var(--muted); font-size: .9rem; }
+    nav { display: grid; gap: 4px; }
+    nav a {
+      text-decoration: none;
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 7px 9px;
+      font-size: .9rem;
+    }
+    nav a:hover { background: var(--primary-soft); color: var(--primary); }
+    main {
+      min-width: 0;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+    }
+    .topline {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: .82rem;
+      font-weight: 700;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+    .lead {
+      margin: 0 0 24px;
+      max-width: 860px;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+    section {
+      border-top: 1px solid var(--line);
+      margin-top: 30px;
+      padding-top: 26px;
+    }
+    h2 { margin: 0 0 12px; font-size: 1.55rem; }
+    h3 { margin: 24px 0 10px; font-size: 1.15rem; }
+    .callout {
+      border-left: 4px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 16px 0;
+    }
+    .warn {
+      border-left-color: var(--amber);
+      background: #fff7e8;
+    }
+    .ok {
+      border-left-color: var(--green);
+      background: #edf8f2;
+    }
+    code {
+      font-family: var(--mono);
+      background: #eef3f8;
+      border: 1px solid #dce5f0;
+      border-radius: 6px;
+      padding: 1px 5px;
+      font-size: .92em;
+    }
+    .code-card {
+      background: var(--code-bg);
+      color: var(--code-ink);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 14px 0 22px;
+    }
+    .code-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      color: #cbd5e1;
+      font-size: .85rem;
+    }
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-weight: 700;
+      background: var(--primary-soft);
+      color: var(--primary);
+      cursor: pointer;
+    }
+    pre {
+      margin: 0;
+      padding: 16px;
+      overflow: auto;
+      white-space: pre;
+      font-family: var(--mono);
+      font-size: .9rem;
+      line-height: 1.55;
+    }
+    ul, ol { padding-left: 1.3rem; }
+    li { margin: 6px 0; }
+    .meta-line { color: var(--muted); font-size: .85rem; margin: 0 0 10px; }
+    @media (max-width: 860px) {
+      .shell { display: block; padding: 12px; }
+      aside { position: static; margin-bottom: 14px; }
+      main { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <h2>Policy Tracker</h2>
+      <p>Running fix guide. Every confirmed fix stays here in the order it landed.</p>
+      <nav>
+        <a href="../">Guide library</a>
+        <a href="#what-this-page-is">What This Page Is</a>
+        <a href="#onedrive-link-fix">Fix 1 - Personal OneDrive Links</a>
+        <a href="#addressbar-url-fix">Fix 2 - Address-Bar Link Save Failure</a>
+      </nav>
+    </aside>
+
+    <main>
+      <div class="topline">
+        <span class="pill">Updated 29 Jul 2026</span>
+        <span class="pill">Policy Tracker only</span>
+        <span class="pill">2 fixes so far</span>
+      </div>
+      <h1>Policy Tracker Fix Guide</h1>
+      <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
+
+      <section id="what-this-page-is">
+        <h2>What This Page Is</h2>
+        <p>This is the working fix log for the Policy Tracker canvas app (repo <code>PhadeDev/policy-tracker</code>). It replaces the old single-fix-at-a-time guide that used to live at <code>phadedev.github.io/policy-tracker/guides/pre-release-scrub.html</code> &mdash; that page now just points here.</p>
+        <div class="callout">
+          Each fix below is a targeted property edit on the live app, applied by hand in Power Apps Studio. None of them require a full screen repaste unless stated otherwise.
+        </div>
+      </section>
+
+      <section id="onedrive-link-fix">
+        <h2>Fix 1 - Block Saving Personal OneDrive Links As Document Links</h2>
+        <p class="meta-line">ViewItem &middot; property edit &middot; no risk</p>
+        <p>The Open In App icon-scan already looks for the real SharePoint document-library domain (<code>modgovuk.sharepoint.com</code>) on <code>OpenDesktop_2.Visible</code>. A personal OneDrive share link (e.g. <code>https://modgovuk-my.sharepoint.com/:w:/r/personal/...</code>) uses a different domain &mdash; the <code>-my.sharepoint.com</code> "my site" domain, not the document library &mdash; so it was never going to be recognised, and worse, it's not something colleagues should be linking to from a tracked policy item anyway (personal OneDrive isn't shared storage). First attempt used a toast on Save, but toasts are easy to miss. Replaced it with a persistent inline text block under the URL field itself (reusing the existing error-label spot, so it shows live as soon as the link is typed/pasted, not just on Save). <strong>Save itself still re-checks the same condition independently as a fallback</strong> &mdash; it doesn't just rely on the label being visible, so even if the inline warning were somehow not showing, Save would still silently refuse to submit a personal OneDrive link.</p>
+
+        <ol>
+          <li>Open <strong>ViewItem</strong>.</li>
+          <li>In the Tree view, find <strong>ErrorMessage29_2</strong> (the small text under the "Direct URL to document" field).</li>
+          <li>Select <code>Text</code> in the Properties dropdown, select all, and replace with this formula.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>ErrorMessage29_2.Text</span>
+            <button data-copy="onedrive-error-text" type="button">Copy</button>
+          </div>
+<pre id="onedrive-error-text">If(
+    "modgovuk-my.sharepoint.com" in Lower(DataCardValue29_2.Text),
+    "This is a personal OneDrive link. Please save this document into SharePoint first, then paste the SharePoint link here.",
+    frmLink_2.Valid = false && !IsBlank(frmLink_2.Error),
+    "URL is required.",
+    ""
+)</pre>
+        </div>
+
+        <ol start="4">
+          <li>Still on <strong>ErrorMessage29_2</strong>, select <code>Wrap</code> in the Properties dropdown and set it to <code>true</code> (the message is longer than the old "URL is required." text, so it needs to wrap onto a second line instead of being cut off).</li>
+          <li>Now find <strong>btnSaveLink_2</strong> (the Save button in the same modal). This is the fallback check &mdash; it runs the same domain test again independently, so Save still refuses to submit even if the inline warning above wasn't showing.</li>
+          <li>Select <code>OnSelect</code> in the Properties dropdown, select all, and replace with this formula.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>btnSaveLink_2.OnSelect</span>
+            <button data-copy="onedrive-save-onselect" type="button">Copy</button>
+          </div>
+<pre id="onedrive-save-onselect">If(
+    !varSubmitting && !("modgovuk-my.sharepoint.com" in Lower(DataCardValue29_2.Text)),
+    Set(varSubmitting, true);
+    SubmitForm(frmLink_2);
+    // Do NOT refresh here
+    Set(varSubmitting, false)
+)</pre>
+        </div>
+
+        <div class="callout ok">
+          <strong>Test:</strong> paste a <code>modgovuk-my.sharepoint.com/:w:/r/personal/...</code> link into the URL field &mdash; the warning text should appear straight away under the field, wrapped onto two lines, and hitting Save should do nothing while it's showing. A normal <code>modgovuk.sharepoint.com</code> document-library link should show no message and still save as before.
+        </div>
+      </section>
+
+      <section id="addressbar-url-fix">
+        <h2>Fix 2 - "Save Failed / Invalid URL Value" On Address-Bar Document Links</h2>
+        <p class="meta-line">ViewItem &middot; property edit &middot; no risk</p>
+        <p>Reported urgent 2026-07-29: adding a document link failed with a pink "Save failed" banner and a briefly-flashed SharePoint error, <code>PolicyLinks failed: Invalid URL value. A URL field contains invalid data.</code> Confirmed via issue #33 comparison: a link copied from the browser's address bar while viewing a Word doc in Office Online (323 characters, carrying Outlook tracking junk like <code>&amp;clickparams=...</code>, <code>&amp;CID=...</code>, <code>&amp;wdLOR=...</code>) failed every time, while the same file's proper Share &gt; Copy Link (169 characters) saved fine. The SharePoint <code>LinkUrl</code> column has its own length cap and rejects anything over it with exactly this error &mdash; it has nothing to do with the file type or which website the link points to (a bare domain like <code>google.com</code> with no <code>http://</code>/<code>https://</code> scheme will also be rejected by SharePoint, for a separate, unrelated reason). The existing <code>Update</code> formula on this field already trimmed one known junk parameter (<code>&amp;action</code>); extended it to also trim the three new ones seen in this report, so the link still saves with its real share token intact, just without the extra tracking noise pushing it over the length limit.</p>
+        <div class="callout warn">
+          <strong>Known limitation, not fixed by this:</strong> links copied from the address bar this way don't contain the filename anywhere in the URL (just an opaque ID token), so their document-link icon will still show generic rather than picking up the real file type. That's a limitation of what that link format contains, not something a formula can fix. Using Share &gt; Copy Link remains the better habit for a correct icon too.
+        </div>
+
+        <ol>
+          <li>Open <strong>ViewItem</strong>.</li>
+          <li>In the Tree view, find <strong>LinkUrl_DataCard2_2</strong> (the data card wrapping the "Direct URL to document" field).</li>
+          <li>Select <code>Update</code> in the Properties dropdown, select all, and replace with this formula.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>LinkUrl_DataCard2_2.Update</span>
+            <button data-copy="addressbar-update" type="button">Copy</button>
+          </div>
+<pre id="addressbar-update">With(
+    {
+        fullUrl: DataCardValue29_2.Text
+    },
+    If(
+        IsBlank(fullUrl),
+        Blank(),
+        Left(
+            fullUrl,
+            Min(
+                If(Find("&action", fullUrl) > 0, Find("&action", fullUrl) - 1, Len(fullUrl)),
+                If(Find("&clickparams", fullUrl) > 0, Find("&clickparams", fullUrl) - 1, Len(fullUrl)),
+                If(Find("&CID=", fullUrl) > 0, Find("&CID=", fullUrl) - 1, Len(fullUrl)),
+                If(Find("&wdLOR", fullUrl) > 0, Find("&wdLOR", fullUrl) - 1, Len(fullUrl))
+            )
+        )
+    )
+)</pre>
+        </div>
+
+        <div class="callout ok">
+          <strong>Test:</strong> open a Word/Excel doc in Office Online from a link inside Outlook, copy the address bar URL, paste it into "Direct URL to document" and hit Save &mdash; it should save without error now. A normal Share &gt; Copy Link URL should still save exactly as before (nothing in this formula changes for URLs that don't contain those tracking parameters).
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    document.querySelectorAll('button[data-copy]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const target = document.getElementById(button.dataset.copy);
+        if (!target) return;
+        await navigator.clipboard.writeText(target.innerText);
+        const old = button.textContent;
+        button.textContent = 'Copied';
+        setTimeout(() => { button.textContent = old; }, 1300);
+      });
+    });
+  </script>
+</body>
+</html>
