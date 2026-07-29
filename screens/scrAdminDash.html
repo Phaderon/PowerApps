@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 6 of 7</p>
   <h1>scrAdminDash</h1>
-  <p class="meta">v3.5 &mdash; Removes invalid immediate OnVisible navigation guard · 29 Jul 2026</p>
+  <p class="meta">v3.6 &mdash; Clarifies compliance KPI maths and outstanding chip colour · 29 Jul 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -411,7 +411,7 @@ const yaml = `Screens:
             FontWeight: =FontWeight.Bold
             Height: =44
             Size: =28
-            Text: =CountRows(Filter(colCompliance, Outstanding = 0))
+            Text: =CountRows(Filter(colCompliance, Required > 0 && Outstanding = 0))
             Width: =321
             X: =349
             Y: =96
@@ -425,7 +425,7 @@ const yaml = `Screens:
             FontWeight: =FontWeight.Bold
             Height: =44
             Size: =28
-            Text: =Round(100*CountRows(Filter(colCompliance,Outstanding=0))/Max(CountRows(colCompliance),1),0) & "%"
+            Text: =If(Sum(colCompliance, Required) = 0, "0%", Round(100 * Sum(colCompliance, InDate) / Max(Sum(colCompliance, Required), 1), 0) & "%")
             Width: =321
             X: =682
             Y: =96
@@ -465,7 +465,7 @@ const yaml = `Screens:
             Font: =Font.'Open Sans'
             Height: =26
             Size: =10
-            Text: ="% compliant"
+            Text: ="% items in date"
             Width: =321
             X: =682
             Y: =144
@@ -585,12 +585,12 @@ const yaml = `Screens:
       - btnAttentionOutstanding:
           Control: Classic/Button@2.2.0
           Properties:
-            BorderColor: =RGBA(0,78,66,1)
+            BorderColor: =RGBA(163,45,45,1)
             BorderThickness: =1
-            Color: =If(varAdminStatusFilter = "Outstanding", RGBA(255,255,255,1), RGBA(0,78,66,1))
-            Fill: =If(varAdminStatusFilter = "Outstanding", RGBA(0,78,66,1), RGBA(232,244,239,1))
+            Color: =If(varAdminStatusFilter = "Outstanding", RGBA(255,255,255,1), RGBA(121,31,31,1))
+            Fill: =If(varAdminStatusFilter = "Outstanding", RGBA(163,45,45,1), RGBA(252,235,235,1))
             Height: =28
-            HoverFill: =RGBA(214,235,227,1)
+            HoverFill: =RGBA(243,218,218,1)
             OnSelect: =Set(varAdminStatusFilter, "Outstanding")
             RadiusBottomLeft: =14
             RadiusBottomRight: =14
