@@ -265,6 +265,9 @@
         <a href="#admin-onvisible-navigation-fix">Admin OnVisible Navigation</a>
         <a href="#compliance-kpi-meaning-fix">Compliance KPI Meaning</a>
         <a href="#stale-course-detail-fix">Stale Course Names</a>
+        <a href="#admin-add-mode-buttons">Add Mode Buttons</a>
+        <a href="#remote-worker-exclusions">Remote Worker Exclusions</a>
+        <a href="#snapshot-dashboard-build">Snapshot Dashboard</a>
         <a href="#yaml-links">YAML Pages</a>
         <a href="#checklist">Checklist</a>
       </nav>
@@ -273,7 +276,7 @@
     <main>
       <div class="topline">
         <span class="pill">Current step: schema and app setup</span>
-        <span class="pill">Updated 27 Jul 2026</span>
+        <span class="pill">Updated 29 Jul 2026</span>
         <span class="pill">Training Tracker only</span>
       </div>
       <h1>Training Tracker v3 Fix Guide</h1>
@@ -289,7 +292,7 @@
 
       <section id="audit-log-purpose">
         <h2>What Is <code>TT AuditLog</code> For?</h2>
-        <p><code>TT AuditLog</code> is an append-only history list. It records small events caused by the app: certificate saved, PDF exported, manager upload enabled, person updated, course archived, and course restored.</p>
+        <p><code>TT AuditLog</code> is an append-only history list. It records small events caused by the app: certificate saved, manager upload enabled, person updated, course archived, course restored, and snapshot activity.</p>
         <p>It was added in v3 for two reasons:</p>
         <ul>
           <li><strong>Activity timeline:</strong> the admin dashboard drill-down can show recent activity for a person instead of just static course rows.</li>
@@ -365,6 +368,38 @@
             <tr><td><code>CourseDescription</code></td><td>Multiple lines of text, plain text</td><td>No. Hidden on the course screen when blank.</td></tr>
           </tbody>
         </table>
+
+        <h3>Remote Worker Exclusion Columns</h3>
+        <p>Add these two Yes/No columns for the remote-worker exclusion pass.</p>
+        <table>
+          <thead>
+            <tr><th>List</th><th>Column internal name</th><th>Type</th><th>Default</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>TT Personnel</code></td><td><code>RemoteWorker</code></td><td>Yes/No</td><td>No / false</td></tr>
+            <tr><td><code>TT Courses</code></td><td><code>ExcludeRemoteWorkers</code></td><td>Yes/No</td><td>No / false</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Create New List: <code>TT ComplianceSnapshots</code></h3>
+        <p>This list stores the historical monthly percentages used by the screenshot dashboard. Without stored snapshots, the app can calculate today's compliance but cannot honestly reconstruct old month-end percentages.</p>
+        <table>
+          <thead>
+            <tr><th>Column internal name</th><th>Type</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>Title</code></td><td>Single line text, built-in</td><td>Course title plus month.</td></tr>
+            <tr><td><code>SnapshotMonth</code></td><td>Date only</td><td>Use the first day of the reporting month.</td></tr>
+            <tr><td><code>CourseID</code></td><td>Number</td><td>The related <code>TT Courses</code> ID.</td></tr>
+            <tr><td><code>CourseTitle</code></td><td>Single line text</td><td>Stored title at snapshot time.</td></tr>
+            <tr><td><code>RequiredCount</code></td><td>Number</td><td>How many active staff required the course after exclusions.</td></tr>
+            <tr><td><code>InDateCount</code></td><td>Number</td><td>How many of those staff were in date.</td></tr>
+            <tr><td><code>CompliancePct</code></td><td>Number</td><td>Whole-number percentage.</td></tr>
+            <tr><td><code>SnapshotTakenOn</code></td><td>Date and time</td><td>When the snapshot was saved.</td></tr>
+            <tr><td><code>SnapshotTakenBy</code></td><td>Single line text</td><td>Admin email.</td></tr>
+            <tr><td><code>Notes</code></td><td>Multiple lines of text</td><td>Plain text, optional.</td></tr>
+          </tbody>
+        </table>
       </section>
 
       <section id="connect-refresh">
@@ -373,7 +408,8 @@
           <li>Open the Training Tracker app in Power Apps Studio.</li>
           <li>Open the Data pane.</li>
           <li>Add the SharePoint list <code>TT AuditLog</code> as a new data source.</li>
-          <li>Refresh these data sources: <code>TT Personnel</code>, <code>TT Courses</code>, <code>TT TrainingRecords</code>, <code>TT AuditLog</code>.</li>
+          <li>Add the SharePoint list <code>TT ComplianceSnapshots</code> as a new data source.</li>
+          <li>Refresh these data sources: <code>TT Personnel</code>, <code>TT Courses</code>, <code>TT TrainingRecords</code>, <code>TT AuditLog</code>, <code>TT ComplianceSnapshots</code>.</li>
           <li>Save the app.</li>
           <li>Reopen the pasted screen and check whether the schema errors have gone.</li>
         </ol>
@@ -392,6 +428,7 @@
           <li><code>TT Courses</code></li>
           <li><code>TT TrainingRecords</code></li>
           <li><code>TT AuditLog</code></li>
+          <li><code>TT ComplianceSnapshots</code></li>
           <li><code>Office365Users</code></li>
         </ul>
 
@@ -819,13 +856,249 @@ Set(varEditCourse, Blank())</pre>
         </div>
       </section>
 
+      <section id="admin-add-mode-buttons">
+        <h2>Build Pass - Add Mode Buttons</h2>
+        <p>The add person and add course forms only show when the edit variable is blank. Add clear mode buttons so an admin can get back to the add form after editing a row.</p>
+
+        <h3>Add <code>btnNewPersonMode</code></h3>
+        <ol>
+          <li>Open <code>scrAdminManage</code>.</li>
+          <li>Insert a modern button named <code>btnNewPersonMode</code>.</li>
+          <li>Set these properties.</li>
+        </ol>
+        <table>
+          <thead><tr><th>Property</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td><code>Text</code></td><td><code>"New person"</code></td></tr>
+            <tr><td><code>Visible</code></td><td><code>varTab = "People"</code></td></tr>
+            <tr><td><code>BasePaletteColor</code></td><td><code>RGBA(0,78,66,1)</code></td></tr>
+            <tr><td><code>X</code></td><td><code>500</code></td></tr>
+            <tr><td><code>Y</code></td><td><code>88</code></td></tr>
+            <tr><td><code>Width</code></td><td><code>150</code></td></tr>
+            <tr><td><code>Height</code></td><td><code>40</code></td></tr>
+          </tbody>
+        </table>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>btnNewPersonMode.OnSelect</span>
+            <button data-copy="new-person-mode-onselect" type="button">Copy</button>
+          </div>
+<pre id="new-person-mode-onselect">Set(varEditPerson, Blank());
+Set(varConfirmDeactivate, 0)</pre>
+        </div>
+
+        <h3>Add <code>btnNewCourseMode</code></h3>
+        <ol>
+          <li>Insert a modern button named <code>btnNewCourseMode</code>.</li>
+          <li>Set these properties.</li>
+        </ol>
+        <table>
+          <thead><tr><th>Property</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td><code>Text</code></td><td><code>"New course"</code></td></tr>
+            <tr><td><code>Visible</code></td><td><code>varTab = "Courses"</code></td></tr>
+            <tr><td><code>BasePaletteColor</code></td><td><code>RGBA(0,78,66,1)</code></td></tr>
+            <tr><td><code>X</code></td><td><code>500</code></td></tr>
+            <tr><td><code>Y</code></td><td><code>88</code></td></tr>
+            <tr><td><code>Width</code></td><td><code>150</code></td></tr>
+            <tr><td><code>Height</code></td><td><code>40</code></td></tr>
+          </tbody>
+        </table>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>btnNewCourseMode.OnSelect</span>
+            <button data-copy="new-course-mode-onselect" type="button">Copy</button>
+          </div>
+<pre id="new-course-mode-onselect">Set(varEditCourse, Blank());
+Set(varConfirmArchive, 0)</pre>
+        </div>
+      </section>
+
+      <section id="remote-worker-exclusions">
+        <h2>Build Pass - Remote Worker Exclusions</h2>
+        <p>This pass lets you mark a person as a remote worker and mark specific courses as excluded for remote workers. When both are true, that person does not see that course, and it does not count against their compliance.</p>
+
+        <h3>Schema</h3>
+        <ol>
+          <li>Confirm <code>TT Personnel.RemoteWorker</code> exists as a Yes/No column.</li>
+          <li>Confirm <code>TT Courses.ExcludeRemoteWorkers</code> exists as a Yes/No column.</li>
+          <li>Refresh <code>TT Personnel</code> and <code>TT Courses</code> in Power Apps Studio.</li>
+        </ol>
+
+        <h3>Add Person Checkboxes</h3>
+        <p>Add two modern checkboxes on <code>scrAdminManage</code>.</p>
+        <table>
+          <thead><tr><th>Control</th><th>Visible</th><th>Checked</th><th>Label</th><th>Suggested position</th></tr></thead>
+          <tbody>
+            <tr><td><code>chkNewRemoteWorker</code></td><td><code>varTab = "People" && IsBlank(varEditPerson)</code></td><td><code>false</code></td><td><code>"Remote worker"</code></td><td><code>X 430 / Y 404 / W 190 / H 32</code></td></tr>
+            <tr><td><code>chkEditRemoteWorker</code></td><td><code>varTab = "People" && !IsBlank(varEditPerson)</code></td><td><code>Coalesce(varEditPerson.RemoteWorker, false)</code></td><td><code>"Remote worker"</code></td><td><code>X 430 / Y 308 / W 190 / H 32</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Add Course Checkboxes</h3>
+        <table>
+          <thead><tr><th>Control</th><th>Visible</th><th>Checked</th><th>Label</th><th>Suggested position</th></tr></thead>
+          <tbody>
+            <tr><td><code>chkNewExcludeRemote</code></td><td><code>varTab = "Courses" && IsBlank(varEditCourse)</code></td><td><code>false</code></td><td><code>"Exclude remote workers"</code></td><td><code>X 32 / Y 416 / W 240 / H 24</code></td></tr>
+            <tr><td><code>chkEditExcludeRemote</code></td><td><code>varTab = "Courses" && !IsBlank(varEditCourse)</code></td><td><code>Coalesce(varEditCourse.ExcludeRemoteWorkers, false)</code></td><td><code>"Exclude remote workers"</code></td><td><code>X 32 / Y 416 / W 240 / H 24</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Patch Person Writes</h3>
+        <p>In <code>btnAddPerson.OnSelect</code>, add this field inside the <code>Patch('TT Personnel', ...)</code> record.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>btnAddPerson Patch field</span>
+            <button data-copy="add-person-remote-field" type="button">Copy</button>
+          </div>
+<pre id="add-person-remote-field">RemoteWorker: chkNewRemoteWorker.Checked,</pre>
+        </div>
+        <p>In <code>btnSavePerson.OnSelect</code>, add this field inside the edit-person patch record.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>btnSavePerson Patch field</span>
+            <button data-copy="save-person-remote-field" type="button">Copy</button>
+          </div>
+<pre id="save-person-remote-field">RemoteWorker: chkEditRemoteWorker.Checked,</pre>
+        </div>
+
+        <h3>Patch Course Writes</h3>
+        <p>In <code>btnAddCourse.OnSelect</code>, add this field inside the <code>Patch('TT Courses', ...)</code> record.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>btnAddCourse Patch field</span>
+            <button data-copy="add-course-remote-field" type="button">Copy</button>
+          </div>
+<pre id="add-course-remote-field">ExcludeRemoteWorkers: chkNewExcludeRemote.Checked,</pre>
+        </div>
+        <p>In <code>btnSaveCourse.OnSelect</code>, add this field inside the edit-course patch record.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>btnSaveCourse Patch field</span>
+            <button data-copy="save-course-remote-field" type="button">Copy</button>
+          </div>
+<pre id="save-course-remote-field">ExcludeRemoteWorkers: chkEditExcludeRemote.Checked,</pre>
+        </div>
+
+        <h3>Compliance Formula Changes</h3>
+        <p>In <code>scrAdminDash.OnVisible</code>, add this field to each person row created in <code>colCompliance</code>.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>colCompliance row field</span>
+            <button data-copy="compliance-remote-row-field" type="button">Copy</button>
+          </div>
+<pre id="compliance-remote-row-field">RemoteWorker: Coalesce(P.RemoteWorker, false),</pre>
+        </div>
+        <p>In <code>scrAdminDash.OnVisible</code>, replace the course requirement predicate inside <code>req: Filter(colCourses, ...)</code> with this version.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>scrAdminDash.OnVisible req predicate</span>
+            <button data-copy="admin-req-remote-predicate" type="button">Copy</button>
+          </div>
+<pre id="admin-req-remote-predicate">Coalesce(Status.Value, "Active") = "Active" &&
+CountIf(ApplicableTo, Value = P.StaffType.Value) > 0 &&
+!(Coalesce(P.RemoteWorker, false) && Coalesce(ExcludeRemoteWorkers, false))</pre>
+        </div>
+        <p>In <code>galCompliance.OnSelect</code>, replace the course filter predicate with this version.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>galCompliance.OnSelect course predicate</span>
+            <button data-copy="detail-remote-predicate" type="button">Copy</button>
+          </div>
+<pre id="detail-remote-predicate">Coalesce(Status.Value, "Active") = "Active" &&
+CountIf(ApplicableTo, Value = varDrillPerson.StaffType) > 0 &&
+!(Coalesce(varDrillPerson.RemoteWorker, false) && Coalesce(ExcludeRemoteWorkers, false))</pre>
+        </div>
+        <h3>My Training Course Filter</h3>
+        <p>In <code>scrMyTraining.OnVisible</code>, find the active-course filter that builds the current user's course list. Replace its predicate with this version. This keeps remote-excluded courses out of the normal user's own list.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>scrMyTraining.OnVisible course predicate</span>
+            <button data-copy="my-training-remote-predicate" type="button">Copy</button>
+          </div>
+<pre id="my-training-remote-predicate">Coalesce(Status.Value, "Active") = "Active" &&
+CountIf(ApplicableTo, Value = varMe.StaffType.Value) > 0 &&
+!(Coalesce(varMe.RemoteWorker, false) && Coalesce(ExcludeRemoteWorkers, false))</pre>
+        </div>
+
+        <h3>Team Member Course Filter</h3>
+        <p>In the <code>scrTeamMember</code> helper formula or <code>OnVisible</code> block, find the active-course filter that builds the viewed person's course list. Replace its predicate with this version. If your current variable name is different, keep the same structure but swap <code>varViewingPerson</code> for the row/person variable already used on that screen.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>scrTeamMember viewed-person course predicate</span>
+            <button data-copy="team-member-remote-predicate" type="button">Copy</button>
+          </div>
+<pre id="team-member-remote-predicate">Coalesce(Status.Value, "Active") = "Active" &&
+CountIf(ApplicableTo, Value = varViewingPerson.StaffType.Value) > 0 &&
+!(Coalesce(varViewingPerson.RemoteWorker, false) && Coalesce(ExcludeRemoteWorkers, false))</pre>
+        </div>
+      </section>
+
+      <section id="snapshot-dashboard-build">
+        <h2>Build Pass - Snapshot Dashboard</h2>
+        <p>This replaces the parked PDF export with a screenshot-friendly dashboard. It shows a rolling six-month grid. Each month is a stored snapshot, so the history remains stable even if records change later.</p>
+
+        <h3>Data Source</h3>
+        <ol>
+          <li>Create <code>TT ComplianceSnapshots</code> using the schema in Fix 1.</li>
+          <li>Add it to the app as a SharePoint data source.</li>
+          <li>Refresh <code>TT ComplianceSnapshots</code>, <code>TT Personnel</code>, <code>TT Courses</code>, and <code>TT TrainingRecords</code>.</li>
+        </ol>
+
+        <h3>Paste The New Screen</h3>
+        <ol>
+          <li>Create a new blank screen named <code>scrMandatoryStats</code>.</li>
+          <li>Open the YAML page below and copy/paste the screen YAML.</li>
+        </ol>
+        <p><a href="../screens/scrMandatoryStats.html?v=1.0">Open scrMandatoryStats YAML</a></p>
+
+        <h3>Replace Export PDF Button</h3>
+        <p>On <code>scrAdminDash</code>, select the old <code>btnExportPDF</code> button. Rename it to <code>btnMandatoryStats</code> if you want the tree to be tidy, then set these properties.</p>
+        <table>
+          <thead><tr><th>Property</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td><code>Text</code></td><td><code>"Mandatory stats"</code></td></tr>
+            <tr><td><code>OnSelect</code></td><td><code>Navigate(scrMandatoryStats, ScreenTransition.Cover)</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Add A Normal-User Entry Point</h3>
+        <p>Because the snapshot screen is for everyone to view, add a button to the <code>scrMyTraining</code> header as well. The screen itself keeps <strong>Take snapshot</strong> visible only for admins.</p>
+        <ol>
+          <li>Open <code>scrMyTraining</code>.</li>
+          <li>Insert a modern button named <code>btnMandatoryStatsUser</code>.</li>
+          <li>Set these properties.</li>
+        </ol>
+        <table>
+          <thead><tr><th>Property</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td><code>Text</code></td><td><code>"Mandatory stats"</code></td></tr>
+            <tr><td><code>Visible</code></td><td><code>true</code></td></tr>
+            <tr><td><code>OnSelect</code></td><td><code>Navigate(scrMandatoryStats, ScreenTransition.Cover)</code></td></tr>
+            <tr><td><code>BasePaletteColor</code></td><td><code>RGBA(0,78,66,1)</code></td></tr>
+            <tr><td><code>X</code></td><td><code>914</code></td></tr>
+            <tr><td><code>Y</code></td><td><code>16</code></td></tr>
+            <tr><td><code>Width</code></td><td><code>160</code></td></tr>
+            <tr><td><code>Height</code></td><td><code>40</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Monthly Use</h3>
+        <ol>
+          <li>Open <code>scrMandatoryStats</code>.</li>
+          <li>Press <strong>Take snapshot</strong> once for the reporting month.</li>
+          <li>Use the visible grid for the snip/screenshot.</li>
+          <li>Do not edit old snapshot rows unless the monthly report was genuinely wrong and needs correction.</li>
+        </ol>
+      </section>
+
       <section id="yaml-links">
         <h2>Paste-Ready YAML Pages</h2>
         <p>Use these after the schema fix is complete. For big replacements, delete the controls on the target screen first, then paste the YAML fresh.</p>
         <div class="links">
           <div class="link-card">
-            <a href="../screens/scrAdminDash.html?v=3.7"><strong>scrAdminDash</strong><span>Admin dashboard, KPI cards, attention filters, risk bars and timeline.</span></a>
-            <div class="card-actions"><a href="../screens/scrAdminDash.html?v=3.7">Open</a><button type="button" data-yaml-url="../screens/scrAdminDash.html?v=3.7">Copy YAML</button></div>
+            <a href="../screens/scrAdminDash.html?v=3.8"><strong>scrAdminDash</strong><span>Admin dashboard, KPI cards, attention filters, risk bars and timeline.</span></a>
+            <div class="card-actions"><a href="../screens/scrAdminDash.html?v=3.8">Open</a><button type="button" data-yaml-url="../screens/scrAdminDash.html?v=3.8">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrAdminManage.html?v=2.6"><strong>scrAdminManage</strong><span>People/course management with audit hooks.</span></a>
@@ -836,12 +1109,16 @@ Set(varEditCourse, Blank())</pre>
             <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.0">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.0">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrMyTraining.html?v=2.6"><strong>scrMyTraining</strong><span>Personal training dashboard.</span></a>
-            <div class="card-actions"><a href="../screens/scrMyTraining.html?v=2.6">Open</a><button type="button" data-yaml-url="../screens/scrMyTraining.html?v=2.6">Copy YAML</button></div>
+            <a href="../screens/scrMyTraining.html?v=2.7"><strong>scrMyTraining</strong><span>Personal training dashboard.</span></a>
+            <div class="card-actions"><a href="../screens/scrMyTraining.html?v=2.7">Open</a><button type="button" data-yaml-url="../screens/scrMyTraining.html?v=2.7">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrTeamMember.html?v=1.9"><strong>scrTeamMember</strong><span>Line manager chain view.</span></a>
             <div class="card-actions"><a href="../screens/scrTeamMember.html?v=1.9">Open</a><button type="button" data-yaml-url="../screens/scrTeamMember.html?v=1.9">Copy YAML</button></div>
+          </div>
+          <div class="link-card">
+            <a href="../screens/scrMandatoryStats.html?v=1.0"><strong>scrMandatoryStats</strong><span>Six-month mandatory course snapshot dashboard.</span></a>
+            <div class="card-actions"><a href="../screens/scrMandatoryStats.html?v=1.0">Open</a><button type="button" data-yaml-url="../screens/scrMandatoryStats.html?v=1.0">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrNoRecord.html?v=2.5"><strong>scrNoRecord</strong><span>No Personnel record screen.</span></a>
@@ -862,10 +1139,14 @@ Set(varEditCourse, Blank())</pre>
           <li><code>TT Personnel</code> has the four audit columns.</li>
           <li><code>TT Courses</code> has the four audit columns.</li>
           <li><code>TT Courses</code> has <code>CourseHost</code>, <code>CourseURL</code> and optional <code>CourseDescription</code>.</li>
+          <li><code>TT Personnel</code> has <code>RemoteWorker</code>.</li>
+          <li><code>TT Courses</code> has <code>ExcludeRemoteWorkers</code>.</li>
           <li><code>TT TrainingRecords</code> has the four audit columns.</li>
+          <li><code>TT ComplianceSnapshots</code> list exists with all ten snapshot columns.</li>
           <li><code>TT AuditLog</code> is added as a Power Apps data source.</li>
+          <li><code>TT ComplianceSnapshots</code> is added as a Power Apps data source.</li>
           <li><code>Office365Users</code> is still connected.</li>
-          <li>All four SharePoint data sources have been refreshed in Power Apps Studio.</li>
+          <li>All five SharePoint data sources have been refreshed in Power Apps Studio.</li>
           <li><code>App.OnStart</code> has been updated and run once.</li>
           <li>The App formulas dropdown has no required v3 named formula changes.</li>
         </ul>

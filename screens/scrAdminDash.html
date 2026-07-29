@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 6 of 7</p>
   <h1>scrAdminDash</h1>
-  <p class="meta">v3.7 &mdash; Refreshes SharePoint sources before rebuilding dashboard collections · 29 Jul 2026</p>
+  <p class="meta">v3.8 &mdash; Replaces PDF export with mandatory snapshot dashboard link · 29 Jul 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -240,7 +240,7 @@ const yaml = `Screens:
             Text: ="Compliance dashboard"
             Width: =600
             X: =52
-      - btnExportPDF:
+      - btnMandatoryStats:
           Control: Classic/Button@2.2.0
           Properties:
             BorderColor: =RGBA(232,244,239,1)
@@ -251,32 +251,7 @@ const yaml = `Screens:
             Height: =40
             HoverColor: =RGBA(0,78,66,1)
             HoverFill: =RGBA(214,235,227,1)
-            OnSelect: |-
-              =Set(varHTML,
-                  "<html><head><style>" &
-                  "body{font-family:Segoe UI,Arial,sans-serif;margin:24px;}" &
-                  "h2{color:#004E42;}" &
-                  "table{border-collapse:collapse;width:100%;}" &
-                  "th,td{border:1px solid #999;padding:6px;font-size:12px;text-align:left;}" &
-                  "th{background:#004E42;color:#fff;}" &
-                  "</style></head><body>" &
-                  "<h2>Training Compliance Report - " & Text(Today(),"dd mmm yyyy") & "</h2>" &
-                  "<p><b>" &
-                      Round(100*CountRows(Filter(colCompliance,Outstanding=0))/
-                            Max(CountRows(colCompliance),1),0) &
-                      "%</b> of staff fully in date. Outstanding items: " &
-                      Sum(colCompliance,Outstanding) & ".</p>" &
-                  "<table><tr><th>Name</th><th>Staff type</th><th>Line manager</th>" &
-                  "<th>Required</th><th>In date</th><th>Outstanding</th><th>%</th></tr>" &
-                  Concat(
-                      SortByColumns(colCompliance,"CompliancePct",SortOrder.Ascending),
-                      "<tr><td>" & Name & "</td><td>" & StaffType & "</td><td>" &
-                      LineManager & "</td><td>" & Required & "</td><td>" & InDate &
-                      "</td><td>" & Outstanding & "</td><td>" & CompliancePct & "%</td></tr>"
-                  ) &
-                  "</table></body></html>"
-              );
-              Notify("PDF export is parked for now. The report HTML is prepared in varHTML, but the Power Automate flow has not been connected yet.", NotificationType.Information)
+            OnSelect: =Navigate(scrMandatoryStats, ScreenTransition.Cover)
             PressedColor: =RGBA(0,78,66,1)
             PressedFill: =RGBA(190,222,210,1)
             RadiusBottomLeft: =8
@@ -284,7 +259,7 @@ const yaml = `Screens:
             RadiusTopLeft: =8
             RadiusTopRight: =8
             Size: =12
-            Text: ="Export PDF"
+            Text: ="Mandatory stats"
             Width: =164
             X: =1186
             Y: =16

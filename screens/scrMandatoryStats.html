@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Power Apps - scrMandatoryStats</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 32px 16px; }
+    .kicker { font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #64748b; }
+    h1 { font-size: 1.8rem; font-weight: 700; color: #bfe8d2; letter-spacing: -.02em; }
+    .meta { font-size: .85rem; color: #475569; }
+    .btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    button { padding: 13px 32px; font-size: 1rem; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; transition: opacity .15s; }
+    button:hover { opacity: .88; }
+    .btn-copy { background: #004e42; color: #fff; }
+    .btn-back { background: #17352d; color: #9fb8ad; border: 1px solid #2f5147; }
+    #status { font-size: .85rem; color: #475569; min-height: 1.2em; }
+    #status.ok { color: #22c55e; }
+    .instructions { max-width: 520px; text-align: center; font-size: .82rem; color: #475569; line-height: 1.7; border: 1px solid #17352d; border-radius: 12px; padding: 16px 20px; background: #0d1117; }
+    .instructions strong { color: #9fb8ad; }
+  </style>
+</head>
+<body>
+  <p class="kicker">Power Apps · Training Tracker · Screen 8 of 8</p>
+  <h1>scrMandatoryStats</h1>
+  <p class="meta">v1.0 - six-month mandatory course snapshot dashboard · 29 Jul 2026</p>
+  <div class="btn-row">
+    <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
+    <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
+  </div>
+  <p id="status">Ready to copy</p>
+  <div class="instructions">
+    <strong>How to paste into Power Apps Studio</strong><br>
+    Create a blank screen named <strong>scrMandatoryStats</strong>. Click the screen in Tree View, then paste this YAML.
+  </div>
+  <script>
+const yaml = `Screens:
+  scrMandatoryStats:
+    Properties:
+      Fill: =RGBA(247,249,252,1)
+      LoadingSpinnerColor: =RGBA(0,78,66,1)
+      OnVisible: |-
+        =Set(varSnapshotMonth, Date(Year(Today()), Month(Today()), 1));
+        Refresh('TT Personnel');
+        Refresh('TT Courses');
+        Refresh('TT TrainingRecords');
+        Refresh('TT ComplianceSnapshots');
+        ClearCollect(colSnapshotPeople, Filter('TT Personnel', Coalesce(Active, true) = true));
+        ClearCollect(colSnapshotCourses, Filter('TT Courses', Coalesce(Status.Value, "Active") = "Active"));
+        ClearCollect(colSnapshotRecords, 'TT TrainingRecords');
+        ClearCollect(
+            colSnapshotMonths,
+            ForAll(
+                Sequence(6, 5, -1),
+                {
+                    MonthStart: DateAdd(varSnapshotMonth, -Value, "Months"),
+                    MonthLabel: Text(DateAdd(varSnapshotMonth, -Value, "Months"), "mmm yy")
+                }
+            )
+        );
+        ClearCollect(
+            colSnapshotData,
+            Filter(
+                'TT ComplianceSnapshots',
+                SnapshotMonth >= DateAdd(varSnapshotMonth, -5, "Months") &&
+                SnapshotMonth <= varSnapshotMonth
+            )
+        )
+    Children:
+      - recSnapHeader:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderThickness: =0
+            Color: =RGBA(255,255,255,1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(0,78,66,1)
+            Height: =74
+            HoverFill: =RGBA(0,78,66,1)
+            PressedFill: =RGBA(0,78,66,1)
+            Text: =""
+            Width: =1366
+      - icoSnapBack:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =RGBA(232,244,239,1)
+            Height: =24
+            Icon: =Icon.ChevronLeft
+            OnSelect: =Navigate(scrAdminDash, ScreenTransition.UnCover)
+            Width: =24
+            X: =18
+            Y: =24
+      - lblSnapTitle:
+          Control: Label@2.5.1
+          Properties:
+            Color: =RGBA(255,255,255,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =42
+            Size: =22
+            Text: ="Mandatory Courses"
+            Width: =360
+            X: =56
+            Y: =14
+      - lblSnapMonth:
+          Control: Label@2.5.1
+          Properties:
+            Color: =RGBA(214,232,227,1)
+            Font: =Font.'Open Sans'
+            Height: =24
+            Size: =11
+            Text: ="Rolling six-month compliance snapshot"
+            Width: =320
+            X: =56
+            Y: =48
+      - btnSnapRefresh:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(232,244,239,1)
+            BorderThickness: =1
+            Color: =RGBA(0,78,66,1)
+            Fill: =RGBA(232,244,239,1)
+            Font: =Font.'Open Sans'
+            Height: =40
+            HoverFill: =RGBA(214,235,227,1)
+            OnSelect: |-
+              =Set(varSnapshotMonth, Date(Year(Today()), Month(Today()), 1));
+              Refresh('TT Personnel');
+              Refresh('TT Courses');
+              Refresh('TT TrainingRecords');
+              Refresh('TT ComplianceSnapshots');
+              ClearCollect(colSnapshotPeople, Filter('TT Personnel', Coalesce(Active, true) = true));
+              ClearCollect(colSnapshotCourses, Filter('TT Courses', Coalesce(Status.Value, "Active") = "Active"));
+              ClearCollect(colSnapshotRecords, 'TT TrainingRecords');
+              ClearCollect(
+                  colSnapshotData,
+                  Filter(
+                      'TT ComplianceSnapshots',
+                      SnapshotMonth >= DateAdd(varSnapshotMonth, -5, "Months") &&
+                      SnapshotMonth <= varSnapshotMonth
+                  )
+              )
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            Size: =12
+            Text: ="Refresh"
+            Width: =124
+            X: =920
+            Y: =18
+      - btnTakeSnapshot:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(232,244,239,1)
+            BorderThickness: =1
+            Color: =RGBA(255,255,255,1)
+            Fill: =RGBA(34,139,80,1)
+            Font: =Font.'Open Sans'
+            Height: =40
+            HoverFill: =RGBA(0,92,77,1)
+            OnSelect: |-
+              =Set(varSnapshotMonth, Date(Year(Today()), Month(Today()), 1));
+              Refresh('TT Personnel');
+              Refresh('TT Courses');
+              Refresh('TT TrainingRecords');
+              Refresh('TT ComplianceSnapshots');
+              ClearCollect(colSnapshotPeople, Filter('TT Personnel', Coalesce(Active, true) = true));
+              ClearCollect(colSnapshotCourses, Filter('TT Courses', Coalesce(Status.Value, "Active") = "Active"));
+              ClearCollect(colSnapshotRecords, 'TT TrainingRecords');
+              ForAll(
+                  colSnapshotCourses As C,
+                  With(
+                      {
+                          requiredPeople: Filter(
+                              colSnapshotPeople,
+                              CountIf(C.ApplicableTo, Value = StaffType.Value) > 0 &&
+                              !(Coalesce(RemoteWorker, false) && Coalesce(C.ExcludeRemoteWorkers, false))
+                          )
+                      },
+                      With(
+                          {
+                              inDatePeople: CountRows(
+                                  Filter(
+                                      requiredPeople As P,
+                                      With(
+                                          {
+                                              rec: LookUp(
+                                                  colSnapshotRecords,
+                                                  Lower(PersonEmail) = Lower(P.Email) &&
+                                                  CourseID = C.ID
+                                              )
+                                          },
+                                          !IsBlank(rec.DateCompleted) &&
+                                          (
+                                              C.RecurrenceMonths = 0 ||
+                                              DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") >= Today()
+                                          )
+                                      )
+                                  )
+                              )
+                          },
+                          With(
+                              {
+                                  existing: LookUp(
+                                      'TT ComplianceSnapshots',
+                                      CourseID = C.ID &&
+                                      SnapshotMonth = varSnapshotMonth
+                                  ),
+                                  pct: If(
+                                      CountRows(requiredPeople) = 0,
+                                      0,
+                                      Round(100 * inDatePeople / Max(CountRows(requiredPeople), 1), 0)
+                                  )
+                              },
+                              If(
+                                  IsBlank(existing.ID),
+                                  Patch(
+                                      'TT ComplianceSnapshots',
+                                      Defaults('TT ComplianceSnapshots'),
+                                      {
+                                          Title: C.Title & " " & Text(varSnapshotMonth, "mmm yy"),
+                                          SnapshotMonth: varSnapshotMonth,
+                                          CourseID: C.ID,
+                                          CourseTitle: C.Title,
+                                          RequiredCount: CountRows(requiredPeople),
+                                          InDateCount: inDatePeople,
+                                          CompliancePct: pct,
+                                          SnapshotTakenOn: Now(),
+                                          SnapshotTakenBy: varMyEmail,
+                                          Notes: ""
+                                      }
+                                  ),
+                                  Patch(
+                                      'TT ComplianceSnapshots',
+                                      existing,
+                                      {
+                                          Title: C.Title & " " & Text(varSnapshotMonth, "mmm yy"),
+                                          CourseTitle: C.Title,
+                                          RequiredCount: CountRows(requiredPeople),
+                                          InDateCount: inDatePeople,
+                                          CompliancePct: pct,
+                                          SnapshotTakenOn: Now(),
+                                          SnapshotTakenBy: varMyEmail
+                                      }
+                                  )
+                              )
+                          )
+                      )
+                  )
+              );
+              Refresh('TT ComplianceSnapshots');
+              ClearCollect(
+                  colSnapshotData,
+                  Filter(
+                      'TT ComplianceSnapshots',
+                      SnapshotMonth >= DateAdd(varSnapshotMonth, -5, "Months") &&
+                      SnapshotMonth <= varSnapshotMonth
+                  )
+              );
+              Notify("Snapshot saved for " & Text(varSnapshotMonth, "mmmm yyyy") & ".", NotificationType.Success)
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            Size: =12
+            Text: ="Take snapshot"
+            Visible: =varIsAdmin
+            Width: =166
+            X: =1058
+            Y: =18
+      - lblSnapTracked:
+          Control: Label@2.5.1
+          Properties:
+            Color: =RGBA(20,45,38,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            Size: =14
+            Text: ="Current stats - tracking " & CountRows(colSnapshotPeople) & " active staff"
+            Width: =520
+            X: =56
+            Y: =92
+      - lblSnapLegend:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =RGBA(20,45,38,1)
+            Font: =Font.'Open Sans'
+            Height: =28
+            Size: =11
+            Text: ="Green >= 80% / Amber 70-79% / Red < 70%"
+            Width: =520
+            X: =786
+            Y: =94
+      - recSnapTableHeader:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(0,18,107,1)
+            BorderThickness: =1
+            Color: =RGBA(255,255,255,1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(68,113,190,1)
+            Height: =48
+            HoverFill: =RGBA(68,113,190,1)
+            PressedFill: =RGBA(68,113,190,1)
+            Text: =""
+            Width: =1256
+            X: =56
+            Y: =136
+      - lblHdrCourse:
+          Control: Label@2.5.1
+          Properties:
+            Color: =RGBA(255,255,255,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =15
+            Text: ="Course Title"
+            Width: =500
+            X: =68
+            Y: =136
+      - lblHdrM1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255,255,255,1)
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =13
+            Text: =Text(DateAdd(varSnapshotMonth, -5, "Months"), "mmm yy")
+            Width: =118
+            X: =568
+            Y: =136
+      - lblHdrM2:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255,255,255,1)
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =13
+            Text: =Text(DateAdd(varSnapshotMonth, -4, "Months"), "mmm yy")
+            Width: =118
+            X: =686
+            Y: =136
+      - lblHdrM3:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255,255,255,1)
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =13
+            Text: =Text(DateAdd(varSnapshotMonth, -3, "Months"), "mmm yy")
+            Width: =118
+            X: =804
+            Y: =136
+      - lblHdrM4:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255,255,255,1)
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =13
+            Text: =Text(DateAdd(varSnapshotMonth, -2, "Months"), "mmm yy")
+            Width: =118
+            X: =922
+            Y: =136
+      - lblHdrM5:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255,255,255,1)
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =13
+            Text: =Text(DateAdd(varSnapshotMonth, -1, "Months"), "mmm yy")
+            Width: =118
+            X: =1040
+            Y: =136
+      - lblHdrM6:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255,255,255,1)
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =13
+            Text: =Text(varSnapshotMonth, "mmm yy")
+            Width: =118
+            X: =1158
+            Y: =136
+      - galSnapshotRows:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            Height: =480
+            Items: =SortByColumns(colSnapshotCourses, "Title", SortOrder.Ascending)
+            TemplatePadding: =0
+            TemplateSize: =42
+            Width: =1256
+            X: =56
+            Y: =184
+          Children:
+            - recSnapRowBg:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderThickness: =0
+                  DisplayMode: =DisplayMode.View
+                  Fill: =If(Mod(ThisItem.ID, 2) = 0, RGBA(230,234,246,1), RGBA(244,246,252,1))
+                  Height: =41
+                  HoverFill: =Self.Fill
+                  PressedFill: =Self.Fill
+                  Text: =""
+                  Width: =1256
+            - lblSnapCourse:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =RGBA(20,45,38,1)
+                  Font: =Font.'Open Sans'
+                  Height: =41
+                  Size: =12
+                  Text: =ThisItem.Title
+                  Width: =500
+                  X: =12
+            - lblSnapCell1:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =RGBA(0,0,0,1)
+                  Fill: |-
+                    =With(
+                        {pct: LookUp(colSnapshotData, CourseID = ThisItem.ID && SnapshotMonth = DateAdd(varSnapshotMonth, -5, "Months")).CompliancePct},
+                        If(IsBlank(pct), RGBA(241,239,232,1), pct >= 80, RGBA(0,176,80,1), pct >= 70, RGBA(255,192,0,1), RGBA(255,0,0,1))
+                    )
+                  Font: =Font.'Open Sans'
+                  Height: =40
+                  Size: =12
+                  Text: |-
+                    =With(
+                        {snap: LookUp(colSnapshotData, CourseID = ThisItem.ID && SnapshotMonth = DateAdd(varSnapshotMonth, -5, "Months"))},
+                        If(IsBlank(snap.CompliancePct), "-", Text(snap.CompliancePct) & "%")
+                    )
+                  Width: =118
+                  X: =512
+            - lblSnapCell2:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =RGBA(0,0,0,1)
+                  Fill: |-
+                    =With(
+                        {pct: LookUp(colSnapshotData, CourseID = ThisItem.ID && SnapshotMonth = DateAdd(varSnapshotMonth, -4, "Months")).CompliancePct},
+                        If(IsBlank(pct), RGBA(241,239,232,1), pct >= 80, RGBA(0,176,80,1), pct >= 70, RGBA(255,192,0,1), RGBA(255,0,0,1))
+                    )
+                  Font: =Font.'Open Sans'
+                  Height: =40
+                  Size: =12
+                  Text: |-
+                    =With(
+                        {snap: LookUp(colSnapshotData, CourseID = ThisItem.ID && SnapshotMonth = DateAdd(varSnapshotMonth, -4, "Months"))},
+                        If(IsBlank(snap.CompliancePct), "-", Text(snap.CompliancePct) & "%")
+                    )
+                  Width: =118
+                  X: =630
+            - lblSnapCell3:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =RGBA(0,0,0,1)
+                  Fill: |-
+                    =With(
+                        {pct: LookUp(colSnapshotData, CourseID = ThisItem.ID && SnapshotMonth = DateAdd(varSnapshotMonth, -3, "Months")).CompliancePct},
+                        If(IsBlank(pct), RGBA(241,239,232,1), pct >= 80, RGBA(0,176,80,1), pct >= 70, RGBA(255,192,0,1), RGBA(255,0,0,1))
+                    )
+                  Font: =Font.'Open Sans'
+                  Height: =40
+                  Size: =12
+                  Text: |-
+                    =With(
+                        {snap: LookUp(colSnapshotData, CourseID = ThisItem.ID && SnapshotMonth = DateAdd(varSnapshotMonth, -3, "Months"))},
+                        If(IsBlank(snap.CompliancePct), "-", Text(snap.CompliancePct) & "%")
+                    )
+                  Width: =118
+                  X: =748
+            - lblSnapCell4:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =RGBA(0,0,0,1)
+                  Fill: |-
+                    =With(
+                        {pct: LookUp(colSnapshotData, CourseID = ThisItem.ID && SnapshotMonth = DateAdd(varSnapshotMonth, -2, "Months")).CompliancePct},
+                        If(IsBlank(pct), RGBA(241,239,232,1), pct >= 80, RGBA(0,176,80,1), pct >= 70, RGBA(255,192,0,1), RGBA(255,0,0,1))
+                    )
+                  Font: =Font.'Open Sans'
+                  Height: =40
+                  Size: =12
+                  Text: |-
+                    =With(
+                        {snap: LookUp(colSnapshotData, CourseID = ThisItem.ID && SnapshotMonth = DateAdd(varSnapshotMonth, -2, "Months"))},
+                        If(IsBlank(snap.CompliancePct), "-", Text(snap.CompliancePct) & "%")
+                    )
+                  Width: =118
+                  X: =866
+            - lblSnapCell5:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =RGBA(0,0,0,1)
+                  Fill: |-
+                    =With(
+                        {pct: LookUp(colSnapshotData, CourseID = ThisItem.ID && SnapshotMonth = DateAdd(varSnapshotMonth, -1, "Months")).CompliancePct},
+                        If(IsBlank(pct), RGBA(241,239,232,1), pct >= 80, RGBA(0,176,80,1), pct >= 70, RGBA(255,192,0,1), RGBA(255,0,0,1))
+                    )
+                  Font: =Font.'Open Sans'
+                  Height: =40
+                  Size: =12
+                  Text: |-
+                    =With(
+                        {snap: LookUp(colSnapshotData, CourseID = ThisItem.ID && SnapshotMonth = DateAdd(varSnapshotMonth, -1, "Months"))},
+                        If(IsBlank(snap.CompliancePct), "-", Text(snap.CompliancePct) & "%")
+                    )
+                  Width: =118
+                  X: =984
+            - lblSnapCell6:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =RGBA(0,0,0,1)
+                  Fill: |-
+                    =With(
+                        {pct: LookUp(colSnapshotData, CourseID = ThisItem.ID && SnapshotMonth = varSnapshotMonth).CompliancePct},
+                        If(IsBlank(pct), RGBA(241,239,232,1), pct >= 80, RGBA(0,176,80,1), pct >= 70, RGBA(255,192,0,1), RGBA(255,0,0,1))
+                    )
+                  Font: =Font.'Open Sans'
+                  Height: =40
+                  Size: =12
+                  Text: |-
+                    =With(
+                        {snap: LookUp(colSnapshotData, CourseID = ThisItem.ID && SnapshotMonth = varSnapshotMonth)},
+                        If(IsBlank(snap.CompliancePct), "-", Text(snap.CompliancePct) & "%")
+                    )
+                  Width: =118
+                  X: =1102
+      - lblSnapNotes:
+          Control: Label@2.5.1
+          Properties:
+            Color: =RGBA(20,45,38,1)
+            Font: =Font.'Open Sans'
+            Height: =56
+            Size: =10
+            Text: |-
+              ="Notes: Take one snapshot per reporting month. The table shows stored monthly percentages, not a live reconstruction of old months. Remote-worker exclusions are removed before the percentage is calculated."
+            Width: =1050
+            X: =70
+            Y: =684
+      - lblSnapFoot:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =RGBA(85,85,85,1)
+            Font: =Font.'Open Sans'
+            Height: =30
+            Size: =9
+            Text: ="Screenshot-ready view for mandatory training reporting"
+            Width: =420
+            X: =890
+            Y: =724
+`;
+function copyYAML() {
+  navigator.clipboard.writeText(yaml.replace(/\n/g, '\r\n')).then(() => {
+    const status = document.getElementById('status');
+    status.textContent = 'Copied to clipboard';
+    status.className = 'ok';
+    setTimeout(() => { status.textContent = 'Ready to copy'; status.className = ''; }, 1600);
+  });
+}
+  </script>
+</body>
+</html>
