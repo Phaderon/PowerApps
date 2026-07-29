@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 6 of 7</p>
   <h1>scrAdminDash</h1>
-  <p class="meta">v3.4 &mdash; Treats pre-upgrade blank Active/Status values as active · 29 Jul 2026</p>
+  <p class="meta">v3.5 &mdash; Removes invalid immediate OnVisible navigation guard · 29 Jul 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -41,8 +41,7 @@ const yaml = `Screens:
       Fill: =RGBA(247,249,252,1)
       LoadingSpinnerColor: =RGBA(0,78,66,1)
       OnVisible: |-
-        =If(!varIsAdmin, Navigate(scrMyTraining, ScreenTransition.None));
-        Set(varAdminLoading, true);
+        =Set(varAdminLoading, true);
         Set(varAdminFilter, "All");
         Set(varAdminStatusFilter, "All");
         Set(varTTTheme,

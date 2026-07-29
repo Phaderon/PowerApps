@@ -262,6 +262,7 @@
         <a href="#add-course-validation-fix">Add Course Validation</a>
         <a href="#blank-admin-dashboard-fix">Blank Admin Dashboard</a>
         <a href="#provider-default-fix">Provider Dropdown Default</a>
+        <a href="#admin-onvisible-navigation-fix">Admin OnVisible Navigation</a>
         <a href="#yaml-links">YAML Pages</a>
         <a href="#checklist">Checklist</a>
       </nav>
@@ -661,13 +662,35 @@ Reset(txtEditCourseDesc)</pre>
         </div>
       </section>
 
+      <section id="admin-onvisible-navigation-fix">
+        <h2>Fix 6 - Admin OnVisible Navigation</h2>
+        <p>If <code>scrAdminDash.OnVisible</code> errors on <code>Navigate(scrMyTraining, ScreenTransition.None)</code>, remove that immediate navigation guard. Power Apps can reject navigation from a screen's own <code>OnVisible</code> because the screen would always navigate away as soon as it appears.</p>
+
+        <ol>
+          <li>Select <code>scrAdminDash</code>.</li>
+          <li>Open its <code>OnVisible</code> formula.</li>
+          <li>Delete this first line only.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>Delete from scrAdminDash.OnVisible</span>
+            <button data-copy="admin-onvisible-delete-line" type="button">Copy</button>
+          </div>
+<pre id="admin-onvisible-delete-line">If(!varIsAdmin, Navigate(scrMyTraining, ScreenTransition.None));</pre>
+        </div>
+
+        <div class="callout">
+          <strong>Expected result:</strong> <code>scrAdminDash.OnVisible</code> starts with <code>Set(varAdminLoading, true);</code>. The normal user route is still protected because the <code>Admin</code> button on <code>scrMyTraining</code> is only visible when <code>varIsAdmin</code> is true.
+        </div>
+      </section>
+
       <section id="yaml-links">
         <h2>Paste-Ready YAML Pages</h2>
         <p>Use these after the schema fix is complete. For big replacements, delete the controls on the target screen first, then paste the YAML fresh.</p>
         <div class="links">
           <div class="link-card">
-            <a href="../screens/scrAdminDash.html?v=3.4"><strong>scrAdminDash</strong><span>Admin dashboard, KPI cards, attention filters, risk bars and timeline.</span></a>
-            <div class="card-actions"><a href="../screens/scrAdminDash.html?v=3.4">Open</a><button type="button" data-yaml-url="../screens/scrAdminDash.html?v=3.4">Copy YAML</button></div>
+            <a href="../screens/scrAdminDash.html?v=3.5"><strong>scrAdminDash</strong><span>Admin dashboard, KPI cards, attention filters, risk bars and timeline.</span></a>
+            <div class="card-actions"><a href="../screens/scrAdminDash.html?v=3.5">Open</a><button type="button" data-yaml-url="../screens/scrAdminDash.html?v=3.5">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrAdminManage.html?v=2.5"><strong>scrAdminManage</strong><span>People/course management with audit hooks.</span></a>
