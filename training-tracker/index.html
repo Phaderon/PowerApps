@@ -259,6 +259,7 @@
         <a href="#connect-refresh">Connect And Refresh</a>
         <a href="#app-setup">App Setup</a>
         <a href="#date-prefill-fix">Date Pre-fill Fix</a>
+        <a href="#add-course-validation-fix">Add Course Validation</a>
         <a href="#yaml-links">YAML Pages</a>
         <a href="#checklist">Checklist</a>
       </nav>
@@ -466,6 +467,71 @@ ClearCollect(colAllRecords, 'TT TrainingRecords')</pre>
         </div>
       </section>
 
+      <section id="add-course-validation-fix">
+        <h2>Fix 3 - Add Course Validation</h2>
+        <p>If pressing <strong>Add course</strong> with a missing required field clears the text you already typed, replace only the button formula below. You do not need to repaste the screen.</p>
+
+        <ol>
+          <li>Select <code>btnAddCourse</code> on <code>scrAdminManage</code>.</li>
+          <li>Set its <code>OnSelect</code> property to this full replacement.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>btnAddCourse.OnSelect</span>
+            <button data-copy="add-course-onselect" type="button">Copy</button>
+          </div>
+<pre id="add-course-onselect">=If(
+    IsBlank(Trim(txtNewCourse.Text)) || CountRows(Filter(cmbNewApplic.SelectedItems, !IsBlank(Value))) = 0 || IsBlank(drpNewProvider.Selected.Value) || IsBlank(Trim(txtNewCourseURL.Text)),
+    Notify("Course needs a name, staff type, provider and URL.",
+           NotificationType.Warning),
+    IfError(
+        With(
+            {
+                savedCourse: Patch('TT Courses', Defaults('TT Courses'),
+                    {
+                        Title:            Trim(txtNewCourse.Text),
+                        ApplicableTo:     ForAll(Filter(cmbNewApplic.SelectedItems, !IsBlank(Value)), {Value: Value}),
+                        RecurrenceMonths: drpNewRecur.Selected.Months,
+                        CourseHost:       {Value: drpNewProvider.Selected.Value},
+                        CourseURL:        Trim(txtNewCourseURL.Text),
+                        CourseDescription: Trim(txtNewCourseDesc.Text),
+                        Status:           {Value: "Active"},
+                        LastUpdatedByEmail: varMyEmail,
+                        LastUpdatedOn: Now(),
+                        LastStatus: "Created"
+                    }
+                )
+            },
+            Patch('TT AuditLog', Defaults('TT AuditLog'),
+                {
+                    Title: savedCourse.Title & " added",
+                    EntityType: "Course",
+                    EntityID: Text(savedCourse.ID),
+                    PersonEmail: "",
+                    CourseID: Text(savedCourse.ID),
+                    EventType: "Course added",
+                    EventDescription: savedCourse.Title & " added to the mandatory course list.",
+                    ActorEmail: varMyEmail,
+                    EventDateTime: Now(),
+                    Notes: ""
+                }
+            );
+            Notify("Course added.", NotificationType.Success);
+            Reset(txtNewCourse); Reset(cmbNewApplic); Reset(drpNewRecur); Reset(drpNewProvider); Reset(txtNewCourseURL); Reset(txtNewCourseDesc);
+            ClearCollect(colCourses, 'TT Courses');
+            true
+        ),
+        Notify("Course could not be added: " & FirstError.Message, NotificationType.Error);
+        true
+    )
+)</pre>
+        </div>
+
+        <div class="callout">
+          <strong>Expected result:</strong> if <code>Applies to</code>, provider, URL or course name is missing, the app shows a warning and keeps your typed values. Fields reset only after a successful course add.
+        </div>
+      </section>
+
       <section id="yaml-links">
         <h2>Paste-Ready YAML Pages</h2>
         <p>Use these after the schema fix is complete. For big replacements, delete the controls on the target screen first, then paste the YAML fresh.</p>
@@ -475,8 +541,8 @@ ClearCollect(colAllRecords, 'TT TrainingRecords')</pre>
             <div class="card-actions"><a href="../screens/scrAdminDash.html?v=3.3">Open</a><button type="button" data-yaml-url="../screens/scrAdminDash.html?v=3.3">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrAdminManage.html?v=2.3"><strong>scrAdminManage</strong><span>People/course management with audit hooks.</span></a>
-            <div class="card-actions"><a href="../screens/scrAdminManage.html?v=2.3">Open</a><button type="button" data-yaml-url="../screens/scrAdminManage.html?v=2.3">Copy YAML</button></div>
+            <a href="../screens/scrAdminManage.html?v=2.4"><strong>scrAdminManage</strong><span>People/course management with audit hooks.</span></a>
+            <div class="card-actions"><a href="../screens/scrAdminManage.html?v=2.4">Open</a><button type="button" data-yaml-url="../screens/scrAdminManage.html?v=2.4">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrCourseDetail.html?v=3.0"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>

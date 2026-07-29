@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 7 of 7</p>
   <h1>scrAdminManage</h1>
-  <p class="meta">v2.3 &mdash; Restores course provider, URL and description editing · 29 Jul 2026</p>
+  <p class="meta">v2.4 &mdash; Prevents add-course validation from clearing typed fields · 29 Jul 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -833,44 +833,49 @@ const yaml = `Screens:
             Height: =44
             OnSelect: |-
               =If(
-                  IsBlank(txtNewCourse.Text) || CountRows(cmbNewApplic.SelectedItems) = 0 || IsBlank(drpNewProvider.Selected.Value) || IsBlank(Trim(txtNewCourseURL.Text)),
+                  IsBlank(Trim(txtNewCourse.Text)) || CountRows(Filter(cmbNewApplic.SelectedItems, !IsBlank(Value))) = 0 || IsBlank(drpNewProvider.Selected.Value) || IsBlank(Trim(txtNewCourseURL.Text)),
                   Notify("Course needs a name, staff type, provider and URL.",
                          NotificationType.Warning),
-                  With(
-                      {
-                          savedCourse: Patch('TT Courses', Defaults('TT Courses'),
-                              {
-                                  Title:            Trim(txtNewCourse.Text),
-                                  ApplicableTo:     ForAll(cmbNewApplic.SelectedItems, {Value: Value}),
-                                  RecurrenceMonths: drpNewRecur.Selected.Months,
-                                  CourseHost:       {Value: drpNewProvider.Selected.Value},
-                                  CourseURL:        Trim(txtNewCourseURL.Text),
-                                  CourseDescription: Trim(txtNewCourseDesc.Text),
-                                  Status:           {Value: "Active"},
-                                  LastUpdatedByEmail: varMyEmail,
-                                  LastUpdatedOn: Now(),
-                                  LastStatus: "Created"
-                              }
-                          )
-                      },
-                      Patch('TT AuditLog', Defaults('TT AuditLog'),
+                  IfError(
+                      With(
                           {
-                              Title: savedCourse.Title & " added",
-                              EntityType: "Course",
-                              EntityID: Text(savedCourse.ID),
-                              PersonEmail: "",
-                              CourseID: Text(savedCourse.ID),
-                              EventType: "Course added",
-                              EventDescription: savedCourse.Title & " added to the mandatory course list.",
-                              ActorEmail: varMyEmail,
-                              EventDateTime: Now(),
-                              Notes: ""
-                          }
-                      )
-                  );
-                  Notify("Course added.", NotificationType.Success);
-                  Reset(txtNewCourse); Reset(cmbNewApplic); Reset(drpNewRecur); Reset(drpNewProvider); Reset(txtNewCourseURL); Reset(txtNewCourseDesc);
-                  ClearCollect(colCourses, 'TT Courses')
+                              savedCourse: Patch('TT Courses', Defaults('TT Courses'),
+                                  {
+                                      Title:            Trim(txtNewCourse.Text),
+                                      ApplicableTo:     ForAll(Filter(cmbNewApplic.SelectedItems, !IsBlank(Value)), {Value: Value}),
+                                      RecurrenceMonths: drpNewRecur.Selected.Months,
+                                      CourseHost:       {Value: drpNewProvider.Selected.Value},
+                                      CourseURL:        Trim(txtNewCourseURL.Text),
+                                      CourseDescription: Trim(txtNewCourseDesc.Text),
+                                      Status:           {Value: "Active"},
+                                      LastUpdatedByEmail: varMyEmail,
+                                      LastUpdatedOn: Now(),
+                                      LastStatus: "Created"
+                                  }
+                              )
+                          },
+                          Patch('TT AuditLog', Defaults('TT AuditLog'),
+                              {
+                                  Title: savedCourse.Title & " added",
+                                  EntityType: "Course",
+                                  EntityID: Text(savedCourse.ID),
+                                  PersonEmail: "",
+                                  CourseID: Text(savedCourse.ID),
+                                  EventType: "Course added",
+                                  EventDescription: savedCourse.Title & " added to the mandatory course list.",
+                                  ActorEmail: varMyEmail,
+                                  EventDateTime: Now(),
+                                  Notes: ""
+                              }
+                          );
+                          Notify("Course added.", NotificationType.Success);
+                          Reset(txtNewCourse); Reset(cmbNewApplic); Reset(drpNewRecur); Reset(drpNewProvider); Reset(txtNewCourseURL); Reset(txtNewCourseDesc);
+                          ClearCollect(colCourses, 'TT Courses');
+                          true
+                      ),
+                      Notify("Course could not be added: " & FirstError.Message, NotificationType.Error);
+                      true
+                  )
               )
             Size: =13
             Text: ="Add course"
