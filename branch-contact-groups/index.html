@@ -254,64 +254,45 @@
       <nav>
         <a href="../">Guide library</a>
         <a href="#what-this-page-is">What This Page Is</a>
-        <a href="#current-fix">Current Fix</a>
-        <a href="#app-onstart">App.OnStart</a>
+        <a href="#current-fix">This Push</a>
         <a href="#screen-links">Screen Pages</a>
-        <a href="#why-it-happened">Why It Happened</a>
-        <a href="#checklist">Checklist</a>
         <a href="#reference">Reference Links</a>
       </nav>
     </aside>
 
     <main>
       <div class="topline">
-        <span class="pill">Current step: v2.32 membership loader fix</span>
-        <span class="pill">Updated 27 Jul 2026</span>
+        <span class="pill">Current step: v2.34 - JMC / County-Contingent / Name fields</span>
+        <span class="pill">Updated 29 Jul 2026</span>
         <span class="pill">Branch Contact Groups</span>
       </div>
       <h1>Branch Contact Groups Fix Guide</h1>
-      <p class="lead">Use this as the quick working page for the Branch Contact Groups Power Apps build. The full generated app guide still lives in the app repository; this page keeps the latest copy/paste fixes visible from the main Power Apps Guide Library.</p>
+      <p class="lead">Quick working page for the Branch Contact Groups Power Apps build - the three screen YAMLs to paste, and the manual fixes needed for the current push only. The full generated app guide (SharePoint schema, data connections, historical changelog) lives at the Full App Guide link below.</p>
 
       <section id="what-this-page-is">
         <h2>What This Page Is</h2>
-        <p>This is a short repair guide for the live Branch Contact Groups app. It is not a rebuild-from-scratch walkthrough. Use it when you need the latest <code>App.OnStart</code>, screen replacement pages, and the reasoning behind the fixes currently being tested.</p>
+        <p>This page always reflects only the <strong>current push</strong> - old fix write-ups are removed once superseded rather than kept as history. If you need the full SharePoint schema or historical context, use the Full App Guide link below.</p>
         <div class="callout">
           <strong>Brand theme:</strong> current app work should use the house green <code>#004e42</code> / <code>RGBA(0,78,66,1)</code> with white, plus restrained grey support colours.
         </div>
       </section>
 
       <section id="current-fix">
-        <h2>Current Fix - Membership Loader</h2>
-        <p>The app originally loaded memberships with <code>ClearCollect(colMemberships, 'BM Memberships')</code>. That only cached the first client-side page of the SharePoint list. The first attempted fix used SharePoint ID windows, but the live app still cut off around the C groups, which means item-ID ranges were still the wrong shape for this tenant.</p>
+        <h2>This Push - v2.34</h2>
+        <p><strong>Add three new columns to <code>BM Memberships</code> in SharePoint first</strong> (all Single line of text, Not Required):</p>
+        <table>
+          <thead><tr><th>Column</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>Name</code></td><td>The real field the app now reads/writes for a person's display name. <code>Title</code> stays only as a mirror for SharePoint's own list view - the app never reads Title again.</td></tr>
+            <tr><td><code>JMC</code></td><td>Bde/Area from the standard import sheet. Blank hides the field on cards.</td></tr>
+            <tr><td><code>County/Contingent</code></td><td>County/District from the standard import sheet. Referenced in Power Fx as <code>ThisItem.'County/Contingent'</code> (quoted, because of the slash). Blank hides the field on cards.</td></tr>
+          </tbody>
+        </table>
         <div class="callout warn">
-          <strong>Replace all four areas:</strong> paste the updated <code>App.OnStart</code>, then replace <code>scrSendEmail</code>, <code>scrManageGroups</code>, and <code>scrManagePeople</code>. Updating only the front screen leaves stale membership-loading formulas on the other screens.
+          <strong>Delete and re-paste all three screens fresh</strong> (don't paste over the existing ones - Studio's paste is additive/merge, so a renamed/removed control can be left behind with its old bindings intact). <code>App.OnStart</code> is unchanged this round, no need to touch it.
         </div>
-        <p>v2.32 loads <code>BM Memberships</code> group-by-group. Each SharePoint query only asks for one group's roster, so it avoids the global row cap and SharePoint item-ID churn.</p>
-      </section>
-
-      <section id="app-onstart">
-        <h2>App.OnStart</h2>
-        <p>Paste this into <strong>App - OnStart</strong>, then run OnStart in Power Apps Studio.</p>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <span>Power Fx - Branch Contact Groups App.OnStart</span>
-            <button data-copy="onstart-code" type="button">Copy</button>
-          </div>
-<pre id="onstart-code">Set(varModDomain, "mod.gov.uk");
-Set(varMyEmail, Lower(User().Email));
-ClearCollect(colMaintainers, 'BM Maintainers');
-Set(varIsMaintainer, CountRows(Filter(colMaintainers, Lower(Email) = varMyEmail)) > 0);
-ClearCollect(colGroups, AddColumns(Sort('BM Groups', SortOrder, SortOrder.Ascending), Ticked, false));
-ClearCollect(colMemberships, Filter('BM Memberships', false)); ForAll(colGroups As grp, Collect(colMemberships, Filter('BM Memberships', GroupName = grp.Title)));
-ClearCollect(colThursdayBatchOptions, ["None", "Batch 1", "Batch 2"]);
-Set(varRecipientField, "bcc");
-Set(varBccForcedByBatch, false);
-Set(varBccForced, false);
-Set(varPreviewGroupID, Blank());
-Set(varShowLightbox, false);
-Set(varLightboxMode, "");
-Set(varLightboxGroupID, Blank())</pre>
-        </div>
+        <p>Also bundled into this same push (v2.33, not yet confirmed live): a red "Delete group" button in Manage Groups; Thursday Batch buttons now warn instead of silently ticking nothing when no group has that batch set; Remove Leaver lists the actual groups a person will be removed from; clear (X) buttons on every search box; and a fix for three GAL search boxes that were calling <code>Office365Users.SearchUserV2</code> directly from a gallery's <code>Items</code> property (suspected cause of the "lightbox randomly closes" bug - not yet confirmed).</p>
+        <p>Paste-import in Manage Groups now recognises the standard sheet automatically: <code>Bde/Area&rarr;JMC</code>, <code>County/District&rarr;County/Contingent</code>, <code>Rank + First Name (Proper Case) + Surname (UPPERCASE)&rarr;Name</code>, <code>Appointment</code> ignored, <code>Email&rarr;Email</code>. The old 2-column Name/Email paste still works for groups without this structured data.</p>
       </section>
 
       <section id="screen-links">
@@ -319,43 +300,21 @@ Set(varLightboxGroupID, Blank())</pre>
         <p>These are the live generated copy pages from the Branch Contact Groups app repository.</p>
         <div class="links">
           <div class="link-card">
-            <a href="screens/scrSendEmail.html?v=2.22"><strong>scrSendEmail</strong><span>Landing page, selected groups, recipient counts, Outlook and clipboard actions.</span></a>
-            <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.22">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.22">Copy YAML</button></div>
+            <a href="screens/scrSendEmail.html?v=2.24"><strong>scrSendEmail</strong><span>Landing page, selected groups, recipient counts, Outlook and clipboard actions.</span></a>
+            <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.24">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.24">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManageGroups.html?v=2.19"><strong>scrManageGroups</strong><span>Group creation, edit lightbox, membership management, history and Thursday settings.</span></a>
-            <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.19">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.19">Copy YAML</button></div>
+            <a href="screens/scrManageGroups.html?v=2.21"><strong>scrManageGroups</strong><span>Group creation, edit/delete lightbox, membership management (JMC/County fields), history, Thursday settings.</span></a>
+            <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.21">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.21">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManagePeople.html?v=2.21"><strong>scrManagePeople</strong><span>People management, GAL search, edit-person group checklist and leaver cleanup.</span></a>
-            <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.21">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.21">Copy YAML</button></div>
+            <a href="screens/scrManagePeople.html?v=2.23"><strong>scrManagePeople</strong><span>People management (JMC/County/Name/Email cards), GAL search, edit-person group checklist, leaver cleanup.</span></a>
+            <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.23">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.23">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="https://phadedev.github.io/branch-contact-groups/"><strong>Full App Guide</strong><span>SharePoint schema, data sources, full app notes and generated screen docs.</span></a>
             <div class="card-actions"><a href="https://phadedev.github.io/branch-contact-groups/">Open</a></div>
           </div>
-        </div>
-      </section>
-
-      <section id="why-it-happened">
-        <h2>Why It Happened</h2>
-        <p>Power Apps collections are local app memory. When a SharePoint list is copied into a collection, Power Apps does not automatically bring every row from a large list. It brings the first client-side page. In this app, all counts and recipients read from <code>colMemberships</code>, so any membership row missing from that collection is invisible to the UI.</p>
-        <p>That is why earlier groups could show real member counts while later groups, including CTC Frimley, showed <code>0 members</code>. SharePoint was correct. The app cache was incomplete.</p>
-      </section>
-
-      <section id="checklist">
-        <h2>Checklist Before Testing</h2>
-        <ul>
-          <li><code>App.OnStart</code> has the group-by-group <code>colMemberships</code> load.</li>
-          <li><code>scrSendEmail</code> has been replaced from v2.22 or newer.</li>
-          <li><code>scrManageGroups</code> has been replaced from v2.19 or newer.</li>
-          <li><code>scrManagePeople</code> has been replaced from v2.21 or newer.</li>
-          <li>Run <code>App.OnStart</code> once after pasting.</li>
-          <li>Refresh the <code>BM Memberships</code> data source in Power Apps Studio.</li>
-          <li>Test one known later group, for example CTC Frimley, before changing unrelated UI formulas.</li>
-        </ul>
-        <div class="callout ok">
-          <strong>Expected result:</strong> member counts and recipient actions should agree with SharePoint membership rows for groups whose memberships are beyond the first SharePoint page.
         </div>
       </section>
 
