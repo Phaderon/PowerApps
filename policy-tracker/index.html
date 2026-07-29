@@ -186,6 +186,7 @@
         <a href="#what-this-page-is">What This Page Is</a>
         <a href="#onedrive-link-fix">Fix 1 - Personal OneDrive Links</a>
         <a href="#addressbar-url-fix">Fix 2 - Address-Bar Link Save Failure</a>
+        <a href="#addressbar-icon-hint">Fix 3 - Generic Icon Hint Text</a>
       </nav>
     </aside>
 
@@ -193,7 +194,7 @@
       <div class="topline">
         <span class="pill">Updated 29 Jul 2026</span>
         <span class="pill">Policy Tracker only</span>
-        <span class="pill">2 fixes so far</span>
+        <span class="pill">3 fixes so far</span>
       </div>
       <h1>Policy Tracker Fix Guide</h1>
       <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
@@ -294,6 +295,36 @@
 
         <div class="callout ok">
           <strong>Test:</strong> open a Word/Excel doc in Office Online from a link inside Outlook, copy the address bar URL, paste it into "Direct URL to document" and hit Save &mdash; it should save without error now. A normal Share &gt; Copy Link URL should still save exactly as before (nothing in this formula changes for URLs that don't contain those tracking parameters).
+        </div>
+      </section>
+
+      <section id="addressbar-icon-hint">
+        <h2>Fix 3 - Hint Text For The Generic-Icon Limitation</h2>
+        <p class="meta-line">ViewItem &middot; new label &middot; no risk</p>
+        <p>Follow-up to Fix 2: even after the save crash is fixed, links copied from the browser address bar still show a generic document icon instead of the real file type, because <code>GetFileExt()</code> (in <code>Formulas.txt</code>) can only detect a file type from a <code>file=</code> query parameter or a dotted extension right before a <code>?</code> in the URL path &mdash; and the compact address-bar link format contains neither, just an opaque ID token. There's no reliable way to recover the real filename from that token without an extra Microsoft Graph lookup (e.g. a Power Automate flow resolving the share link), which was judged not worth the extra infrastructure for a cosmetic icon. Decided instead to just tell people, clearly, right where they're about to paste the link.</p>
+
+        <ol>
+          <li>Open <strong>ViewItem</strong>.</li>
+          <li>In the Tree view, find <strong>Activator_1</strong> (the "No document links yet" empty-state group, containing <code>Label6_2</code>, <code>lblLinkFieldsHint1</code>, <code>btnAddLinkEmpty1</code>, and <code>SVG_13</code>).</li>
+          <li>Add a new <strong>Label</strong> control as the last child of <strong>Activator_1</strong>, named <code>lblLinkCopyHint1</code>, with the properties below.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>lblLinkCopyHint1 (new Label@2.5.1)</span>
+            <button data-copy="copy-hint-label" type="button">Copy</button>
+          </div>
+<pre id="copy-hint-label">Align: Center
+AutoHeight: true
+Color: RGBA(91, 105, 97, 1)
+Font: Font.'Open Sans'
+Size: 9
+Text: ="Tip - use Share > Copy Link on the document, not the browser address bar. Address bar links still save, but the app can only show the correct file icon when copied this way."
+Width: 380
+Wrap: true</pre>
+        </div>
+
+        <div class="callout ok">
+          <strong>Test:</strong> open an item with no document links yet &mdash; the new tip text should appear under the "+ Add Document Link" button, wrapped onto multiple lines, without affecting anything else in that empty-state block.
         </div>
       </section>
     </main>
