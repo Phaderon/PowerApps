@@ -258,6 +258,7 @@
         <a href="#add-columns">Add Existing List Columns</a>
         <a href="#connect-refresh">Connect And Refresh</a>
         <a href="#app-setup">App Setup</a>
+        <a href="#date-prefill-fix">Date Pre-fill Fix</a>
         <a href="#yaml-links">YAML Pages</a>
         <a href="#checklist">Checklist</a>
       </nav>
@@ -432,6 +433,39 @@ ClearCollect(colAllRecords, 'TT TrainingRecords')</pre>
         </div>
       </section>
 
+      <section id="date-prefill-fix">
+        <h2>Fix 2 - Date Of Completion Pre-fill</h2>
+        <p>If <code>scrCourseDetail</code> shows the saved certificate attachment but the date picker is blank, fix the existing controls below. You do not need to repaste the whole screen.</p>
+
+        <ol>
+          <li>Select <code>DateCompleted_DataCard1</code>.</li>
+          <li>Set its <code>Default</code> property to this formula.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>DateCompleted_DataCard1.Default</span>
+            <button data-copy="date-card-default" type="button">Copy</button>
+          </div>
+<pre id="date-card-default">=ThisItem.DateCompleted</pre>
+        </div>
+
+        <ol start="3">
+          <li>Select the date picker inside that card, <code>DataCardValue1</code>.</li>
+          <li>Set its <code>SelectedDate</code> property to this formula.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>DataCardValue1.SelectedDate</span>
+            <button data-copy="date-picker-selected" type="button">Copy</button>
+          </div>
+<pre id="date-picker-selected">=Coalesce(varRecord.DateCompleted, Parent.Default)</pre>
+        </div>
+
+        <div class="callout">
+          <strong>Expected result:</strong> when a record already has a completion date, the date picker opens with that saved date. Choosing a different date still saves a replacement date when you press <strong>Save record</strong>.
+        </div>
+      </section>
+
       <section id="yaml-links">
         <h2>Paste-Ready YAML Pages</h2>
         <p>Use these after the schema fix is complete. For big replacements, delete the controls on the target screen first, then paste the YAML fresh.</p>
@@ -445,8 +479,8 @@ ClearCollect(colAllRecords, 'TT TrainingRecords')</pre>
             <div class="card-actions"><a href="../screens/scrAdminManage.html?v=2.3">Open</a><button type="button" data-yaml-url="../screens/scrAdminManage.html?v=2.3">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrCourseDetail.html?v=2.9"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
-            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=2.9">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=2.9">Copy YAML</button></div>
+            <a href="../screens/scrCourseDetail.html?v=3.0"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
+            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.0">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.0">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrMyTraining.html?v=2.6"><strong>scrMyTraining</strong><span>Personal training dashboard.</span></a>
