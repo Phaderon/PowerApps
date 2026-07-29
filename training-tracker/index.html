@@ -264,6 +264,7 @@
         <a href="#provider-default-fix">Provider Dropdown Default</a>
         <a href="#admin-onvisible-navigation-fix">Admin OnVisible Navigation</a>
         <a href="#compliance-kpi-meaning-fix">Compliance KPI Meaning</a>
+        <a href="#stale-course-detail-fix">Stale Course Names</a>
         <a href="#yaml-links">YAML Pages</a>
         <a href="#checklist">Checklist</a>
       </nav>
@@ -763,17 +764,72 @@ Reset(txtEditCourseDesc)</pre>
         </div>
       </section>
 
+      <section id="stale-course-detail-fix">
+        <h2>Fix 8 - Stale Course Names</h2>
+        <p>If you shorten a course name in <code>scrAdminManage</code>, save it, return to <code>scrAdminDash</code>, and the selected person's course list still shows the old name, refresh the SharePoint source before rebuilding the local collections. Do not try to refresh the gallery itself; galleries read whatever is already in their <code>Items</code> collection.</p>
+
+        <ol>
+          <li>Select <code>scrAdminDash</code>.</li>
+          <li>Open its <code>OnVisible</code> formula.</li>
+          <li>Add these four lines immediately before <code>ClearCollect(colAllPersonnelRaw, 'TT Personnel');</code>.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>scrAdminDash.OnVisible - source refresh lines</span>
+            <button data-copy="admin-dash-refresh-lines" type="button">Copy</button>
+          </div>
+<pre id="admin-dash-refresh-lines">Refresh('TT Personnel');
+Refresh('TT TrainingRecords');
+Refresh('TT Courses');
+Refresh('TT AuditLog');</pre>
+        </div>
+
+        <ol start="4">
+          <li>Select <code>btnSaveCourse</code> on <code>scrAdminManage</code>.</li>
+          <li>In its <code>OnSelect</code> success path, find these lines near the end.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>Find in btnSaveCourse.OnSelect</span>
+            <button data-copy="save-course-old-refresh-tail" type="button">Copy</button>
+          </div>
+<pre id="save-course-old-refresh-tail">Notify("Course updated. Expiry dates recalculate automatically.",
+       NotificationType.Success);
+ClearCollect(colCourses, 'TT Courses');
+Set(varEditCourse, Blank())</pre>
+        </div>
+
+        <ol start="6">
+          <li>Replace that ending with this version.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>btnSaveCourse.OnSelect - replacement ending</span>
+            <button data-copy="save-course-new-refresh-tail" type="button">Copy</button>
+          </div>
+<pre id="save-course-new-refresh-tail">Notify("Course updated. Expiry dates recalculate automatically.",
+       NotificationType.Success);
+Refresh('TT Courses');
+ClearCollect(colCourses, 'TT Courses');
+Set(varEditCourse, Blank())</pre>
+        </div>
+
+        <div class="callout">
+          <strong>Expected result:</strong> when you return to the compliance dashboard, <code>scrAdminDash.OnVisible</code> pulls fresh SharePoint data into <code>colCourses</code>. Click a person again and their detail gallery rebuilds from the current course names.
+        </div>
+      </section>
+
       <section id="yaml-links">
         <h2>Paste-Ready YAML Pages</h2>
         <p>Use these after the schema fix is complete. For big replacements, delete the controls on the target screen first, then paste the YAML fresh.</p>
         <div class="links">
           <div class="link-card">
-            <a href="../screens/scrAdminDash.html?v=3.6"><strong>scrAdminDash</strong><span>Admin dashboard, KPI cards, attention filters, risk bars and timeline.</span></a>
-            <div class="card-actions"><a href="../screens/scrAdminDash.html?v=3.6">Open</a><button type="button" data-yaml-url="../screens/scrAdminDash.html?v=3.6">Copy YAML</button></div>
+            <a href="../screens/scrAdminDash.html?v=3.7"><strong>scrAdminDash</strong><span>Admin dashboard, KPI cards, attention filters, risk bars and timeline.</span></a>
+            <div class="card-actions"><a href="../screens/scrAdminDash.html?v=3.7">Open</a><button type="button" data-yaml-url="../screens/scrAdminDash.html?v=3.7">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrAdminManage.html?v=2.5"><strong>scrAdminManage</strong><span>People/course management with audit hooks.</span></a>
-            <div class="card-actions"><a href="../screens/scrAdminManage.html?v=2.5">Open</a><button type="button" data-yaml-url="../screens/scrAdminManage.html?v=2.5">Copy YAML</button></div>
+            <a href="../screens/scrAdminManage.html?v=2.6"><strong>scrAdminManage</strong><span>People/course management with audit hooks.</span></a>
+            <div class="card-actions"><a href="../screens/scrAdminManage.html?v=2.6">Open</a><button type="button" data-yaml-url="../screens/scrAdminManage.html?v=2.6">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrCourseDetail.html?v=3.0"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>

@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 7 of 7</p>
   <h1>scrAdminManage</h1>
-  <p class="meta">v2.5 &mdash; Centralises course provider options and edit dropdown defaults · 29 Jul 2026</p>
+  <p class="meta">v2.6 &mdash; Refreshes courses after saving edits · 29 Jul 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -1048,6 +1048,7 @@ const yaml = `Screens:
                   );
                   Notify("Course updated. Expiry dates recalculate automatically.",
                          NotificationType.Success);
+                  Refresh('TT Courses');
                   ClearCollect(colCourses, 'TT Courses');
                   Set(varEditCourse, Blank())
               )

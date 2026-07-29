@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 6 of 7</p>
   <h1>scrAdminDash</h1>
-  <p class="meta">v3.6 &mdash; Clarifies compliance KPI maths and outstanding chip colour · 29 Jul 2026</p>
+  <p class="meta">v3.7 &mdash; Refreshes SharePoint sources before rebuilding dashboard collections · 29 Jul 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -56,6 +56,11 @@ const yaml = `Screens:
                 Muted: RGBA(85,85,85,1)
             }
         );
+
+        Refresh('TT Personnel');
+        Refresh('TT TrainingRecords');
+        Refresh('TT Courses');
+        Refresh('TT AuditLog');
 
         ClearCollect(colAllPersonnelRaw, 'TT Personnel');
         ClearCollect(colAllPeople, Filter(colAllPersonnelRaw, Coalesce(Active, true) = true));
