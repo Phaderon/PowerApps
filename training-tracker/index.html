@@ -1130,7 +1130,7 @@ Clear(colNewCertificate)</pre>
 
         <h3>Paste The Updated Screen</h3>
         <p>Open the updated <code>scrCourseDetail</code> YAML and paste it over the existing screen (delete the screen's controls first, then paste fresh &mdash; do not paste over controls that still exist, per the usual rule for structural changes).</p>
-        <p><a href="../screens/scrCourseDetail.html?v=3.5">Open scrCourseDetail YAML (v3.5)</a></p>
+        <p><a href="../screens/scrCourseDetail.html?v=3.6">Open scrCourseDetail YAML (v3.6)</a></p>
 
         <h3>Build The Flow: <code>TT - Save Certificate</code></h3>
         <p>You do not need any Power Automate experience for this &mdash; follow these steps in order. This is one flow with a handful of steps, not a big build.</p>
@@ -1339,10 +1339,19 @@ Clear(colNewCertificate)</pre>
           <strong>Also verify live, not assume:</strong> the <strong>Open certificate</strong> button uses <code>Launch("data:application/octet-stream;base64," &amp; varCertDownload.fileContentBase64)</code> to trigger a browser download/open of the returned file. This is a well-documented technique for handing a file back from a flow to a canvas app, but it has not been tested against this specific flow and file types (PDF/JPG/PNG/DOCX may each behave slightly differently in how the browser opens vs downloads them). If it does not open the file correctly, tell me exactly what happened (blank tab, download of a corrupted/empty file, nothing at all) rather than guessing at a fix yourself.
         </div>
 
-        <h3>Checklist</h3>
+        <h3>Progress And Error Feedback</h3>
+        <p><code>scrCourseDetail</code> v3.6 (already included in the paste above &mdash; nothing extra to build in Power Automate for this part) adds a busy state and a persistent error banner around both <strong>Save record</strong> and <strong>Open certificate</strong>, using three screen-local variables seeded in <code>scrCourseDetail.OnVisible</code>: <code>varCertBusy</code> (Boolean), <code>varCertStatusText</code> (Text), <code>varCertError</code> (Text).</p>
+        <ul>
+          <li>The instant either button is pressed, it and the other certificate controls (<strong>Cancel</strong>, the file picker) grey out via <code>DisplayMode.Disabled</code>, and a small spinner plus a status line (<code>Saving certificate...</code> / <code>Fetching certificate...</code>) appear beneath the buttons.</li>
+          <li>Once the flow responds, controls re-enable and the spinner/status clear. On success, the usual toast notification still fires (and for Save, the screen navigates back as before).</li>
+          <li>On failure, instead of only a toast that disappears in a few seconds, the flow's actual error message is written into <code>varCertError</code> and shown in a persistent amber banner with a close (&times;) icon, so the exact wording can be read, copied, or reported back &mdash; it does not auto-dismiss. It clears automatically the next time either button is pressed, or manually via the &times;.</li>
+        </ul>
+        <div class="callout warn">
+          <strong>Honest limit on "every step of the way":</strong> a single <code>.Run(...)</code> call to a flow is one request and one response &mdash; the app genuinely has no way to know which action inside the flow is currently executing while it waits, so it cannot show true step-by-step progress ("checking permissions... now fetching the file..."). What this adds is one clear "working" state for the whole operation, and a real, readable error afterward if it fails &mdash; not a multi-stage progress bar, because that would require inventing information the app does not actually have.
+        </div>
         <ul>
           <li><code>colNewCertificate</code> seeded in <code>App.OnStart</code>.</li>
-          <li><code>scrCourseDetail</code> v3.5 pasted.</li>
+          <li><code>scrCourseDetail</code> v3.6 pasted (includes busy/error UI, no separate step needed).</li>
           <li>Flow <code>TT - Save Certificate</code> created with all 11 inputs, in order, including <code>IsAdmin</code> added last.</li>
           <li><strong>Get item</strong> (authoritative <code>PersonEmail</code> lookup) sits before the authorisation <strong>Condition</strong>, which sits before <strong>Update item</strong>.</li>
           <li><strong>Update item</strong> step (inside the Yes branch) writes <code>DateCompleted</code>, <code>LastUpdatedByEmail</code>, <code>LastUpdatedOn</code>, <code>LastStatus</code>, and re-supplies the required <code>PersonEmail</code>/<code>CourseID</code>/<code>CourseName</code> columns from the trigger.</li>
@@ -1354,6 +1363,7 @@ Clear(colNewCertificate)</pre>
           <li>Both flows added as data sources in the app.</li>
           <li>Both <code>.OnSelect</code> flow identifiers confirmed via autocomplete, not hand-typed, and argument order confirmed against each flow's real trigger order &mdash; especially <code>TT - Save Certificate</code>, since its structure changed again in this hardening pass.</li>
           <li>Tested live: save with no new file (date-only change), save with a new file on a record with no existing certificate, save with a new file replacing an existing one, save as an admin on someone else's record, confirm a non-admin cannot save to someone else's record, open/download an existing certificate as the record's own person, open/download the same certificate as an admin, confirm a different non-admin person cannot open someone else's certificate.</li>
+          <li>Spinner/status text appears on both buttons while their flow is running, and controls visibly grey out; confirm a genuine failure (e.g. temporarily rename a field in a flow to force an error) shows the amber error banner with real wording, and that it clears on the &times; icon and on the next attempt.</li>
         </ul>
       </section>
 
@@ -1370,8 +1380,8 @@ Clear(colNewCertificate)</pre>
             <div class="card-actions"><a href="../screens/scrAdminManage.html?v=2.6">Open</a><button type="button" data-yaml-url="../screens/scrAdminManage.html?v=2.6">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrCourseDetail.html?v=3.5"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
-            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.5">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.5">Copy YAML</button></div>
+            <a href="../screens/scrCourseDetail.html?v=3.6"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
+            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.6">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.6">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrMyTraining.html?v=2.7"><strong>scrMyTraining</strong><span>Personal training dashboard.</span></a>
