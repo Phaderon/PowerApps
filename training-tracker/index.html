@@ -1107,6 +1107,7 @@ CountIf(ApplicableTo, Value = varViewingPerson.StaffType.Value) > 0 &&
           <li>No new SharePoint columns are needed. The flow writes the same <code>DateCompleted</code>, <code>UploadedByEmail</code>, <code>LastUpdatedByEmail</code>, <code>LastUpdatedOn</code>, <code>LastStatus</code> and attachment fields the old Form wrote, plus the same <code>TT AuditLog</code> entry the old <code>frmCert.OnSuccess</code> wrote.</li>
           <li>The old "remove the × first, then add the new file" warning is gone. Dropping a new file now always replaces whatever was on file &mdash; the flow deletes the old attachment and adds the new one in the same run.</li>
           <li>A second flow, <code>TT - Get Certificate</code>, and a new <strong>Open certificate</strong> button let a person re-open or download a certificate they (or an admin, on their behalf) already saved. Without this, saving a certificate would have been a one-way trip &mdash; visible as a filename, never viewable again.</li>
+          <li><code>TT - Save Certificate</code> is also hardened to genuinely check authorisation server-side (the record's own person, or an admin) before writing anything &mdash; not just relying on the app's navigation to keep people on their own records.</li>
         </ul>
 
         <div class="callout">
@@ -1129,7 +1130,7 @@ Clear(colNewCertificate)</pre>
 
         <h3>Paste The Updated Screen</h3>
         <p>Open the updated <code>scrCourseDetail</code> YAML and paste it over the existing screen (delete the screen's controls first, then paste fresh &mdash; do not paste over controls that still exist, per the usual rule for structural changes).</p>
-        <p><a href="../screens/scrCourseDetail.html?v=3.4">Open scrCourseDetail YAML (v3.4)</a></p>
+        <p><a href="../screens/scrCourseDetail.html?v=3.5">Open scrCourseDetail YAML (v3.5)</a></p>
 
         <h3>Build The Flow: <code>TT - Save Certificate</code></h3>
         <p>You do not need any Power Automate experience for this &mdash; follow these steps in order. This is one flow with a handful of steps, not a big build.</p>
@@ -1239,6 +1240,38 @@ Clear(colNewCertificate)</pre>
           <strong>This covers the happy path only.</strong> A beginner-friendly flow like this does not include retry/error branches. If any step fails, Power Automate shows a red cross on that step in the run history, and the app's <code>IfError(...)</code> around the flow call will show a generic "Save failed" message. That is enough to know something went wrong; diagnosing which step failed means opening that run in Power Automate's history and reading the error on the failed step.
         </div>
 
+        <h3>Harden <code>TT - Save Certificate</code>: Require Authorisation</h3>
+        <p>The steps above give <code>TT - Save Certificate</code> no authorisation check at all &mdash; it writes whatever record the app tells it to, trusting that only the app's own navigation ever points it at the right record. Today that is true in practice, but it is not enforced by the flow itself. This adds the same real check the read flow already has: verified against the actual stored data, not just trusted from the app.</p>
+
+        <h4>1. Add One More Input</h4>
+        <p>Open the trigger. <strong>+ Add an input</strong>, type <strong>Yes/No</strong>, name it <code>IsAdmin</code>. Because you are adding this to a flow that already has 10 inputs, it will land at the very end of the schema, after <code>CourseID</code> &mdash; that is expected, and is exactly why the app formula below adds it as the last argument, not wherever "feels" logical.</p>
+
+        <h4>2. Add A Lookup Right After The Trigger</h4>
+        <p>Add <strong>SharePoint &rarr; Get item</strong> as the very first action, before your existing <strong>Update item</strong> step. Site Address/List Name as usual, <strong>List Name:</strong> <code>TT TrainingRecords</code>, <strong>Id:</strong> dynamic content <code>RecordID</code>. This fetches the record's real, currently-stored <code>PersonEmail</code> &mdash; the trigger's own <code>PersonEmail</code> input is supplied by the app and is not trustworthy for a security check on its own, the same reasoning as the read flow.</p>
+
+        <h4>3. Add The Authorisation Condition</h4>
+        <ol>
+          <li>Add a <strong>Condition</strong> directly after the new <strong>Get item</strong> step (still before <strong>Update item</strong>).</li>
+          <li>First row: dynamic content <code>ActorEmail</code> (trigger) <strong>is equal to</strong> dynamic content <code>PersonEmail</code> (from this new <strong>Get item</strong>, not the trigger).</li>
+          <li><strong>+ Add row</strong>, switch the group to <strong>Or</strong>.</li>
+          <li>Second row: dynamic content <code>IsAdmin</code> (trigger) <strong>is equal to</strong> &mdash; via the <strong>fx</strong> icon, bare word <code>true</code>, not the Yes/No dropdown.</li>
+        </ol>
+
+        <h4>4. Move Or Rebuild The Existing Steps Into The Yes Branch</h4>
+        <p>Everything you already built &mdash; <strong>Update item</strong>, the <code>HasNewFile</code> Condition with its attachment steps, <strong>Create item</strong>, and the existing <strong>Respond to a PowerApp or flow</strong> &mdash; needs to end up inside this new Condition's <strong>If yes</strong> branch, so none of it runs for an unauthorised caller.</p>
+        <p>Two ways to get there, try the first, fall back to the second if it fights you:</p>
+        <ul>
+          <li><strong>Drag:</strong> each action has a small handle on its left edge. Try dragging <strong>Update item</strong> into the <strong>If yes</strong> branch first; if the later steps do not follow automatically, drag each one in afterward, in the same order they were in before (Update item, then the <code>HasNewFile</code> Condition, then Create item, then Respond).</li>
+          <li><strong>Rebuild:</strong> if dragging misbehaves, it is equally correct and lower-risk to delete those four existing actions and recreate them fresh inside the <strong>If yes</strong> branch, following Steps 2 through 5 earlier in this section exactly as written &mdash; nothing about their field mappings changes, only where they physically sit on the canvas.</li>
+        </ul>
+
+        <h4>5. Respond For The Unauthorised Case</h4>
+        <p>In the new Condition's <strong>If no</strong> branch, add <strong>Respond to a PowerApp or flow</strong> with the same two outputs as the existing one: <code>success</code> set via <strong>fx</strong> to <code>false</code>, and <code>message</code> set to the literal text <code>You are not authorized to save this record.</code></p>
+        <p>Save the flow.</p>
+
+        <h4>6. Update The App Formula</h4>
+        <p>Already done in <code>scrCourseDetail</code> v3.5 &mdash; <code>btnSaveCert.OnSelect</code> now passes <code>varIsAdmin</code> as an 11th, final argument. As always: verify the real order against your flow's own autocomplete hints before trusting it, not this guide's table, especially since you have just changed this flow's structure again.</p>
+
         <h3>Build The Second Flow: <code>TT - Get Certificate</code></h3>
         <p>This is the read side &mdash; it lets someone re-open or download a certificate that is already on file. It is simpler than the save flow: no writes, just one lookup, one authorisation check, and the file handed back.</p>
         <div class="callout">
@@ -1309,17 +1342,18 @@ Clear(colNewCertificate)</pre>
         <h3>Checklist</h3>
         <ul>
           <li><code>colNewCertificate</code> seeded in <code>App.OnStart</code>.</li>
-          <li><code>scrCourseDetail</code> v3.4 pasted.</li>
-          <li>Flow <code>TT - Save Certificate</code> created with all 10 inputs, in order.</li>
-          <li><strong>Update item</strong> step writes <code>DateCompleted</code>, <code>LastUpdatedByEmail</code>, <code>LastUpdatedOn</code>, <code>LastStatus</code>, and re-supplies the required <code>PersonEmail</code>/<code>CourseID</code>/<code>CourseName</code> columns from the trigger.</li>
-          <li><strong>Condition</strong> on <code>HasNewFile</code>, with Get attachments &rarr; Apply to each &rarr; Delete attachment, then Add attachment, all inside the Yes branch, comparing to boolean <code>true</code> via the expression editor, not the Yes/No dropdown.</li>
-          <li><strong>Create item</strong> on <code>TT AuditLog</code> with all nine fields mapped.</li>
-          <li><strong>Respond to a PowerApp or flow</strong> with <code>success</code> (real boolean <code>true</code>, not typed "Yes") and <code>message</code> outputs.</li>
+          <li><code>scrCourseDetail</code> v3.5 pasted.</li>
+          <li>Flow <code>TT - Save Certificate</code> created with all 11 inputs, in order, including <code>IsAdmin</code> added last.</li>
+          <li><strong>Get item</strong> (authoritative <code>PersonEmail</code> lookup) sits before the authorisation <strong>Condition</strong>, which sits before <strong>Update item</strong>.</li>
+          <li><strong>Update item</strong> step (inside the Yes branch) writes <code>DateCompleted</code>, <code>LastUpdatedByEmail</code>, <code>LastUpdatedOn</code>, <code>LastStatus</code>, and re-supplies the required <code>PersonEmail</code>/<code>CourseID</code>/<code>CourseName</code> columns from the trigger.</li>
+          <li><strong>Condition</strong> on <code>HasNewFile</code> (also inside the Yes branch), with Get attachments &rarr; Apply to each &rarr; Delete attachment, then Add attachment, all inside its own Yes branch, comparing to boolean <code>true</code> via the expression editor, not the Yes/No dropdown.</li>
+          <li><strong>Create item</strong> on <code>TT AuditLog</code> (inside the Yes branch) with all nine fields mapped.</li>
+          <li><strong>Respond to a PowerApp or flow</strong> for the authorised case (inside the Yes branch) with <code>success</code> (real boolean <code>true</code>, not typed "Yes") and <code>message</code> outputs; a second Respond in the No branch with <code>success: false</code> and an "not authorized" message.</li>
           <li>Flow <code>TT - Get Certificate</code> created with all 3 inputs, in order.</li>
           <li><strong>Condition</strong> checking <code>ActorEmail = PersonEmail</code> OR <code>IsAdmin = true</code> (real boolean, via expression editor), with the file-fetch-and-respond steps inside the Yes branch and an unauthorised response in the No branch.</li>
           <li>Both flows added as data sources in the app.</li>
-          <li>Both <code>.OnSelect</code> flow identifiers confirmed via autocomplete, not hand-typed, and argument order confirmed against each flow's real trigger order.</li>
-          <li>Tested live: save with no new file (date-only change), save with a new file on a record with no existing certificate, save with a new file replacing an existing one, open/download an existing certificate as the record's own person, open/download the same certificate as an admin, confirm a different non-admin person cannot open someone else's certificate.</li>
+          <li>Both <code>.OnSelect</code> flow identifiers confirmed via autocomplete, not hand-typed, and argument order confirmed against each flow's real trigger order &mdash; especially <code>TT - Save Certificate</code>, since its structure changed again in this hardening pass.</li>
+          <li>Tested live: save with no new file (date-only change), save with a new file on a record with no existing certificate, save with a new file replacing an existing one, save as an admin on someone else's record, confirm a non-admin cannot save to someone else's record, open/download an existing certificate as the record's own person, open/download the same certificate as an admin, confirm a different non-admin person cannot open someone else's certificate.</li>
         </ul>
       </section>
 
@@ -1336,8 +1370,8 @@ Clear(colNewCertificate)</pre>
             <div class="card-actions"><a href="../screens/scrAdminManage.html?v=2.6">Open</a><button type="button" data-yaml-url="../screens/scrAdminManage.html?v=2.6">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrCourseDetail.html?v=3.4"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
-            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.4">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.4">Copy YAML</button></div>
+            <a href="../screens/scrCourseDetail.html?v=3.5"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
+            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.5">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.5">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrMyTraining.html?v=2.7"><strong>scrMyTraining</strong><span>Personal training dashboard.</span></a>
