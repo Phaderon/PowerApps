@@ -436,7 +436,7 @@ const yaml = `Screens:
                           If(CountRows(colNewCertificate) > 0, First(colNewCertificate).Name, ""),
                           If(CountRows(colNewCertificate) > 0, First(colNewCertificate).Value, Blank()),
                           Lower(varRecord.PersonEmail),
-                          Text(varCourse.CourseID),
+                          varCourse.CourseID,
                           varCourse.CourseName,
                           varMyEmail,
                           varViewingForSelf

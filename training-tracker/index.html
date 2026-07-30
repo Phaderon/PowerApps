@@ -1149,14 +1149,14 @@ Clear(colNewCertificate)</pre>
             <tr><td>4</td><td>Text</td><td><code>FileName</code></td></tr>
             <tr><td>5</td><td>File</td><td><code>FileContent</code></td></tr>
             <tr><td>6</td><td>Text</td><td><code>PersonEmail</code></td></tr>
-            <tr><td>7</td><td>Text</td><td><code>CourseID</code></td></tr>
+            <tr><td>7</td><td>Number</td><td><code>CourseID</code></td></tr>
             <tr><td>8</td><td>Text</td><td><code>CourseName</code></td></tr>
             <tr><td>9</td><td>Text</td><td><code>ActorEmail</code></td></tr>
             <tr><td>10</td><td>Yes/No</td><td><code>ViewingForSelf</code></td></tr>
           </tbody>
         </table>
         <div class="callout warn">
-          <strong><code>RecordID</code> must be type Number, not Text.</strong> Every <code>Id</code> field on a SharePoint action (<strong>Update item</strong>, <strong>Get attachments</strong>, <strong>Delete attachment</strong>, <strong>Add attachment</strong>) expects a number. Power Automate's dynamic content picker silently filters its list by matching type &mdash; on a Number-typed field, a Text-typed value will not appear in the list at all, showing "No dynamic content available" even though the trigger genuinely has the value. This is documented Microsoft behaviour, not a bug in your flow: <a href="https://learn.microsoft.com/en-us/troubleshoot/power-platform/power-automate/flow-creation/dynamic-content-picker-missing-dynamic-content-from-previous-steps" target="_blank" rel="noopener">Dynamic content picker missing dynamic content from previous steps</a>. If you already created <code>RecordID</code> as Text, delete that input and re-add it as Number before continuing.
+          <strong><code>RecordID</code> and <code>CourseID</code> must both be type Number, not Text.</strong> Every <code>Id</code> field on a SharePoint action (<strong>Update item</strong>, <strong>Get attachments</strong>, <strong>Delete attachment</strong>, <strong>Add attachment</strong>) expects a number, and <code>TT TrainingRecords.CourseID</code> is itself a Number column, not text. Power Automate's dynamic content picker silently filters its list by matching type &mdash; on a Number-typed field, a Text-typed value will not appear in the list at all, showing "No dynamic content available" even though the trigger genuinely has the value. This is documented Microsoft behaviour, not a bug in your flow: <a href="https://learn.microsoft.com/en-us/troubleshoot/power-platform/power-automate/flow-creation/dynamic-content-picker-missing-dynamic-content-from-previous-steps" target="_blank" rel="noopener">Dynamic content picker missing dynamic content from previous steps</a>. If you already created either input as Text, delete it and re-add it as Number before continuing. <code>CourseID</code> going into <code>TT AuditLog.CourseID</code> (a genuine Text column on that list) later in Step 4 is fine as-is &mdash; a Number value dropped into a Text-typed SharePoint field is not filtered the same restrictive way, and SharePoint converts it automatically.
         </div>
 
         <h4>Step 2 &mdash; Update The Training Record</h4>
