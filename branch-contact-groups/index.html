@@ -262,8 +262,8 @@
 
     <main>
       <div class="topline">
-        <span class="pill">Current step: v2.35 - polish and admin diagnostics</span>
-        <span class="pill">Updated 29 Jul 2026</span>
+        <span class="pill">Current step: v2.36 - leaver selector and compact Thursday tools</span>
+        <span class="pill">Updated 30 Jul 2026</span>
         <span class="pill">Branch Contact Groups</span>
       </div>
       <h1>Branch Contact Groups Fix Guide</h1>
@@ -278,7 +278,7 @@
       </section>
 
       <section id="current-fix">
-        <h2>This Push - v2.35</h2>
+        <h2>This Push - v2.36</h2>
         <p><strong>Add three new columns to <code>BM Memberships</code> in SharePoint first</strong> (all Single line of text, Not Required):</p>
         <table>
           <thead><tr><th>Column</th><th>Purpose</th></tr></thead>
@@ -295,9 +295,10 @@
           <strong>Backfill existing membership rows before testing v2.34.</strong> After adding the new <code>Name</code> column, existing rows will still have their old display name in <code>Title</code> and a blank <code>Name</code>. Copy each existing <code>Title</code> value into <code>Name</code> once (for example in SharePoint grid edit) before relying on Manage People, member popups, search, or name sorting.
         </div>
         <div class="callout">
-          <strong>New saved selections list:</strong> create <code>BM Saved Selections</code> and add it as a data source before pasting <code>scrSendEmail v2.26</code>. Columns: <code>Title</code>, <code>SelectionName</code>, and <code>GroupName</code>, all Single line of text and Not Required.
+          <strong>New saved selections list:</strong> create <code>BM Saved Selections</code> and add it as a data source before pasting <code>scrSendEmail v2.27</code>. Columns: <code>Title</code>, <code>SelectionName</code>, and <code>GroupName</code>, all Single line of text and Not Required.
         </div>
-        <p>Also bundled into this same push: reusable saved send selections on Send Email; a read-only Admin Health Check in Manage Groups; add/remove/unchanged diff counts before paste-replacing a roster; manual Refresh and last-loaded labels on the data-heavy screens; a red "Delete group" button in Manage Groups; Remove Leaver affected-group listing; clear (X) buttons on search boxes; and cached GAL search results instead of live connector calls from gallery <code>Items</code>.</p>
+        <p>This push adds two current fixes: Send Email now keeps the Thursday Batch shortcuts behind a compact maintainer-only <strong>Thursday tools</strong> toggle, and Remove Leaver now shows every matching person in a tickable list before the red remove button appears. This replaces the flaky single-<code>LookUp</code> behaviour where searching "David" could only ever pick the first matching David.</p>
+        <p>Still included from the previous polish pass: reusable saved send selections on Send Email; a read-only Admin Health Check in Manage Groups; add/remove/unchanged diff counts before paste-replacing a roster; manual Refresh and last-loaded labels on the data-heavy screens; a red "Delete group" button in Manage Groups; clear (X) buttons on search boxes; and cached GAL search results instead of live connector calls from gallery <code>Items</code>.</p>
         <p>Paste-import in Manage Groups now recognises the standard sheet automatically: <code>Bde/Area&rarr;JMC</code>, <code>County/District&rarr;County/Contingent</code>, <code>Rank + First Name (Proper Case) + Surname (UPPERCASE)&rarr;Name</code>, <code>Appointment</code> ignored, <code>Email&rarr;Email</code>. The old 2-column Name/Email paste still works for groups without this structured data.</p>
       </section>
 
@@ -306,16 +307,16 @@
         <p>These are the live generated copy pages from the Branch Contact Groups app repository.</p>
         <div class="links">
           <div class="link-card">
-            <a href="screens/scrSendEmail.html?v=2.26"><strong>scrSendEmail <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.26</span></strong><span>Landing page, selected groups, saved selections, recipient counts, Outlook and clipboard actions.</span></a>
-            <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.26">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.26">Copy YAML</button></div>
+            <a href="screens/scrSendEmail.html?v=2.27"><strong>scrSendEmail <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.27</span></strong><span>Landing page, selected groups, saved selections, recipient counts, compact Thursday tools, Outlook and clipboard actions.</span></a>
+            <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.27">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.27">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="screens/scrManageGroups.html?v=2.23"><strong>scrManageGroups <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.23</span></strong><span>Group creation, edit/delete lightbox, membership management, paste diff preview, health check, history, Thursday settings.</span></a>
             <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.23">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.23">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManagePeople.html?v=2.25"><strong>scrManagePeople <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.25</span></strong><span>People management, GAL search, edit-person group checklist, leaver cleanup, refresh/loaded status.</span></a>
-            <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.25">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.25">Copy YAML</button></div>
+            <a href="screens/scrManagePeople.html?v=2.26"><strong>scrManagePeople <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.26</span></strong><span>People management, GAL search, edit-person group checklist, selected leaver cleanup, refresh/loaded status.</span></a>
+            <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.26">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.26">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="https://phadedev.github.io/branch-contact-groups/"><strong>Full App Guide</strong><span>SharePoint schema, data sources, full app notes and generated screen docs.</span></a>
