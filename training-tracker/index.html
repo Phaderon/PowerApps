@@ -1128,7 +1128,7 @@ Clear(colNewCertificate)</pre>
 
         <h3>Paste The Updated Screen</h3>
         <p>Open the updated <code>scrCourseDetail</code> YAML and paste it over the existing screen (delete the screen's controls first, then paste fresh &mdash; do not paste over controls that still exist, per the usual rule for structural changes).</p>
-        <p><a href="../screens/scrCourseDetail.html?v=3.1">Open scrCourseDetail YAML (v3.1)</a></p>
+        <p><a href="../screens/scrCourseDetail.html?v=3.2">Open scrCourseDetail YAML (v3.2)</a></p>
 
         <h3>Build The Flow: <code>TT - Save Certificate</code></h3>
         <p>You do not need any Power Automate experience for this &mdash; follow these steps in order. This is one flow with a handful of steps, not a big build.</p>
@@ -1143,7 +1143,7 @@ Clear(colNewCertificate)</pre>
         <table>
           <thead><tr><th>#</th><th>Input type to pick</th><th>Name</th></tr></thead>
           <tbody>
-            <tr><td>1</td><td>Text</td><td><code>RecordID</code></td></tr>
+            <tr><td>1</td><td>Number</td><td><code>RecordID</code></td></tr>
             <tr><td>2</td><td>Date</td><td><code>DateCompleted</code></td></tr>
             <tr><td>3</td><td>Yes/No</td><td><code>HasNewFile</code></td></tr>
             <tr><td>4</td><td>Text</td><td><code>FileName</code></td></tr>
@@ -1155,6 +1155,9 @@ Clear(colNewCertificate)</pre>
             <tr><td>10</td><td>Yes/No</td><td><code>ViewingForSelf</code></td></tr>
           </tbody>
         </table>
+        <div class="callout warn">
+          <strong><code>RecordID</code> must be type Number, not Text.</strong> Every <code>Id</code> field on a SharePoint action (<strong>Update item</strong>, <strong>Get attachments</strong>, <strong>Delete attachment</strong>, <strong>Add attachment</strong>) expects a number. Power Automate's dynamic content picker silently filters its list by matching type &mdash; on a Number-typed field, a Text-typed value will not appear in the list at all, showing "No dynamic content available" even though the trigger genuinely has the value. This is documented Microsoft behaviour, not a bug in your flow: <a href="https://learn.microsoft.com/en-us/troubleshoot/power-platform/power-automate/flow-creation/dynamic-content-picker-missing-dynamic-content-from-previous-steps" target="_blank" rel="noopener">Dynamic content picker missing dynamic content from previous steps</a>. If you already created <code>RecordID</code> as Text, delete that input and re-add it as Number before continuing.
+        </div>
 
         <h4>Step 2 &mdash; Update The Training Record</h4>
         <ol>
@@ -1263,8 +1266,8 @@ Clear(colNewCertificate)</pre>
             <div class="card-actions"><a href="../screens/scrAdminManage.html?v=2.6">Open</a><button type="button" data-yaml-url="../screens/scrAdminManage.html?v=2.6">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrCourseDetail.html?v=3.1"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
-            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.1">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.1">Copy YAML</button></div>
+            <a href="../screens/scrCourseDetail.html?v=3.2"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
+            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.2">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.2">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrMyTraining.html?v=2.7"><strong>scrMyTraining</strong><span>Personal training dashboard.</span></a>
