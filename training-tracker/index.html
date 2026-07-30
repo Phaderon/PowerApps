@@ -1128,7 +1128,7 @@ Clear(colNewCertificate)</pre>
 
         <h3>Paste The Updated Screen</h3>
         <p>Open the updated <code>scrCourseDetail</code> YAML and paste it over the existing screen (delete the screen's controls first, then paste fresh &mdash; do not paste over controls that still exist, per the usual rule for structural changes).</p>
-        <p><a href="../screens/scrCourseDetail.html?v=3.2">Open scrCourseDetail YAML (v3.2)</a></p>
+        <p><a href="../screens/scrCourseDetail.html?v=3.3">Open scrCourseDetail YAML (v3.3)</a></p>
 
         <h3>Build The Flow: <code>TT - Save Certificate</code></h3>
         <p>You do not need any Power Automate experience for this &mdash; follow these steps in order. This is one flow with a handful of steps, not a big build.</p>
@@ -1238,6 +1238,9 @@ Clear(colNewCertificate)</pre>
           <li>If the pasted formula's flow identifier does not match what autocomplete gives you, replace just that one identifier (leave the rest of the formula as pasted).</li>
         </ol>
         <div class="callout warn">
+          <strong>Critical &mdash; the argument order in the pasted formula must match your flow's actual trigger order, not this guide's Step 1 table.</strong> <code>.Run(...)</code> passes arguments purely by position, not by name. If you deleted and re-added any trigger input while fixing a type (for example, switching <code>RecordID</code> or <code>CourseID</code> from Text to Number, per the warning above), that input moves to the end of the trigger's real parameter order, even though it is still first in this guide's table. Before trusting the pasted formula, click into <code>'TT - Save Certificate'.Run(</code> in the formula bar and read the grey parameter-name hints Power Apps shows for each argument slot &mdash; reorder the pasted arguments to match those hints exactly, in whatever order your trigger really ends up in. Do not assume the guide's table order still applies once you have edited any input.
+        </div>
+        <div class="callout warn">
           <strong>One thing to verify live, not assume:</strong> the pasted formula passes <code>Blank()</code> for the <code>FileContent</code> argument when no new file was picked (i.e. the person is only changing the date). This is a commonly used pattern for optional File-type flow parameters, but it has not been tested against this specific flow. If Power Apps or the flow rejects it at save time, tell me the exact error text and I'll adjust the formula &mdash; do not guess a workaround yourself.
         </div>
 
@@ -1269,8 +1272,8 @@ Clear(colNewCertificate)</pre>
             <div class="card-actions"><a href="../screens/scrAdminManage.html?v=2.6">Open</a><button type="button" data-yaml-url="../screens/scrAdminManage.html?v=2.6">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrCourseDetail.html?v=3.2"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
-            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.2">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.2">Copy YAML</button></div>
+            <a href="../screens/scrCourseDetail.html?v=3.3"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
+            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.3">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.3">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrMyTraining.html?v=2.7"><strong>scrMyTraining</strong><span>Personal training dashboard.</span></a>
