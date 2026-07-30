@@ -268,6 +268,7 @@
         <a href="#admin-add-mode-buttons">Add Mode Buttons</a>
         <a href="#remote-worker-exclusions">Remote Worker Exclusions</a>
         <a href="#snapshot-dashboard-build">Snapshot Dashboard</a>
+        <a href="#certificate-privacy-upgrade">Certificate Privacy Upgrade (Optional)</a>
         <a href="#yaml-links">YAML Pages</a>
         <a href="#checklist">Checklist</a>
       </nav>
@@ -276,7 +277,7 @@
     <main>
       <div class="topline">
         <span class="pill">Current step: schema and app setup</span>
-        <span class="pill">Updated 29 Jul 2026</span>
+        <span class="pill">Updated 30 Jul 2026</span>
         <span class="pill">Training Tracker only</span>
       </div>
       <h1>Training Tracker v3 Fix Guide</h1>
@@ -1092,6 +1093,157 @@ CountIf(ApplicableTo, Value = varViewingPerson.StaffType.Value) > 0 &&
         </ol>
       </section>
 
+      <section id="certificate-privacy-upgrade">
+        <h2>Optional Upgrade &mdash; Certificate Privacy (Power Automate)</h2>
+        <div class="callout warn">
+          <strong>This is separate from the v3 build above.</strong> Nothing here is required to make Training Tracker work. It exists because certificates are personal data tied to a named employee, and the direct SharePoint-list design means anyone with read access to the raw list can browse everyone's certificate, not just their own or their team's. This section removes the certificate save/replace path from direct SharePoint writes and routes it through one Power Automate flow instead. Skip this whole section if you are not doing this upgrade.
+        </div>
+        <p>Certificates are ordinary personal data (a name plus a course and a date), not the specially-protected "special category" tier under UK GDPR &mdash; but "not special category" is not the same as "fine to leave open." Least-privilege access (the person, their manager, and admins only) is standard practice regardless of legal category, and worth doing on its own merits. Check with whoever owns data protection/information governance at your organisation before treating this as settled.</p>
+
+        <h3>What This Changes</h3>
+        <ul>
+          <li><code>scrCourseDetail</code> no longer uses a SharePoint-bound <code>Form</code> control to save the certificate. It now uses a local file picker and calls one Power Automate flow, <code>TT - Save Certificate</code>, which does the actual write.</li>
+          <li>The flow runs under its own connection, not the signed-in user's. This is what makes it possible to later lock down direct SharePoint permission on <code>TT TrainingRecords</code> (a separate step, not covered here) without breaking the app &mdash; the app was never relying on the user's own list permission for this action in the first place.</li>
+          <li>No new SharePoint columns are needed. The flow writes the same <code>DateCompleted</code>, <code>UploadedByEmail</code>, <code>LastUpdatedByEmail</code>, <code>LastUpdatedOn</code>, <code>LastStatus</code> and attachment fields the old Form wrote, plus the same <code>TT AuditLog</code> entry the old <code>frmCert.OnSuccess</code> wrote.</li>
+          <li>The old "remove the × first, then add the new file" warning is gone. Dropping a new file now always replaces whatever was on file &mdash; the flow deletes the old attachment and adds the new one in the same run.</li>
+        </ul>
+
+        <div class="callout">
+          <strong>Not covered here, on purpose:</strong> actually locking the SharePoint list's permissions is a separate step, owned by whoever manages your SharePoint site/security &mdash; not a Power Apps change. This upgrade is designed so it works identically whether that list is still open or already locked down, which is why it is safe to build now, before that decision is made. A second flow for reading the certificate back (needed once the list is actually locked, since a locked list also blocks reads) is not included in this pass &mdash; ask for it when you are ready to lock the list, using the same pattern as the flow below.</li>
+        </div>
+
+        <h3>App.OnStart Addition</h3>
+        <p>Add this one line to <strong>App &rarr; OnStart</strong>, anywhere after the existing lines. It creates the local collection the new file picker stages a file into before Save is pressed.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>Power Fx - App.OnStart addition</span>
+            <button data-copy="cert-onstart-seed" type="button">Copy</button>
+          </div>
+<pre id="cert-onstart-seed">ClearCollect(colNewCertificate, {Name: "", Value: Blank()});
+Clear(colNewCertificate)</pre>
+        </div>
+        <div class="callout warn">
+          <strong>Why two lines and not just a single-step empty-table ClearCollect:</strong> an empty schema-less table makes Power Apps guess the column shape, which is unreliable. Seeding one properly-typed row then clearing it gives the collection a real <code>Name</code> (Text) / <code>Value</code> (File) schema up front.
+        </div>
+
+        <h3>Paste The Updated Screen</h3>
+        <p>Open the updated <code>scrCourseDetail</code> YAML and paste it over the existing screen (delete the screen's controls first, then paste fresh &mdash; do not paste over controls that still exist, per the usual rule for structural changes).</p>
+        <p><a href="../screens/scrCourseDetail.html?v=3.1">Open scrCourseDetail YAML (v3.1)</a></p>
+
+        <h3>Build The Flow: <code>TT - Save Certificate</code></h3>
+        <p>You do not need any Power Automate experience for this &mdash; follow these steps in order. This is one flow with a handful of steps, not a big build.</p>
+        <ol>
+          <li>Go to <a href="https://make.powerautomate.com" target="_blank" rel="noopener">make.powerautomate.com</a>, signed in as the same account you use for this SharePoint site.</li>
+          <li><strong>Create &rarr; Instant cloud flow.</strong> Name it exactly <code>TT - Save Certificate</code>.</li>
+          <li>For the trigger, choose <strong>Power Apps (V2)</strong>. Select <strong>Create</strong>.</li>
+        </ol>
+
+        <h4>Step 1 &mdash; Add The Inputs</h4>
+        <p>On the trigger step, press <strong>+ Add an input</strong> once for each row below, in this exact order (the order matters &mdash; it must match the order the app sends them). Give each input the exact name shown; Power Automate uses this name as the label in the app's formula bar later.</p>
+        <table>
+          <thead><tr><th>#</th><th>Input type to pick</th><th>Name</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Text</td><td><code>RecordID</code></td></tr>
+            <tr><td>2</td><td>Date</td><td><code>DateCompleted</code></td></tr>
+            <tr><td>3</td><td>Yes/No</td><td><code>HasNewFile</code></td></tr>
+            <tr><td>4</td><td>Text</td><td><code>FileName</code></td></tr>
+            <tr><td>5</td><td>File</td><td><code>FileContent</code></td></tr>
+            <tr><td>6</td><td>Text</td><td><code>PersonEmail</code></td></tr>
+            <tr><td>7</td><td>Text</td><td><code>CourseID</code></td></tr>
+            <tr><td>8</td><td>Text</td><td><code>CourseName</code></td></tr>
+            <tr><td>9</td><td>Text</td><td><code>ActorEmail</code></td></tr>
+            <tr><td>10</td><td>Yes/No</td><td><code>ViewingForSelf</code></td></tr>
+          </tbody>
+        </table>
+
+        <h4>Step 2 &mdash; Update The Training Record</h4>
+        <ol>
+          <li>Add a new step. Search for <strong>SharePoint</strong>, choose the <strong>Update item</strong> action.</li>
+          <li><strong>Site Address:</strong> your Training Tracker SharePoint site.</li>
+          <li><strong>List Name:</strong> <code>TT TrainingRecords</code>.</li>
+          <li><strong>Id:</strong> insert the <code>RecordID</code> dynamic content from the trigger.</li>
+          <li>Fill in these fields using dynamic content from the trigger; leave every other field on this step untouched:</li>
+        </ol>
+        <table>
+          <thead><tr><th>SharePoint field</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td><code>DateCompleted</code></td><td>dynamic content <code>DateCompleted</code></td></tr>
+            <tr><td><code>UploadedByEmail</code></td><td>expression: <code>if(equals(triggerBody()?['text_10'], true), '', triggerBody()?['text_9'])</code> &mdash; or simpler, use the <strong>Condition</strong>-free approach: type an expression box and pick <code>ActorEmail</code>, then wrap it following the note below</td></tr>
+            <tr><td><code>LastUpdatedByEmail</code></td><td>dynamic content <code>ActorEmail</code></td></tr>
+            <tr><td><code>LastUpdatedOn</code></td><td>expression: <code>utcNow()</code></td></tr>
+            <tr><td><code>LastStatus</code></td><td>type the literal text <code>Certificate saved</code></td></tr>
+          </tbody>
+        </table>
+        <div class="callout warn">
+          <strong>On the <code>UploadedByEmail</code> expression:</strong> Power Automate's dynamic-content picker names your inputs like <code>text_9</code>/<code>bool_10</code> internally &mdash; the exact numbers depend on the order you added them in. Easier and just as correct: skip the raw expression, and instead add a small <strong>Condition</strong> step before <strong>Update item</strong> that checks <code>ViewingForSelf is equal to Yes</code>, and inside <strong>Update item</strong> put the literal empty text <code>""</code> in the Yes branch's copy of the action and <code>ActorEmail</code> dynamic content in the No branch's copy. If that feels like extra steps for a first build, it is fine to leave <code>UploadedByEmail</code> out of this action entirely for now &mdash; it is only used for an admin-uploaded-on-your-behalf note elsewhere and is not required for the save to work.
+        </div>
+
+        <h4>Step 3 &mdash; Replace The Attachment, Only If A New File Was Sent</h4>
+        <ol>
+          <li>Add a new step: <strong>Condition</strong>. Set it to <code>HasNewFile</code> <strong>is equal to</strong> <code>Yes</code>.</li>
+          <li>In the <strong>If yes</strong> branch, add <strong>SharePoint &rarr; Get attachments</strong>. Site Address and List Name as before. <strong>Id:</strong> <code>RecordID</code>.</li>
+          <li>Still inside <strong>If yes</strong>, add <strong>Apply to each</strong>, output selected from <strong>Get attachments</strong>. Inside the loop, add <strong>SharePoint &rarr; Delete attachment</strong>: Site Address/List Name as before, <strong>Id:</strong> <code>RecordID</code>, <strong>File Identifier:</strong> pick the <code>Name</code> field from the current item in the loop (the dynamic-content list will show it once you're inside the loop).</li>
+          <li>After the <strong>Apply to each</strong> finishes (still inside <strong>If yes</strong>, but below/after the loop &mdash; drag the next action so it sits outside the loop but inside the Yes branch), add <strong>SharePoint &rarr; Add attachment</strong>: Site Address/List Name as before, <strong>Id:</strong> <code>RecordID</code>, <strong>File Name:</strong> dynamic content <code>FileName</code>, <strong>File Content:</strong> dynamic content <code>FileContent</code>.</li>
+          <li>Leave the <strong>If no</strong> branch completely empty.</li>
+        </ol>
+
+        <h4>Step 4 &mdash; Write The Audit Log Entry</h4>
+        <ol>
+          <li>Add a new step, after the Condition (not inside either branch). <strong>SharePoint &rarr; Create item</strong>.</li>
+          <li><strong>Site Address:</strong> your site. <strong>List Name:</strong> <code>TT AuditLog</code>.</li>
+        </ol>
+        <table>
+          <thead><tr><th>SharePoint field</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td><code>Title</code></td><td>expression: <code>concat(triggerBody()?['text_8'], ' certificate saved')</code> &mdash; or simpler, use dynamic content <code>CourseName</code> then type the literal text <code>&nbsp;certificate saved</code> straight after it in the same field</td></tr>
+            <tr><td><code>EntityType</code></td><td>literal text <code>TrainingRecord</code></td></tr>
+            <tr><td><code>EntityID</code></td><td>dynamic content <code>RecordID</code></td></tr>
+            <tr><td><code>PersonEmail</code></td><td>dynamic content <code>PersonEmail</code></td></tr>
+            <tr><td><code>CourseID</code></td><td>dynamic content <code>CourseID</code></td></tr>
+            <tr><td><code>EventType</code></td><td>literal text <code>Certificate saved</code></td></tr>
+            <tr><td><code>EventDescription</code></td><td>dynamic content <code>CourseName</code>, followed by the literal text <code>&nbsp;certificate saved.</code></td></tr>
+            <tr><td><code>ActorEmail</code></td><td>dynamic content <code>ActorEmail</code></td></tr>
+            <tr><td><code>EventDateTime</code></td><td>expression: <code>utcNow()</code></td></tr>
+            <tr><td><code>Notes</code></td><td>leave blank for now &mdash; this only needs the "Manager upload" note from the same <code>ViewingForSelf</code> condition mentioned in Step 2, which you can add later</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Step 5 &mdash; Respond To The App</h4>
+        <ol>
+          <li>Add a final step: <strong>Respond to a PowerApp or flow</strong>.</li>
+          <li>Add two outputs: a <strong>Yes/No</strong> output named <code>success</code>, set to <code>Yes</code>; and a <strong>Text</strong> output named <code>message</code>, set to the literal text <code>Saved</code>.</li>
+          <li>Save the flow.</li>
+        </ol>
+        <div class="callout warn">
+          <strong>This covers the happy path only.</strong> A beginner-friendly flow like this does not include retry/error branches. If any step fails, Power Automate shows a red cross on that step in the run history, and the app's <code>IfError(...)</code> around the flow call will show a generic "Save failed" message. That is enough to know something went wrong; diagnosing which step failed means opening that run in Power Automate's history and reading the error on the failed step.
+        </div>
+
+        <h3>Connect The Flow In The App</h3>
+        <ol>
+          <li>In Power Apps Studio, open the Training Tracker app.</li>
+          <li>Data pane &rarr; <strong>Add data</strong> &rarr; search <strong>Power Automate</strong> or your organisation's flows &rarr; add <code>TT - Save Certificate</code>.</li>
+          <li>Open <code>scrCourseDetail</code> and click into <code>btnSaveCert.OnSelect</code>. Start typing <code>'TT - Save Certificate'.Run(</code> and let autocomplete finish the flow name for you &mdash; do not hand-type it. Power Apps generates its own identifier from the flow's display name (spaces are usually stripped), and it is easy to get that wrong by guessing.</li>
+          <li>If the pasted formula's flow identifier does not match what autocomplete gives you, replace just that one identifier (leave the rest of the formula as pasted).</li>
+        </ol>
+        <div class="callout warn">
+          <strong>One thing to verify live, not assume:</strong> the pasted formula passes <code>Blank()</code> for the <code>FileContent</code> argument when no new file was picked (i.e. the person is only changing the date). This is a commonly used pattern for optional File-type flow parameters, but it has not been tested against this specific flow. If Power Apps or the flow rejects it at save time, tell me the exact error text and I'll adjust the formula &mdash; do not guess a workaround yourself.
+        </div>
+
+        <h3>Checklist</h3>
+        <ul>
+          <li><code>colNewCertificate</code> seeded in <code>App.OnStart</code>.</li>
+          <li><code>scrCourseDetail</code> v3.1 pasted.</li>
+          <li>Flow <code>TT - Save Certificate</code> created with all 10 inputs, in order.</li>
+          <li><strong>Update item</strong> step writes <code>DateCompleted</code>, <code>LastUpdatedByEmail</code>, <code>LastUpdatedOn</code>, <code>LastStatus</code>.</li>
+          <li><strong>Condition</strong> on <code>HasNewFile</code>, with Get attachments &rarr; Apply to each &rarr; Delete attachment, then Add attachment, all inside the Yes branch.</li>
+          <li><strong>Create item</strong> on <code>TT AuditLog</code> with all nine fields mapped.</li>
+          <li><strong>Respond to a PowerApp or flow</strong> with <code>success</code> and <code>message</code> outputs.</li>
+          <li>Flow added as a data source in the app.</li>
+          <li><code>btnSaveCert.OnSelect</code> flow identifier confirmed via autocomplete, not hand-typed.</li>
+          <li>Tested live: save with no new file (date-only change), save with a new file on a record with no existing certificate, save with a new file replacing an existing one.</li>
+        </ul>
+      </section>
+
       <section id="yaml-links">
         <h2>Paste-Ready YAML Pages</h2>
         <p>Use these after the schema fix is complete. For big replacements, delete the controls on the target screen first, then paste the YAML fresh.</p>
@@ -1105,8 +1257,8 @@ CountIf(ApplicableTo, Value = varViewingPerson.StaffType.Value) > 0 &&
             <div class="card-actions"><a href="../screens/scrAdminManage.html?v=2.6">Open</a><button type="button" data-yaml-url="../screens/scrAdminManage.html?v=2.6">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrCourseDetail.html?v=3.0"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
-            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.0">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.0">Copy YAML</button></div>
+            <a href="../screens/scrCourseDetail.html?v=3.1"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
+            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.1">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.1">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrMyTraining.html?v=2.7"><strong>scrMyTraining</strong><span>Personal training dashboard.</span></a>
