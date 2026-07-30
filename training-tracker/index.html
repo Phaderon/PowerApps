@@ -1167,6 +1167,9 @@ Clear(colNewCertificate)</pre>
         <table>
           <thead><tr><th>SharePoint field</th><th>Value</th></tr></thead>
           <tbody>
+            <tr><td><code>PersonEmail</code></td><td>dynamic content <code>PersonEmail</code></td></tr>
+            <tr><td><code>CourseID</code></td><td>dynamic content <code>CourseID</code></td></tr>
+            <tr><td><code>CourseName</code></td><td>dynamic content <code>CourseName</code></td></tr>
             <tr><td><code>DateCompleted</code></td><td>dynamic content <code>DateCompleted</code></td></tr>
             <tr><td><code>UploadedByEmail</code></td><td>expression: <code>if(equals(triggerBody()?['text_10'], true), '', triggerBody()?['text_9'])</code> &mdash; or simpler, use the <strong>Condition</strong>-free approach: type an expression box and pick <code>ActorEmail</code>, then wrap it following the note below</td></tr>
             <tr><td><code>LastUpdatedByEmail</code></td><td>dynamic content <code>ActorEmail</code></td></tr>
@@ -1174,6 +1177,9 @@ Clear(colNewCertificate)</pre>
             <tr><td><code>LastStatus</code></td><td>type the literal text <code>Certificate saved</code></td></tr>
           </tbody>
         </table>
+        <div class="callout warn">
+          <strong>Why <code>PersonEmail</code>/<code>CourseID</code>/<code>CourseName</code> are in this list even though nothing changes them:</strong> those three columns are set as required on <code>TT TrainingRecords</code>. SharePoint's <strong>Update item</strong> connector demands a value for every required column on every update, even ones you have no intention of changing, or it will refuse to save with a red asterisk and won't let you save the flow at all. Re-supplying the same value the trigger already received is harmless &mdash; it does not change the stored data, it just satisfies the connector.
+        </div>
         <div class="callout warn">
           <strong>On the <code>UploadedByEmail</code> expression:</strong> Power Automate's dynamic-content picker names your inputs like <code>text_9</code>/<code>bool_10</code> internally &mdash; the exact numbers depend on the order you added them in. Easier and just as correct: skip the raw expression, and instead add a small <strong>Condition</strong> step before <strong>Update item</strong> that checks <code>ViewingForSelf is equal to Yes</code>, and inside <strong>Update item</strong> put the literal empty text <code>""</code> in the Yes branch's copy of the action and <code>ActorEmail</code> dynamic content in the No branch's copy. If that feels like extra steps for a first build, it is fine to leave <code>UploadedByEmail</code> out of this action entirely for now &mdash; it is only used for an admin-uploaded-on-your-behalf note elsewhere and is not required for the save to work.
         </div>
@@ -1234,7 +1240,7 @@ Clear(colNewCertificate)</pre>
           <li><code>colNewCertificate</code> seeded in <code>App.OnStart</code>.</li>
           <li><code>scrCourseDetail</code> v3.1 pasted.</li>
           <li>Flow <code>TT - Save Certificate</code> created with all 10 inputs, in order.</li>
-          <li><strong>Update item</strong> step writes <code>DateCompleted</code>, <code>LastUpdatedByEmail</code>, <code>LastUpdatedOn</code>, <code>LastStatus</code>.</li>
+          <li><strong>Update item</strong> step writes <code>DateCompleted</code>, <code>LastUpdatedByEmail</code>, <code>LastUpdatedOn</code>, <code>LastStatus</code>, and re-supplies the required <code>PersonEmail</code>/<code>CourseID</code>/<code>CourseName</code> columns from the trigger.</li>
           <li><strong>Condition</strong> on <code>HasNewFile</code>, with Get attachments &rarr; Apply to each &rarr; Delete attachment, then Add attachment, all inside the Yes branch.</li>
           <li><strong>Create item</strong> on <code>TT AuditLog</code> with all nine fields mapped.</li>
           <li><strong>Respond to a PowerApp or flow</strong> with <code>success</code> and <code>message</code> outputs.</li>
