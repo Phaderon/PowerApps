@@ -1220,9 +1220,12 @@ Clear(colNewCertificate)</pre>
         <h4>Step 5 &mdash; Respond To The App</h4>
         <ol>
           <li>Add a final step: <strong>Respond to a PowerApp or flow</strong>.</li>
-          <li>Add two outputs: a <strong>Yes/No</strong> output named <code>success</code>, set to <code>Yes</code>; and a <strong>Text</strong> output named <code>message</code>, set to the literal text <code>Saved</code>.</li>
+          <li>Add two outputs: a <strong>Yes/No</strong> output named <code>success</code>, set to <code>Yes</code>; and a <strong>Text</strong> output named <code>message</code>, set to the literal text <code>Saved for record </code> followed immediately by dynamic content <code>RecordID</code> in the same field (mixed text + dynamic content, same as other fields earlier in this flow).</li>
           <li>Save the flow.</li>
         </ol>
+        <div class="callout warn">
+          <strong>If Power Automate warns "does not reference any data from the flow run" after saving:</strong> this is only a warning, not an error &mdash; it means every output field was pure hardcoded text with nothing dynamic in it, so its optimizer can't tell the response is worth waiting for. We do want the app to wait for it (that is the entire point of this action), so do not follow its suggestion to remove the response step. Instead make sure <code>message</code> includes the <code>RecordID</code> dynamic content as shown above &mdash; any genuine dynamic reference in at least one output silences the warning.
+        </div>
         <div class="callout warn">
           <strong>This covers the happy path only.</strong> A beginner-friendly flow like this does not include retry/error branches. If any step fails, Power Automate shows a red cross on that step in the run history, and the app's <code>IfError(...)</code> around the flow call will show a generic "Save failed" message. That is enough to know something went wrong; diagnosing which step failed means opening that run in Power Automate's history and reading the error on the failed step.
         </div>
