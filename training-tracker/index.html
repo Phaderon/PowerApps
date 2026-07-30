@@ -1106,10 +1106,11 @@ CountIf(ApplicableTo, Value = varViewingPerson.StaffType.Value) > 0 &&
           <li>The flow runs under its own connection, not the signed-in user's. This is what makes it possible to later lock down direct SharePoint permission on <code>TT TrainingRecords</code> (a separate step, not covered here) without breaking the app &mdash; the app was never relying on the user's own list permission for this action in the first place.</li>
           <li>No new SharePoint columns are needed. The flow writes the same <code>DateCompleted</code>, <code>UploadedByEmail</code>, <code>LastUpdatedByEmail</code>, <code>LastUpdatedOn</code>, <code>LastStatus</code> and attachment fields the old Form wrote, plus the same <code>TT AuditLog</code> entry the old <code>frmCert.OnSuccess</code> wrote.</li>
           <li>The old "remove the × first, then add the new file" warning is gone. Dropping a new file now always replaces whatever was on file &mdash; the flow deletes the old attachment and adds the new one in the same run.</li>
+          <li>A second flow, <code>TT - Get Certificate</code>, and a new <strong>Open certificate</strong> button let a person re-open or download a certificate they (or an admin, on their behalf) already saved. Without this, saving a certificate would have been a one-way trip &mdash; visible as a filename, never viewable again.</li>
         </ul>
 
         <div class="callout">
-          <strong>Not covered here, on purpose:</strong> actually locking the SharePoint list's permissions is a separate step, owned by whoever manages your SharePoint site/security &mdash; not a Power Apps change. This upgrade is designed so it works identically whether that list is still open or already locked down, which is why it is safe to build now, before that decision is made. A second flow for reading the certificate back (needed once the list is actually locked, since a locked list also blocks reads) is not included in this pass &mdash; ask for it when you are ready to lock the list, using the same pattern as the flow below.</li>
+          <strong>Not covered here, on purpose:</strong> actually locking the SharePoint list's permissions is a separate step, owned by whoever manages your SharePoint site/security &mdash; not a Power Apps change. Both flows in this section are designed to work identically whether that list is still open or already locked down, which is why it is safe to build them now, before that decision is made.
         </div>
 
         <h3>App.OnStart Addition</h3>
@@ -1128,7 +1129,7 @@ Clear(colNewCertificate)</pre>
 
         <h3>Paste The Updated Screen</h3>
         <p>Open the updated <code>scrCourseDetail</code> YAML and paste it over the existing screen (delete the screen's controls first, then paste fresh &mdash; do not paste over controls that still exist, per the usual rule for structural changes).</p>
-        <p><a href="../screens/scrCourseDetail.html?v=3.3">Open scrCourseDetail YAML (v3.3)</a></p>
+        <p><a href="../screens/scrCourseDetail.html?v=3.4">Open scrCourseDetail YAML (v3.4)</a></p>
 
         <h3>Build The Flow: <code>TT - Save Certificate</code></h3>
         <p>You do not need any Power Automate experience for this &mdash; follow these steps in order. This is one flow with a handful of steps, not a big build.</p>
@@ -1238,32 +1239,87 @@ Clear(colNewCertificate)</pre>
           <strong>This covers the happy path only.</strong> A beginner-friendly flow like this does not include retry/error branches. If any step fails, Power Automate shows a red cross on that step in the run history, and the app's <code>IfError(...)</code> around the flow call will show a generic "Save failed" message. That is enough to know something went wrong; diagnosing which step failed means opening that run in Power Automate's history and reading the error on the failed step.
         </div>
 
-        <h3>Connect The Flow In The App</h3>
+        <h3>Build The Second Flow: <code>TT - Get Certificate</code></h3>
+        <p>This is the read side &mdash; it lets someone re-open or download a certificate that is already on file. It is simpler than the save flow: no writes, just one lookup, one authorisation check, and the file handed back.</p>
+        <div class="callout">
+          <strong>How authorisation works here, and the trade-off being made:</strong> the flow checks, on its own, whether the person asking is the same person the record belongs to &mdash; that check happens fully inside the flow, using the record's real stored email, and cannot be faked by the app. For the "or an admin can also view it" case, the flow trusts the <code>IsAdmin</code> flag the app already computed rather than independently re-checking it against <code>TT Personnel</code> a second time. That is a deliberate simplification, not an oversight: it protects against the actual risk this whole upgrade exists for (casual/accidental browsing of the raw SharePoint list, or one person's app session reading another person's certificate), without a second nested lookup. It would not stop someone who already has valid access to your tenant and is deliberately trying to forge a request outside the app entirely &mdash; if that is a real concern for your organisation, say so and this can be hardened to re-check admin status server-side too, the same way the self-check already is.
+        </div>
+        <ol>
+          <li>In <a href="https://make.powerautomate.com" target="_blank" rel="noopener">make.powerautomate.com</a>, <strong>Create &rarr; Instant cloud flow</strong>. Name it exactly <code>TT - Get Certificate</code>.</li>
+          <li>Trigger: <strong>Power Apps (V2)</strong>.</li>
+        </ol>
+
+        <h4>Step 1 &mdash; Add The Inputs</h4>
+        <table>
+          <thead><tr><th>#</th><th>Input type to pick</th><th>Name</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Number</td><td><code>RecordID</code></td></tr>
+            <tr><td>2</td><td>Text</td><td><code>ActorEmail</code></td></tr>
+            <tr><td>3</td><td>Yes/No</td><td><code>IsAdmin</code></td></tr>
+          </tbody>
+        </table>
+
+        <h4>Step 2 &mdash; Look Up The Record</h4>
+        <ol>
+          <li>Add <strong>SharePoint &rarr; Get item</strong>. Site Address/List Name as in the other flow, <strong>List Name:</strong> <code>TT TrainingRecords</code>. <strong>Id:</strong> dynamic content <code>RecordID</code>.</li>
+        </ol>
+
+        <h4>Step 3 &mdash; Check Authorisation</h4>
+        <ol>
+          <li>Add a <strong>Condition</strong>.</li>
+          <li>First row: left side dynamic content <code>ActorEmail</code> (from the trigger), operator <strong>is equal to</strong>, right side dynamic content <code>PersonEmail</code> (from the <strong>Get item</strong> step you just added &mdash; not the trigger).</li>
+          <li>Click <strong>+ Add row</strong> under that same group, and switch the group's operator from <strong>And</strong> to <strong>Or</strong> (there is a small And/Or toggle above the rows).</li>
+          <li>Second row: left side dynamic content <code>IsAdmin</code> (from the trigger), operator <strong>is equal to</strong>, right side &mdash; same rule as every boolean comparison in this guide: click the <strong>fx</strong> icon and type the bare word <code>true</code>, do not use a Yes/No dropdown.</li>
+        </ol>
+
+        <h4>Step 4 &mdash; If Authorised, Fetch And Return The File</h4>
+        <p>Inside the <strong>If yes</strong> branch:</p>
+        <ol>
+          <li>Add <strong>SharePoint &rarr; Get attachments</strong>. <strong>Id:</strong> dynamic content <code>RecordID</code>.</li>
+          <li>Add <strong>Apply to each</strong>, output selected from <strong>Get attachments</strong>.</li>
+          <li>Inside the loop, add <strong>SharePoint &rarr; Get attachment content</strong>: <strong>Id:</strong> dynamic content <code>RecordID</code>, <strong>File Identifier:</strong> the current loop item's <code>Id</code> field (same preference as the Delete attachment step in the other flow &mdash; use <code>Id</code> if offered, <code>Name</code>/<code>Display Name</code> only if not).</li>
+          <li>Still inside the loop, immediately after, add <strong>Respond to a PowerApp or flow</strong> with four outputs: a <strong>Yes/No</strong> named <code>success</code> set via the <strong>fx</strong> icon to <code>true</code>; a <strong>Text</strong> named <code>message</code> set to the literal text <code>OK</code>; a <strong>Text</strong> named <code>fileName</code> set to the current loop item's <code>Name</code> dynamic content; and a <strong>Text</strong> named <code>fileContentBase64</code> set via the <strong>fx</strong> icon to <code>base64(</code>, then switch to the Dynamic content tab and click <strong>Get attachment content</strong>, then close the bracket <code>)</code>.</li>
+        </ol>
+
+        <h4>Step 5 &mdash; If Not Authorised</h4>
+        <p>In the <strong>If no</strong> branch, add <strong>Respond to a PowerApp or flow</strong> with the same four outputs: <code>success</code> as <code>false</code> (via <strong>fx</strong>), <code>message</code> as the literal text <code>You are not authorized to view this certificate.</code>, <code>fileName</code> and <code>fileContentBase64</code> both left as empty text.</p>
+        <p>Save the flow.</p>
+        <div class="callout warn">
+          <strong>Known limitation, accepted on purpose:</strong> this flow does not separately handle "the record exists but has no certificate attached." In practice that should not be reachable &mdash; the app's <strong>Open certificate</strong> button only appears when it already knows locally that an attachment exists. If <strong>Get attachments</strong> genuinely returns nothing, the loop simply does zero iterations and no response is ever sent, which will show up in the app as the generic "flow could not be reached" message rather than a specific one. Acceptable for now; tell me if you want this handled explicitly.
+        </div>
+
+        <h3>Connect Both Flows In The App</h3>
         <ol>
           <li>In Power Apps Studio, open the Training Tracker app.</li>
-          <li>Data pane &rarr; <strong>Add data</strong> &rarr; search <strong>Power Automate</strong> or your organisation's flows &rarr; add <code>TT - Save Certificate</code>.</li>
+          <li>Data pane &rarr; <strong>Add data</strong> &rarr; search <strong>Power Automate</strong> or your organisation's flows &rarr; add both <code>TT - Save Certificate</code> and <code>TT - Get Certificate</code>.</li>
           <li>Open <code>scrCourseDetail</code> and click into <code>btnSaveCert.OnSelect</code>. Start typing <code>'TT - Save Certificate'.Run(</code> and let autocomplete finish the flow name for you &mdash; do not hand-type it. Power Apps generates its own identifier from the flow's display name (spaces are usually stripped), and it is easy to get that wrong by guessing.</li>
-          <li>If the pasted formula's flow identifier does not match what autocomplete gives you, replace just that one identifier (leave the rest of the formula as pasted).</li>
+          <li>Do the same for <code>btnOpenCertificate.OnSelect</code>, starting <code>'TT - Get Certificate'.Run(</code>.</li>
+          <li>If either pasted formula's flow identifier does not match what autocomplete gives you, replace just that one identifier (leave the rest of the formula as pasted).</li>
         </ol>
         <div class="callout warn">
-          <strong>Critical &mdash; the argument order in the pasted formula must match your flow's actual trigger order, not this guide's Step 1 table.</strong> <code>.Run(...)</code> passes arguments purely by position, not by name. If you deleted and re-added any trigger input while fixing a type (for example, switching <code>RecordID</code> or <code>CourseID</code> from Text to Number, per the warning above), that input moves to the end of the trigger's real parameter order, even though it is still first in this guide's table. Before trusting the pasted formula, click into <code>'TT - Save Certificate'.Run(</code> in the formula bar and read the grey parameter-name hints Power Apps shows for each argument slot &mdash; reorder the pasted arguments to match those hints exactly, in whatever order your trigger really ends up in. Do not assume the guide's table order still applies once you have edited any input.
+          <strong>Critical, for both flows &mdash; the argument order in the pasted formula must match each flow's actual trigger order, not this guide's tables.</strong> <code>.Run(...)</code> passes arguments purely by position, not by name. If you deleted and re-added any trigger input while fixing a type, that input moves to the end of the trigger's real parameter order, even though it is still first in this guide's table. Before trusting either pasted formula, click into its <code>.Run(</code> in the formula bar and read the grey parameter-name hints Power Apps shows for each argument slot &mdash; reorder the pasted arguments to match those hints exactly, in whatever order your trigger really ends up in. Do not assume either table's order still applies once you have edited any input.
         </div>
         <div class="callout warn">
-          <strong>One thing to verify live, not assume:</strong> the pasted formula passes <code>Blank()</code> for the <code>FileContent</code> argument when no new file was picked (i.e. the person is only changing the date). This is a commonly used pattern for optional File-type flow parameters, but it has not been tested against this specific flow. If Power Apps or the flow rejects it at save time, tell me the exact error text and I'll adjust the formula &mdash; do not guess a workaround yourself.
+          <strong>One thing to verify live, not assume:</strong> the save flow's formula passes <code>Blank()</code> for the <code>FileContent</code> argument when no new file was picked (i.e. the person is only changing the date). This is a commonly used pattern for optional File-type flow parameters, but it has not been tested against this specific flow. If Power Apps or the flow rejects it at save time, tell me the exact error text and I'll adjust the formula &mdash; do not guess a workaround yourself.
+        </div>
+        <div class="callout warn">
+          <strong>Also verify live, not assume:</strong> the <strong>Open certificate</strong> button uses <code>Launch("data:application/octet-stream;base64," &amp; varCertDownload.fileContentBase64)</code> to trigger a browser download/open of the returned file. This is a well-documented technique for handing a file back from a flow to a canvas app, but it has not been tested against this specific flow and file types (PDF/JPG/PNG/DOCX may each behave slightly differently in how the browser opens vs downloads them). If it does not open the file correctly, tell me exactly what happened (blank tab, download of a corrupted/empty file, nothing at all) rather than guessing at a fix yourself.
         </div>
 
         <h3>Checklist</h3>
         <ul>
           <li><code>colNewCertificate</code> seeded in <code>App.OnStart</code>.</li>
-          <li><code>scrCourseDetail</code> v3.1 pasted.</li>
+          <li><code>scrCourseDetail</code> v3.4 pasted.</li>
           <li>Flow <code>TT - Save Certificate</code> created with all 10 inputs, in order.</li>
           <li><strong>Update item</strong> step writes <code>DateCompleted</code>, <code>LastUpdatedByEmail</code>, <code>LastUpdatedOn</code>, <code>LastStatus</code>, and re-supplies the required <code>PersonEmail</code>/<code>CourseID</code>/<code>CourseName</code> columns from the trigger.</li>
-          <li><strong>Condition</strong> on <code>HasNewFile</code>, with Get attachments &rarr; Apply to each &rarr; Delete attachment, then Add attachment, all inside the Yes branch.</li>
+          <li><strong>Condition</strong> on <code>HasNewFile</code>, with Get attachments &rarr; Apply to each &rarr; Delete attachment, then Add attachment, all inside the Yes branch, comparing to boolean <code>true</code> via the expression editor, not the Yes/No dropdown.</li>
           <li><strong>Create item</strong> on <code>TT AuditLog</code> with all nine fields mapped.</li>
-          <li><strong>Respond to a PowerApp or flow</strong> with <code>success</code> and <code>message</code> outputs.</li>
-          <li>Flow added as a data source in the app.</li>
-          <li><code>btnSaveCert.OnSelect</code> flow identifier confirmed via autocomplete, not hand-typed.</li>
-          <li>Tested live: save with no new file (date-only change), save with a new file on a record with no existing certificate, save with a new file replacing an existing one.</li>
+          <li><strong>Respond to a PowerApp or flow</strong> with <code>success</code> (real boolean <code>true</code>, not typed "Yes") and <code>message</code> outputs.</li>
+          <li>Flow <code>TT - Get Certificate</code> created with all 3 inputs, in order.</li>
+          <li><strong>Condition</strong> checking <code>ActorEmail = PersonEmail</code> OR <code>IsAdmin = true</code> (real boolean, via expression editor), with the file-fetch-and-respond steps inside the Yes branch and an unauthorised response in the No branch.</li>
+          <li>Both flows added as data sources in the app.</li>
+          <li>Both <code>.OnSelect</code> flow identifiers confirmed via autocomplete, not hand-typed, and argument order confirmed against each flow's real trigger order.</li>
+          <li>Tested live: save with no new file (date-only change), save with a new file on a record with no existing certificate, save with a new file replacing an existing one, open/download an existing certificate as the record's own person, open/download the same certificate as an admin, confirm a different non-admin person cannot open someone else's certificate.</li>
         </ul>
       </section>
 
@@ -1280,8 +1336,8 @@ Clear(colNewCertificate)</pre>
             <div class="card-actions"><a href="../screens/scrAdminManage.html?v=2.6">Open</a><button type="button" data-yaml-url="../screens/scrAdminManage.html?v=2.6">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrCourseDetail.html?v=3.3"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
-            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.3">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.3">Copy YAML</button></div>
+            <a href="../screens/scrCourseDetail.html?v=3.4"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
+            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.4">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.4">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrMyTraining.html?v=2.7"><strong>scrMyTraining</strong><span>Personal training dashboard.</span></a>
