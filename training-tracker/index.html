@@ -1182,12 +1182,15 @@ Clear(colNewCertificate)</pre>
         <p>Open the updated <code>scrCourseDetail</code> YAML and paste it over the existing screen (delete the screen's controls first, then paste fresh &mdash; do not paste over controls that still exist, per the usual rule for structural changes).</p>
         <p><a href="../screens/scrCourseDetail.html?v=3.7">Open scrCourseDetail YAML (v3.7)</a></p>
 
+        <div class="callout ok">
+          <strong>Currently fixing <code>TT - Get Certificate</code>?</strong> There's a dedicated page with just the action list, no step-renumbering, no scrolling past stuff you've already built: <a href="get-certificate-fix.html"><strong>Open: Fix TT - Get Certificate &mdash; Exactly What To Change</strong></a>
+        </div>
         <div class="progress-banner">
           <strong>Where you are in this upgrade:</strong>
           <ul>
             <li class="done-item">✅ Done &mdash; <code>TT - Save Certificate</code> flow built, and the typed-text field mistakes fixed (collapsed below, click to re-open if you ever need to check a step again).</li>
-            <li class="next-item">▶ Continue here next &mdash; <a href="#cert-harden-save">Harden <code>TT - Save Certificate</code>: Require Authorisation</a></li>
-            <li>Then &mdash; <a href="#cert-get-flow">Build the second flow, <code>TT - Get Certificate</code></a></li>
+            <li class="done-item">✅ Done &mdash; Harden <code>TT - Save Certificate</code> with authorisation.</li>
+            <li class="next-item">▶ Continue here next &mdash; <a href="get-certificate-fix.html">Fix TT - Get Certificate (dedicated page, linked above)</a></li>
             <li>Then &mdash; <a href="#cert-connect">Connect both flows in the app</a> (mostly already done by pasting the v3.7 screen)</li>
             <li>Then test it &mdash; see <a href="#cert-progress-feedback">Progress and error feedback</a> for what you should see on screen</li>
           </ul>

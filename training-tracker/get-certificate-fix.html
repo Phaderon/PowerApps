@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TT - Get Certificate: What To Fix Right Now</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --paper: #ffffff;
+      --ink: #172033;
+      --muted: #637084;
+      --line: #d9e1ec;
+      --primary: #004e42;
+      --primary-soft: #e8f4ef;
+      --green: #1f7a4d;
+      --amber: #a86500;
+      --red: #a33a3a;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --radius: 10px;
+      --shadow: 0 12px 32px rgba(20, 34, 56, .10);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+    }
+    a { color: var(--primary); }
+    .shell {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    main {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+    }
+    h1 { margin: 0 0 8px; font-size: 2rem; }
+    .lead { margin: 0 0 20px; color: var(--muted); font-size: 1.05rem; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: .8rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    h2 { margin: 28px 0 10px; font-size: 1.3rem; border-top: 1px solid var(--line); padding-top: 20px; }
+    h2:first-of-type { border-top: 0; padding-top: 0; }
+    .callout {
+      border-left: 4px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 16px 0;
+    }
+    .warn { border-left-color: var(--amber); background: #fff7e8; }
+    .ok { border-left-color: var(--green); background: #edf8f2; }
+    code {
+      font-family: var(--mono);
+      background: #eef3f8;
+      border: 1px solid #dce5f0;
+      border-radius: 6px;
+      padding: 1px 5px;
+      font-size: .92em;
+    }
+    ol, ul { padding-left: 1.3rem; }
+    li { margin: 8px 0; }
+    .step-list li { margin: 14px 0; }
+    .back-link { display: inline-block; margin-top: 24px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <main>
+      <span class="pill">Action list only &mdash; not a full rebuild</span>
+      <h1>Fix <code>TT - Get Certificate</code>: Exactly What To Change</h1>
+      <p class="lead">This page is just the "what do I actually need to do right now" list for the flow you have already been building, following what came out of troubleshooting the "only <code>success</code>/<code>message</code> show up" problem. Nothing here is new work &mdash; it is undoing/replacing a small number of things you already built. No step numbers to track against the main guide; this list stands on its own.</p>
+
+      <div class="callout warn">
+        <strong>Root cause, in one sentence:</strong> a flow cannot have two separate <strong>Respond to a PowerApp or flow</strong> actions &mdash; not even one per Condition branch with matching field names. Power Apps cannot reliably combine them into one schema, which is why some output fields silently stopped being recognised by the app no matter how many times the data source was refreshed. Confirmed against a moderator-verified answer on Microsoft's own Power Platform community forum.
+      </div>
+
+      <h2>0. Clean up the duplicate flow &mdash; you don't need it</h2>
+      <p>Earlier, while we were still chasing what turned out to be a caching red herring, you made a duplicate copy of this flow (e.g. <code>TT - Fetch Certificate</code>) via <strong>Save As</strong>, to test whether the problem was tied to the original flow's identity. It wasn't &mdash; the real cause (two Respond actions in one flow) was identical in both copies, so the duplicate proved nothing was special about the original and isn't needed going forward.</p>
+      <ol class="step-list">
+        <li>In Power Apps Studio, open <code>btnOpenCertificate.OnSelect</code>. If it currently calls <code>'TT-FetchCertificate'.Run(...)</code> (or whatever you named the duplicate), change it back to <code>'TT - Get Certificate'.Run(...)</code> &mdash; start typing the flow name and let autocomplete fill in the real identifier.</li>
+        <li>In the Data pane, remove the duplicate flow (e.g. <code>TT - Fetch Certificate</code>) from the app's data sources if it was added.</li>
+        <li>In Power Automate, you can delete the duplicate flow entirely, or just leave it turned off/unused &mdash; your call, it does no harm sitting there unused, but deleting it avoids any future confusion about which one is the "real" one.</li>
+      </ol>
+      <p>Everything below fixes the original <code>TT - Get Certificate</code> flow &mdash; that's the one to keep using.</p>
+
+      <h2>1. Delete both existing Respond actions</h2>
+      <ul>
+        <li>The one sitting <strong>after your Apply to each loop</strong>, inside the "If yes" (authorised) branch.</li>
+        <li>The one in the <strong>"If no"</strong> (unauthorised) branch.</li>
+      </ul>
+      <p>Right-click each one &rarr; Delete. Both are being replaced below.</p>
+
+      <h2>2. Add two more variables, alongside the two you already have</h2>
+      <p>You should already have <code>varFileName</code> and <code>varFileContentBase64</code> initialised at the very top of the flow (directly after the trigger, before <strong>Get item</strong>). Add two more, in the same place, the same way:</p>
+      <ul>
+        <li><strong>Initialize variable</strong> &mdash; Name: <code>varSuccess</code>, Type: <strong>Boolean</strong>, Value: leave empty.</li>
+        <li><strong>Initialize variable</strong> &mdash; Name: <code>varMessage</code>, Type: <strong>String</strong>, Value: leave empty.</li>
+      </ul>
+      <p>You now have four variables total, all initialised at the top level, none inside any Condition or loop.</p>
+
+      <h2>3. In the "If yes" (authorised) branch: replace the deleted Respond with two Set variable steps</h2>
+      <p>Place these <strong>after your Apply to each loop ends</strong>, still inside the "If yes" branch &mdash; the same spot the deleted Respond action used to sit.</p>
+      <ol class="step-list">
+        <li><strong>Set variable</strong> &mdash; Name: <code>varSuccess</code>, Value: click the <strong>fx</strong> icon, type the bare word <code>true</code>.</li>
+        <li><strong>Set variable</strong> &mdash; Name: <code>varMessage</code>, Value: plain literal text <code>OK</code> (no <strong>fx</strong> needed, it's just text).</li>
+      </ol>
+
+      <h2>4. In the "If no" (unauthorised) branch: same idea, two Set variable steps</h2>
+      <ol class="step-list">
+        <li><strong>Set variable</strong> &mdash; Name: <code>varSuccess</code>, Value: click <strong>fx</strong>, type <code>false</code>.</li>
+        <li><strong>Set variable</strong> &mdash; Name: <code>varMessage</code>, Value: plain literal text <code>You are not authorized to view this certificate.</code></li>
+      </ol>
+      <p>Leave <code>varFileName</code>/<code>varFileContentBase64</code> alone in this branch &mdash; they just keep whatever blank value they were initialised to.</p>
+
+      <h2>5. Add exactly one Respond action, after both branches rejoin</h2>
+      <p>Drag a new action so it sits <strong>below and outside the whole Condition box</strong> &mdash; not inside either branch. This is the only <strong>Respond to a PowerApp or flow</strong> action anywhere in this flow. Add four outputs:</p>
+      <ul>
+        <li><strong>Yes/No</strong> named <code>success</code> &mdash; value: dynamic content <code>varSuccess</code>.</li>
+        <li><strong>Text</strong> named <code>message</code> &mdash; value: dynamic content <code>varMessage</code>.</li>
+        <li><strong>Text</strong> named <code>fileName</code> &mdash; value: dynamic content <code>varFileName</code>.</li>
+        <li><strong>Text</strong> named <code>fileContentBase64</code> &mdash; value: dynamic content <code>varFileContentBase64</code>.</li>
+      </ul>
+
+      <h2>6. Save, then check the app</h2>
+      <ol class="step-list">
+        <li>Save the flow.</li>
+        <li>In Power Apps, open <code>btnOpenCertificate.OnSelect</code> and check the autocomplete on whichever variable holds the flow's result (e.g. <code>varCertDownload.</code> or <code>varCertFetch.</code> if you renamed it earlier).</li>
+        <li>All four fields (<code>success</code>, <code>message</code>, <code>fileName</code>, <code>fileContentBase64</code>) should now show up, permanently &mdash; this is a structural fix, not a caching one, so it should not come back.</li>
+      </ol>
+
+      <div class="callout ok">
+        <strong>You do not need to touch <code>TT - Save Certificate</code>.</strong> That flow technically has the same two-Respond-action structure, but it only ever returns two fields (<code>success</code>/<code>message</code>) on both branches, so there is nothing for Power Apps to disagree about &mdash; it works fine as-is. Leave it alone.
+      </div>
+
+      <a class="back-link" href="index.html#certificate-privacy-upgrade">&larr; Back to the main Certificate Privacy Upgrade section</a>
+    </main>
+  </div>
+</body>
+</html>
