@@ -1180,7 +1180,7 @@ Clear(colNewCertificate)</pre>
 
         <h3>Paste The Updated Screen</h3>
         <p>Open the updated <code>scrCourseDetail</code> YAML and paste it over the existing screen (delete the screen's controls first, then paste fresh &mdash; do not paste over controls that still exist, per the usual rule for structural changes).</p>
-        <p><a href="../screens/scrCourseDetail.html?v=3.6">Open scrCourseDetail YAML (v3.6)</a></p>
+        <p><a href="../screens/scrCourseDetail.html?v=3.7">Open scrCourseDetail YAML (v3.7)</a></p>
 
         <div class="progress-banner">
           <strong>Where you are in this upgrade:</strong>
@@ -1188,7 +1188,7 @@ Clear(colNewCertificate)</pre>
             <li class="done-item">✅ Done &mdash; <code>TT - Save Certificate</code> flow built, and the typed-text field mistakes fixed (collapsed below, click to re-open if you ever need to check a step again).</li>
             <li class="next-item">▶ Continue here next &mdash; <a href="#cert-harden-save">Harden <code>TT - Save Certificate</code>: Require Authorisation</a></li>
             <li>Then &mdash; <a href="#cert-get-flow">Build the second flow, <code>TT - Get Certificate</code></a></li>
-            <li>Then &mdash; <a href="#cert-connect">Connect both flows in the app</a> (mostly already done by pasting the v3.6 screen)</li>
+            <li>Then &mdash; <a href="#cert-connect">Connect both flows in the app</a> (mostly already done by pasting the v3.7 screen)</li>
             <li>Then test it &mdash; see <a href="#cert-progress-feedback">Progress and error feedback</a> for what you should see on screen</li>
           </ul>
         </div>
@@ -1414,15 +1414,25 @@ Clear(colNewCertificate)</pre>
         <div class="callout warn">
           <strong>Critical, for both flows &mdash; the argument order in the pasted formula must match each flow's actual trigger order, not this guide's tables.</strong> <code>.Run(...)</code> passes arguments purely by position, not by name. If you deleted and re-added any trigger input while fixing a type, that input moves to the end of the trigger's real parameter order, even though it is still first in this guide's table. Before trusting either pasted formula, click into its <code>.Run(</code> in the formula bar and read the grey parameter-name hints Power Apps shows for each argument slot &mdash; reorder the pasted arguments to match those hints exactly, in whatever order your trigger really ends up in. Do not assume either table's order still applies once you have edited any input.
         </div>
-        <div class="callout warn">
-          <strong>One thing to verify live, not assume:</strong> the save flow's formula passes <code>Blank()</code> for the <code>FileContent</code> argument when no new file was picked (i.e. the person is only changing the date). This is a commonly used pattern for optional File-type flow parameters, but it has not been tested against this specific flow. If Power Apps or the flow rejects it at save time, tell me the exact error text and I'll adjust the formula &mdash; do not guess a workaround yourself.
+        <div class="callout ok">
+          <strong>Confirmed live, 2026-07-31 &mdash; the <code>FileContent</code> argument must be the whole attachment record, not just its <code>.Value</code>.</strong> The original formula passed <code>First(colNewCertificate).Value</code>, which Power Apps rejected with "Invalid argument type (Text). Expecting a Record value instead" &mdash; a flow's <strong>File</strong>-type trigger input compiles to a Record type in Power Fx (matching name + content together), not the raw file content on its own. <strong>Fix:</strong> pass <code>First(colNewCertificate)</code> (the whole record, no <code>.Value</code>) instead. The <code>Blank()</code> fallback for "no new file picked" needed no change and works correctly alongside this. <code>screens/scrCourseDetail.html</code> v3.7 already has this fix applied &mdash; if you pasted an earlier version, open <code>btnSaveCert.OnSelect</code> and change that one argument the same way.
         </div>
         <div class="callout warn">
           <strong>Also verify live, not assume:</strong> the <strong>Open certificate</strong> button uses <code>Launch("data:application/octet-stream;base64," &amp; varCertDownload.fileContentBase64)</code> to trigger a browser download/open of the returned file. This is a well-documented technique for handing a file back from a flow to a canvas app, but it has not been tested against this specific flow and file types (PDF/JPG/PNG/DOCX may each behave slightly differently in how the browser opens vs downloads them). If it does not open the file correctly, tell me exactly what happened (blank tab, download of a corrupted/empty file, nothing at all) rather than guessing at a fix yourself.
         </div>
+        <div class="callout warn">
+          <strong>If Power Apps says <code>Name isn't valid. 'fileContentBase64' isn't recognized.</code> on the <code>btnOpenCertificate</code> formula:</strong> this is not a typo in the formula &mdash; it means Power Apps added <code>TT - Get Certificate</code> as a data source <em>before</em> you finished (or changed) that flow's <strong>Respond to a PowerApp or flow</strong> outputs, and it is still using the older, cached shape of the flow's response. No screen edit needed, just a data source refresh:
+          <ol>
+            <li>In Power Apps Studio, open the <strong>Data</strong> pane on the left.</li>
+            <li>Find <code>TT - Get Certificate</code> in the list, click the <strong>&hellip;</strong> (three dots) next to it.</li>
+            <li>Choose <strong>Remove</strong> (this only removes the reference to the flow from the app's data sources &mdash; it does not touch or delete the actual flow in Power Automate).</li>
+            <li><strong>+ Add data</strong>, search for <code>TT - Get Certificate</code> again, and add it back. This re-reads the flow's current, real output schema.</li>
+            <li>Go back to <code>btnOpenCertificate.OnSelect</code> &mdash; the red squiggly under <code>fileContentBase64</code> should be gone. If the whole formula turned red/broken from the removal, retype just the <code>.Run(...)</code> line following the guide above; the surrounding <code>Set(...)</code>/<code>If(...)</code> lines around it do not need to change.</li>
+          </ol>
+        </div>
 
         <h3 id="cert-progress-feedback">Progress And Error Feedback</h3>
-        <p><code>scrCourseDetail</code> v3.6 (already included in the paste above &mdash; nothing extra to build in Power Automate for this part) adds a busy state and a persistent error banner around both <strong>Save record</strong> and <strong>Open certificate</strong>, using three screen-local variables seeded in <code>scrCourseDetail.OnVisible</code>: <code>varCertBusy</code> (Boolean), <code>varCertStatusText</code> (Text), <code>varCertError</code> (Text).</p>
+        <p><code>scrCourseDetail</code> v3.7 (already included in the paste above &mdash; nothing extra to build in Power Automate for this part) adds a busy state and a persistent error banner around both <strong>Save record</strong> and <strong>Open certificate</strong>, using three screen-local variables seeded in <code>scrCourseDetail.OnVisible</code>: <code>varCertBusy</code> (Boolean), <code>varCertStatusText</code> (Text), <code>varCertError</code> (Text).</p>
         <ul>
           <li>The instant either button is pressed, it and the other certificate controls (<strong>Cancel</strong>, the file picker) grey out via <code>DisplayMode.Disabled</code>, and a small spinner plus a status line (<code>Saving certificate...</code> / <code>Fetching certificate...</code>) appear beneath the buttons.</li>
           <li>Once the flow responds, controls re-enable and the spinner/status clear. On success, the usual toast notification still fires (and for Save, the screen navigates back as before).</li>
@@ -1433,7 +1443,7 @@ Clear(colNewCertificate)</pre>
         </div>
         <ul>
           <li><code>colNewCertificate</code> seeded in <code>App.OnStart</code>.</li>
-          <li><code>scrCourseDetail</code> v3.6 pasted (includes busy/error UI, no separate step needed).</li>
+          <li><code>scrCourseDetail</code> v3.7 pasted (includes busy/error UI, no separate step needed).</li>
           <li>Flow <code>TT - Save Certificate</code> created with all 11 inputs, in order, including <code>IsAdmin</code> added last.</li>
           <li><strong>Get item</strong> (authoritative <code>PersonEmail</code> lookup) sits before the authorisation <strong>Condition</strong>, which sits before <strong>Update item</strong>.</li>
           <li><strong>Update item</strong> step (inside the Yes branch) writes <code>DateCompleted</code>, <code>LastUpdatedByEmail</code>, <code>LastUpdatedOn</code>, <code>LastStatus</code>, and re-supplies the required <code>PersonEmail</code>/<code>CourseID</code>/<code>CourseName</code> columns from the trigger.</li>
@@ -1462,8 +1472,8 @@ Clear(colNewCertificate)</pre>
             <div class="card-actions"><a href="../screens/scrAdminManage.html?v=2.6">Open</a><button type="button" data-yaml-url="../screens/scrAdminManage.html?v=2.6">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="../screens/scrCourseDetail.html?v=3.6"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
-            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.6">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.6">Copy YAML</button></div>
+            <a href="../screens/scrCourseDetail.html?v=3.7"><strong>scrCourseDetail</strong><span>Cleaner certificate save screen with audit fields.</span></a>
+            <div class="card-actions"><a href="../screens/scrCourseDetail.html?v=3.7">Open</a><button type="button" data-yaml-url="../screens/scrCourseDetail.html?v=3.7">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrMyTraining.html?v=2.7"><strong>scrMyTraining</strong><span>Personal training dashboard.</span></a>
