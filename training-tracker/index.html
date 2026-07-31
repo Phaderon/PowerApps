@@ -1129,6 +1129,27 @@ CountIf(ApplicableTo, Value = varViewingPerson.StaffType.Value) > 0 &&
         </div>
         <p>Certificates are ordinary personal data (a name plus a course and a date), not the specially-protected "special category" tier under UK GDPR &mdash; but "not special category" is not the same as "fine to leave open." Least-privilege access (the person, their manager, and admins only) is standard practice regardless of legal category, and worth doing on its own merits. Check with whoever owns data protection/information governance at your organisation before treating this as settled.</p>
 
+        <h3>The One Rule To Remember: <code>true</code>/<code>false</code> Fields vs Plain Text Fields</h3>
+        <div class="callout warn">
+          <strong>Every single time this guide tells you to set a value to <code>true</code> or <code>false</code> (a Yes/No / boolean value), you must click the <strong>fx</strong> expression icon on that field first, then type the bare word <code>true</code> or <code>false</code> with no quotes.</strong> Never use the plain Yes/No toggle, and never just type the word into the plain box without clicking <strong>fx</strong> first &mdash; both of those can silently store the literal text <code>"Yes"</code>/<code>"true"</code> instead of a real boolean, which looks identical on screen but is not the same thing, and can make comparisons and app logic silently fail later with no error shown. After clicking <strong>fx</strong> and typing it correctly, the value shows up as a small coloured pill/chip in the box &mdash; that pill is your confirmation it worked.
+          <br><br>
+          <strong>This rule does not apply to plain text fields</strong> such as <code>message</code>, <code>Title</code>, <code>EventDescription</code>, <code>fileName</code>, or anything else that is ordinary words/sentences. Those are fine to type directly with no <strong>fx</strong> click needed &mdash; plain typed text is exactly what a Text field expects. The rule is only about <code>true</code>/<code>false</code> boolean values.
+        </div>
+        <p>Use this checklist to go back and audit every boolean field you have already built, in both flows:</p>
+        <table>
+          <thead><tr><th>Flow</th><th>Where</th><th>Field</th><th>Should be</th></tr></thead>
+          <tbody>
+            <tr><td><code>TT - Save Certificate</code></td><td>Step 3, Condition on <code>HasNewFile</code></td><td>right-hand comparison value</td><td><code>true</code> via <strong>fx</strong></td></tr>
+            <tr><td><code>TT - Save Certificate</code></td><td>Step 5, Respond (authorised/original)</td><td><code>success</code></td><td><code>true</code> via <strong>fx</strong></td></tr>
+            <tr><td><code>TT - Save Certificate</code></td><td>Harden, Condition on <code>IsAdmin</code>/authorisation</td><td>right-hand comparison value</td><td><code>true</code> via <strong>fx</strong></td></tr>
+            <tr><td><code>TT - Save Certificate</code></td><td>Harden, Respond (unauthorised, new one you just built)</td><td><code>success</code></td><td><code>false</code> via <strong>fx</strong></td></tr>
+            <tr><td><code>TT - Get Certificate</code></td><td>Step 3, Condition on <code>IsAdmin</code>/authorisation</td><td>right-hand comparison value</td><td><code>true</code> via <strong>fx</strong></td></tr>
+            <tr><td><code>TT - Get Certificate</code></td><td>Step 4, Respond (authorised)</td><td><code>success</code></td><td><code>true</code> via <strong>fx</strong></td></tr>
+            <tr><td><code>TT - Get Certificate</code></td><td>Step 5, Respond (unauthorised)</td><td><code>success</code></td><td><code>false</code> via <strong>fx</strong></td></tr>
+          </tbody>
+        </table>
+        <p>Everything else in both flows &mdash; <code>message</code>, <code>Title</code>, <code>EventDescription</code>, <code>fileName</code>, <code>fileContentBase64</code> &mdash; is plain text or dynamic content, never a boolean, so none of those need the <strong>fx</strong> click.</p>
+
         <h3>What This Changes</h3>
         <ul>
           <li><code>scrCourseDetail</code> no longer uses a SharePoint-bound <code>Form</code> control to save the certificate. It now uses a local file picker and calls one Power Automate flow, <code>TT - Save Certificate</code>, which does the actual write.</li>
