@@ -1143,9 +1143,9 @@ CountIf(ApplicableTo, Value = varViewingPerson.StaffType.Value) > 0 &&
             <tr><td><code>TT - Save Certificate</code></td><td>Step 5, Respond (authorised/original)</td><td><code>success</code></td><td><code>true</code> via <strong>fx</strong></td></tr>
             <tr><td><code>TT - Save Certificate</code></td><td>Harden, Condition on <code>IsAdmin</code>/authorisation</td><td>right-hand comparison value</td><td><code>true</code> via <strong>fx</strong></td></tr>
             <tr><td><code>TT - Save Certificate</code></td><td>Harden, Respond (unauthorised, new one you just built)</td><td><code>success</code></td><td><code>false</code> via <strong>fx</strong></td></tr>
-            <tr><td><code>TT - Get Certificate</code></td><td>Step 3, Condition on <code>IsAdmin</code>/authorisation</td><td>right-hand comparison value</td><td><code>true</code> via <strong>fx</strong></td></tr>
-            <tr><td><code>TT - Get Certificate</code></td><td>Step 4, Respond (authorised)</td><td><code>success</code></td><td><code>true</code> via <strong>fx</strong></td></tr>
-            <tr><td><code>TT - Get Certificate</code></td><td>Step 5, Respond (unauthorised)</td><td><code>success</code></td><td><code>false</code> via <strong>fx</strong></td></tr>
+            <tr><td><code>TT - Get Certificate</code></td><td>Step 4, Condition on <code>IsAdmin</code>/authorisation</td><td>right-hand comparison value</td><td><code>true</code> via <strong>fx</strong></td></tr>
+            <tr><td><code>TT - Get Certificate</code></td><td>Step 5, Respond (authorised, after the loop)</td><td><code>success</code></td><td><code>true</code> via <strong>fx</strong></td></tr>
+            <tr><td><code>TT - Get Certificate</code></td><td>Step 6, Respond (unauthorised)</td><td><code>success</code></td><td><code>false</code> via <strong>fx</strong></td></tr>
           </tbody>
         </table>
         <p>Everything else in both flows &mdash; <code>message</code>, <code>Title</code>, <code>EventDescription</code>, <code>fileName</code>, <code>fileContentBase64</code> &mdash; is plain text or dynamic content, never a boolean, so none of those need the <strong>fx</strong> click.</p>
@@ -1358,12 +1358,23 @@ Clear(colNewCertificate)</pre>
           </tbody>
         </table>
 
-        <h4>Step 2 &mdash; Look Up The Record</h4>
+        <div class="callout warn">
+          <strong>If you already built Steps 4/5 the old way and hit "Flow save failed... 'Response' ... could not be nested under an action of type 'foreach'":</strong> that error is correct, and it is this guide's mistake, not yours. Power Automate does not allow a <strong>Respond to a PowerApp or flow</strong> action to sit inside an <strong>Apply to each</strong> loop, full stop &mdash; there is no setting to enable it. The steps below are rewritten to fix this: instead of responding from inside the loop, the loop now only fills in two variables, and the actual Respond action moves to after the loop ends. If you already have a Respond action stuck inside your loop, delete just that one action (right-click it &rarr; Delete), then continue with the rewritten steps below.
+        </div>
+
+        <h4>Step 2 &mdash; Initialize Two Variables</h4>
+        <p>These sit at the very top of the flow, directly after the trigger and before anything else &mdash; not inside any Condition or loop. Power Automate only allows <strong>Initialize variable</strong> actions at the top level of a flow, so both of these must be added here, even though they are not filled in until later.</p>
+        <ol>
+          <li>Add <strong>Control &rarr; Initialize variable</strong>. <strong>Name:</strong> <code>varFileName</code>. <strong>Type:</strong> String. <strong>Value:</strong> leave empty.</li>
+          <li>Add a second <strong>Initialize variable</strong>, directly after the first (not inside it). <strong>Name:</strong> <code>varFileContentBase64</code>. <strong>Type:</strong> String. <strong>Value:</strong> leave empty.</li>
+        </ol>
+
+        <h4>Step 3 &mdash; Look Up The Record</h4>
         <ol>
           <li>Add <strong>SharePoint &rarr; Get item</strong>. Site Address/List Name as in the other flow, <strong>List Name:</strong> <code>TT TrainingRecords</code>. <strong>Id:</strong> dynamic content <code>RecordID</code>.</li>
         </ol>
 
-        <h4>Step 3 &mdash; Check Authorisation</h4>
+        <h4>Step 4 &mdash; Check Authorisation</h4>
         <ol>
           <li>Add a <strong>Condition</strong>.</li>
           <li>First row: left side dynamic content <code>ActorEmail</code> (from the trigger), operator <strong>is equal to</strong>, right side dynamic content <code>PersonEmail</code> (from the <strong>Get item</strong> step you just added &mdash; not the trigger).</li>
@@ -1371,20 +1382,25 @@ Clear(colNewCertificate)</pre>
           <li>Second row: left side dynamic content <code>IsAdmin</code> (from the trigger), operator <strong>is equal to</strong>, right side &mdash; same rule as every boolean comparison in this guide: click the <strong>fx</strong> icon and type the bare word <code>true</code>, do not use a Yes/No dropdown.</li>
         </ol>
 
-        <h4>Step 4 &mdash; If Authorised, Fetch And Return The File</h4>
+        <h4>Step 5 &mdash; If Authorised, Fetch The File Into The Variables, Then Respond</h4>
         <p>Inside the <strong>If yes</strong> branch:</p>
         <ol>
           <li>Add <strong>SharePoint &rarr; Get attachments</strong>. <strong>Id:</strong> dynamic content <code>RecordID</code>.</li>
           <li>Add <strong>Apply to each</strong>, output selected from <strong>Get attachments</strong>.</li>
           <li>Inside the loop, add <strong>SharePoint &rarr; Get attachment content</strong>: <strong>Id:</strong> dynamic content <code>RecordID</code>. For <strong>File Identifier</strong>, open the dynamic content picker and look for the group headed <strong>"Get attachments"</strong> (not "Get item") &mdash; inside that group, pick the <code>Id</code> entry (it will say "File identifier" underneath it). The picker will also show an <code>ID</code> under a separate "Get item" group &mdash; that one is the training record's own row ID (same value as <code>RecordID</code>), not the attachment, and is the wrong one here even though it is also called "Id".</li>
-          <li>Still inside the loop, immediately after, add <strong>Respond to a PowerApp or flow</strong> with four outputs: a <strong>Yes/No</strong> named <code>success</code> set via the <strong>fx</strong> icon to <code>true</code>; a <strong>Text</strong> named <code>message</code> set to the literal text <code>OK</code>; a <strong>Text</strong> named <code>fileName</code> set to the current loop item's <code>Name</code> dynamic content; and a <strong>Text</strong> named <code>fileContentBase64</code> set via the <strong>fx</strong> icon to <code>base64(</code>, then switch to the Dynamic content tab and click <strong>Get attachment content</strong>, then close the bracket <code>)</code>.</li>
+          <li>Still inside the loop, immediately after, add <strong>Control &rarr; Set variable</strong>: <strong>Name:</strong> <code>varFileName</code>, <strong>Value:</strong> the current loop item's <code>Name</code> dynamic content (from the "Get attachments" group).</li>
+          <li>Still inside the loop, add a second <strong>Set variable</strong>: <strong>Name:</strong> <code>varFileContentBase64</code>, <strong>Value:</strong> click the <strong>fx</strong> icon and build <code>base64(</code>, then switch to the Dynamic content tab and click <strong>Get attachment content</strong>'s body/file content, then close the bracket <code>)</code>.</li>
+          <li>Now drag a new action so it sits <strong>after the whole Apply to each loop ends</strong>, but still inside the <strong>If yes</strong> branch &mdash; not inside the loop. This is the same "outside the loop, inside the Yes branch" placement used for <strong>Add attachment</strong> in the other flow. Add <strong>Respond to a PowerApp or flow</strong> here with four outputs: a <strong>Yes/No</strong> named <code>success</code> set via the <strong>fx</strong> icon to <code>true</code>; a <strong>Text</strong> named <code>message</code> set to the literal text <code>OK</code>; a <strong>Text</strong> named <code>fileName</code> set to dynamic content <code>varFileName</code>; and a <strong>Text</strong> named <code>fileContentBase64</code> set to dynamic content <code>varFileContentBase64</code>.</li>
         </ol>
+        <div class="callout">
+          <strong>Why variables instead of just reading the loop's output directly:</strong> an action's output from inside an <strong>Apply to each</strong> is technically an array (one result per loop iteration), so it cannot be read directly as a single value once you are outside the loop. Since certificates are limited to one attachment (<code>MaxAttachments: 1</code> in the app), the loop only ever runs zero or one times in practice &mdash; storing the result in a variable inside the loop, then reading that variable after the loop ends, sidesteps the array problem entirely and is the standard fix for this exact situation.
+        </div>
 
-        <h4>Step 5 &mdash; If Not Authorised</h4>
+        <h4>Step 6 &mdash; If Not Authorised</h4>
         <p>In the <strong>If no</strong> branch, add <strong>Respond to a PowerApp or flow</strong> with the same four outputs: <code>success</code> as <code>false</code> (via <strong>fx</strong>), <code>message</code> as the literal text <code>You are not authorized to view this certificate.</code>, <code>fileName</code> and <code>fileContentBase64</code> both left as empty text.</p>
         <p>Save the flow.</p>
         <div class="callout warn">
-          <strong>Known limitation, accepted on purpose:</strong> this flow does not separately handle "the record exists but has no certificate attached." In practice that should not be reachable &mdash; the app's <strong>Open certificate</strong> button only appears when it already knows locally that an attachment exists. If <strong>Get attachments</strong> genuinely returns nothing, the loop simply does zero iterations and no response is ever sent, which will show up in the app as the generic "flow could not be reached" message rather than a specific one. Acceptable for now; tell me if you want this handled explicitly.
+          <strong>Known limitation, accepted on purpose:</strong> this flow does not separately handle "the record exists but has no certificate attached." In practice that should not be reachable &mdash; the app's <strong>Open certificate</strong> button only appears when it already knows locally that an attachment exists. If <strong>Get attachments</strong> genuinely returns nothing, the loop simply does zero iterations, <code>varFileName</code>/<code>varFileContentBase64</code> stay empty, and the Respond action after the loop still fires with <code>success: true</code> but empty file data &mdash; the app would show "success" with nothing to open. Acceptable for now; tell me if you want this handled explicitly.
         </div>
 
         <h3 id="cert-connect">Connect Both Flows In The App</h3>
@@ -1424,8 +1440,8 @@ Clear(colNewCertificate)</pre>
           <li><strong>Condition</strong> on <code>HasNewFile</code> (also inside the Yes branch), with Get attachments &rarr; Apply to each &rarr; Delete attachment, then Add attachment, all inside its own Yes branch, comparing to boolean <code>true</code> via the expression editor, not the Yes/No dropdown.</li>
           <li><strong>Create item</strong> on <code>TT AuditLog</code> (inside the Yes branch) with all nine fields mapped.</li>
           <li><strong>Respond to a PowerApp or flow</strong> for the authorised case (inside the Yes branch) with <code>success</code> (real boolean <code>true</code>, not typed "Yes") and <code>message</code> outputs; a second Respond in the No branch with <code>success: false</code> and an "not authorized" message.</li>
-          <li>Flow <code>TT - Get Certificate</code> created with all 3 inputs, in order.</li>
-          <li><strong>Condition</strong> checking <code>ActorEmail = PersonEmail</code> OR <code>IsAdmin = true</code> (real boolean, via expression editor), with the file-fetch-and-respond steps inside the Yes branch and an unauthorised response in the No branch.</li>
+          <li>Flow <code>TT - Get Certificate</code> created with all 3 inputs, in order, plus <code>varFileName</code>/<code>varFileContentBase64</code> initialized as String variables at the top level, before <strong>Get item</strong>.</li>
+          <li><strong>Condition</strong> checking <code>ActorEmail = PersonEmail</code> OR <code>IsAdmin = true</code> (real boolean, via expression editor). Inside the Yes branch: <strong>Get attachments</strong> &rarr; <strong>Apply to each</strong> (setting the two variables inside the loop) &rarr; <strong>Respond to a PowerApp or flow</strong> placed <em>after</em> the loop ends, not inside it. Inside the No branch: an unauthorised <strong>Respond</strong>.</li>
           <li>Both flows added as data sources in the app.</li>
           <li>Both <code>.OnSelect</code> flow identifiers confirmed via autocomplete, not hand-typed, and argument order confirmed against each flow's real trigger order &mdash; especially <code>TT - Save Certificate</code>, since its structure changed again in this hardening pass.</li>
           <li>Tested live: save with no new file (date-only change), save with a new file on a record with no existing certificate, save with a new file replacing an existing one, save as an admin on someone else's record, confirm a non-admin cannot save to someone else's record, open/download an existing certificate as the record's own person, open/download the same certificate as an admin, confirm a different non-admin person cannot open someone else's certificate.</li>
