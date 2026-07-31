@@ -123,6 +123,35 @@
       border-left-color: var(--green);
       background: #edf8f2;
     }
+    details.done {
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--green);
+      background: #edf8f2;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 16px 0;
+    }
+    details.done > summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--green);
+      list-style: none;
+    }
+    details.done > summary::-webkit-details-marker { display: none; }
+    details.done > summary::before { content: "▸ "; }
+    details.done[open] > summary::before { content: "▾ "; }
+    details.done[open] > summary { margin-bottom: 10px; }
+    .progress-banner {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      padding: 16px 18px;
+      margin: 16px 0 22px;
+    }
+    .progress-banner ul { margin: 8px 0 0; padding-left: 20px; }
+    .progress-banner .done-item { color: var(--green); }
+    .progress-banner .next-item { color: var(--ink); font-weight: 600; }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -1132,18 +1161,22 @@ Clear(colNewCertificate)</pre>
         <p>Open the updated <code>scrCourseDetail</code> YAML and paste it over the existing screen (delete the screen's controls first, then paste fresh &mdash; do not paste over controls that still exist, per the usual rule for structural changes).</p>
         <p><a href="../screens/scrCourseDetail.html?v=3.6">Open scrCourseDetail YAML (v3.6)</a></p>
 
-        <h3>Build The Flow: <code>TT - Save Certificate</code></h3>
+        <div class="progress-banner">
+          <strong>Where you are in this upgrade:</strong>
+          <ul>
+            <li class="done-item">✅ Done &mdash; <code>TT - Save Certificate</code> flow built, and the typed-text field mistakes fixed (collapsed below, click to re-open if you ever need to check a step again).</li>
+            <li class="next-item">▶ Continue here next &mdash; <a href="#cert-harden-save">Harden <code>TT - Save Certificate</code>: Require Authorisation</a></li>
+            <li>Then &mdash; <a href="#cert-get-flow">Build the second flow, <code>TT - Get Certificate</code></a></li>
+            <li>Then &mdash; <a href="#cert-connect">Connect both flows in the app</a> (mostly already done by pasting the v3.6 screen)</li>
+            <li>Then test it &mdash; see <a href="#cert-progress-feedback">Progress and error feedback</a> for what you should see on screen</li>
+          </ul>
+        </div>
+
+        <details class="done">
+          <summary>✅ Done: Build the flow <code>TT - Save Certificate</code> (click to expand if you need to re-check a step)</summary>
         <p>You do not need any Power Automate experience for this &mdash; follow these steps in order. This is one flow with a handful of steps, not a big build.</p>
         <div class="callout">
-          <strong>Already built this flow and typed things like <code>text_9</code>, <code>text_10</code>, or <code>text_8</code> into a field by hand?</strong> That happened because an earlier version of this guide showed illustrative example expressions that looked copy-pasteable but referenced internal names unique to a different flow &mdash; not yours. That was this guide's mistake, not yours. Here is exactly how to undo it, field by field:
-          <ol>
-            <li>Open <strong>TT - Save Certificate</strong> in <a href="https://make.powerautomate.com" target="_blank" rel="noopener">make.powerautomate.com</a> and click into it to edit.</li>
-            <li>Find the <strong>Update item</strong> action (Step 2 below). Click into the <code>UploadedByEmail</code> field. If it contains any typed text such as <code>text_9</code> or <code>text_10</code>, click inside the box, select all the text in it (Ctrl+A while the cursor is in that box) and delete it, leaving the field completely empty. Do not type anything back in &mdash; Step 2's table below says to leave this field empty.</li>
-            <li>Find the <strong>Create item</strong> action on <code>TT AuditLog</code> (Step 4 below). Click into the <code>Title</code> field. If it contains typed text such as <code>text_8</code>, select all and delete it. Then click the lightning-bolt <strong>dynamic content</strong> icon on the right of that same box, and pick <code>CourseName</code> from the list &mdash; then type the literal words <code>&nbsp;certificate saved</code> straight after it, exactly as Step 4's table describes.</li>
-            <li>While you are in that same <strong>Create item</strong> action, check every other field against Step 4's table below the same way: if any of them contain typed text instead of a clicked-in dynamic content chip (dynamic content values show as small coloured pill/chip tags inside the box, not plain typed-looking text), clear it and re-click the correct dynamic content item from the picker instead.</li>
-            <li>Once every field is fixed, click <strong>Save</strong> on the flow. If Save succeeds with no red errors, the fix worked.</li>
-          </ol>
-          If you are building this flow for the first time and have not hit this yet, you can skip this box entirely &mdash; just follow Steps 1&ndash;5 below using only the dynamic content picker, never by typing a field name yourself.
+          <strong>Reminder if you ever rebuild a step from scratch:</strong> never type an expression containing <code>text_N</code>, <code>number_N</code>, or <code>boolean_N</code> from this guide or anywhere else &mdash; always click a field from the dynamic content picker instead. This is what caused the earlier <code>UploadedByEmail</code>/<code>Title</code> mix-up, which is already fixed now.
         </div>
         <ol>
           <li>Go to <a href="https://make.powerautomate.com" target="_blank" rel="noopener">make.powerautomate.com</a>, signed in as the same account you use for this SharePoint site.</li>
@@ -1250,8 +1283,9 @@ Clear(colNewCertificate)</pre>
         <div class="callout warn">
           <strong>This covers the happy path only.</strong> A beginner-friendly flow like this does not include retry/error branches. If any step fails, Power Automate shows a red cross on that step in the run history, and the app's <code>IfError(...)</code> around the flow call will show a generic "Save failed" message. That is enough to know something went wrong; diagnosing which step failed means opening that run in Power Automate's history and reading the error on the failed step.
         </div>
+        </details>
 
-        <h3>Harden <code>TT - Save Certificate</code>: Require Authorisation</h3>
+        <h3 id="cert-harden-save">Harden <code>TT - Save Certificate</code>: Require Authorisation</h3>
         <p>The steps above give <code>TT - Save Certificate</code> no authorisation check at all &mdash; it writes whatever record the app tells it to, trusting that only the app's own navigation ever points it at the right record. Today that is true in practice, but it is not enforced by the flow itself. This adds the same real check the read flow already has: verified against the actual stored data, not just trusted from the app.</p>
 
         <h4>1. Add One More Input</h4>
@@ -1283,7 +1317,7 @@ Clear(colNewCertificate)</pre>
         <h4>6. Update The App Formula</h4>
         <p>Already done in <code>scrCourseDetail</code> v3.5 &mdash; <code>btnSaveCert.OnSelect</code> now passes <code>varIsAdmin</code> as an 11th, final argument. As always: verify the real order against your flow's own autocomplete hints before trusting it, not this guide's table, especially since you have just changed this flow's structure again.</p>
 
-        <h3>Build The Second Flow: <code>TT - Get Certificate</code></h3>
+        <h3 id="cert-get-flow">Build The Second Flow: <code>TT - Get Certificate</code></h3>
         <p>This is the read side &mdash; it lets someone re-open or download a certificate that is already on file. It is simpler than the save flow: no writes, just one lookup, one authorisation check, and the file handed back.</p>
         <div class="callout">
           <strong>How authorisation works here, and the trade-off being made:</strong> the flow checks, on its own, whether the person asking is the same person the record belongs to &mdash; that check happens fully inside the flow, using the record's real stored email, and cannot be faked by the app. For the "or an admin can also view it" case, the flow trusts the <code>IsAdmin</code> flag the app already computed rather than independently re-checking it against <code>TT Personnel</code> a second time. That is a deliberate simplification, not an oversight: it protects against the actual risk this whole upgrade exists for (casual/accidental browsing of the raw SharePoint list, or one person's app session reading another person's certificate), without a second nested lookup. It would not stop someone who already has valid access to your tenant and is deliberately trying to forge a request outside the app entirely &mdash; if that is a real concern for your organisation, say so and this can be hardened to re-check admin status server-side too, the same way the self-check already is.
@@ -1332,7 +1366,7 @@ Clear(colNewCertificate)</pre>
           <strong>Known limitation, accepted on purpose:</strong> this flow does not separately handle "the record exists but has no certificate attached." In practice that should not be reachable &mdash; the app's <strong>Open certificate</strong> button only appears when it already knows locally that an attachment exists. If <strong>Get attachments</strong> genuinely returns nothing, the loop simply does zero iterations and no response is ever sent, which will show up in the app as the generic "flow could not be reached" message rather than a specific one. Acceptable for now; tell me if you want this handled explicitly.
         </div>
 
-        <h3>Connect Both Flows In The App</h3>
+        <h3 id="cert-connect">Connect Both Flows In The App</h3>
         <ol>
           <li>In Power Apps Studio, open the Training Tracker app.</li>
           <li>Data pane &rarr; <strong>Add data</strong> &rarr; search <strong>Power Automate</strong> or your organisation's flows &rarr; add both <code>TT - Save Certificate</code> and <code>TT - Get Certificate</code>.</li>
@@ -1350,7 +1384,7 @@ Clear(colNewCertificate)</pre>
           <strong>Also verify live, not assume:</strong> the <strong>Open certificate</strong> button uses <code>Launch("data:application/octet-stream;base64," &amp; varCertDownload.fileContentBase64)</code> to trigger a browser download/open of the returned file. This is a well-documented technique for handing a file back from a flow to a canvas app, but it has not been tested against this specific flow and file types (PDF/JPG/PNG/DOCX may each behave slightly differently in how the browser opens vs downloads them). If it does not open the file correctly, tell me exactly what happened (blank tab, download of a corrupted/empty file, nothing at all) rather than guessing at a fix yourself.
         </div>
 
-        <h3>Progress And Error Feedback</h3>
+        <h3 id="cert-progress-feedback">Progress And Error Feedback</h3>
         <p><code>scrCourseDetail</code> v3.6 (already included in the paste above &mdash; nothing extra to build in Power Automate for this part) adds a busy state and a persistent error banner around both <strong>Save record</strong> and <strong>Open certificate</strong>, using three screen-local variables seeded in <code>scrCourseDetail.OnVisible</code>: <code>varCertBusy</code> (Boolean), <code>varCertStatusText</code> (Text), <code>varCertError</code> (Text).</p>
         <ul>
           <li>The instant either button is pressed, it and the other certificate controls (<strong>Cancel</strong>, the file picker) grey out via <code>DisplayMode.Disabled</code>, and a small spinner plus a status line (<code>Saving certificate...</code> / <code>Fetching certificate...</code>) appear beneath the buttons.</li>
