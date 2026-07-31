@@ -277,7 +277,7 @@
     <main>
       <div class="topline">
         <span class="pill">Current step: schema and app setup</span>
-        <span class="pill">Updated 30 Jul 2026</span>
+        <span class="pill">Updated 31 Jul 2026</span>
         <span class="pill">Training Tracker only</span>
       </div>
       <h1>Training Tracker v3 Fix Guide</h1>
@@ -1134,6 +1134,17 @@ Clear(colNewCertificate)</pre>
 
         <h3>Build The Flow: <code>TT - Save Certificate</code></h3>
         <p>You do not need any Power Automate experience for this &mdash; follow these steps in order. This is one flow with a handful of steps, not a big build.</p>
+        <div class="callout">
+          <strong>Already built this flow and typed things like <code>text_9</code>, <code>text_10</code>, or <code>text_8</code> into a field by hand?</strong> That happened because an earlier version of this guide showed illustrative example expressions that looked copy-pasteable but referenced internal names unique to a different flow &mdash; not yours. That was this guide's mistake, not yours. Here is exactly how to undo it, field by field:
+          <ol>
+            <li>Open <strong>TT - Save Certificate</strong> in <a href="https://make.powerautomate.com" target="_blank" rel="noopener">make.powerautomate.com</a> and click into it to edit.</li>
+            <li>Find the <strong>Update item</strong> action (Step 2 below). Click into the <code>UploadedByEmail</code> field. If it contains any typed text such as <code>text_9</code> or <code>text_10</code>, click inside the box, select all the text in it (Ctrl+A while the cursor is in that box) and delete it, leaving the field completely empty. Do not type anything back in &mdash; Step 2's table below says to leave this field empty.</li>
+            <li>Find the <strong>Create item</strong> action on <code>TT AuditLog</code> (Step 4 below). Click into the <code>Title</code> field. If it contains typed text such as <code>text_8</code>, select all and delete it. Then click the lightning-bolt <strong>dynamic content</strong> icon on the right of that same box, and pick <code>CourseName</code> from the list &mdash; then type the literal words <code>&nbsp;certificate saved</code> straight after it, exactly as Step 4's table describes.</li>
+            <li>While you are in that same <strong>Create item</strong> action, check every other field against Step 4's table below the same way: if any of them contain typed text instead of a clicked-in dynamic content chip (dynamic content values show as small coloured pill/chip tags inside the box, not plain typed-looking text), clear it and re-click the correct dynamic content item from the picker instead.</li>
+            <li>Once every field is fixed, click <strong>Save</strong> on the flow. If Save succeeds with no red errors, the fix worked.</li>
+          </ol>
+          If you are building this flow for the first time and have not hit this yet, you can skip this box entirely &mdash; just follow Steps 1&ndash;5 below using only the dynamic content picker, never by typing a field name yourself.
+        </div>
         <ol>
           <li>Go to <a href="https://make.powerautomate.com" target="_blank" rel="noopener">make.powerautomate.com</a>, signed in as the same account you use for this SharePoint site.</li>
           <li><strong>Create &rarr; Instant cloud flow.</strong> Name it exactly <code>TT - Save Certificate</code>.</li>
