@@ -23,6 +23,20 @@ This is not a copied mirror of Microsoft Learn. It is a practical local referenc
 - `known-bad-patterns.md` - recurring mistakes to block before publishing.
 - `external/powerappsui/` - pre-built copy-paste component YAML from powerappsui.com (MIT-licensed open-source Power Apps component library), plus original condensed notes per component. See `external/powerappsui/README.md` for the full component index (data table, KPI cards, charts, sidebar, stepper, dialog, breadcrumbs, etc.). Check here before hand-building a UI pattern one of these components already covers.
 
+## Companion Power Automate Pack
+
+Power Automate flow guidance lives separately at `../power-automate/`.
+
+Use that pack for:
+
+- Power Apps (V2) trigger schemas and input order.
+- Flow designer copy/paste payloads.
+- SharePoint/Outlook connector action templates.
+- `Respond to a PowerApp or flow` output patterns.
+- Run-only and connection-reference behavior.
+
+Keep Power Apps screen/control/YAML rules in this reference pack, and flow/action/trigger rules in the Power Automate pack. When an app calls a flow, update both sides deliberately.
+
 ## Rule
 
 If a future guide needs a control, connector, or formula pattern that is not in this pack, verify it from Microsoft Learn or live Power Apps behavior first. Add the result here before using it in the guide.

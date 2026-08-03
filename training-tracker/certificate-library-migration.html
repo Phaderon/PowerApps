@@ -236,9 +236,9 @@
         <tr><td>11</td><td>Yes/No</td><td><code>IsAdmin</code></td></tr>
       </table>
 
-      <div class="callout warn">
-        <strong>Experimental shortcut:</strong> Power Automate's new designer can copy and paste triggers/actions, but Microsoft documents the feature, not this raw clipboard format as a stable hand-authored file format. The button below generates the same trigger clipboard structure from a real copied <code>Power Apps (V2)</code> trigger with these 11 inputs. Try it on a test flow first. If Power Automate refuses the paste, fall back to the manual input table above.
-        <br><button class="copy-button" type="button" data-flow-trigger="save">Copy TEST save trigger payload</button>
+      <div class="callout ok">
+        <strong>Confirmed shortcut:</strong> this button copies a paste-tested <code>Power Apps (V2)</code> trigger payload with all 11 inputs already defined. In a new test flow, right-click the canvas/plus point and use <strong>Paste an action</strong>. If Microsoft changes the designer and the paste ever fails, the manual table above is still the fallback.
+        <br><button class="copy-button" type="button" data-flow-trigger="save">Copy save trigger</button>
       </div>
 
       <h3>Top-Level Variables</h3>
@@ -248,6 +248,11 @@
         <tr><td>Initialize variable</td><td><code>varSuccess</code></td><td>Boolean</td><td>leave empty</td></tr>
         <tr><td>Initialize variable</td><td><code>varMessage</code></td><td>String</td><td>leave empty</td></tr>
       </table>
+      <div class="callout ok">
+        <strong>Confirmed shortcut:</strong> paste these two actions directly under the trigger, before any SharePoint action. Paste <code>varSuccess</code> first, then <code>varMessage</code>.
+        <br><button class="copy-button" type="button" data-flow-variable="success">Copy varSuccess initializer</button>
+        <button class="copy-button" type="button" data-flow-variable="message">Copy varMessage initializer</button>
+      </div>
 
       <h3>Actions</h3>
       <ol class="step-list">
@@ -311,9 +316,9 @@
         <tr><td>3</td><td>Yes/No</td><td><code>IsAdmin</code></td></tr>
       </table>
 
-      <div class="callout warn">
-        <strong>Experimental shortcut:</strong> this button copies the matching <code>Power Apps (V2)</code> trigger payload for the email test flow's three inputs. Test the paste in a disposable flow before relying on it.
-        <br><button class="copy-button" type="button" data-flow-trigger="email">Copy TEST email trigger payload</button>
+      <div class="callout ok">
+        <strong>Confirmed shortcut:</strong> this button copies a paste-tested <code>Power Apps (V2)</code> trigger payload with the three email-flow inputs already defined.
+        <br><button class="copy-button" type="button" data-flow-trigger="email">Copy email trigger</button>
       </div>
 
       <h3>Top-Level Variables</h3>
@@ -322,6 +327,11 @@
         <tr><td><code>varSuccess</code></td><td>Boolean</td><td>empty</td></tr>
         <tr><td><code>varMessage</code></td><td>String</td><td>empty</td></tr>
       </table>
+      <div class="callout ok">
+        <strong>Confirmed shortcut:</strong> use the same two variable initializer buttons here as well. Paste <code>varSuccess</code> first, then <code>varMessage</code>, directly under the email trigger.
+        <br><button class="copy-button" type="button" data-flow-variable="success">Copy varSuccess initializer</button>
+        <button class="copy-button" type="button" data-flow-variable="message">Copy varMessage initializer</button>
+      </div>
 
       <h3>Actions</h3>
       <ol class="step-list">
@@ -781,6 +791,216 @@ If(
       });
     }
 
+    function literalSegment(value) {
+      return {
+        id: crypto.randomUUID ? crypto.randomUUID().toUpperCase() : "00000000-0000-4000-8000-000000000000",
+        type: "literal",
+        value,
+        valueType: "string"
+      };
+    }
+
+    function variableTypeParameter(type) {
+      return {
+        id: crypto.randomUUID ? crypto.randomUUID().toUpperCase() : "00000000-0000-4000-8000-000000000001",
+        editor: "dropdown",
+        editorOptions: {
+          options: Array(
+            { displayName: "Boolean", value: "boolean" },
+            { displayName: "Integer", value: "integer" },
+            { displayName: "Float", value: "float" },
+            { displayName: "String", value: "string" },
+            { displayName: "Object", value: "object" },
+            { displayName: "Array", value: "array" }
+          ),
+          serialization: {}
+        },
+        info: { isDynamic: false },
+        hideInUI: false,
+        label: "Type",
+        parameterKey: "inputs.$.type",
+        parameterName: "type",
+        preservedValue: type,
+        required: true,
+        schema: {
+          type: "string",
+          title: "Type",
+          default: "boolean",
+          "x-ms-editor": "dropdown",
+          "x-ms-editor-options": {
+            options: Array(
+              { displayName: "Boolean", value: "boolean" },
+              { displayName: "Integer", value: "integer" },
+              { displayName: "Float", value: "float" },
+              { displayName: "String", value: "string" },
+              { displayName: "Object", value: "object" },
+              { displayName: "Array", value: "array" }
+            )
+          }
+        },
+        showErrors: false,
+        showTokens: true,
+        suppressCasting: true,
+        type: "string",
+        value: Array(literalSegment(type)),
+        visibility: "",
+        validationErrors: Array()
+      };
+    }
+
+    function variableValueParameter(type) {
+      const parameter = {
+        id: crypto.randomUUID ? crypto.randomUUID().toUpperCase() : "00000000-0000-4000-8000-000000000002",
+        info: { isDynamic: true, dynamicParameterReference: "inputs.$.value" },
+        hideInUI: false,
+        label: "Value",
+        parameterKey: "inputs.$.value",
+        parameterName: "value",
+        required: false,
+        schema: {
+          isDynamic: true,
+          key: "inputs.$.value",
+          name: "value",
+          required: false,
+          schema: { type },
+          summary: "",
+          suppressCasting: false,
+          title: "Value",
+          type,
+          visibility: "important",
+          dynamicParameterReference: "inputs.$.value"
+        },
+        showErrors: false,
+        showTokens: true,
+        suppressCasting: false,
+        type,
+        value: Array(literalSegment("")),
+        visibility: "important"
+      };
+      if (type === "boolean") {
+        parameter.editor = "combobox";
+        parameter.editorOptions = { options: Array({ displayName: "true", value: true, key: "true" }, { displayName: "false", value: false, key: "false" }) };
+        parameter.schema.editor = "combobox";
+        parameter.schema.editorOptions = parameter.editorOptions;
+        parameter.schema.enum = Array({ displayName: "true", value: true }, { displayName: "false", value: false });
+        parameter.schema.schema.enum = Array(true, false);
+      }
+      return parameter;
+    }
+
+    function buildInitializeVariableClipboard(name, type, nodeId) {
+      const parameters = Array(
+        {
+          id: crypto.randomUUID ? crypto.randomUUID().toUpperCase() : "00000000-0000-4000-8000-000000000003",
+          editor: "string",
+          info: { isDynamic: false },
+          hideInUI: false,
+          label: "Name",
+          parameterKey: "inputs.$.name",
+          parameterName: "name",
+          placeholder: "Enter variable name",
+          required: true,
+          schema: {
+            type: "string",
+            title: "Name",
+            description: "Enter variable name",
+            "x-ms-editor": "string"
+          },
+          showErrors: false,
+          showTokens: false,
+          suppressCasting: true,
+          type: "string",
+          value: Array(literalSegment(name)),
+          visibility: "",
+          validationErrors: Array()
+        },
+        variableTypeParameter(type),
+        variableValueParameter(type)
+      );
+
+      return JSON.stringify({
+        nodeId,
+        nodeData: {
+          id: nodeId,
+          nodeInputs: {
+            dynamicLoadStatus: "Succeeded",
+            parameterGroups: {
+              default: {
+                id: "default",
+                description: "",
+                parameters,
+                rawInputs: Array(
+                  {
+                    description: "Enter variable name",
+                    editor: "string",
+                    isNested: true,
+                    key: "inputs.$.name",
+                    name: "name",
+                    required: true,
+                    schema: { type: "string", title: "Name", description: "Enter variable name", "x-ms-editor": "string" },
+                    summary: "",
+                    suppressCasting: true,
+                    title: "Name",
+                    type: "string",
+                    visibility: ""
+                  },
+                  {
+                    default: "boolean",
+                    editor: "dropdown",
+                    isNested: true,
+                    key: "inputs.$.type",
+                    name: "type",
+                    required: true,
+                    schema: { type: "string", title: "Type", default: "boolean", "x-ms-editor": "dropdown" },
+                    summary: "",
+                    suppressCasting: true,
+                    title: "Type",
+                    type: "string",
+                    visibility: ""
+                  },
+                  {
+                    isDynamic: true,
+                    isNested: true,
+                    key: "inputs.$.value",
+                    name: "value",
+                    required: false,
+                    schema: { type },
+                    summary: "",
+                    suppressCasting: false,
+                    title: "Value",
+                    type,
+                    visibility: "important"
+                  }
+                )
+              }
+            }
+          },
+          nodeOutputs: { outputs: {} },
+          nodeDependencies: { inputs: {}, outputs: {} },
+          operationMetadata: {
+            iconUri: "https://content.powerapps.com/resource/makerx/static/pauto/images/designeroperations/Variable.276a45cc.png",
+            brandColor: "#770BD6",
+            isConnectToSystemsOperation: false
+          },
+          settings: {
+            secureInputs: { isSupported: true },
+            secureOutputs: { isSupported: true },
+            trackedProperties: { isSupported: false },
+            runAfter: { isSupported: true, value: Array() }
+          }
+        },
+        nodeTokenData: { tokens: Array(), upstreamNodeIds: Array("When_Power_Apps_calls_a_flow_(V2)") },
+        nodeOperationInfo: {
+          connectorId: "providers/Microsoft.ProcessSimple/operationGroups/Variable",
+          operationId: "InitializeVariable",
+          type: "InitializeVariable"
+        },
+        nodeConnectionData: null,
+        isScopeNode: false,
+        mslaNode: true
+      });
+    }
+
     const triggerFields = {
       save: Array(
         { key: "date", title: "DateCompleted", type: "string", format: "date", hint: "DATE" },
@@ -807,6 +1027,22 @@ If(
         const oldText = button.textContent;
         try {
           await navigator.clipboard.writeText(buildPowerAppsTriggerClipboard(triggerFields[button.dataset.flowTrigger]));
+          button.textContent = "Copied";
+        } catch (error) {
+          button.textContent = "Copy failed";
+        }
+        setTimeout(() => { button.textContent = oldText; }, 1600);
+      });
+    });
+
+    document.querySelectorAll("button[data-flow-variable]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const oldText = button.textContent;
+        const variable = button.dataset.flowVariable === "success"
+          ? { name: "varSuccess", type: "boolean", nodeId: "Initialize_variable" }
+          : { name: "varMessage", type: "string", nodeId: "Initialize_variable_1" };
+        try {
+          await navigator.clipboard.writeText(buildInitializeVariableClipboard(variable.name, variable.type, variable.nodeId));
           button.textContent = "Copied";
         } catch (error) {
           button.textContent = "Copy failed";
