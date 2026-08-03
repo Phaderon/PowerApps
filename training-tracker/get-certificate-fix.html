@@ -102,48 +102,59 @@
       <p>Everything below fixes the original <code>TT - Get Certificate</code> flow &mdash; that's the one to keep using.</p>
 
       <h2>1. Delete both existing Respond actions</h2>
+      <p>Open <code>TT - Get Certificate</code> in edit mode in <a href="https://make.powerautomate.com" target="_blank" rel="noopener">make.powerautomate.com</a>. You are looking for two separate <strong>Respond to a PowerApp or flow</strong> actions:</p>
       <ul>
-        <li>The one sitting <strong>after your Apply to each loop</strong>, inside the "If yes" (authorised) branch.</li>
-        <li>The one in the <strong>"If no"</strong> (unauthorised) branch.</li>
+        <li>One sitting <strong>after your Apply to each loop ends</strong>, still inside the <strong>If yes</strong> (authorised) branch of your Condition.</li>
+        <li>One inside the <strong>If no</strong> (unauthorised) branch.</li>
       </ul>
-      <p>Right-click each one &rarr; Delete. Both are being replaced below.</p>
+      <p>For each one: click the three dots <strong>&hellip;</strong> in the top-right corner of the action's card &rarr; <strong>Delete</strong> &rarr; confirm. Do this for both before moving on &mdash; the flow will be in a half-finished state until Step 5 below, that's expected.</p>
 
       <h2>2. Add two more variables, alongside the two you already have</h2>
-      <p>You should already have <code>varFileName</code> and <code>varFileContentBase64</code> initialised at the very top of the flow (directly after the trigger, before <strong>Get item</strong>). Add two more, in the same place, the same way:</p>
-      <ul>
-        <li><strong>Initialize variable</strong> &mdash; Name: <code>varSuccess</code>, Type: <strong>Boolean</strong>, Value: leave empty.</li>
-        <li><strong>Initialize variable</strong> &mdash; Name: <code>varMessage</code>, Type: <strong>String</strong>, Value: leave empty.</li>
-      </ul>
-      <p>You now have four variables total, all initialised at the top level, none inside any Condition or loop.</p>
+      <p>You should already have <code>varFileName</code> and <code>varFileContentBase64</code> sitting as <strong>Initialize variable</strong> actions at the very top of the flow &mdash; directly under the trigger, before <strong>Get item</strong>. Add two more in that exact same spot, above <strong>Get item</strong>, the same way you added those:</p>
+      <ol class="step-list">
+        <li>Click the <strong>+</strong> below your last existing "Initialize variable" action (or between it and <strong>Get item</strong>) &rarr; search <code>Initialize variable</code> &rarr; select the <strong>Control</strong> connector's action of that name.</li>
+        <li>Fill it in: <strong>Name:</strong> <code>varSuccess</code>. <strong>Type:</strong> click the type dropdown and choose <strong>Boolean</strong>. <strong>Value:</strong> leave this box completely empty &mdash; don't type anything, not even a fx expression.</li>
+        <li>Repeat: add a second <strong>Initialize variable</strong> the same way. <strong>Name:</strong> <code>varMessage</code>. <strong>Type:</strong> <strong>String</strong>. <strong>Value:</strong> leave empty.</li>
+      </ol>
+      <p>You should now have four "Initialize variable" actions stacked at the top, in this order: <code>varFileName</code>, <code>varFileContentBase64</code> (however you had them before), then your new <code>varSuccess</code>, <code>varMessage</code>. Order between them doesn't matter, but all four must be above <strong>Get item</strong> and outside any Condition/loop &mdash; Power Automate only allows this action at the flow's top level, it will refuse to save if one ends up inside a branch.</p>
 
       <h2>3. In the "If yes" (authorised) branch: replace the deleted Respond with two Set variable steps</h2>
-      <p>Place these <strong>after your Apply to each loop ends</strong>, still inside the "If yes" branch &mdash; the same spot the deleted Respond action used to sit.</p>
+      <p>Go back into the <strong>If yes</strong> branch. Your <strong>Apply to each</strong> loop (with <strong>Get attachment content</strong> and your two Set variable steps for <code>varFileName</code>/<code>varFileContentBase64</code> inside it) should still be there and untouched. You're adding two brand-new actions <strong>directly below the loop, still inside the If yes branch</strong> &mdash; the same spot where the Respond action you deleted in Step 1 used to sit.</p>
       <ol class="step-list">
-        <li><strong>Set variable</strong> &mdash; Name: <code>varSuccess</code>, Value: click the <strong>fx</strong> icon, type the bare word <code>true</code>.</li>
-        <li><strong>Set variable</strong> &mdash; Name: <code>varMessage</code>, Value: plain literal text <code>OK</code> (no <strong>fx</strong> needed, it's just text).</li>
+        <li>Click the <strong>+</strong> just below the closing edge of the Apply to each box (still inside the yellow/grey If yes branch, not inside the loop itself) &rarr; search <code>Set variable</code> &rarr; select it.
+          <br>Fill in: <strong>Name:</strong> from the dropdown, pick <code>varSuccess</code>. <strong>Value:</strong> click the <strong>fx</strong> icon (the small function/lightning icon to the right of the value box) and type the bare word <code>true</code> &mdash; no quotes, no capital letter. Confirm it shows as a small blue/coloured pill in the box, not plain text, before moving on.</li>
+        <li>Click <strong>+</strong> again, directly below that, still in the same branch &rarr; another <strong>Set variable</strong>.
+          <br>Fill in: <strong>Name:</strong> <code>varMessage</code>. <strong>Value:</strong> just click into the plain text box and type <code>OK</code> &mdash; do <em>not</em> click fx for this one, it's a literal text field, not a true/false field.</li>
       </ol>
 
       <h2>4. In the "If no" (unauthorised) branch: same idea, two Set variable steps</h2>
+      <p>Switch to the <strong>If no</strong> branch (it should currently be empty, since you deleted its Respond action in Step 1).</p>
       <ol class="step-list">
-        <li><strong>Set variable</strong> &mdash; Name: <code>varSuccess</code>, Value: click <strong>fx</strong>, type <code>false</code>.</li>
-        <li><strong>Set variable</strong> &mdash; Name: <code>varMessage</code>, Value: plain literal text <code>You are not authorized to view this certificate.</code></li>
+        <li>Click <strong>+</strong> inside the If no branch &rarr; <strong>Set variable</strong>. <strong>Name:</strong> <code>varSuccess</code>. <strong>Value:</strong> click <strong>fx</strong>, type <code>false</code>. Confirm it shows as a pill, same as before.</li>
+        <li>Click <strong>+</strong> again, below that &rarr; <strong>Set variable</strong>. <strong>Name:</strong> <code>varMessage</code>. <strong>Value:</strong> plain text box, type exactly <code>You are not authorized to view this certificate.</code></li>
       </ol>
-      <p>Leave <code>varFileName</code>/<code>varFileContentBase64</code> alone in this branch &mdash; they just keep whatever blank value they were initialised to.</p>
+      <p>Do not add anything for <code>varFileName</code>/<code>varFileContentBase64</code> in this branch &mdash; leave them alone, they just keep whatever blank value they were initialised to in Step 2.</p>
 
       <h2>5. Add exactly one Respond action, after both branches rejoin</h2>
-      <p>Drag a new action so it sits <strong>below and outside the whole Condition box</strong> &mdash; not inside either branch. This is the only <strong>Respond to a PowerApp or flow</strong> action anywhere in this flow. Add four outputs:</p>
+      <p>Scroll down until you can see the whole Condition box (both If yes and If no branches side by side) end, with its bottom edge closing them both off. You need to add a new action <strong>below that closing edge, outside both branches</strong> &mdash; there is usually a <strong>+</strong> directly under the whole Condition box, separate from the <strong>+</strong> buttons inside either branch. If you're not sure you're in the right spot, the new action's card should span the full width of the flow canvas, not be indented inside a branch.</p>
+      <ol class="step-list">
+        <li>Click that <strong>+</strong> &rarr; search <code>Respond to a PowerApp or flow</code> &rarr; select it.</li>
+        <li>Click <strong>+ Add an output</strong> four times and configure each one:</li>
+      </ol>
       <ul>
-        <li><strong>Yes/No</strong> named <code>success</code> &mdash; value: dynamic content <code>varSuccess</code>.</li>
-        <li><strong>Text</strong> named <code>message</code> &mdash; value: dynamic content <code>varMessage</code>.</li>
-        <li><strong>Text</strong> named <code>fileName</code> &mdash; value: dynamic content <code>varFileName</code>.</li>
-        <li><strong>Text</strong> named <code>fileContentBase64</code> &mdash; value: dynamic content <code>varFileContentBase64</code>.</li>
+        <li>Output type <strong>Yes/No</strong>, Title: <code>success</code>, Value: click into the value box, switch to <strong>Dynamic content</strong>, pick <code>varSuccess</code>.</li>
+        <li>Output type <strong>Text</strong>, Title: <code>message</code>, Value: dynamic content <code>varMessage</code>.</li>
+        <li>Output type <strong>Text</strong>, Title: <code>fileName</code>, Value: dynamic content <code>varFileName</code>.</li>
+        <li>Output type <strong>Text</strong>, Title: <code>fileContentBase64</code>, Value: dynamic content <code>varFileContentBase64</code>.</li>
       </ul>
+      <p>Double-check the spelling and capitalisation of all four titles exactly as shown &mdash; the app's formula on the other end refers to these by name, and a mismatch (e.g. <code>filename</code> vs <code>fileName</code>) reproduces the exact "isn't recognized" error this whole rebuild was fixing.</p>
 
       <h2>6. Save, then check the app</h2>
       <ol class="step-list">
-        <li>Save the flow.</li>
-        <li>In Power Apps, open <code>btnOpenCertificate.OnSelect</code> and check the autocomplete on whichever variable holds the flow's result (e.g. <code>varCertDownload.</code> or <code>varCertFetch.</code> if you renamed it earlier).</li>
-        <li>All four fields (<code>success</code>, <code>message</code>, <code>fileName</code>, <code>fileContentBase64</code>) should now show up, permanently &mdash; this is a structural fix, not a caching one, so it should not come back.</li>
+        <li>Click <strong>Save</strong> in the top-right of the flow designer. If it saves cleanly with no red error banner, the structural fix is in.</li>
+        <li>In Power Apps Studio, open the Training Tracker app, go to the <strong>Data</strong> pane, find <code>TT - Get Certificate</code>, click its <strong>&hellip;</strong> &rarr; <strong>Remove</strong>, then <strong>+ Add data</strong> and add it back &mdash; this forces Power Apps to re-read the flow's now-corrected output schema rather than an old cached one.</li>
+        <li>Explicitly save the app itself too (not just the data source) &mdash; the small <strong>File &rarr; Save</strong>, or Ctrl+S. Then fully close the app (back to the app list) and reopen it, to be sure Studio isn't holding an old in-memory copy.</li>
+        <li>Open <code>btnOpenCertificate.OnSelect</code> and check the autocomplete on whichever variable holds the flow's result (e.g. <code>varCertDownload.</code>). All four fields (<code>success</code>, <code>message</code>, <code>fileName</code>, <code>fileContentBase64</code>) should now show up, permanently &mdash; this is a structural fix, not a caching one, so it should not come back.</li>
       </ol>
 
       <div class="callout ok">
