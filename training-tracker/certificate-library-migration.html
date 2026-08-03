@@ -119,6 +119,18 @@
     .step-list li { margin: 14px 0; }
     .back-link { display: inline-block; margin-top: 24px; font-weight: 600; }
     .small { color: var(--muted); font-size: .92rem; }
+    .copy-button {
+      appearance: none;
+      border: 0;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #ffffff;
+      cursor: pointer;
+      font-weight: 700;
+      margin: 8px 8px 8px 0;
+      padding: 9px 13px;
+    }
+    .copy-button:hover { background: #063d35; }
     @media (max-width: 860px) {
       .shell { padding: 12px; }
       main { padding: 18px; }
@@ -224,6 +236,11 @@
         <tr><td>11</td><td>Yes/No</td><td><code>IsAdmin</code></td></tr>
       </table>
 
+      <div class="callout warn">
+        <strong>Experimental shortcut:</strong> Power Automate's new designer can copy and paste triggers/actions, but Microsoft documents the feature, not this raw clipboard format as a stable hand-authored file format. The button below generates the same trigger clipboard structure from a real copied <code>Power Apps (V2)</code> trigger with these 11 inputs. Try it on a test flow first. If Power Automate refuses the paste, fall back to the manual input table above.
+        <br><button class="copy-button" type="button" data-flow-trigger="save">Copy TEST save trigger payload</button>
+      </div>
+
       <h3>Top-Level Variables</h3>
       <p>Add these directly under the trigger, before any SharePoint action.</p>
       <table>
@@ -293,6 +310,11 @@
         <tr><td>2</td><td>Text</td><td><code>ActorEmail</code></td></tr>
         <tr><td>3</td><td>Yes/No</td><td><code>IsAdmin</code></td></tr>
       </table>
+
+      <div class="callout warn">
+        <strong>Experimental shortcut:</strong> this button copies the matching <code>Power Apps (V2)</code> trigger payload for the email test flow's three inputs. Test the paste in a disposable flow before relying on it.
+        <br><button class="copy-button" type="button" data-flow-trigger="email">Copy TEST email trigger payload</button>
+      </div>
 
       <h3>Top-Level Variables</h3>
       <table>
@@ -514,5 +536,284 @@ If(
       <a class="back-link" href="index.html#certificate-privacy-upgrade">&larr; Back to the main Training Tracker guide</a>
     </main>
   </div>
+  <script>
+    const powerAppsIcon = "https://content.powerapps.com/resource/makerx/static/pauto/images/designeroperations/PowerApps2.05e0cdd0.png";
+    const schemaParameterId = "56D839FE-9352-40AA-849A-BCCB6B61316B";
+
+    function fieldSchema(field) {
+      if (field.hint === "FILE") {
+        return {
+          description: "Please select file or image",
+          title: field.title,
+          type: "object",
+          properties: {
+            contentBytes: { type: "string", format: "byte" },
+            name: { type: "string" }
+          },
+          "x-ms-content-hint": "FILE",
+          "x-ms-dynamically-added": true
+        };
+      }
+
+      const descriptions = {
+        DATE: "Please enter or select a date (YYYY-MM-DD)",
+        BOOLEAN: "Please select yes or no",
+        NUMBER: "Please enter a number",
+        TEXT: "Please enter your input"
+      };
+      const schema = {
+        description: descriptions[field.hint],
+        title: field.title,
+        type: field.type,
+        "x-ms-content-hint": field.hint,
+        "x-ms-dynamically-added": true
+      };
+      if (field.format) {
+        schema.format = field.format;
+      }
+      return schema;
+    }
+
+    function outputForField(field, schema) {
+      return {
+        key: "outputs.$.body." + field.key,
+        type: schema.type,
+        format: schema.format,
+        isAdvanced: false,
+        name: "body." + field.key,
+        title: field.title,
+        schema,
+        source: "outputs",
+        required: false,
+        description: schema.description
+      };
+    }
+
+    function tokenForOutput(output) {
+      const token = {
+        key: output.key,
+        brandColor: "#742774",
+        icon: powerAppsIcon,
+        title: output.title,
+        name: output.name,
+        type: output.type,
+        description: output.description,
+        isAdvanced: false,
+        outputInfo: {
+          type: "outputs",
+          required: false,
+          source: "outputs",
+          isSecure: false,
+          schema: output.schema
+        }
+      };
+      if (output.format) {
+        token.outputInfo.format = output.format;
+      }
+      return token;
+    }
+
+    function buildPowerAppsTriggerClipboard(fields) {
+      const schema = { type: "object", properties: {}, required: Array() };
+      fields.forEach((field) => {
+        schema.properties[field.key] = fieldSchema(field);
+        schema.required.push(field.key);
+      });
+
+      const outputs = {};
+      fields.forEach((field) => {
+        const schemaForField = schema.properties[field.key];
+        outputs["outputs.$.body." + field.key] = outputForField(field, schemaForField);
+        if (field.hint === "FILE") {
+          outputs["outputs.$.body." + field.key + ".contentBytes"] = {
+            key: "outputs.$.body." + field.key + ".contentBytes",
+            type: "string",
+            format: "byte",
+            isAdvanced: false,
+            name: "body." + field.key + ".contentBytes",
+            title: field.title + " contentBytes",
+            schema: { type: "string", format: "byte" },
+            source: "outputs",
+            required: false
+          };
+          outputs["outputs.$.body." + field.key + ".name"] = {
+            key: "outputs.$.body." + field.key + ".name",
+            type: "string",
+            isAdvanced: false,
+            name: "body." + field.key + ".name",
+            title: field.title + " name",
+            schema: { type: "string" },
+            source: "outputs",
+            required: false
+          };
+        }
+      });
+      outputs["outputs.$.body"] = {
+        key: "outputs.$.body",
+        type: "object",
+        isAdvanced: false,
+        name: "body",
+        title: "Body",
+        schema,
+        source: "outputs",
+        required: false
+      };
+
+      const tokens = Object.values(outputs).map(tokenForOutput);
+      const schemaValue = JSON.stringify(schema);
+
+      return JSON.stringify({
+        nodeId: "When_Power_Apps_calls_a_flow_(V2)",
+        nodeData: {
+          id: "When_Power_Apps_calls_a_flow_(V2)",
+          nodeInputs: {
+            dynamicLoadStatus: "Succeeded",
+            parameterGroups: {
+              default: {
+                id: "default",
+                description: "",
+                parameters: [{
+                  id: schemaParameterId,
+                  editor: "floatingactionmenu",
+                  editorOptions: {
+                    supportedTypes: Array("text", "file", "email", "boolean", "number", "date"),
+                    isRequestApiConnectionTrigger: false,
+                    useStaticInputs: false
+                  },
+                  info: { isDynamic: false },
+                  hideInUI: false,
+                  label: "schema",
+                  parameterKey: "inputs.$.schema",
+                  parameterName: "schema",
+                  required: true,
+                  schema: {
+                    type: "object",
+                    "x-ms-editor": "floatingactionmenu",
+                    "x-ms-editor-options": {
+                      supportedTypes: Array("text", "file", "email", "boolean", "number", "date"),
+                      isRequestApiConnectionTrigger: false,
+                      useStaticInputs: false
+                    }
+                  },
+                  showErrors: false,
+                  showTokens: true,
+                  suppressCasting: true,
+                  type: "object",
+                  value: [{
+                    id: "65972B89-08B1-4969-8611-21427A1F8BC0",
+                    type: "literal",
+                    value: schemaValue,
+                    valueType: "string"
+                  }],
+                  visibility: "",
+                  validationErrors: Array()
+                }],
+                rawInputs: [{
+                  editor: "floatingactionmenu",
+                  editorOptions: {
+                    supportedTypes: Array("text", "file", "email", "boolean", "number", "date"),
+                    isRequestApiConnectionTrigger: false,
+                    useStaticInputs: false
+                  },
+                  isNested: true,
+                  key: "inputs.$.schema",
+                  name: "schema",
+                  required: true,
+                  schema: {
+                    type: "object",
+                    "x-ms-editor": "floatingactionmenu",
+                    "x-ms-editor-options": {
+                      supportedTypes: Array("text", "file", "email", "boolean", "number", "date"),
+                      isRequestApiConnectionTrigger: false,
+                      useStaticInputs: false
+                    }
+                  },
+                  summary: "",
+                  suppressCasting: true,
+                  title: "schema",
+                  type: "object",
+                  visibility: "",
+                  hideInUI: false,
+                  value: { type: "object", properties: {}, required: Array() }
+                }]
+              }
+            }
+          },
+          nodeOutputs: { outputs, originalOutputs: outputs },
+          nodeDependencies: {
+            inputs: {},
+            outputs: {
+              "outputs.$.body": {
+                definition: { outputLocation: Array("properties", "body"), name: "schema", schema: "Value" },
+                dependencyType: "StaticSchema",
+                dependentParameters: { [schemaParameterId]: { isValid: true } }
+              }
+            }
+          },
+          operationMetadata: {
+            iconUri: powerAppsIcon,
+            brandColor: "#742774",
+            isConnectToSystemsOperation: false
+          },
+          settings: {
+            asynchronous: { isSupported: false, value: false },
+            correlation: { isSupported: true },
+            secureInputs: { isSupported: true },
+            secureOutputs: { isSupported: true },
+            splitOn: { isSupported: false, value: { enabled: false } },
+            concurrency: { isSupported: true, value: { enabled: false } },
+            conditionExpressions: { isSupported: true },
+            runAfter: { isSupported: false, value: Array() },
+            statelessFlow: { isSupported: true, value: { enabled: false } }
+          },
+          repetitionInfo: { repetitionReferences: Array() }
+        },
+        nodeTokenData: { tokens, upstreamNodeIds: Array() },
+        nodeOperationInfo: {
+          connectorId: "PowerApps",
+          operationId: "PowerAppsButtonV2",
+          type: "Request",
+          kind: "PowerAppV2"
+        },
+        nodeConnectionData: null,
+        isScopeNode: false,
+        mslaNode: true
+      });
+    }
+
+    const triggerFields = {
+      save: Array(
+        { key: "date", title: "DateCompleted", type: "string", format: "date", hint: "DATE" },
+        { key: "boolean", title: "HasNewFile", type: "boolean", hint: "BOOLEAN" },
+        { key: "text", title: "FileName", type: "string", hint: "TEXT" },
+        { key: "file", title: "FileContent", type: "object", hint: "FILE" },
+        { key: "text_1", title: "PersonEmail", type: "string", hint: "TEXT" },
+        { key: "text_2", title: "CourseName", type: "string", hint: "TEXT" },
+        { key: "text_3", title: "ActorEmail", type: "string", hint: "TEXT" },
+        { key: "boolean_1", title: "ViewingForSelf", type: "boolean", hint: "BOOLEAN" },
+        { key: "number", title: "RecordID", type: "number", hint: "NUMBER" },
+        { key: "number_1", title: "CourseID", type: "number", hint: "NUMBER" },
+        { key: "boolean_2", title: "IsAdmin", type: "boolean", hint: "BOOLEAN" }
+      ),
+      email: Array(
+        { key: "number", title: "RecordID", type: "number", hint: "NUMBER" },
+        { key: "text", title: "ActorEmail", type: "string", hint: "TEXT" },
+        { key: "boolean", title: "IsAdmin", type: "boolean", hint: "BOOLEAN" }
+      )
+    };
+
+    document.querySelectorAll("button[data-flow-trigger]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const oldText = button.textContent;
+        try {
+          await navigator.clipboard.writeText(buildPowerAppsTriggerClipboard(triggerFields[button.dataset.flowTrigger]));
+          button.textContent = "Copied";
+        } catch (error) {
+          button.textContent = "Copy failed";
+        }
+        setTimeout(() => { button.textContent = oldText; }, 1600);
+      });
+    });
+  </script>
 </body>
 </html>
