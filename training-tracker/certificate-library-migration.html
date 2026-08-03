@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Training Tracker Certificate Library Migration</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --paper: #ffffff;
+      --ink: #172033;
+      --muted: #637084;
+      --line: #d9e1ec;
+      --primary: #004e42;
+      --primary-soft: #e8f4ef;
+      --green: #1f7a4d;
+      --amber: #a86500;
+      --red: #a33a3a;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --shadow: 0 12px 32px rgba(20, 34, 56, .10);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+    }
+    a { color: var(--primary); }
+    .shell {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    main {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+    }
+    h1 { margin: 0 0 8px; font-size: 2rem; }
+    h2 { margin: 34px 0 10px; font-size: 1.35rem; border-top: 1px solid var(--line); padding-top: 22px; }
+    h2:first-of-type { border-top: 0; padding-top: 0; }
+    h3 { margin: 24px 0 8px; font-size: 1.05rem; }
+    .lead { margin: 0 0 20px; color: var(--muted); font-size: 1.05rem; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: .8rem;
+      font-weight: 700;
+      margin: 0 8px 16px 0;
+    }
+    .callout {
+      border-left: 4px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 16px 0;
+    }
+    .warn { border-left-color: var(--amber); background: #fff7e8; }
+    .danger { border-left-color: var(--red); background: #fff0f0; }
+    .ok { border-left-color: var(--green); background: #edf8f2; }
+    code {
+      font-family: var(--mono);
+      background: #eef3f8;
+      border: 1px solid #dce5f0;
+      border-radius: 6px;
+      padding: 1px 5px;
+      font-size: .92em;
+    }
+    pre {
+      margin: 0;
+      overflow-x: auto;
+      background: #101827;
+      color: #f4f7fb;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: var(--mono);
+      font-size: .9rem;
+      line-height: 1.5;
+    }
+    .code-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 12px 0 18px;
+    }
+    .code-title {
+      background: #eef3f8;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-weight: 700;
+      padding: 9px 12px;
+      font-size: .88rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 18px;
+      font-size: .95rem;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #f0f5f8; }
+    ol, ul { padding-left: 1.3rem; }
+    li { margin: 8px 0; }
+    .step-list li { margin: 14px 0; }
+    .back-link { display: inline-block; margin-top: 24px; font-weight: 600; }
+    .small { color: var(--muted); font-size: .92rem; }
+    @media (max-width: 860px) {
+      .shell { padding: 12px; }
+      main { padding: 18px; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <main>
+      <span class="pill">Safe migration</span>
+      <span class="pill">Build and test before cutover</span>
+      <span class="pill">Training Tracker only</span>
+      <h1>Move Certificates Out Of <code>TT TrainingRecords</code> Attachments</h1>
+      <p class="lead">This is the separate fix guide for moving certificates into a locked SharePoint document library while leaving the training tracker metadata in the existing lists. Follow the test phase first. Do not remove old attachments, flows, or formulas until the new save and email flows work against one real test record.</p>
+
+      <div class="callout ok">
+        <strong>Answer to the big question:</strong> yes, you can test this in advance. Build the new <code>TT Certificates</code> library and the two new <code>TEST</code> flows first. Add two temporary buttons on <code>scrCourseDetail</code> to call those test flows. If the test works, then do the cutover edits. If it does not, delete the test buttons and the current app keeps using the old attachment route.
+      </div>
+
+      <h2>1. What Changes And What Stays</h2>
+      <table>
+        <tr><th>Area</th><th>Keep</th><th>Change</th></tr>
+        <tr>
+          <td>Existing SharePoint lists</td>
+          <td><code>TT Personnel</code>, <code>TT Courses</code>, <code>TT TrainingRecords</code>, <code>TT AuditLog</code>, <code>TT ComplianceSnapshots</code></td>
+          <td>Add a separate document library named <code>TT Certificates</code>. It is the fourth data store for certificate files only.</td>
+        </tr>
+        <tr>
+          <td>Training record metadata</td>
+          <td><code>DateCompleted</code>, <code>UploadedByEmail</code>, <code>LastUpdatedByEmail</code>, <code>LastUpdatedOn</code>, <code>LastStatus</code>, compliance maths, admin dashboard, audit log.</td>
+          <td>The record no longer needs a SharePoint list attachment to prove a certificate exists. The file is stored in <code>TT Certificates</code> instead.</td>
+        </tr>
+        <tr>
+          <td>Power Apps file picker</td>
+          <td>The existing unbound <code>Attachments@2.3.0</code> control and <code>colNewCertificate</code> staging pattern.</td>
+          <td>The save button calls a new library flow instead of the old attachment flow.</td>
+        </tr>
+        <tr>
+          <td>Power Automate</td>
+          <td>The old flows stay untouched during testing.</td>
+          <td>New flows write/read the locked document library. The read flow emails the certificate instead of returning base64 to Power Apps.</td>
+        </tr>
+        <tr>
+          <td>Security</td>
+          <td>Users still use the app to see their training data.</td>
+          <td>Only admins/service account have direct access to <code>TT Certificates</code>. Normal users do not browse the certificate library.</td>
+        </tr>
+      </table>
+
+      <div class="callout warn">
+        <strong>Important:</strong> SharePoint document library columns have internal names. Create the columns below with the exact names shown, with no spaces. If you rename them later, Power Automate may still use the original internal name.
+      </div>
+
+      <h2>2. Create The New SharePoint Document Library</h2>
+      <ol class="step-list">
+        <li>Open the same SharePoint site that contains the Training Tracker lists.</li>
+        <li>Create a new <strong>Document library</strong>, not a normal list. Name it exactly <code>TT Certificates</code>.</li>
+        <li>In the new library, add the columns below.</li>
+      </ol>
+
+      <table>
+        <tr><th>Column name</th><th>Type</th><th>Required?</th><th>Purpose</th></tr>
+        <tr><td><code>TrainingRecordID</code></td><td>Number</td><td>Yes</td><td>Links the file back to <code>TT TrainingRecords.ID</code>.</td></tr>
+        <tr><td><code>PersonEmail</code></td><td>Single line of text</td><td>Yes</td><td>The person who owns the training record.</td></tr>
+        <tr><td><code>CourseID</code></td><td>Number</td><td>No</td><td>The course ID from <code>TT Courses</code>.</td></tr>
+        <tr><td><code>CourseName</code></td><td>Single line of text</td><td>No</td><td>Readable course name for admin/search/audit.</td></tr>
+        <tr><td><code>DateCompleted</code></td><td>Date and time, Date only</td><td>No</td><td>The completion date saved on the training record.</td></tr>
+        <tr><td><code>UploadedByEmail</code></td><td>Single line of text</td><td>No</td><td>The app user who uploaded or replaced the file.</td></tr>
+        <tr><td><code>UploadedOn</code></td><td>Date and time, Date and time</td><td>No</td><td>When the library copy was created.</td></tr>
+        <tr><td><code>IsCurrent</code></td><td>Yes/No</td><td>No</td><td>Use <code>Yes</code>. Kept for future-proofing if you ever keep old versions.</td></tr>
+      </table>
+
+      <h3>Permissions For Testing</h3>
+      <p>For the first test, do not lock the library down yet. Give yourself and the flow owner access. Once the test flow works, change permissions like this:</p>
+      <ul>
+        <li>Stop inheriting permissions on <code>TT Certificates</code>.</li>
+        <li>Keep Full Control for the site owners/admins who are allowed to inspect certificates.</li>
+        <li>Keep access for the account whose SharePoint connection the flows use.</li>
+        <li>Remove normal app users from this library only. Do not remove their access from the metadata lists yet.</li>
+      </ul>
+
+      <h2>3. Build Test Flow 1: Save To Library</h2>
+      <p>Create this as a new flow first. Do not edit <code>TT - Save Certificate</code> yet.</p>
+
+      <h3>Flow Name</h3>
+      <p><code>TT - Save Certificate Library TEST</code></p>
+
+      <h3>Trigger Inputs</h3>
+      <p>Use <strong>Power Apps (V2)</strong>. Add these inputs in this order.</p>
+      <table>
+        <tr><th>#</th><th>Type</th><th>Name</th></tr>
+        <tr><td>1</td><td>Date</td><td><code>DateCompleted</code></td></tr>
+        <tr><td>2</td><td>Yes/No</td><td><code>HasNewFile</code></td></tr>
+        <tr><td>3</td><td>Text</td><td><code>FileName</code></td></tr>
+        <tr><td>4</td><td>File</td><td><code>FileContent</code></td></tr>
+        <tr><td>5</td><td>Text</td><td><code>PersonEmail</code></td></tr>
+        <tr><td>6</td><td>Text</td><td><code>CourseName</code></td></tr>
+        <tr><td>7</td><td>Text</td><td><code>ActorEmail</code></td></tr>
+        <tr><td>8</td><td>Yes/No</td><td><code>ViewingForSelf</code></td></tr>
+        <tr><td>9</td><td>Number</td><td><code>RecordID</code></td></tr>
+        <tr><td>10</td><td>Number</td><td><code>CourseID</code></td></tr>
+        <tr><td>11</td><td>Yes/No</td><td><code>IsAdmin</code></td></tr>
+      </table>
+
+      <h3>Top-Level Variables</h3>
+      <p>Add these directly under the trigger, before any SharePoint action.</p>
+      <table>
+        <tr><th>Action</th><th>Name</th><th>Type</th><th>Value</th></tr>
+        <tr><td>Initialize variable</td><td><code>varSuccess</code></td><td>Boolean</td><td>leave empty</td></tr>
+        <tr><td>Initialize variable</td><td><code>varMessage</code></td><td>String</td><td>leave empty</td></tr>
+      </table>
+
+      <h3>Actions</h3>
+      <ol class="step-list">
+        <li><strong>SharePoint - Get item</strong>. Site: your Training Tracker site. List: <code>TT TrainingRecords</code>. Id: dynamic content <code>RecordID</code>.</li>
+        <li><strong>Condition - Authorised?</strong> Use OR logic:
+          <br><code>PersonEmail</code> from <strong>Get item</strong> is equal to trigger <code>ActorEmail</code>
+          <br>OR trigger <code>IsAdmin</code> is equal to expression <code>true</code>.
+          <br>Use the expression editor for <code>true</code>, not a Yes/No dropdown.</li>
+        <li>Inside <strong>If no</strong>: set <code>varSuccess</code> to expression <code>false</code>. Set <code>varMessage</code> to <code>You are not authorized to save this certificate.</code></li>
+        <li>Inside <strong>If yes</strong>: add a nested <strong>Condition - Has file?</strong>. Compare trigger <code>HasNewFile</code> to expression <code>true</code>.</li>
+        <li>Inside <strong>Has file? If yes</strong>: add <strong>SharePoint - Get files (properties only)</strong>. Site: same site. Library: <code>TT Certificates</code>. Filter Query:
+          <div class="code-card"><div class="code-title">OData Filter Query</div><pre>TrainingRecordID eq [RecordID dynamic content]</pre></div>
+          Do not type the square brackets. Type <code>TrainingRecordID eq </code>, then insert the real <code>RecordID</code> token from the dynamic-content picker.</li>
+        <li>Still inside <strong>Has file? If yes</strong>: add <strong>Apply to each</strong> over the value from <strong>Get files (properties only)</strong>. Inside it, add <strong>SharePoint - Delete file</strong>. File Identifier: use the current item's <code>Identifier</code> dynamic content.</li>
+        <li>Still inside <strong>Has file? If yes</strong>, but below the delete loop: add <strong>SharePoint - Create file</strong>. Site: same site. Folder Path: <code>/TT Certificates</code>. File Name: insert dynamic content <code>RecordID</code>, then type a hyphen, then insert dynamic content <code>FileName</code>. File Content: choose <code>FileContent contentBytes</code>, not <code>FileContent name</code>.</li>
+        <li>Below <strong>Create file</strong>, add <strong>SharePoint - Update file properties</strong>. Library: <code>TT Certificates</code>. Id: use <code>ItemId</code> from <strong>Create file</strong>. Set the properties:
+          <table>
+            <tr><th>Property</th><th>Value</th></tr>
+            <tr><td><code>Title</code></td><td><code>CourseName</code></td></tr>
+            <tr><td><code>TrainingRecordID</code></td><td><code>RecordID</code></td></tr>
+            <tr><td><code>PersonEmail</code></td><td><code>PersonEmail</code></td></tr>
+            <tr><td><code>CourseID</code></td><td><code>CourseID</code></td></tr>
+            <tr><td><code>CourseName</code></td><td><code>CourseName</code></td></tr>
+            <tr><td><code>DateCompleted</code></td><td><code>DateCompleted</code></td></tr>
+            <tr><td><code>UploadedByEmail</code></td><td><code>ActorEmail</code></td></tr>
+            <tr><td><code>UploadedOn</code></td><td>expression <code>utcNow()</code></td></tr>
+            <tr><td><code>IsCurrent</code></td><td>expression <code>true</code></td></tr>
+          </table>
+        </li>
+        <li>Still inside the authorised branch, after the nested file condition: add <strong>SharePoint - Update item</strong> for <code>TT TrainingRecords</code>. Id: <code>RecordID</code>. Re-supply the required fields and set:
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td><code>PersonEmail</code></td><td><code>PersonEmail</code></td></tr>
+            <tr><td><code>CourseID</code></td><td><code>CourseID</code></td></tr>
+            <tr><td><code>CourseName</code></td><td><code>CourseName</code></td></tr>
+            <tr><td><code>DateCompleted</code></td><td><code>DateCompleted</code></td></tr>
+            <tr><td><code>UploadedByEmail</code></td><td><code>ActorEmail</code> if a manager/admin uploaded it; leave blank if you want to keep the current simplified behaviour.</td></tr>
+            <tr><td><code>LastUpdatedByEmail</code></td><td><code>ActorEmail</code></td></tr>
+            <tr><td><code>LastUpdatedOn</code></td><td>expression <code>utcNow()</code></td></tr>
+            <tr><td><code>LastStatus</code></td><td><code>Certificate saved</code></td></tr>
+          </table>
+        </li>
+        <li>Still inside authorised branch: create the same <code>TT AuditLog</code> row the old save flow created. EventType: <code>Certificate saved</code>. PersonEmail: <code>PersonEmail</code>. CourseID: <code>CourseID</code>. ActorEmail: <code>ActorEmail</code>. EventDate: <code>utcNow()</code>.</li>
+        <li>Still inside authorised branch: set <code>varSuccess</code> to expression <code>true</code>. Set <code>varMessage</code> to <code>OK</code>.</li>
+        <li>After the whole authorisation Condition, outside both branches, add exactly one <strong>Respond to a PowerApp or flow</strong> action. Outputs:
+          <br><strong>Yes/No</strong> <code>success</code> = <code>varSuccess</code>
+          <br><strong>Text</strong> <code>message</code> = <code>varMessage</code></li>
+      </ol>
+
+      <h2>4. Build Test Flow 2: Email Certificate From Library</h2>
+      <p>This replaces the base64 download flow. It avoids the broken four-field response schema entirely. The app asks for the certificate, the flow checks authorisation, and the flow emails the file to the authorised requester.</p>
+
+      <h3>Flow Name</h3>
+      <p><code>TT - Email Certificate Library TEST</code></p>
+
+      <h3>Trigger Inputs</h3>
+      <table>
+        <tr><th>#</th><th>Type</th><th>Name</th></tr>
+        <tr><td>1</td><td>Number</td><td><code>RecordID</code></td></tr>
+        <tr><td>2</td><td>Text</td><td><code>ActorEmail</code></td></tr>
+        <tr><td>3</td><td>Yes/No</td><td><code>IsAdmin</code></td></tr>
+      </table>
+
+      <h3>Top-Level Variables</h3>
+      <table>
+        <tr><th>Name</th><th>Type</th><th>Initial value</th></tr>
+        <tr><td><code>varSuccess</code></td><td>Boolean</td><td>empty</td></tr>
+        <tr><td><code>varMessage</code></td><td>String</td><td>empty</td></tr>
+      </table>
+
+      <h3>Actions</h3>
+      <ol class="step-list">
+        <li><strong>SharePoint - Get item</strong>. List: <code>TT TrainingRecords</code>. Id: <code>RecordID</code>.</li>
+        <li><strong>Condition - Authorised?</strong> Same as the save flow:
+          <br>record <code>PersonEmail</code> equals trigger <code>ActorEmail</code>
+          <br>OR trigger <code>IsAdmin</code> equals expression <code>true</code>.</li>
+        <li>Inside <strong>If no</strong>: set <code>varSuccess</code> to expression <code>false</code>. Set <code>varMessage</code> to <code>You are not authorized to view this certificate.</code></li>
+        <li>Inside <strong>If yes</strong>: add <strong>SharePoint - Get files (properties only)</strong>. Library: <code>TT Certificates</code>. Filter Query: <code>TrainingRecordID eq </code> followed by dynamic content <code>RecordID</code>. Top Count: <code>1</code>.</li>
+        <li>Add a <strong>Condition - Found certificate?</strong>. Left side expression:
+          <div class="code-card"><div class="code-title">Expression</div><pre>length(body('Get_files_(properties_only)')?['value'])</pre></div>
+          is greater than <code>0</code>.</li>
+        <li>Inside <strong>Found certificate? If no</strong>: set <code>varSuccess</code> to expression <code>false</code>. Set <code>varMessage</code> to <code>No certificate is on file for this record.</code></li>
+        <li>Inside <strong>Found certificate? If yes</strong>: add <strong>Apply to each</strong> over the <strong>value</strong> from <strong>Get files (properties only)</strong>. This loop should run once because Top Count is 1.</li>
+        <li>Inside that loop: add <strong>SharePoint - Get file content</strong>. File Identifier: current item <code>Identifier</code>.</li>
+        <li>Inside that loop: add <strong>Office 365 Outlook - Send an email (V2)</strong>.
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>To</td><td><code>ActorEmail</code></td></tr>
+            <tr><td>Subject</td><td><code>Your Training Tracker certificate</code></td></tr>
+            <tr><td>Body</td><td><code>Your requested certificate is attached.</code></td></tr>
+            <tr><td>Attachments Name</td><td>current item <code>File name with extension</code>, or <code>Name</code> if that is what your picker shows.</td></tr>
+            <tr><td>Attachments Content</td><td><strong>Get file content</strong> file content/body.</td></tr>
+          </table>
+        </li>
+        <li>Still inside <strong>Found certificate? If yes</strong>, after the loop: set <code>varSuccess</code> to expression <code>true</code>. Set <code>varMessage</code> to <code>Certificate emailed to you.</code></li>
+        <li>After the whole authorisation Condition, outside both branches, add exactly one <strong>Respond to a PowerApp or flow</strong>. Outputs:
+          <br><strong>Yes/No</strong> <code>success</code> = <code>varSuccess</code>
+          <br><strong>Text</strong> <code>message</code> = <code>varMessage</code></li>
+      </ol>
+
+      <h2>5. Add Temporary Test Buttons In Power Apps</h2>
+      <p>This is how you test without breaking the current working screen. Add the two test flows as data sources. Do not remove the old flows yet.</p>
+
+      <h3>Temporary Save Test Button</h3>
+      <p>Add a small temporary button to <code>scrCourseDetail</code>, or reuse an unused test button if you already have one. Set its <code>Text</code> to <code>TEST save library</code> and its <code>OnSelect</code> to this:</p>
+      <div class="code-card"><div class="code-title">Power Fx - temporary save test</div><pre>=Set(
+    varSaveResult,
+    'TT - Save Certificate Library TEST'.Run(
+        datCompletion.SelectedDate,
+        CountRows(colNewCertificate) > 0,
+        If(CountRows(colNewCertificate) > 0, First(colNewCertificate).Name, ""),
+        If(CountRows(colNewCertificate) > 0, First(colNewCertificate), Blank()),
+        Lower(varRecord.PersonEmail),
+        varCourse.CourseName,
+        varMyEmail,
+        varViewingForSelf,
+        varRecord.ID,
+        varCourse.CourseID,
+        varIsAdmin
+    )
+);
+If(
+    varSaveResult.success,
+    Notify("TEST save worked. Check TT Certificates.", NotificationType.Success),
+    Notify(varSaveResult.message, NotificationType.Error)
+)</pre></div>
+
+      <h3>Temporary Email Test Button</h3>
+      <p>Add a second temporary button. Set its <code>Text</code> to <code>TEST email cert</code> and its <code>OnSelect</code> to this:</p>
+      <div class="code-card"><div class="code-title">Power Fx - temporary email test</div><pre>=Set(
+    varCertEmailResult,
+    'TT - Email Certificate Library TEST'.Run(varRecord.ID, varMyEmail, varIsAdmin)
+);
+If(
+    varCertEmailResult.success,
+    Notify(varCertEmailResult.message, NotificationType.Success),
+    Notify(varCertEmailResult.message, NotificationType.Error)
+)</pre></div>
+
+      <h3>Safe Test Script</h3>
+      <ol class="step-list">
+        <li>Pick one training record you can safely test with.</li>
+        <li>Open that record in <code>scrCourseDetail</code>.</li>
+        <li>Select a small PDF or image certificate using the existing file picker.</li>
+        <li>Click <strong>TEST save library</strong>.</li>
+        <li>Open SharePoint <code>TT Certificates</code>. Confirm one file exists for that <code>TrainingRecordID</code> and its metadata columns are filled.</li>
+        <li>Click <strong>TEST email cert</strong>.</li>
+        <li>Confirm the email arrives and the attachment opens.</li>
+        <li>Run the test again with a different file. Confirm the library still has one current file for that <code>TrainingRecordID</code>, not duplicates.</li>
+      </ol>
+
+      <div class="callout danger">
+        <strong>Stop here if the test fails.</strong> Do not edit the live save/open buttons yet. The existing app can keep using the old list attachments while the new flows are fixed.
+      </div>
+
+      <h2>6. Cutover After The Test Passes</h2>
+      <p>Only do this section after the test save and test email both work.</p>
+
+      <h3>Rename Or Recreate Final Flows</h3>
+      <p>You can either rename the two test flows after they work, or create final clean copies manually. Recommended final names:</p>
+      <ul>
+        <li><code>TT - Save Certificate Library</code></li>
+        <li><code>TT - Email Certificate Library</code></li>
+      </ul>
+      <p>If you rename the test flows, remove and re-add them in Power Apps afterwards so the data source names are refreshed.</p>
+
+      <h3>Update <code>btnSaveCert.OnSelect</code></h3>
+      <p>Replace only the flow call name. The arguments stay the same.</p>
+      <div class="code-card"><div class="code-title">Power Fx - new live save call</div><pre>'TT - Save Certificate Library'.Run(
+    datCompletion.SelectedDate,
+    CountRows(colNewCertificate) > 0,
+    If(CountRows(colNewCertificate) > 0, First(colNewCertificate).Name, ""),
+    If(CountRows(colNewCertificate) > 0, First(colNewCertificate), Blank()),
+    Lower(varRecord.PersonEmail),
+    varCourse.CourseName,
+    varMyEmail,
+    varViewingForSelf,
+    varRecord.ID,
+    varCourse.CourseID,
+    varIsAdmin
+)</pre></div>
+      <p>In the full existing formula, this replaces the old <code>'TT - Save Certificate'.Run(...)</code> call inside <code>IfError</code>. Keep the surrounding busy/error/notify code.</p>
+
+      <h3>Update <code>btnOpenCertificate</code></h3>
+      <p>The old button tries to launch base64 returned by <code>TT - Get Certificate</code>. Replace that behaviour with an email request.</p>
+      <table>
+        <tr><th>Property</th><th>New value</th></tr>
+        <tr><td><code>Text</code></td><td><code>="Email certificate"</code></td></tr>
+        <tr><td><code>Visible</code></td><td><code>=!IsBlank(varRecord) &amp;&amp; !IsBlank(varRecord.DateCompleted)</code></td></tr>
+      </table>
+      <div class="code-card"><div class="code-title">Power Fx - btnOpenCertificate.OnSelect</div><pre>=Set(varCertError, "");
+Set(varCertStatusText, "Requesting certificate email...");
+Set(varCertBusy, true);
+Set(
+    varCertEmailResult,
+    IfError(
+        'TT - Email Certificate Library'.Run(varRecord.ID, varMyEmail, varIsAdmin),
+        {success: false, message: "Flow could not be reached. Check your connection and try again."}
+    )
+);
+Set(varCertBusy, false);
+If(
+    varCertEmailResult.success,
+    Set(varCertStatusText, ""); Notify(varCertEmailResult.message, NotificationType.Success),
+    Set(varCertError, varCertEmailResult.message); Notify("Could not email certificate - see the error below.", NotificationType.Error)
+)</pre></div>
+
+      <h3>Update <code>lblCurrentCertInfo.Text</code></h3>
+      <p>This label currently checks <code>varRecord.Attachments</code>. After cutover, it should not depend on list attachments.</p>
+      <div class="code-card"><div class="code-title">Power Fx - lblCurrentCertInfo.Text</div><pre>=If(
+    !IsBlank(varRecord) &amp;&amp; !IsBlank(varRecord.DateCompleted),
+    "Certificate metadata saved. Use Email certificate to request the file. Attach a new file below to replace it.",
+    "No certificate on file yet."
+)</pre></div>
+
+      <h3>Optional: Keep The Old Attachment UI Hidden, Not Deleted</h3>
+      <p>Do not delete the old attachments from <code>TT TrainingRecords</code> during the first cutover. Leave them in place as a fallback until the new library has been used successfully for a while. The app will stop reading them once you update the formulas above.</p>
+
+      <h2>7. What To Undo From The Old Guide</h2>
+      <table>
+        <tr><th>Old guide item</th><th>Action now</th><th>Reason</th></tr>
+        <tr>
+          <td><code>TT - Get Certificate</code> base64 return flow</td>
+          <td>Stop using it after cutover. Leave it turned off or delete it later.</td>
+          <td>The new email flow avoids the Power Apps returned-schema bug and keeps certificate bytes out of the app.</td>
+        </tr>
+        <tr>
+          <td><code>btnOpenCertificate</code> formula using <code>fileContentBase64</code></td>
+          <td>Replace with the email-flow formula above.</td>
+          <td>No base64 launch needed.</td>
+        </tr>
+        <tr>
+          <td><code>TT - Save Certificate</code> deleting and adding list attachments</td>
+          <td>Stop using it after the new library save flow passes testing.</td>
+          <td>Certificate files now live in <code>TT Certificates</code>, not as list item attachments.</td>
+        </tr>
+        <tr>
+          <td><code>lblCurrentCertInfo</code> checking <code>varRecord.Attachments</code></td>
+          <td>Replace with the <code>DateCompleted</code>-based message above.</td>
+          <td>Normal users may no longer have access to raw file storage.</td>
+        </tr>
+        <tr>
+          <td>Old list attachments already uploaded</td>
+          <td>Do not delete immediately. Migrate later, after the new path works.</td>
+          <td>They are your rollback safety net.</td>
+        </tr>
+      </table>
+
+      <h2>8. Migrating Existing Attachments Later</h2>
+      <p>This is deliberately not part of the first test. Once the new path works, existing certificates can be copied from <code>TT TrainingRecords</code> attachments into <code>TT Certificates</code> with a separate one-time admin flow:</p>
+      <ol>
+        <li>List rows from <code>TT TrainingRecords</code>.</li>
+        <li>For each row, get attachments.</li>
+        <li>For each attachment, get attachment content.</li>
+        <li>Create file in <code>TT Certificates</code>.</li>
+        <li>Update file properties using the row's ID, person email, course ID, course name, date completed, and upload fields.</li>
+      </ol>
+      <p>Do that only after the new save/email path is proven. Until then, old attachments can stay where they are.</p>
+
+      <h2>9. Final Lockdown Checklist</h2>
+      <ol class="step-list">
+        <li>New library <code>TT Certificates</code> exists with exact columns.</li>
+        <li><code>TT - Save Certificate Library TEST</code> saves one file and fills metadata.</li>
+        <li><code>TT - Email Certificate Library TEST</code> emails that file to the authorised user.</li>
+        <li>Unauthorised user test fails with the expected message.</li>
+        <li>Live <code>btnSaveCert</code> calls the final library save flow.</li>
+        <li>Live <code>btnOpenCertificate</code> is now <strong>Email certificate</strong> and calls the final email flow.</li>
+        <li><code>lblCurrentCertInfo</code> no longer checks <code>varRecord.Attachments</code>.</li>
+        <li>Normal app users are removed from direct access to <code>TT Certificates</code>.</li>
+        <li>Normal app users still have whatever access they need to the metadata lists for the app to run.</li>
+        <li>Old list attachments are retained until you are happy with the new route.</li>
+      </ol>
+
+      <h2>10. Sources And Assumptions</h2>
+      <ul>
+        <li>Power Apps UI is not a security layer over SharePoint data-source permissions. Microsoft reference: <a href="https://learn.microsoft.com/en-us/power-platform/admin/security/connect-data-sources" target="_blank" rel="noopener">Connecting and authenticating to data sources</a>.</li>
+        <li>Run-only flow users and flow-owner connections are the basis for using Power Automate as a controlled gate. Microsoft references: <a href="https://learn.microsoft.com/en-us/power-automate/create-team-flows" target="_blank" rel="noopener">Share a cloud flow</a> and <a href="https://learn.microsoft.com/en-us/power-automate/guide-to-cloud-flow-sharing-permissions" target="_blank" rel="noopener">Guide to cloud flow sharing and permissions</a>.</li>
+        <li>This guide assumes the flow's SharePoint actions run through an account that is allowed to read and write <code>TT Certificates</code>.</li>
+      </ul>
+
+      <a class="back-link" href="index.html#certificate-privacy-upgrade">&larr; Back to the main Training Tracker guide</a>
+    </main>
+  </div>
+</body>
+</html>
