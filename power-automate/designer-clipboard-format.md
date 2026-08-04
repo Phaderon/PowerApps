@@ -12,13 +12,12 @@ Official designer copy/paste docs:
 
 ## Confirmed Working
 
-Generated `Power Apps (V2)` trigger payloads pasted successfully in the user's Power Automate designer:
+Generated `Power Apps (V2)` trigger payloads can be copied and inspected, but the designer does not allow them to be pasted into the top trigger slot:
 
-- `TT - Save Certificate Library TEST` trigger with 11 inputs.
-- `TT - Email Certificate Library TEST` trigger with 3 inputs.
+- Confirmed 2026-08-04: the trigger cannot be pasted in place. Anything after the trigger can be pasted, but the trigger itself must be created manually when the flow is created.
 - `Initialize variable` payloads for `varSuccess` Boolean and `varMessage` String are exposed as confirmed copy buttons in the migration guide.
 
-These were added as copy buttons on:
+The action copy buttons live on:
 
 - `../training-tracker/certificate-library-migration.html`
 

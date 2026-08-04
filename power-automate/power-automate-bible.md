@@ -41,13 +41,12 @@ The new designer copies the `Power Apps (V2)` trigger as a JSON clipboard payloa
 
 Confirmed live by user, 2026-08-03:
 
-- Generated trigger payload for `TT - Save Certificate Library TEST` pasted successfully.
-- It created all 11 trigger inputs correctly.
-- Generated trigger payload for `TT - Email Certificate Library TEST` pasted successfully.
-- It created all 3 trigger inputs correctly.
+- Power Automate can copy a `Power Apps (V2)` trigger payload containing a full schema.
+- Important correction, confirmed 2026-08-04: the designer does not allow a trigger to be pasted into the trigger slot. A flow's trigger is created when the flow is created. If the trigger is deleted, the designer still does not provide a usable paste target for a copied trigger.
+- Therefore, create `Power Apps (V2)` triggers and their inputs manually unless/until Microsoft changes this behavior.
 - Generated initializer payloads for `varSuccess` Boolean and `varMessage` String are now treated as confirmed shortcuts in the Training Tracker migration guide.
 
-This means generated trigger-paste buttons are viable for known `Power Apps (V2)` schemas in the same designer generation. Still be careful with new action families because Microsoft documents copy/paste behavior, not the raw clipboard JSON as a public authoring format.
+Generated action-paste buttons are still viable for actions after the trigger. Be careful with new action families because Microsoft documents copy/paste behavior, not the raw clipboard JSON as a public authoring format.
 
 ### Internal Trigger Keys Matter
 
