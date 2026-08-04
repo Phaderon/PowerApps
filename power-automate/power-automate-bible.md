@@ -1,6 +1,6 @@
 # Power Automate Bible
 
-Last checked: 2026-08-03
+Last checked: 2026-08-04
 
 ## Purpose
 
@@ -103,11 +103,22 @@ Confirmed copied action/container templates:
 - `Initialize variable` Boolean action.
 - `Initialize variable` String action.
 - `Respond to a PowerApp or flow` action.
+- SharePoint `Get item` action.
 - Basic `Condition` container using `serializedValue`.
+- Full copied `Condition` container using `serializedValue` with nested child actions inside `actions` and `else.actions`.
+
+Important clipboard format lesson, confirmed 2026-08-04 from `/home/Phaderon/Downloads/CertTest.txt`:
+
+- A normal copied action can be very large because it includes designer metadata such as `nodeData`, dynamic token data, connector operation info, and UI parameter definitions.
+- A copied condition/scope can look much smaller because it may use compact Workflow Definition Language-style `serializedValue` instead.
+- Small does not automatically mean incomplete. Check whether `serializedValue.actions` and `serializedValue.else.actions` contain the child actions.
+- If those child action objects are empty, the copied condition is only a shell.
+- If those child action objects contain actions, the copied condition carries the nested logic, even though it is much smaller than some individual action clipboard payloads.
+- A copied nested condition from the Training Tracker save flow included `Get files (properties only)`, `Apply to each`, `Delete file`, `Create file`, `Update file properties`, `Update item`, `Create item`, and success/message variable setters inside its nested `actions` tree.
+- However, nested SharePoint actions captured this way are WDL action objects, not standalone designer `nodeData` clipboard templates. Treat them as useful for auditing and possibly pasting the whole condition, but do not assume they are enough to generate reliable individual SharePoint action paste buttons.
 
 Not yet captured from the user's tenant:
 
-- SharePoint `Get item`.
 - SharePoint `Get files (properties only)`.
 - SharePoint `Delete file`.
 - SharePoint `Create file`.
