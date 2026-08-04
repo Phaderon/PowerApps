@@ -118,6 +118,21 @@ Not yet captured from the user's tenant:
 
 Until those connector templates are captured, do not generate full SharePoint/Outlook action paste blocks except as clearly experimental stubs. The connector payloads may include tenant/list/library/connection metadata that should come from a real copied action.
 
+### Exported Flow ZIP Packages
+
+Power Automate export packages are useful, but they are not the same format as designer right-click clipboard JSON.
+
+Training Tracker confirmed 2026-08-04:
+
+- Exported ZIP path supplied by user: `/home/Phaderon/Downloads/CertfTest_20260804094916.zip`.
+- Package contained `Microsoft.Flow/flows/<guid>/definition.json`, `apisMap.json`, `connectionsMap.json`, and manifests.
+- `definition.json` uses Workflow Definition Language-style action objects with `type`, `inputs`, `runAfter`, nested `If`/`Foreach` structures, SharePoint `operationId` values such as `GetItem`, `GetFileItems`, `CreateFile`, `PatchFileItem`, `PatchItem`, and `PostItem`.
+- This is enough to audit branch placement, trigger schema, connector action parameters, connection references, SharePoint site URLs, and internal list/library IDs.
+- It may also be enough to create corrected import ZIPs or full-flow package templates.
+- It is not automatically enough to create designer clipboard chunks, because the new designer's paste format uses `nodeData` / `nodeOperationInfo` payloads rather than plain WDL action objects.
+
+Audit lesson from `CertfTest`: actions that must run for both "new file attached" and "date-only save" must sit outside the nested `HasNewFile` condition but still inside the outer authorised branch. If `Update item`, `Create audit item`, and success/message variable setters are inside `HasNewFile = true`, an authorised date-only save will skip all metadata/audit/success work.
+
 ## Training Tracker Certificate Architecture
 
 Agreed direction, 2026-08-03:
