@@ -257,19 +257,82 @@
 
       <h3>Actions</h3>
       <ol class="step-list">
-        <li><strong>SharePoint - Get item</strong>. Site: your Training Tracker site. List: <code>TT TrainingRecords</code>. Id: dynamic content <code>RecordID</code>.</li>
-        <li><strong>Condition - Authorised?</strong> Use OR logic:
-          <br><code>PersonEmail</code> from <strong>Get item</strong> is equal to trigger <code>ActorEmail</code>
-          <br>OR trigger <code>IsAdmin</code> is equal to expression <code>true</code>.
-          <br>Use the expression editor for <code>true</code>, not a Yes/No dropdown.</li>
-        <li>Inside <strong>If no</strong>: set <code>varSuccess</code> to expression <code>false</code>. Set <code>varMessage</code> to <code>You are not authorized to save this certificate.</code></li>
-        <li>Inside <strong>If yes</strong>: add a nested <strong>Condition - Has file?</strong>. Compare trigger <code>HasNewFile</code> to expression <code>true</code>.</li>
-        <li>Inside <strong>Has file? If yes</strong>: add <strong>SharePoint - Get files (properties only)</strong>. Site: same site. Library: select <code>TT Certificates_LTD</code> or the renamed display value <code>TT Certificates (LTD)</code>, whichever Power Automate shows. Filter Query:
+        <li><strong>Add SharePoint - Get item.</strong>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Site Address</td><td>Your Training Tracker SharePoint site.</td></tr>
+            <tr><td>List Name</td><td><code>TT TrainingRecords</code></td></tr>
+            <tr><td>Id</td><td>Dynamic content <code>RecordID</code> from the Power Apps trigger.</td></tr>
+          </table>
+        </li>
+        <li><strong>Add Control - Condition.</strong> Rename it if Power Automate lets you, e.g. <code>Condition - Authorised?</code>. Set it to OR logic, not AND.
+          <p>Build the first row like this:</p>
+          <table>
+            <tr><th>Left</th><th>Operator</th><th>Right</th></tr>
+            <tr><td>Dynamic content <code>PersonEmail</code> from <strong>Get item</strong></td><td>is equal to</td><td>Dynamic content <code>ActorEmail</code> from the trigger</td></tr>
+          </table>
+          <p>Add a second row, then change the condition group from <strong>And</strong> to <strong>Or</strong>. Build the second row like this:</p>
+          <table>
+            <tr><th>Left</th><th>Operator</th><th>Right</th></tr>
+            <tr><td>Dynamic content <code>IsAdmin</code> from the trigger</td><td>is equal to</td><td>Expression <code>true</code></td></tr>
+          </table>
+          <p>For the right-hand <code>true</code>, click the <strong>fx</strong> / Expression tab and type the bare word <code>true</code>. Do not pick Yes from a dropdown and do not type <code>"true"</code> with quotes.</p>
+        </li>
+        <li><strong>Inside the Authorised? If no branch, add Control - Set variable.</strong>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Name</td><td><code>varSuccess</code></td></tr>
+            <tr><td>Value</td><td>Expression <code>false</code></td></tr>
+          </table>
+          <p>Then add a second <strong>Control - Set variable</strong> directly below it in the same <strong>If no</strong> branch.</p>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Name</td><td><code>varMessage</code></td></tr>
+            <tr><td>Value</td><td>Plain text: <code>You are not authorized to save this certificate.</code></td></tr>
+          </table>
+        </li>
+        <li><strong>Inside the Authorised? If yes branch, add another Control - Condition.</strong> This is the nested file condition. Rename it if possible, e.g. <code>Condition - Has file?</code>.
+          <table>
+            <tr><th>Left</th><th>Operator</th><th>Right</th></tr>
+            <tr><td>Dynamic content <code>HasNewFile</code> from the trigger</td><td>is equal to</td><td>Expression <code>true</code></td></tr>
+          </table>
+          <p>Again, use the Expression tab for <code>true</code>. This nested condition decides whether the flow should replace a file. Its <strong>If yes</strong> branch contains the certificate-library file work. Its <strong>If no</strong> branch can stay empty, because a date-only save still needs the training record metadata update later.</p>
+        </li>
+        <li><strong>Inside the nested Has file? If yes branch, add SharePoint - Get files (properties only).</strong> This action must be inside the nested <strong>If yes</strong>, not below the condition.
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
+            <tr><td>Library Name</td><td>Select <code>TT Certificates_LTD</code> or the renamed display value <code>TT Certificates (LTD)</code>, whichever Power Automate shows.</td></tr>
+            <tr><td>Filter Query</td><td><code>TrainingRecordID eq </code> followed by dynamic content <code>RecordID</code>.</td></tr>
+          </table>
+          <p>The filter query should end up like this, except the square-bracket part is the real dynamic-content pill:</p>
           <div class="code-card"><div class="code-title">OData Filter Query</div><pre>TrainingRecordID eq [RecordID dynamic content]</pre></div>
-          Do not type the square brackets. Type <code>TrainingRecordID eq </code>, then insert the real <code>RecordID</code> token from the dynamic-content picker.</li>
-        <li>Still inside <strong>Has file? If yes</strong>: add <strong>Apply to each</strong> over the value from <strong>Get files (properties only)</strong>. Inside it, add <strong>SharePoint - Delete file</strong>. File Identifier: use the current item's <code>Identifier</code> dynamic content.</li>
-        <li>Still inside <strong>Has file? If yes</strong>, but below the delete loop: add <strong>SharePoint - Create file</strong>. Site: same site. Folder Path: use the folder/library path Power Automate offers for the certificate library, normally <code>/TT Certificates_LTD</code> even if the display name has been renamed. File Name: insert dynamic content <code>RecordID</code>, then type a hyphen, then insert dynamic content <code>FileName</code>. File Content: choose <code>FileContent contentBytes</code>, not <code>FileContent name</code>.</li>
-        <li>Below <strong>Create file</strong>, add <strong>SharePoint - Update file properties</strong>. Library: select <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>. Id: use <code>ItemId</code> from <strong>Create file</strong>. Set the properties:
+        </li>
+        <li><strong>Still inside the nested Has file? If yes branch, add Control - Apply to each.</strong> For the loop input, choose the <strong>value</strong> output from <strong>Get files (properties only)</strong>. This loops through any existing certificate file for the same training record so it can be deleted before the replacement file is created.
+          <p>Inside this <strong>Apply to each</strong>, add <strong>SharePoint - Delete file</strong>.</p>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
+            <tr><td>File Identifier</td><td>Dynamic content <code>Identifier</code> from the current item in <strong>Get files (properties only)</strong>.</td></tr>
+          </table>
+        </li>
+        <li><strong>Still inside the nested Has file? If yes branch, but below the Apply to each loop, add SharePoint - Create file.</strong> Make sure this action is outside/below the loop, but still inside the nested <strong>If yes</strong> branch.
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
+            <tr><td>Folder Path</td><td>Use the folder/library path Power Automate offers for the certificate library, normally <code>/TT Certificates_LTD</code> even if the display name has been renamed.</td></tr>
+            <tr><td>File Name</td><td>Dynamic content <code>RecordID</code>, then type a hyphen, then dynamic content <code>FileName</code>.</td></tr>
+            <tr><td>File Content</td><td>Dynamic content <code>FileContent contentBytes</code>. Do not choose <code>FileContent name</code>.</td></tr>
+          </table>
+        </li>
+        <li><strong>Still inside the nested Has file? If yes branch, directly below Create file, add SharePoint - Update file properties.</strong>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
+            <tr><td>Library Name</td><td>Select <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</td></tr>
+            <tr><td>Id</td><td>Dynamic content <code>ItemId</code> from <strong>Create file</strong>.</td></tr>
+          </table>
+          <p>Then fill the library metadata fields:</p>
           <table>
             <tr><th>Property</th><th>Value</th></tr>
             <tr><td><code>Title</code></td><td><code>CourseName</code></td></tr>
@@ -283,7 +346,14 @@
             <tr><td><code>IsCurrent</code></td><td>expression <code>true</code></td></tr>
           </table>
         </li>
-        <li>Still inside the authorised branch, after the nested file condition: add <strong>SharePoint - Update item</strong> for <code>TT TrainingRecords</code>. Id: <code>RecordID</code>. Re-supply the required fields and set:
+        <li><strong>Now go below the whole nested Has file? condition, but stay inside the outer Authorised? If yes branch.</strong> Add <strong>SharePoint - Update item</strong> for <code>TT TrainingRecords</code>. This action must run whether a new file was attached or not, so it belongs after the nested file condition, not inside the nested file condition.
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
+            <tr><td>List Name</td><td><code>TT TrainingRecords</code></td></tr>
+            <tr><td>Id</td><td>Dynamic content <code>RecordID</code>.</td></tr>
+          </table>
+          <p>Re-supply the required fields and set the update fields:</p>
           <table>
             <tr><th>Field</th><th>Value</th></tr>
             <tr><td><code>PersonEmail</code></td><td><code>PersonEmail</code></td></tr>
@@ -296,11 +366,40 @@
             <tr><td><code>LastStatus</code></td><td><code>Certificate saved</code></td></tr>
           </table>
         </li>
-        <li>Still inside authorised branch: create the same <code>TT AuditLog</code> row the old save flow created. EventType: <code>Certificate saved</code>. PersonEmail: <code>PersonEmail</code>. CourseID: <code>CourseID</code>. ActorEmail: <code>ActorEmail</code>. EventDate: <code>utcNow()</code>.</li>
-        <li>Still inside authorised branch: set <code>varSuccess</code> to expression <code>true</code>. Set <code>varMessage</code> to <code>OK</code>.</li>
-        <li>After the whole authorisation Condition, outside both branches, add exactly one <strong>Respond to a PowerApp or flow</strong> action. Outputs:
-          <br><strong>Yes/No</strong> <code>success</code> = <code>varSuccess</code>
-          <br><strong>Text</strong> <code>message</code> = <code>varMessage</code></li>
+        <li><strong>Still inside the outer Authorised? If yes branch, below Update item, add SharePoint - Create item.</strong> This writes the audit log row.
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
+            <tr><td>List Name</td><td><code>TT AuditLog</code></td></tr>
+            <tr><td><code>Title</code></td><td>Dynamic content <code>CourseName</code>, then type <code> certificate saved</code>.</td></tr>
+            <tr><td><code>PersonEmail</code></td><td>Dynamic content <code>PersonEmail</code>.</td></tr>
+            <tr><td><code>CourseID</code></td><td>Dynamic content <code>CourseID</code>.</td></tr>
+            <tr><td><code>ActorEmail</code></td><td>Dynamic content <code>ActorEmail</code>.</td></tr>
+            <tr><td><code>EventType</code></td><td><code>Certificate saved</code></td></tr>
+            <tr><td><code>EventDescription</code></td><td>Dynamic content <code>CourseName</code>, then type <code> certificate saved.</code></td></tr>
+            <tr><td><code>EventDate</code></td><td>Expression <code>utcNow()</code>.</td></tr>
+          </table>
+        </li>
+        <li><strong>Still inside the outer Authorised? If yes branch, below Create item, add Control - Set variable.</strong>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Name</td><td><code>varSuccess</code></td></tr>
+            <tr><td>Value</td><td>Expression <code>true</code></td></tr>
+          </table>
+          <p>Then add a second <strong>Control - Set variable</strong> directly below it.</p>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Name</td><td><code>varMessage</code></td></tr>
+            <tr><td>Value</td><td>Plain text: <code>OK</code></td></tr>
+          </table>
+        </li>
+        <li><strong>After the whole outer Authorised? condition, outside both branches, add exactly one Respond to a PowerApp or flow action.</strong> It should sit below the entire Condition container, not inside <strong>If yes</strong> or <strong>If no</strong>.
+          <table>
+            <tr><th>Output type</th><th>Title</th><th>Value</th></tr>
+            <tr><td>Yes/No</td><td><code>success</code></td><td>Dynamic content <code>varSuccess</code>.</td></tr>
+            <tr><td>Text</td><td><code>message</code></td><td>Dynamic content <code>varMessage</code>.</td></tr>
+          </table>
+        </li>
       </ol>
 
       <h2>4. Build Test Flow 2: Email Certificate From Library</h2>
@@ -336,32 +435,102 @@
 
       <h3>Actions</h3>
       <ol class="step-list">
-        <li><strong>SharePoint - Get item</strong>. List: <code>TT TrainingRecords</code>. Id: <code>RecordID</code>.</li>
-        <li><strong>Condition - Authorised?</strong> Same as the save flow:
-          <br>record <code>PersonEmail</code> equals trigger <code>ActorEmail</code>
-          <br>OR trigger <code>IsAdmin</code> equals expression <code>true</code>.</li>
-        <li>Inside <strong>If no</strong>: set <code>varSuccess</code> to expression <code>false</code>. Set <code>varMessage</code> to <code>You are not authorized to view this certificate.</code></li>
-        <li>Inside <strong>If yes</strong>: add <strong>SharePoint - Get files (properties only)</strong>. Library: select <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>. Filter Query: <code>TrainingRecordID eq </code> followed by dynamic content <code>RecordID</code>. Top Count: <code>1</code>.</li>
-        <li>Add a <strong>Condition - Found certificate?</strong>. Left side expression:
-          <div class="code-card"><div class="code-title">Expression</div><pre>length(body('Get_files_(properties_only)')?['value'])</pre></div>
-          is greater than <code>0</code>.</li>
-        <li>Inside <strong>Found certificate? If no</strong>: set <code>varSuccess</code> to expression <code>false</code>. Set <code>varMessage</code> to <code>No certificate is on file for this record.</code></li>
-        <li>Inside <strong>Found certificate? If yes</strong>: add <strong>Apply to each</strong> over the <strong>value</strong> from <strong>Get files (properties only)</strong>. This loop should run once because Top Count is 1.</li>
-        <li>Inside that loop: add <strong>SharePoint - Get file content</strong>. File Identifier: current item <code>Identifier</code>.</li>
-        <li>Inside that loop: add <strong>Office 365 Outlook - Send an email (V2)</strong>.
+        <li><strong>Add SharePoint - Get item.</strong>
           <table>
             <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>To</td><td><code>ActorEmail</code></td></tr>
+            <tr><td>Site Address</td><td>Your Training Tracker SharePoint site.</td></tr>
+            <tr><td>List Name</td><td><code>TT TrainingRecords</code></td></tr>
+            <tr><td>Id</td><td>Dynamic content <code>RecordID</code> from the Power Apps trigger.</td></tr>
+          </table>
+        </li>
+        <li><strong>Add Control - Condition.</strong> Rename it if possible, e.g. <code>Condition - Authorised?</code>. Build it exactly like the save flow:
+          <table>
+            <tr><th>Left</th><th>Operator</th><th>Right</th></tr>
+            <tr><td>Dynamic content <code>PersonEmail</code> from <strong>Get item</strong></td><td>is equal to</td><td>Dynamic content <code>ActorEmail</code> from the trigger</td></tr>
+            <tr><td>Dynamic content <code>IsAdmin</code> from the trigger</td><td>is equal to</td><td>Expression <code>true</code></td></tr>
+          </table>
+          <p>Make the group logic <strong>Or</strong>. Use the Expression tab for <code>true</code>.</p>
+        </li>
+        <li><strong>Inside the Authorised? If no branch, add Control - Set variable.</strong>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Name</td><td><code>varSuccess</code></td></tr>
+            <tr><td>Value</td><td>Expression <code>false</code></td></tr>
+          </table>
+          <p>Then add a second <strong>Control - Set variable</strong> directly below it in the same branch.</p>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Name</td><td><code>varMessage</code></td></tr>
+            <tr><td>Value</td><td>Plain text: <code>You are not authorized to view this certificate.</code></td></tr>
+          </table>
+        </li>
+        <li><strong>Inside the Authorised? If yes branch, add SharePoint - Get files (properties only).</strong>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
+            <tr><td>Library Name</td><td>Select <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</td></tr>
+            <tr><td>Filter Query</td><td><code>TrainingRecordID eq </code> followed by dynamic content <code>RecordID</code>.</td></tr>
+            <tr><td>Top Count</td><td><code>1</code></td></tr>
+          </table>
+        </li>
+        <li><strong>Still inside the Authorised? If yes branch, below Get files, add Control - Condition.</strong> Rename it if possible, e.g. <code>Condition - Found certificate?</code>. Left side expression:
+          <div class="code-card"><div class="code-title">Expression</div><pre>length(body('Get_files_(properties_only)')?['value'])</pre></div>
+          <table>
+            <tr><th>Left</th><th>Operator</th><th>Right</th></tr>
+            <tr><td>The expression above</td><td>is greater than</td><td><code>0</code></td></tr>
+          </table>
+        </li>
+        <li><strong>Inside the Found certificate? If no branch, add Control - Set variable.</strong>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Name</td><td><code>varSuccess</code></td></tr>
+            <tr><td>Value</td><td>Expression <code>false</code></td></tr>
+          </table>
+          <p>Then add a second <strong>Control - Set variable</strong> directly below it.</p>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Name</td><td><code>varMessage</code></td></tr>
+            <tr><td>Value</td><td>Plain text: <code>No certificate is on file for this record.</code></td></tr>
+          </table>
+        </li>
+        <li><strong>Inside the Found certificate? If yes branch, add Control - Apply to each.</strong> For the loop input, choose the <strong>value</strong> output from <strong>Get files (properties only)</strong>. This loop should run once because Top Count is 1.</li>
+        <li><strong>Inside that Apply to each loop, add SharePoint - Get file content.</strong>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
+            <tr><td>File Identifier</td><td>Dynamic content <code>Identifier</code> from the current file item.</td></tr>
+          </table>
+        </li>
+        <li><strong>Still inside that same Apply to each loop, below Get file content, add Office 365 Outlook - Send an email (V2).</strong>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>To</td><td>Dynamic content <code>ActorEmail</code>.</td></tr>
             <tr><td>Subject</td><td><code>Your Training Tracker certificate</code></td></tr>
             <tr><td>Body</td><td><code>Your requested certificate is attached.</code></td></tr>
             <tr><td>Attachments Name</td><td>current item <code>File name with extension</code>, or <code>Name</code> if that is what your picker shows.</td></tr>
             <tr><td>Attachments Content</td><td><strong>Get file content</strong> file content/body.</td></tr>
           </table>
         </li>
-        <li>Still inside <strong>Found certificate? If yes</strong>, after the loop: set <code>varSuccess</code> to expression <code>true</code>. Set <code>varMessage</code> to <code>Certificate emailed to you.</code></li>
-        <li>After the whole authorisation Condition, outside both branches, add exactly one <strong>Respond to a PowerApp or flow</strong>. Outputs:
-          <br><strong>Yes/No</strong> <code>success</code> = <code>varSuccess</code>
-          <br><strong>Text</strong> <code>message</code> = <code>varMessage</code></li>
+        <li><strong>Still inside the Found certificate? If yes branch, but below/outside the Apply to each loop, add Control - Set variable.</strong>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Name</td><td><code>varSuccess</code></td></tr>
+            <tr><td>Value</td><td>Expression <code>true</code></td></tr>
+          </table>
+          <p>Then add a second <strong>Control - Set variable</strong> directly below it.</p>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Name</td><td><code>varMessage</code></td></tr>
+            <tr><td>Value</td><td>Plain text: <code>Certificate emailed to you.</code></td></tr>
+          </table>
+        </li>
+        <li><strong>After the whole outer Authorised? condition, outside both branches, add exactly one Respond to a PowerApp or flow action.</strong>
+          <table>
+            <tr><th>Output type</th><th>Title</th><th>Value</th></tr>
+            <tr><td>Yes/No</td><td><code>success</code></td><td>Dynamic content <code>varSuccess</code>.</td></tr>
+            <tr><td>Text</td><td><code>message</code></td><td>Dynamic content <code>varMessage</code>.</td></tr>
+          </table>
+        </li>
       </ol>
 
       <h2>5. Add Temporary Test Buttons In Power Apps</h2>
