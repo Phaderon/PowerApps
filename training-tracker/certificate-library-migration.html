@@ -148,7 +148,7 @@
       <p class="lead">This is the separate fix guide for moving certificates into a locked SharePoint document library while leaving the training tracker metadata in the existing lists. Follow the test phase first. Do not remove old attachments, flows, or formulas until the new save and email flows work against one real test record.</p>
 
       <div class="callout ok">
-        <strong>Answer to the big question:</strong> yes, you can test this in advance. Build the new <code>TT Certificates</code> library and the two new <code>TEST</code> flows first. Add two temporary buttons on <code>scrCourseDetail</code> to call those test flows. If the test works, then do the cutover edits. If it does not, delete the test buttons and the current app keeps using the old attachment route.
+        <strong>Answer to the big question:</strong> yes, you can test this in advance. Build the new <code>TT Certificates_LTD</code> library, optionally rename its display name to <code>TT Certificates (LTD)</code>, and build the two new <code>TEST</code> flows first. Add two temporary buttons on <code>scrCourseDetail</code> to call those test flows. If the test works, then do the cutover edits. If it does not, delete the test buttons and the current app keeps using the old attachment route.
       </div>
 
       <h2>1. What Changes And What Stays</h2>
@@ -157,12 +157,12 @@
         <tr>
           <td>Existing SharePoint lists</td>
           <td><code>TT Personnel</code>, <code>TT Courses</code>, <code>TT TrainingRecords</code>, <code>TT AuditLog</code>, <code>TT ComplianceSnapshots</code></td>
-          <td>Add a separate document library named <code>TT Certificates</code>. It is the fourth data store for certificate files only.</td>
+          <td>Add a separate document library created as <code>TT Certificates_LTD</code>. You can rename the display name to <code>TT Certificates (LTD)</code> afterwards, but Power Automate may still show/use the original internal library name.</td>
         </tr>
         <tr>
           <td>Training record metadata</td>
           <td><code>DateCompleted</code>, <code>UploadedByEmail</code>, <code>LastUpdatedByEmail</code>, <code>LastUpdatedOn</code>, <code>LastStatus</code>, compliance maths, admin dashboard, audit log.</td>
-          <td>The record no longer needs a SharePoint list attachment to prove a certificate exists. The file is stored in <code>TT Certificates</code> instead.</td>
+          <td>The record no longer needs a SharePoint list attachment to prove a certificate exists. The file is stored in <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code> instead.</td>
         </tr>
         <tr>
           <td>Power Apps file picker</td>
@@ -177,18 +177,19 @@
         <tr>
           <td>Security</td>
           <td>Users still use the app to see their training data.</td>
-          <td>Only admins/service account have direct access to <code>TT Certificates</code>. Normal users do not browse the certificate library.</td>
+          <td>Only admins/service account have direct access to <code>TT Certificates_LTD</code>. Normal users do not browse the certificate library.</td>
         </tr>
       </table>
 
       <div class="callout warn">
-        <strong>Important:</strong> SharePoint document library columns have internal names. Create the columns below with the exact names shown, with no spaces. If you rename them later, Power Automate may still use the original internal name.
+        <strong>Important:</strong> SharePoint document libraries and columns have internal names. Create the library first as <code>TT Certificates_LTD</code>. If you then rename the display name to <code>TT Certificates (LTD)</code>, Power Automate may still show or require the original internal name/path. Create the columns below with the exact names shown, with no spaces.
       </div>
 
       <h2>2. Create The New SharePoint Document Library</h2>
       <ol class="step-list">
         <li>Open the same SharePoint site that contains the Training Tracker lists.</li>
-        <li>Create a new <strong>Document library</strong>, not a normal list. Name it exactly <code>TT Certificates</code>.</li>
+        <li>Create a new <strong>Document library</strong>, not a normal list. Name it exactly <code>TT Certificates_LTD</code>.</li>
+        <li>After creation, you may rename the display name to <code>TT Certificates (LTD)</code> if policy needs that wording. Do not recreate it just for the display name. The original internal path/name is the useful stable bit for Power Automate.</li>
         <li>In the new library, add the columns below.</li>
       </ol>
 
@@ -207,7 +208,7 @@
       <h3>Permissions For Testing</h3>
       <p>For the first test, do not lock the library down yet. Give yourself and the flow owner access. Once the test flow works, change permissions like this:</p>
       <ul>
-        <li>Stop inheriting permissions on <code>TT Certificates</code>.</li>
+        <li>Stop inheriting permissions on <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</li>
         <li>Keep Full Control for the site owners/admins who are allowed to inspect certificates.</li>
         <li>Keep access for the account whose SharePoint connection the flows use.</li>
         <li>Remove normal app users from this library only. Do not remove their access from the metadata lists yet.</li>
@@ -263,12 +264,12 @@
           <br>Use the expression editor for <code>true</code>, not a Yes/No dropdown.</li>
         <li>Inside <strong>If no</strong>: set <code>varSuccess</code> to expression <code>false</code>. Set <code>varMessage</code> to <code>You are not authorized to save this certificate.</code></li>
         <li>Inside <strong>If yes</strong>: add a nested <strong>Condition - Has file?</strong>. Compare trigger <code>HasNewFile</code> to expression <code>true</code>.</li>
-        <li>Inside <strong>Has file? If yes</strong>: add <strong>SharePoint - Get files (properties only)</strong>. Site: same site. Library: <code>TT Certificates</code>. Filter Query:
+        <li>Inside <strong>Has file? If yes</strong>: add <strong>SharePoint - Get files (properties only)</strong>. Site: same site. Library: select <code>TT Certificates_LTD</code> or the renamed display value <code>TT Certificates (LTD)</code>, whichever Power Automate shows. Filter Query:
           <div class="code-card"><div class="code-title">OData Filter Query</div><pre>TrainingRecordID eq [RecordID dynamic content]</pre></div>
           Do not type the square brackets. Type <code>TrainingRecordID eq </code>, then insert the real <code>RecordID</code> token from the dynamic-content picker.</li>
         <li>Still inside <strong>Has file? If yes</strong>: add <strong>Apply to each</strong> over the value from <strong>Get files (properties only)</strong>. Inside it, add <strong>SharePoint - Delete file</strong>. File Identifier: use the current item's <code>Identifier</code> dynamic content.</li>
-        <li>Still inside <strong>Has file? If yes</strong>, but below the delete loop: add <strong>SharePoint - Create file</strong>. Site: same site. Folder Path: <code>/TT Certificates</code>. File Name: insert dynamic content <code>RecordID</code>, then type a hyphen, then insert dynamic content <code>FileName</code>. File Content: choose <code>FileContent contentBytes</code>, not <code>FileContent name</code>.</li>
-        <li>Below <strong>Create file</strong>, add <strong>SharePoint - Update file properties</strong>. Library: <code>TT Certificates</code>. Id: use <code>ItemId</code> from <strong>Create file</strong>. Set the properties:
+        <li>Still inside <strong>Has file? If yes</strong>, but below the delete loop: add <strong>SharePoint - Create file</strong>. Site: same site. Folder Path: use the folder/library path Power Automate offers for the certificate library, normally <code>/TT Certificates_LTD</code> even if the display name has been renamed. File Name: insert dynamic content <code>RecordID</code>, then type a hyphen, then insert dynamic content <code>FileName</code>. File Content: choose <code>FileContent contentBytes</code>, not <code>FileContent name</code>.</li>
+        <li>Below <strong>Create file</strong>, add <strong>SharePoint - Update file properties</strong>. Library: select <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>. Id: use <code>ItemId</code> from <strong>Create file</strong>. Set the properties:
           <table>
             <tr><th>Property</th><th>Value</th></tr>
             <tr><td><code>Title</code></td><td><code>CourseName</code></td></tr>
@@ -340,7 +341,7 @@
           <br>record <code>PersonEmail</code> equals trigger <code>ActorEmail</code>
           <br>OR trigger <code>IsAdmin</code> equals expression <code>true</code>.</li>
         <li>Inside <strong>If no</strong>: set <code>varSuccess</code> to expression <code>false</code>. Set <code>varMessage</code> to <code>You are not authorized to view this certificate.</code></li>
-        <li>Inside <strong>If yes</strong>: add <strong>SharePoint - Get files (properties only)</strong>. Library: <code>TT Certificates</code>. Filter Query: <code>TrainingRecordID eq </code> followed by dynamic content <code>RecordID</code>. Top Count: <code>1</code>.</li>
+        <li>Inside <strong>If yes</strong>: add <strong>SharePoint - Get files (properties only)</strong>. Library: select <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>. Filter Query: <code>TrainingRecordID eq </code> followed by dynamic content <code>RecordID</code>. Top Count: <code>1</code>.</li>
         <li>Add a <strong>Condition - Found certificate?</strong>. Left side expression:
           <div class="code-card"><div class="code-title">Expression</div><pre>length(body('Get_files_(properties_only)')?['value'])</pre></div>
           is greater than <code>0</code>.</li>
@@ -386,7 +387,7 @@
 );
 If(
     varSaveResult.success,
-    Notify("TEST save worked. Check TT Certificates.", NotificationType.Success),
+    Notify("TEST save worked. Check TT Certificates (LTD).", NotificationType.Success),
     Notify(varSaveResult.message, NotificationType.Error)
 )</pre></div>
 
@@ -408,7 +409,7 @@ If(
         <li>Open that record in <code>scrCourseDetail</code>.</li>
         <li>Select a small PDF or image certificate using the existing file picker.</li>
         <li>Click <strong>TEST save library</strong>.</li>
-        <li>Open SharePoint <code>TT Certificates</code>. Confirm one file exists for that <code>TrainingRecordID</code> and its metadata columns are filled.</li>
+        <li>Open SharePoint <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>. Confirm one file exists for that <code>TrainingRecordID</code> and its metadata columns are filled.</li>
         <li>Click <strong>TEST email cert</strong>.</li>
         <li>Confirm the email arrives and the attachment opens.</li>
         <li>Run the test again with a different file. Confirm the library still has one current file for that <code>TrainingRecordID</code>, not duplicates.</li>
@@ -497,7 +498,7 @@ If(
         <tr>
           <td><code>TT - Save Certificate</code> deleting and adding list attachments</td>
           <td>Stop using it after the new library save flow passes testing.</td>
-          <td>Certificate files now live in <code>TT Certificates</code>, not as list item attachments.</td>
+          <td>Certificate files now live in <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>, not as list item attachments.</td>
         </tr>
         <tr>
           <td><code>lblCurrentCertInfo</code> checking <code>varRecord.Attachments</code></td>
@@ -512,26 +513,26 @@ If(
       </table>
 
       <h2>8. Migrating Existing Attachments Later</h2>
-      <p>This is deliberately not part of the first test. Once the new path works, existing certificates can be copied from <code>TT TrainingRecords</code> attachments into <code>TT Certificates</code> with a separate one-time admin flow:</p>
+      <p>This is deliberately not part of the first test. Once the new path works, existing certificates can be copied from <code>TT TrainingRecords</code> attachments into <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code> with a separate one-time admin flow:</p>
       <ol>
         <li>List rows from <code>TT TrainingRecords</code>.</li>
         <li>For each row, get attachments.</li>
         <li>For each attachment, get attachment content.</li>
-        <li>Create file in <code>TT Certificates</code>.</li>
+        <li>Create file in <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</li>
         <li>Update file properties using the row's ID, person email, course ID, course name, date completed, and upload fields.</li>
       </ol>
       <p>Do that only after the new save/email path is proven. Until then, old attachments can stay where they are.</p>
 
       <h2>9. Final Lockdown Checklist</h2>
       <ol class="step-list">
-        <li>New library <code>TT Certificates</code> exists with exact columns.</li>
+        <li>New library <code>TT Certificates_LTD</code> exists with exact columns, optionally renamed for display as <code>TT Certificates (LTD)</code>.</li>
         <li><code>TT - Save Certificate Library TEST</code> saves one file and fills metadata.</li>
         <li><code>TT - Email Certificate Library TEST</code> emails that file to the authorised user.</li>
         <li>Unauthorised user test fails with the expected message.</li>
         <li>Live <code>btnSaveCert</code> calls the final library save flow.</li>
         <li>Live <code>btnOpenCertificate</code> is now <strong>Email certificate</strong> and calls the final email flow.</li>
         <li><code>lblCurrentCertInfo</code> no longer checks <code>varRecord.Attachments</code>.</li>
-        <li>Normal app users are removed from direct access to <code>TT Certificates</code>.</li>
+        <li>Normal app users are removed from direct access to <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</li>
         <li>Normal app users still have whatever access they need to the metadata lists for the app to run.</li>
         <li>Old list attachments are retained until you are happy with the new route.</li>
       </ol>
@@ -540,7 +541,7 @@ If(
       <ul>
         <li>Power Apps UI is not a security layer over SharePoint data-source permissions. Microsoft reference: <a href="https://learn.microsoft.com/en-us/power-platform/admin/security/connect-data-sources" target="_blank" rel="noopener">Connecting and authenticating to data sources</a>.</li>
         <li>Run-only flow users and flow-owner connections are the basis for using Power Automate as a controlled gate. Microsoft references: <a href="https://learn.microsoft.com/en-us/power-automate/create-team-flows" target="_blank" rel="noopener">Share a cloud flow</a> and <a href="https://learn.microsoft.com/en-us/power-automate/guide-to-cloud-flow-sharing-permissions" target="_blank" rel="noopener">Guide to cloud flow sharing and permissions</a>.</li>
-        <li>This guide assumes the flow's SharePoint actions run through an account that is allowed to read and write <code>TT Certificates</code>.</li>
+        <li>This guide assumes the flow's SharePoint actions run through an account that is allowed to read and write <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</li>
       </ul>
 
       <a class="back-link" href="index.html#certificate-privacy-upgrade">&larr; Back to the main Training Tracker guide</a>

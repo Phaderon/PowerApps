@@ -110,7 +110,7 @@ Until those connector templates are captured, do not generate full SharePoint/Ou
 Agreed direction, 2026-08-03:
 
 - Keep `TT TrainingRecords` as ordinary training metadata: person, email, course, date, status.
-- Move certificate files into a separate locked SharePoint document library: `TT Certificates`.
+- Move certificate files into a separate locked SharePoint document library created as `TT Certificates_LTD`, optionally renamed for display as `TT Certificates (LTD)`.
 - Use Power Automate as the gate:
   - Save flow writes/replaces the library file and updates metadata.
   - Email flow validates the requester and emails the certificate.
@@ -128,9 +128,9 @@ User currently does not have access to the target tenant, so SharePoint/Outlook 
 When access is available again, ask for copied payloads from real actions in this order:
 
 1. SharePoint `Get item` against `TT TrainingRecords`.
-2. SharePoint `Get files (properties only)` against `TT Certificates`.
-3. SharePoint `Create file` against `TT Certificates`.
-4. SharePoint `Update file properties` against `TT Certificates`.
+2. SharePoint `Get files (properties only)` against `TT Certificates_LTD` / `TT Certificates (LTD)`.
+3. SharePoint `Create file` against `TT Certificates_LTD` / `TT Certificates (LTD)`.
+4. SharePoint `Update file properties` against `TT Certificates_LTD` / `TT Certificates (LTD)`.
 5. SharePoint `Update item` against `TT TrainingRecords`.
 6. SharePoint `Create item` against `TT AuditLog`.
 7. Outlook `Send an email (V2)`.
