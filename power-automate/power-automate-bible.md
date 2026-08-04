@@ -73,6 +73,20 @@ Do not guess these keys in instructions when the dynamic-content picker can be u
 
 When comparing or setting true/false values in Power Automate, prefer the expression editor with bare `true` or `false`. Do not rely on Yes/No dropdown text when the target is a real boolean. This avoided Training Tracker conditions silently comparing a boolean to text.
 
+### Dynamic Content With Repeated Field Names
+
+Power Automate's dynamic-content picker groups tokens by action, but many SharePoint and trigger fields have identical display names. Do not write guide steps like "pick `CourseName`" when the flow has several `CourseName` tokens from different actions. Always name the source action group.
+
+Use this wording pattern:
+
+- `CourseName` from `When Power Apps calls a flow (V2)`.
+- `PersonEmail` from `Get item`.
+- `ItemId` from `Create file`.
+- `Identifier` from `Get files (properties only)`.
+- file content/body from `Get file content`.
+
+Training Tracker confirmed this matters live: while filling `TT AuditLog.EventDescription`, the dynamic-content picker showed `CourseName` under `Update item`, `Update file properties`, `Get files (properties only)`, `Get item`, and `When Power Apps calls a flow (V2)`. The intended value for audit/log/library metadata in the certificate save flow is usually the trigger value from `When Power Apps calls a flow (V2)`, not the similarly named values from later SharePoint actions.
+
 ### Respond To A PowerApp Or Flow
 
 Avoid multiple `Respond to a PowerApp or flow` actions in separate Condition branches when the app depends on the response schema. Training Tracker hit a persistent Power Apps schema-recognition failure where only some outputs appeared. The robust pattern is:

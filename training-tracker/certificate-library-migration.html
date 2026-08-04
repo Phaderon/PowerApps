@@ -256,6 +256,9 @@
       </div>
 
       <h3>Actions</h3>
+      <div class="callout warn">
+        <strong>Dynamic content rule:</strong> the same field name can appear under several headings. Pick the value from the action group named in this guide. For trigger inputs such as <code>CourseName</code>, <code>CourseID</code>, <code>ActorEmail</code>, <code>RecordID</code>, <code>FileName</code>, and <code>DateCompleted</code>, use the group headed <strong>When Power Apps calls a flow (V2)</strong>. For <code>ItemId</code>, use <strong>Create file</strong>. For existing file <code>Identifier</code>, use <strong>Get files (properties only)</strong>.
+      </div>
       <ol class="step-list">
         <li><strong>Add SharePoint - Get item.</strong>
           <table>
@@ -303,7 +306,7 @@
             <tr><th>Field</th><th>Value</th></tr>
             <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
             <tr><td>Library Name</td><td>Select <code>TT Certificates_LTD</code> or the renamed display value <code>TT Certificates (LTD)</code>, whichever Power Automate shows.</td></tr>
-            <tr><td>Filter Query</td><td><code>TrainingRecordID eq </code> followed by dynamic content <code>RecordID</code>.</td></tr>
+            <tr><td>Filter Query</td><td><code>TrainingRecordID eq </code> followed by <code>RecordID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
           </table>
           <p>The filter query should end up like this, except the square-bracket part is the real dynamic-content pill:</p>
           <div class="code-card"><div class="code-title">OData Filter Query</div><pre>TrainingRecordID eq [RecordID dynamic content]</pre></div>
@@ -321,8 +324,8 @@
             <tr><th>Field</th><th>Value</th></tr>
             <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
             <tr><td>Folder Path</td><td>Use the folder/library path Power Automate offers for the certificate library, normally <code>/TT Certificates_LTD</code> even if the display name has been renamed.</td></tr>
-            <tr><td>File Name</td><td>Dynamic content <code>RecordID</code>, then type a hyphen, then dynamic content <code>FileName</code>.</td></tr>
-            <tr><td>File Content</td><td>Dynamic content <code>FileContent contentBytes</code>. Do not choose <code>FileContent name</code>.</td></tr>
+            <tr><td>File Name</td><td><code>RecordID</code> from <strong>When Power Apps calls a flow (V2)</strong>, then type a hyphen, then <code>FileName</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+            <tr><td>File Content</td><td><code>FileContent contentBytes</code> from <strong>When Power Apps calls a flow (V2)</strong>. Do not choose <code>FileContent name</code>.</td></tr>
           </table>
         </li>
         <li><strong>Still inside the nested Has file? If yes branch, directly below Create file, add SharePoint - Update file properties.</strong>
@@ -331,18 +334,18 @@
             <tr><th>Field</th><th>Value</th></tr>
             <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
             <tr><td>Library Name</td><td>Select <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</td></tr>
-            <tr><td>Id</td><td>Dynamic content <code>ItemId</code> from <strong>Create file</strong>.</td></tr>
+            <tr><td>Id</td><td><code>ItemId</code> from the <strong>Create file</strong> group.</td></tr>
           </table>
           <p>Then fill the library metadata fields:</p>
           <table>
             <tr><th>Property</th><th>Value</th></tr>
-            <tr><td><code>Title</code></td><td><code>CourseName</code></td></tr>
-            <tr><td><code>TrainingRecordID</code></td><td><code>RecordID</code></td></tr>
-            <tr><td><code>PersonEmail</code></td><td><code>PersonEmail</code></td></tr>
-            <tr><td><code>CourseID</code></td><td><code>CourseID</code></td></tr>
-            <tr><td><code>CourseName</code></td><td><code>CourseName</code></td></tr>
-            <tr><td><code>DateCompleted</code></td><td><code>DateCompleted</code></td></tr>
-            <tr><td><code>UploadedByEmail</code></td><td><code>ActorEmail</code></td></tr>
+            <tr><td><code>Title</code></td><td><code>CourseName</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+            <tr><td><code>TrainingRecordID</code></td><td><code>RecordID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+            <tr><td><code>PersonEmail</code></td><td><code>PersonEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+            <tr><td><code>CourseID</code></td><td><code>CourseID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+            <tr><td><code>CourseName</code></td><td><code>CourseName</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+            <tr><td><code>DateCompleted</code></td><td><code>DateCompleted</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+            <tr><td><code>UploadedByEmail</code></td><td><code>ActorEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
             <tr><td><code>UploadedOn</code></td><td>expression <code>utcNow()</code></td></tr>
             <tr><td><code>IsCurrent</code></td><td>expression <code>true</code></td></tr>
           </table>
@@ -352,17 +355,17 @@
             <tr><th>Field</th><th>Value</th></tr>
             <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
             <tr><td>List Name</td><td><code>TT TrainingRecords</code></td></tr>
-            <tr><td>Id</td><td>Dynamic content <code>RecordID</code>.</td></tr>
+            <tr><td>Id</td><td><code>RecordID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
           </table>
           <p>Re-supply the required fields and set the update fields:</p>
           <table>
             <tr><th>Field</th><th>Value</th></tr>
-            <tr><td><code>PersonEmail</code></td><td><code>PersonEmail</code></td></tr>
-            <tr><td><code>CourseID</code></td><td><code>CourseID</code></td></tr>
-            <tr><td><code>CourseName</code></td><td><code>CourseName</code></td></tr>
-            <tr><td><code>DateCompleted</code></td><td><code>DateCompleted</code></td></tr>
-            <tr><td><code>UploadedByEmail</code></td><td><code>ActorEmail</code> if a manager/admin uploaded it; leave blank if you want to keep the current simplified behaviour.</td></tr>
-            <tr><td><code>LastUpdatedByEmail</code></td><td><code>ActorEmail</code></td></tr>
+            <tr><td><code>PersonEmail</code></td><td><code>PersonEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+            <tr><td><code>CourseID</code></td><td><code>CourseID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+            <tr><td><code>CourseName</code></td><td><code>CourseName</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+            <tr><td><code>DateCompleted</code></td><td><code>DateCompleted</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+            <tr><td><code>UploadedByEmail</code></td><td><code>ActorEmail</code> from <strong>When Power Apps calls a flow (V2)</strong> if a manager/admin uploaded it; leave blank if you want to keep the current simplified behaviour.</td></tr>
+            <tr><td><code>LastUpdatedByEmail</code></td><td><code>ActorEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
             <tr><td><code>LastUpdatedOn</code></td><td>expression <code>utcNow()</code></td></tr>
             <tr><td><code>LastStatus</code></td><td><code>Certificate saved</code></td></tr>
           </table>
@@ -372,12 +375,12 @@
             <tr><th>Field</th><th>Value</th></tr>
             <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
             <tr><td>List Name</td><td><code>TT AuditLog</code></td></tr>
-            <tr><td><code>Title</code></td><td>Dynamic content <code>CourseName</code>, then type <code> certificate saved</code>.</td></tr>
-            <tr><td><code>PersonEmail</code></td><td>Dynamic content <code>PersonEmail</code>.</td></tr>
-            <tr><td><code>CourseID</code></td><td>Dynamic content <code>CourseID</code>.</td></tr>
-            <tr><td><code>ActorEmail</code></td><td>Dynamic content <code>ActorEmail</code>.</td></tr>
+            <tr><td><code>Title</code></td><td><code>CourseName</code> from <strong>When Power Apps calls a flow (V2)</strong>, then type <code> certificate saved</code>.</td></tr>
+            <tr><td><code>PersonEmail</code></td><td><code>PersonEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+            <tr><td><code>CourseID</code></td><td><code>CourseID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+            <tr><td><code>ActorEmail</code></td><td><code>ActorEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
             <tr><td><code>EventType</code></td><td><code>Certificate saved</code></td></tr>
-            <tr><td><code>EventDescription</code></td><td>Dynamic content <code>CourseName</code>, then type <code> certificate saved.</code></td></tr>
+            <tr><td><code>EventDescription</code></td><td><code>CourseName</code> from <strong>When Power Apps calls a flow (V2)</strong>, then type <code> certificate saved.</code></td></tr>
             <tr><td><code>EventDate</code></td><td>Expression <code>utcNow()</code>.</td></tr>
           </table>
         </li>
@@ -435,13 +438,16 @@
       </div>
 
       <h3>Actions</h3>
+      <div class="callout warn">
+        <strong>Dynamic content rule:</strong> the repeated names problem happens here too. For request values such as <code>RecordID</code>, <code>ActorEmail</code>, and <code>IsAdmin</code>, use <strong>When Power Apps calls a flow (V2)</strong>. For the file <code>Identifier</code> and file name fields, use <strong>Get files (properties only)</strong>. For attachment bytes in the email, use <strong>Get file content</strong>.
+      </div>
       <ol class="step-list">
         <li><strong>Add SharePoint - Get item.</strong>
           <table>
             <tr><th>Field</th><th>Value</th></tr>
             <tr><td>Site Address</td><td>Your Training Tracker SharePoint site.</td></tr>
             <tr><td>List Name</td><td><code>TT TrainingRecords</code></td></tr>
-            <tr><td>Id</td><td>Dynamic content <code>RecordID</code> from the Power Apps trigger.</td></tr>
+            <tr><td>Id</td><td><code>RecordID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
           </table>
         </li>
         <li><strong>Add Control - Condition.</strong> Rename it if possible, e.g. <code>Condition - Authorised?</code>. Build it exactly like the save flow:
@@ -470,7 +476,7 @@
             <tr><th>Field</th><th>Value</th></tr>
             <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
             <tr><td>Library Name</td><td>Select <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</td></tr>
-            <tr><td>Filter Query</td><td><code>TrainingRecordID eq </code> followed by dynamic content <code>RecordID</code>.</td></tr>
+            <tr><td>Filter Query</td><td><code>TrainingRecordID eq </code> followed by <code>RecordID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
             <tr><td>Top Count</td><td><code>1</code></td></tr>
           </table>
         </li>
@@ -499,17 +505,17 @@
           <table>
             <tr><th>Field</th><th>Value</th></tr>
             <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
-            <tr><td>File Identifier</td><td>Dynamic content <code>Identifier</code> from the current file item.</td></tr>
+            <tr><td>File Identifier</td><td><code>Identifier</code> from the current item in <strong>Get files (properties only)</strong>.</td></tr>
           </table>
         </li>
         <li><strong>Still inside that same Apply to each loop, below Get file content, add Office 365 Outlook - Send an email (V2).</strong>
           <table>
             <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>To</td><td>Dynamic content <code>ActorEmail</code>.</td></tr>
+            <tr><td>To</td><td><code>ActorEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
             <tr><td>Subject</td><td><code>Your Training Tracker certificate</code></td></tr>
             <tr><td>Body</td><td><code>Your requested certificate is attached.</code></td></tr>
-            <tr><td>Attachments Name</td><td>current item <code>File name with extension</code>, or <code>Name</code> if that is what your picker shows.</td></tr>
-            <tr><td>Attachments Content</td><td><strong>Get file content</strong> file content/body.</td></tr>
+            <tr><td>Attachments Name</td><td><code>File name with extension</code> from <strong>Get files (properties only)</strong>, or <code>Name</code> from that same group if that is what your picker shows.</td></tr>
+            <tr><td>Attachments Content</td><td>File content/body from <strong>Get file content</strong>.</td></tr>
           </table>
         </li>
         <li><strong>Still inside the Found certificate? If yes branch, but below/outside the Apply to each loop, add Control - Set variable.</strong>
