@@ -298,6 +298,17 @@
           <strong>New saved selections list:</strong> create <code>BM Saved Selections</code> and add it as a data source before pasting <code>scrSendEmail v2.27</code>. Columns: <code>Title</code>, <code>SelectionName</code>, and <code>GroupName</code>, all Single line of text and Not Required.
         </div>
         <p>This push adds two current fixes: Send Email now keeps the Thursday Batch shortcuts behind a compact maintainer-only <strong>Thursday tools</strong> toggle, and Remove Leaver now shows every matching person in a tickable list before the red remove button appears. This replaces the flaky single-<code>LookUp</code> behaviour where searching "David" could only ever pick the first matching David.</p>
+        <div class="callout">
+          <strong>Manual property fix:</strong> if <code>drpEditThursdayBatch</code> still opens blank instead of showing <code>None</code>, select <code>drpEditThursdayBatch</code> on <code>scrManageGroups</code> and replace its <strong>Default</strong> property with this formula.
+        </div>
+        <div class="code-card">
+          <div class="code-toolbar"><span>drpEditThursdayBatch.Default</span><button type="button" data-copy="drpEditThursdayBatchDefault">Copy</button></div>
+          <pre id="drpEditThursdayBatchDefault">LookUp(
+    colThursdayBatchOptions,
+    Lower(Trim(Value)) =
+        Lower(Trim(Coalesce(LookUp(colGroups, ID = varManageGroupID).ThursdayBatch.Value, "None")))
+)</pre>
+        </div>
         <p>Still included from the previous polish pass: reusable saved send selections on Send Email; a read-only Admin Health Check in Manage Groups; add/remove/unchanged diff counts before paste-replacing a roster; manual Refresh and last-loaded labels on the data-heavy screens; a red "Delete group" button in Manage Groups; clear (X) buttons on search boxes; and cached GAL search results instead of live connector calls from gallery <code>Items</code>.</p>
         <p>Paste-import in Manage Groups now recognises the standard sheet automatically: <code>Bde/Area&rarr;JMC</code>, <code>County/District&rarr;County/Contingent</code>, <code>Rank + First Name (Proper Case) + Surname (UPPERCASE)&rarr;Name</code>, <code>Appointment</code> ignored, <code>Email&rarr;Email</code>. The old 2-column Name/Email paste still works for groups without this structured data.</p>
       </section>
