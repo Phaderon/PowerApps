@@ -262,8 +262,8 @@
 
     <main>
       <div class="topline">
-        <span class="pill">Current step: v2.36 - leaver selector and compact Thursday tools</span>
-        <span class="pill">Updated 30 Jul 2026</span>
+        <span class="pill">Current step: v2.37 - add existing people to a group</span>
+        <span class="pill">Updated 5 Aug 2026</span>
         <span class="pill">Branch Contact Groups</span>
       </div>
       <h1>Branch Contact Groups Fix Guide</h1>
@@ -278,7 +278,7 @@
       </section>
 
       <section id="current-fix">
-        <h2>This Push - v2.36</h2>
+        <h2>This Push - v2.37</h2>
         <p><strong>Add three new columns to <code>BM Memberships</code> in SharePoint first</strong> (all Single line of text, Not Required):</p>
         <table>
           <thead><tr><th>Column</th><th>Purpose</th></tr></thead>
@@ -289,7 +289,7 @@
           </tbody>
         </table>
         <div class="callout warn">
-          <strong>Delete and re-paste all three screens fresh</strong> (don't paste over the existing ones - Studio's paste is additive/merge, so a renamed/removed control can be left behind with its old bindings intact). <code>App.OnStart</code> is unchanged this round, no need to touch it.
+          <strong>For this push, replace <code>scrManageGroups</code> only.</strong> The new Manage Groups screen adds the <strong>Add existing</strong> tab when editing a group's personnel. <code>App.OnStart</code>, <code>scrSendEmail</code>, and <code>scrManagePeople</code> are unchanged this round.
         </div>
         <div class="callout warn">
           <strong>Backfill existing membership rows before testing v2.34.</strong> After adding the new <code>Name</code> column, existing rows will still have their old display name in <code>Title</code> and a blank <code>Name</code>. Copy each existing <code>Title</code> value into <code>Name</code> once (for example in SharePoint grid edit) before relying on Manage People, member popups, search, or name sorting.
@@ -297,7 +297,8 @@
         <div class="callout">
           <strong>New saved selections list:</strong> create <code>BM Saved Selections</code> and add it as a data source before pasting <code>scrSendEmail v2.27</code>. Columns: <code>Title</code>, <code>SelectionName</code>, and <code>GroupName</code>, all Single line of text and Not Required.
         </div>
-        <p>This push adds two current fixes: Send Email now keeps the Thursday Batch shortcuts behind a compact maintainer-only <strong>Thursday tools</strong> toggle, and Remove Leaver now shows every matching person in a tickable list before the red remove button appears. This replaces the flaky single-<code>LookUp</code> behaviour where searching "David" could only ever pick the first matching David.</p>
+        <p>This push adds <strong>Add existing</strong> to Manage Groups. Open a group, click the personnel icon, switch to Add existing, search the people already known to the app, tick multiple people, then click <strong>Add selected</strong>. People already in the current group are excluded from the list, and the add button has a duplicate guard as a second safety check.</p>
+        <p>Also carried in the new <code>scrManageGroups v2.24</code> YAML: the defensive <code>drpEditThursdayBatch.Default</code> formula below, and the in-app version label has been removed so it does not come back if you replace the screen.</p>
         <div class="callout">
           <strong>Manual property fix:</strong> if <code>drpEditThursdayBatch</code> still opens blank instead of showing <code>None</code>, select <code>drpEditThursdayBatch</code> on <code>scrManageGroups</code> and replace its <strong>Default</strong> property with this formula.
         </div>
@@ -322,8 +323,8 @@
             <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.27">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.27">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManageGroups.html?v=2.23"><strong>scrManageGroups <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.23</span></strong><span>Group creation, edit/delete lightbox, membership management, paste diff preview, health check, history, Thursday settings.</span></a>
-            <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.23">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.23">Copy YAML</button></div>
+            <a href="screens/scrManageGroups.html?v=2.24"><strong>scrManageGroups <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.24</span></strong><span>Group creation, edit/delete lightbox, current members, add existing people, GAL/manual add, paste diff preview, health check, history, Thursday settings.</span></a>
+            <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.24">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.24">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="screens/scrManagePeople.html?v=2.26"><strong>scrManagePeople <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.26</span></strong><span>People management, GAL search, edit-person group checklist, selected leaver cleanup, refresh/loaded status.</span></a>
