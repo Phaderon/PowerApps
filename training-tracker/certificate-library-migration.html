@@ -557,7 +557,7 @@
         datCompletion.SelectedDate,
         CountRows(colNewCertificate) > 0,
         If(CountRows(colNewCertificate) > 0, First(colNewCertificate).Name, ""),
-        If(CountRows(colNewCertificate) > 0, First(colNewCertificate), Blank()),
+        If(CountRows(colNewCertificate) > 0, {name: First(colNewCertificate).Name, contentBytes: First(colNewCertificate).Value}, Blank()),
         Lower(varRecord.PersonEmail),
         varCourse.CourseName,
         varMyEmail,
@@ -572,6 +572,10 @@ If(
     Notify("TEST save worked. Check TT Certificates (LTD).", NotificationType.Success),
     Notify(varSaveResult.message, NotificationType.Error)
 )</pre></div>
+
+      <div class="callout warn">
+        <strong>If you get "Missing column. Your formula is missing a column 'contentBytes' with a type of 'Blob'":</strong> the flow's <code>FileContent</code> trigger input needs a record with a column literally named <code>contentBytes</code>, not whatever field names the attachment control happens to use. Passing <code>First(colNewCertificate)</code> as-is (the old pattern from the original <code>TT - Save Certificate</code> flow) does not satisfy this. Build the record explicitly instead: <code>{name: First(colNewCertificate).Name, contentBytes: First(colNewCertificate).Value}</code>. The code block above already has this fix applied.
+      </div>
 
       <h3>Temporary Email Test Button</h3>
       <p>Add a second temporary button. Set its <code>Text</code> to <code>TEST email cert</code> and its <code>OnSelect</code> to this:</p>
