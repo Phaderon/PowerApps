@@ -1186,8 +1186,8 @@ Clear(colNewCertificate)</pre>
         <div class="callout ok">
           <strong>Currently fixing <code>TT - Get Certificate</code>?</strong> There's a dedicated page with just the action list, no step-renumbering, no scrolling past stuff you've already built: <a href="get-certificate-fix.html"><strong>Open: Fix TT - Get Certificate &mdash; Exactly What To Change</strong></a>
         </div>
-        <div class="callout warn">
-          <strong>Newer recommended path:</strong> instead of continuing to fight the base64 download flow, move certificates into a locked document library and have Power Automate email authorised certificate requests. Use the separate migration guide here: <a href="certificate-library-migration.html"><strong>Move Certificates To A Locked Library &mdash; Safe Test And Cutover Guide</strong></a>. It starts with test flows and temporary buttons so you can prove the idea before changing the live save/open buttons.
+        <div class="callout ok">
+          <strong>Live, current path:</strong> certificates are stored in a locked document library and served through an authorisation-checked flow, with the certificate rendered directly in the app &mdash; no email, no download prompt. Full details, including the in-app viewer: <a href="certificate-library-migration.html"><strong>Certificate Library &amp; In-App Viewer &mdash; Full Guide</strong></a>.
         </div>
         <div class="progress-banner">
           <strong>Where you are in this upgrade:</strong>

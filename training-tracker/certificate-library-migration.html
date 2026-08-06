@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Training Tracker Certificate Library Migration</title>
+  <title>Training Tracker Certificate Viewer</title>
   <style>
     :root {
       --bg: #f6f8fb;
@@ -45,6 +45,7 @@
     h2 { margin: 34px 0 10px; font-size: 1.35rem; border-top: 1px solid var(--line); padding-top: 22px; }
     h2:first-of-type { border-top: 0; padding-top: 0; }
     h3 { margin: 24px 0 8px; font-size: 1.05rem; }
+    h4 { margin: 18px 0 6px; font-size: .95rem; }
     .lead { margin: 0 0 20px; color: var(--muted); font-size: 1.05rem; }
     .pill {
       display: inline-flex;
@@ -98,8 +99,10 @@
       border-bottom: 1px solid var(--line);
       color: var(--muted);
       font-weight: 700;
-      padding: 9px 12px;
-      font-size: .88rem;
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: 8px 14px;
     }
     table {
       width: 100%;
@@ -109,28 +112,15 @@
     }
     th, td {
       border: 1px solid var(--line);
-      padding: 9px 10px;
+      padding: 8px 10px;
       text-align: left;
       vertical-align: top;
     }
-    th { background: #f0f5f8; }
-    ol, ul { padding-left: 1.3rem; }
-    li { margin: 8px 0; }
-    .step-list li { margin: 14px 0; }
+    th { background: #eef3f8; }
+    .step-list { padding-left: 22px; }
+    .step-list li { margin-bottom: 10px; }
     .back-link { display: inline-block; margin-top: 24px; font-weight: 600; }
     .small { color: var(--muted); font-size: .92rem; }
-    .copy-button {
-      appearance: none;
-      border: 0;
-      border-radius: 8px;
-      background: var(--primary);
-      color: #ffffff;
-      cursor: pointer;
-      font-weight: 700;
-      margin: 8px 8px 8px 0;
-      padding: 9px 13px;
-    }
-    .copy-button:hover { background: #063d35; }
     @media (max-width: 860px) {
       .shell { padding: 12px; }
       main { padding: 18px; }
@@ -141,616 +131,91 @@
 <body>
   <div class="shell">
     <main>
-      <span class="pill">Safe migration</span>
-      <span class="pill">Build and test before cutover</span>
+      <span class="pill">Certificate library: live</span>
+      <span class="pill">This adds: in-app viewer</span>
       <span class="pill">Training Tracker only</span>
-      <h1>Move Certificates Out Of <code>TT TrainingRecords</code> Attachments</h1>
-      <p class="lead">This is the separate fix guide for moving certificates into a locked SharePoint document library while leaving the training tracker metadata in the existing lists. Follow the test phase first. Do not remove old attachments, flows, or formulas until the new save and email flows work against one real test record.</p>
+      <h1>Add An In-App Certificate Viewer</h1>
+      <p class="lead">The certificate library migration is done: <code>TT - Save Certificate Library</code> saves into the locked <code>TT Certificates_LTD</code> library, and <code>TT - Email Certificate Library</code> looks the file up with the same authorisation check and returns it as one JSON <code>payload</code> field. This guide covers the one remaining piece: getting that certificate to actually open on screen when someone clicks the button, instead of trying to email it or force a download.</p>
 
       <div class="callout ok">
-        <strong>Answer to the big question:</strong> yes, you can test this in advance. Build the new <code>TT Certificates_LTD</code> library, optionally rename its display name to <code>TT Certificates (LTD)</code>, and build the two new <code>TEST</code> flows first. Add two temporary buttons on <code>scrCourseDetail</code> to call those test flows. If the test works, then do the cutover edits. If it does not, delete the test buttons and the current app keeps using the old attachment route.
+        <strong>Nothing about the flow changes.</strong> <code>TT - Save Certificate Library</code>, <code>btnSaveCert</code>, and <code>TT - Email Certificate Library</code> itself are all correct and stay exactly as they are. This guide only touches <code>btnOpenCertificate</code> and adds four new controls to <code>scrCourseDetail</code>.
       </div>
 
-      <h2>1. What Changes And What Stays</h2>
+      <h2>1. What This Adds And Why</h2>
+      <p>The point of this app is one click, done &mdash; find the person, open the record, click the certificate, it opens. Two things were tried and both failed for the same underlying reason:</p>
       <table>
-        <tr><th>Area</th><th>Keep</th><th>Change</th></tr>
-        <tr>
-          <td>Existing SharePoint lists</td>
-          <td><code>TT Personnel</code>, <code>TT Courses</code>, <code>TT TrainingRecords</code>, <code>TT AuditLog</code>, <code>TT ComplianceSnapshots</code></td>
-          <td>Add a separate document library created as <code>TT Certificates_LTD</code>. You can rename the display name to <code>TT Certificates (LTD)</code> afterwards, but Power Automate may still show/use the original internal library name.</td>
-        </tr>
-        <tr>
-          <td>Training record metadata</td>
-          <td><code>DateCompleted</code>, <code>UploadedByEmail</code>, <code>LastUpdatedByEmail</code>, <code>LastUpdatedOn</code>, <code>LastStatus</code>, compliance maths, admin dashboard, audit log.</td>
-          <td>The record no longer needs a SharePoint list attachment to prove a certificate exists. The file is stored in <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code> instead.</td>
-        </tr>
-        <tr>
-          <td>Power Apps file picker</td>
-          <td>The existing unbound <code>Attachments@2.3.0</code> control and <code>colNewCertificate</code> staging pattern.</td>
-          <td>The save button calls a new library flow instead of the old attachment flow.</td>
-        </tr>
-        <tr>
-          <td>Power Automate</td>
-          <td>The old flows stay untouched during testing.</td>
-          <td>New flows write/read the locked document library. The read flow emails the certificate instead of returning base64 to Power Apps.</td>
-        </tr>
-        <tr>
-          <td>Security</td>
-          <td>Users still use the app to see their training data.</td>
-          <td>Only admins/service account have direct access to <code>TT Certificates_LTD</code>. Normal users do not browse the certificate library.</td>
-        </tr>
+        <tr><th>Tried</th><th>Result</th><th>Why</th></tr>
+        <tr><td><code>Launch("data:...;base64,...")</code></td><td>Nothing happened, no error.</td><td>Browsers (and Power Apps Studio's own Preview player, which runs in an iframe) block top-level navigation to a <code>data:</code> URI as an anti-phishing measure.</td></tr>
+        <tr><td><code>Download("data:...;base64,...")</code></td><td>"The URL passed to the function is not valid."</td><td>Power Apps' own <code>Download()</code> function expects a real <code>https://</code> address, the same as <code>Launch()</code> &mdash; neither function is actually built to accept base64 data URIs, despite older examples online suggesting otherwise.</td></tr>
       </table>
-
-      <div class="callout warn">
-        <strong>Important:</strong> SharePoint document libraries and columns have internal names. Create the library first as <code>TT Certificates_LTD</code>. If you then rename the display name to <code>TT Certificates (LTD)</code>, Power Automate may still show or require the original internal name/path. Create the columns below with the exact names shown, with no spaces.
-      </div>
-
-      <h2>2. Create The New SharePoint Document Library</h2>
-      <ol class="step-list">
-        <li>Open the same SharePoint site that contains the Training Tracker lists.</li>
-        <li>Create a new <strong>Document library</strong>, not a normal list. Name it exactly <code>TT Certificates_LTD</code>.</li>
-        <li>After creation, you may rename the display name to <code>TT Certificates (LTD)</code> if policy needs that wording. Do not recreate it just for the display name. The original internal path/name is the useful stable bit for Power Automate.</li>
-        <li>In the new library, add the columns below.</li>
-      </ol>
-
-      <table>
-        <tr><th>Column name</th><th>Type</th><th>Required?</th><th>Purpose</th></tr>
-        <tr><td><code>TrainingRecordID</code></td><td>Number</td><td>Yes</td><td>Links the file back to <code>TT TrainingRecords.ID</code>.</td></tr>
-        <tr><td><code>PersonEmail</code></td><td>Single line of text</td><td>Yes</td><td>The person who owns the training record.</td></tr>
-        <tr><td><code>CourseID</code></td><td>Number</td><td>No</td><td>The course ID from <code>TT Courses</code>.</td></tr>
-        <tr><td><code>CourseName</code></td><td>Single line of text</td><td>No</td><td>Readable course name for admin/search/audit.</td></tr>
-        <tr><td><code>DateCompleted</code></td><td>Date and time, Date only</td><td>No</td><td>The completion date saved on the training record.</td></tr>
-        <tr><td><code>UploadedByEmail</code></td><td>Single line of text</td><td>No</td><td>The app user who uploaded or replaced the file.</td></tr>
-        <tr><td><code>UploadedOn</code></td><td>Date and time, Date and time</td><td>No</td><td>When the library copy was created.</td></tr>
-        <tr><td><code>IsCurrent</code></td><td>Yes/No</td><td>No</td><td>Use <code>Yes</code>. Kept for future-proofing if you ever keep old versions.</td></tr>
-      </table>
-
-      <h3>Permissions For Testing</h3>
-      <p>For the first test, do not lock the library down yet. Give yourself and the flow owner access. Once the test flow works, change permissions like this:</p>
+      <p>Both routes try to make the <strong>browser</strong> navigate to or fetch the file. The fix is to stop trying to navigate anywhere, and instead hand the base64 data straight to a control that renders it inline, inside the app itself. Two native Power Apps controls do exactly this and are not subject to the navigation block, because setting a property is not the same as navigating:</p>
       <ul>
-        <li>Stop inheriting permissions on <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</li>
-        <li>Keep Full Control for the site owners/admins who are allowed to inspect certificates.</li>
-        <li>Keep access for the account whose SharePoint connection the flows use.</li>
-        <li>Remove normal app users from this library only. Do not remove their access from the metadata lists yet.</li>
+        <li><strong>PDF viewer control</strong> &mdash; its <code>Document</code> property natively accepts a <code>data:application/pdf;base64,...</code> string.</li>
+        <li><strong>Image control</strong> &mdash; its <code>Image</code> property natively accepts a <code>data:image/...;base64,...</code> string.</li>
       </ul>
+      <p>Since your certificate picker allows both PDFs and images, this guide adds both controls in a small popup over <code>scrCourseDetail</code>, and shows whichever one matches the file that came back.</p>
 
-      <h2>3. Build Test Flow 1: Save To Library</h2>
-      <p>Create this as a new flow first. Do not edit <code>TT - Save Certificate</code> yet.</p>
+      <h2>2. Add The Viewer Controls To <code>scrCourseDetail</code></h2>
+      <p>Add these four controls as the <strong>last</strong> controls on the screen (after everything else in the tree), so they render on top of the rest of the screen when visible. None of them need inserting inside any existing group &mdash; add them directly on the screen.</p>
 
-      <h3>Flow Name</h3>
-      <p><code>TT - Save Certificate Library TEST</code></p>
-
-      <h3>Trigger Inputs</h3>
-      <p>Use <strong>Power Apps (V2)</strong>. Add these inputs in this order.</p>
+      <h3>2.1 Dimmed Background</h3>
+      <p>Insert &rarr; search <strong>Button</strong> &rarr; classic Button (not ModernButton). Rename it <code>grpCertViewerBG</code>.</p>
       <table>
-        <tr><th>#</th><th>Type</th><th>Name</th></tr>
-        <tr><td>1</td><td>Text</td><td><code>DateCompleted</code></td></tr>
-        <tr><td>2</td><td>Yes/No</td><td><code>HasNewFile</code></td></tr>
-        <tr><td>3</td><td>Text</td><td><code>FileName</code></td></tr>
-        <tr><td>4</td><td>File</td><td><code>FileContent</code></td></tr>
-        <tr><td>5</td><td>Text</td><td><code>PersonEmail</code></td></tr>
-        <tr><td>6</td><td>Text</td><td><code>CourseName</code></td></tr>
-        <tr><td>7</td><td>Text</td><td><code>ActorEmail</code></td></tr>
-        <tr><td>8</td><td>Yes/No</td><td><code>ViewingForSelf</code></td></tr>
-        <tr><td>9</td><td>Number</td><td><code>RecordID</code></td></tr>
-        <tr><td>10</td><td>Number</td><td><code>CourseID</code></td></tr>
-        <tr><td>11</td><td>Yes/No</td><td><code>IsAdmin</code></td></tr>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td><code>Text</code></td><td><code>=""</code></td></tr>
+        <tr><td><code>Fill</code></td><td><code>=RGBA(0,0,0,0.75)</code></td></tr>
+        <tr><td><code>BorderThickness</code></td><td><code>=0</code></td></tr>
+        <tr><td><code>X</code></td><td><code>=0</code></td></tr>
+        <tr><td><code>Y</code></td><td><code>=0</code></td></tr>
+        <tr><td><code>Width</code></td><td><code>=Parent.Width</code></td></tr>
+        <tr><td><code>Height</code></td><td><code>=Parent.Height</code></td></tr>
+        <tr><td><code>DisplayMode</code></td><td><code>=DisplayMode.View</code></td></tr>
+        <tr><td><code>Visible</code></td><td><code>=varCertViewerOpen</code></td></tr>
       </table>
-      <div class="callout warn">
-        <strong>Use Text, not Date, for <code>DateCompleted</code>:</strong> a Date-typed trigger input demands strict ISO format (<code>yyyy-mm-dd</code>), but Power Apps serialises a Date value using the maker's locale display format instead (e.g. <code>06/08/2026</code>), which fails validation with <code>TriggerInputSchemaMismatch</code> every time. Using Text here and building the ISO string explicitly on the Power Apps side (<code>Text(datCompletion.SelectedDate, "yyyy-mm-dd")</code>) sidesteps the mismatch entirely. Every SharePoint action below that consumes <code>DateCompleted</code> accepts a plain ISO text string into a Date column without any extra conversion.
-      </div>
+      <p class="small">This is decorative only (<code>DisplayMode.View</code> makes it non-interactive) &mdash; it just dims everything behind the viewer so it's obvious you're in a popup.</p>
 
-      <div class="callout warn">
-        <strong>Trigger paste limitation:</strong> the copied trigger payload is valid JSON, but Power Automate will not let you paste a trigger into the trigger slot. The trigger is created when the flow is created, and deleting it does not create a place where a new copied trigger can be pasted. Add these 11 trigger inputs manually. The copy buttons below are only for actions after the trigger.
-      </div>
-
-      <h3>Top-Level Variables</h3>
-      <p>Add these directly under the trigger, before any SharePoint action.</p>
+      <h3>2.2 PDF Viewer Control</h3>
+      <p>Insert &rarr; search <strong>PDF viewer</strong> &rarr; add it. Rename it <code>pdfCertViewer</code>.</p>
       <table>
-        <tr><th>Action</th><th>Name</th><th>Type</th><th>Value</th></tr>
-        <tr><td>Initialize variable</td><td><code>varSuccess</code></td><td>Boolean</td><td>leave empty</td></tr>
-        <tr><td>Initialize variable</td><td><code>varMessage</code></td><td>String</td><td>leave empty</td></tr>
-      </table>
-      <div class="callout ok">
-        <strong>Confirmed shortcut:</strong> paste these two actions directly under the trigger, before any SharePoint action. Paste <code>varSuccess</code> first, then <code>varMessage</code>.
-        <br><button class="copy-button" type="button" data-flow-variable="success">Copy varSuccess initializer</button>
-        <button class="copy-button" type="button" data-flow-variable="message">Copy varMessage initializer</button>
-      </div>
-
-      <h3>Actions</h3>
-      <div class="callout warn">
-        <strong>Dynamic content rule:</strong> the same field name can appear under several headings. Pick the value from the action group named in this guide. For trigger inputs such as <code>CourseName</code>, <code>CourseID</code>, <code>ActorEmail</code>, <code>RecordID</code>, <code>FileName</code>, and <code>DateCompleted</code>, use the group headed <strong>When Power Apps calls a flow (V2)</strong>. For <code>ItemId</code>, use <strong>Create file</strong>. For existing file <code>Identifier</code>, use <strong>Get files (properties only)</strong>.
-      </div>
-      <div class="callout warn">
-        <strong>Experimental shortcut:</strong> after the trigger, the two variables, and <strong>Get item</strong> exist, you can try pasting the whole corrected Authorised condition in one go. Delete the old Authorised condition, click this button, then paste directly below <strong>Get item</strong>. If Power Automate rejects the SharePoint bindings or asks you to repair actions, use the manual steps below instead.
-        <br><button class="copy-button" type="button" data-flow-condition="save">Copy corrected save condition prototype</button>
-      </div>
-      <ol class="step-list">
-        <li><strong>Add SharePoint - Get item.</strong>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Site Address</td><td>Your Training Tracker SharePoint site.</td></tr>
-            <tr><td>List Name</td><td><code>TT TrainingRecords</code></td></tr>
-            <tr><td>Id</td><td>Dynamic content <code>RecordID</code> from the Power Apps trigger.</td></tr>
-          </table>
-        </li>
-        <li><strong>Add Control - Condition.</strong> Rename it if Power Automate lets you, e.g. <code>Condition - Authorised?</code>. Set it to OR logic, not AND.
-          <p>Build the first row like this:</p>
-          <table>
-            <tr><th>Left</th><th>Operator</th><th>Right</th></tr>
-            <tr><td>Dynamic content <code>PersonEmail</code> from <strong>Get item</strong></td><td>is equal to</td><td>Dynamic content <code>ActorEmail</code> from the trigger</td></tr>
-          </table>
-          <p>Add a second row, then change the condition group from <strong>And</strong> to <strong>Or</strong>. Build the second row like this:</p>
-          <table>
-            <tr><th>Left</th><th>Operator</th><th>Right</th></tr>
-            <tr><td>Dynamic content <code>IsAdmin</code> from the trigger</td><td>is equal to</td><td>Expression <code>true</code></td></tr>
-          </table>
-          <p>For the right-hand <code>true</code>, click the <strong>fx</strong> / Expression tab and type the bare word <code>true</code>. Do not pick Yes from a dropdown and do not type <code>"true"</code> with quotes.</p>
-        </li>
-        <li><strong>Inside the Authorised? If no branch, add Control - Set variable.</strong>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Name</td><td><code>varSuccess</code></td></tr>
-            <tr><td>Value</td><td>Expression <code>false</code></td></tr>
-          </table>
-          <p>Then add a second <strong>Control - Set variable</strong> directly below it in the same <strong>If no</strong> branch.</p>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Name</td><td><code>varMessage</code></td></tr>
-            <tr><td>Value</td><td>Plain text: <code>You are not authorized to save this certificate.</code></td></tr>
-          </table>
-        </li>
-        <li><strong>Inside the Authorised? If yes branch, add another Control - Condition.</strong> This is the nested file condition. Rename it if possible, e.g. <code>Condition - Has file?</code>.
-          <table>
-            <tr><th>Left</th><th>Operator</th><th>Right</th></tr>
-            <tr><td>Dynamic content <code>HasNewFile</code> from the trigger</td><td>is equal to</td><td>Expression <code>true</code></td></tr>
-          </table>
-          <p>Again, use the Expression tab for <code>true</code>. This nested condition decides whether the flow should replace a file. Its <strong>If yes</strong> branch contains the certificate-library file work. Its <strong>If no</strong> branch can stay empty, because a date-only save still needs the training record metadata update later.</p>
-        </li>
-        <li><strong>Inside the nested Has file? If yes branch, add SharePoint - Get files (properties only).</strong> This action must be inside the nested <strong>If yes</strong>, not below the condition.
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
-            <tr><td>Library Name</td><td>Select <code>TT Certificates_LTD</code> or the renamed display value <code>TT Certificates (LTD)</code>, whichever Power Automate shows.</td></tr>
-            <tr><td>Filter Query</td><td><code>TrainingRecordID eq </code> followed by <code>RecordID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-          </table>
-          <p>The filter query should end up like this, except the square-bracket part is the real dynamic-content pill:</p>
-          <div class="code-card"><div class="code-title">OData Filter Query</div><pre>TrainingRecordID eq [RecordID dynamic content]</pre></div>
-        </li>
-        <li><strong>Still inside the nested Has file? If yes branch, add Control - Apply to each.</strong> For the loop input, choose the <strong>value</strong> output from <strong>Get files (properties only)</strong>. This loops through any existing certificate file for the same training record so it can be deleted before the replacement file is created.
-          <p>Inside this <strong>Apply to each</strong>, add <strong>SharePoint - Delete file</strong>.</p>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
-            <tr><td>File Identifier</td><td>Dynamic content <code>Identifier</code> from the current item in <strong>Get files (properties only)</strong>.</td></tr>
-          </table>
-        </li>
-        <li><strong>Still inside the nested Has file? If yes branch, but below the Apply to each loop, add SharePoint - Create file.</strong> Make sure this action is outside/below the loop, but still inside the nested <strong>If yes</strong> branch.
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
-            <tr><td>Folder Path</td><td>Use the folder/library path Power Automate offers for the certificate library, normally <code>/TT Certificates_LTD</code> even if the display name has been renamed.</td></tr>
-            <tr><td>File Name</td><td><code>RecordID</code> from <strong>When Power Apps calls a flow (V2)</strong>, then type a hyphen, then <code>FileName</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td>File Content</td><td><code>FileContent contentBytes</code> from <strong>When Power Apps calls a flow (V2)</strong>. Do not choose <code>FileContent name</code>.</td></tr>
-          </table>
-        </li>
-        <li><strong>Still inside the nested Has file? If yes branch, directly below Create file, add SharePoint - Update file properties.</strong>
-          <p><strong>Do not choose SharePoint - Update file.</strong> That is a different action for overwriting file content, and it asks for <code>Site Address</code>, <code>File Identifier</code>, and <code>File Content</code>. You need the metadata action named <strong>Update file properties</strong>, which asks for the library and item/file Id and then shows your custom columns such as <code>TrainingRecordID</code>, <code>PersonEmail</code>, and <code>IsCurrent</code>.</p>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
-            <tr><td>Library Name</td><td>Select <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</td></tr>
-            <tr><td>Id</td><td><code>ItemId</code> from the <strong>Create file</strong> group.</td></tr>
-          </table>
-          <p>Then fill the library metadata fields:</p>
-          <table>
-            <tr><th>Property</th><th>Value</th></tr>
-            <tr><td><code>Title</code></td><td><code>CourseName</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>TrainingRecordID</code></td><td><code>RecordID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>PersonEmail</code></td><td><code>PersonEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>CourseID</code></td><td><code>CourseID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>CourseName</code></td><td><code>CourseName</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>DateCompleted</code></td><td><code>DateCompleted</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>UploadedByEmail</code></td><td><code>ActorEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>UploadedOn</code></td><td>expression <code>utcNow()</code></td></tr>
-            <tr><td><code>IsCurrent</code></td><td>expression <code>true</code></td></tr>
-          </table>
-        </li>
-        <li><strong>Now go below the whole nested Has file? condition, but stay inside the outer Authorised? If yes branch.</strong> Add <strong>SharePoint - Update item</strong> for <code>TT TrainingRecords</code>. This action must run whether a new file was attached or not, so it belongs after the nested file condition, not inside the nested file condition.
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
-            <tr><td>List Name</td><td><code>TT TrainingRecords</code></td></tr>
-            <tr><td>Id</td><td><code>RecordID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-          </table>
-          <p>Re-supply the required fields and set the update fields:</p>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td><code>PersonEmail</code></td><td><code>PersonEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>CourseID</code></td><td><code>CourseID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>CourseName</code></td><td><code>CourseName</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>DateCompleted</code></td><td><code>DateCompleted</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>UploadedByEmail</code></td><td><code>ActorEmail</code> from <strong>When Power Apps calls a flow (V2)</strong> if a manager/admin uploaded it; leave blank if you want to keep the current simplified behaviour.</td></tr>
-            <tr><td><code>LastUpdatedByEmail</code></td><td><code>ActorEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>LastUpdatedOn</code></td><td>expression <code>utcNow()</code></td></tr>
-            <tr><td><code>LastStatus</code></td><td><code>Certificate saved</code></td></tr>
-          </table>
-        </li>
-        <li><strong>Still inside the outer Authorised? If yes branch, below Update item, add SharePoint - Create item.</strong> This writes the audit log row.
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
-            <tr><td>List Name</td><td><code>TT AuditLog</code></td></tr>
-            <tr><td><code>Title</code></td><td><code>CourseName</code> from <strong>When Power Apps calls a flow (V2)</strong>, then type <code> certificate saved</code>.</td></tr>
-            <tr><td><code>PersonEmail</code></td><td><code>PersonEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>CourseID</code></td><td><code>CourseID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>ActorEmail</code></td><td><code>ActorEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td><code>EventType</code></td><td><code>Certificate saved</code></td></tr>
-            <tr><td><code>EventDescription</code></td><td><code>CourseName</code> from <strong>When Power Apps calls a flow (V2)</strong>, then type <code> certificate saved.</code></td></tr>
-            <tr><td><code>EventDate</code></td><td>Expression <code>utcNow()</code>.</td></tr>
-          </table>
-        </li>
-        <li><strong>Still inside the outer Authorised? If yes branch, below Create item, add Control - Set variable.</strong>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Name</td><td><code>varSuccess</code></td></tr>
-            <tr><td>Value</td><td>Expression <code>true</code></td></tr>
-          </table>
-          <p>Then add a second <strong>Control - Set variable</strong> directly below it.</p>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Name</td><td><code>varMessage</code></td></tr>
-            <tr><td>Value</td><td>Plain text: <code>OK</code></td></tr>
-          </table>
-        </li>
-        <li><strong>After the whole outer Authorised? condition, outside both branches, add exactly one Respond to a PowerApp or flow action.</strong> It should sit below the entire Condition container, not inside <strong>If yes</strong> or <strong>If no</strong>.
-          <table>
-            <tr><th>Output type</th><th>Title</th><th>Value</th></tr>
-            <tr><td>Yes/No</td><td><code>success</code></td><td>Dynamic content <code>varSuccess</code>.</td></tr>
-            <tr><td>Text</td><td><code>message</code></td><td>Dynamic content <code>varMessage</code>.</td></tr>
-          </table>
-        </li>
-      </ol>
-
-      <h2>4. Build Test Flow 2: Email Certificate From Library</h2>
-      <p>This replaces the base64 download flow. It avoids the broken four-field response schema entirely. The app asks for the certificate, the flow checks authorisation, and the flow emails the file to the authorised requester.</p>
-
-      <h3>Flow Name</h3>
-      <p><code>TT - Email Certificate Library TEST</code></p>
-
-      <h3>Trigger Inputs</h3>
-      <table>
-        <tr><th>#</th><th>Type</th><th>Name</th></tr>
-        <tr><td>1</td><td>Number</td><td><code>RecordID</code></td></tr>
-        <tr><td>2</td><td>Text</td><td><code>ActorEmail</code></td></tr>
-        <tr><td>3</td><td>Yes/No</td><td><code>IsAdmin</code></td></tr>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td><code>Document</code></td><td><code>=varCertDataUri</code></td></tr>
+        <tr><td><code>X</code></td><td><code>=Parent.Width * 0.1</code></td></tr>
+        <tr><td><code>Y</code></td><td><code>=Parent.Height * 0.1</code></td></tr>
+        <tr><td><code>Width</code></td><td><code>=Parent.Width * 0.8</code></td></tr>
+        <tr><td><code>Height</code></td><td><code>=Parent.Height * 0.75</code></td></tr>
+        <tr><td><code>Visible</code></td><td><code>=varCertViewerOpen &amp;&amp; varCertIsPdf</code></td></tr>
       </table>
 
-      <div class="callout warn">
-        <strong>Trigger paste limitation:</strong> add these three trigger inputs manually. Power Automate does not allow a copied trigger to be pasted into the top trigger position. Use the copy buttons below only for actions after the trigger.
-      </div>
-
-      <h3>Top-Level Variables</h3>
+      <h3>2.3 Image Control</h3>
+      <p>Insert &rarr; search <strong>Image</strong> &rarr; add it. Rename it <code>imgCertViewer</code>.</p>
       <table>
-        <tr><th>Name</th><th>Type</th><th>Initial value</th></tr>
-        <tr><td><code>varSuccess</code></td><td>Boolean</td><td>empty</td></tr>
-        <tr><td><code>varMessage</code></td><td>String</td><td>empty</td></tr>
-      </table>
-      <div class="callout ok">
-        <strong>Confirmed shortcut:</strong> use the same two variable initializer buttons here as well. Paste <code>varSuccess</code> first, then <code>varMessage</code>, directly under the email trigger.
-        <br><button class="copy-button" type="button" data-flow-variable="success">Copy varSuccess initializer</button>
-        <button class="copy-button" type="button" data-flow-variable="message">Copy varMessage initializer</button>
-      </div>
-
-      <h3>Actions</h3>
-      <div class="callout warn">
-        <strong>Dynamic content rule:</strong> the repeated names problem happens here too. For request values such as <code>RecordID</code>, <code>ActorEmail</code>, and <code>IsAdmin</code>, use <strong>When Power Apps calls a flow (V2)</strong>. For the file <code>Identifier</code> and file name fields, use <strong>Get files (properties only)</strong>. For attachment bytes in the email, use <strong>Get file content</strong>.
-      </div>
-      <div class="callout warn">
-        <strong>Experimental shortcut:</strong> after the trigger, the two variables, and <strong>Get item</strong> exist, you can try pasting the whole Authorised email condition in one go. Delete the old Authorised condition if you already made one, click this button, then paste directly below <strong>Get item</strong>. The SharePoint parts are based on the same structure that pasted successfully in the save-flow test. The Outlook email action is still unproven and may ask you to repair or reselect the Office 365 Outlook connection.
-        <br><button class="copy-button" type="button" data-flow-condition="email">Copy email condition prototype</button>
-      </div>
-      <ol class="step-list">
-        <li><strong>Add SharePoint - Get item.</strong>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Site Address</td><td>Your Training Tracker SharePoint site.</td></tr>
-            <tr><td>List Name</td><td><code>TT TrainingRecords</code></td></tr>
-            <tr><td>Id</td><td><code>RecordID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-          </table>
-        </li>
-        <li><strong>Add Control - Condition.</strong> Rename it if possible, e.g. <code>Condition - Authorised?</code>. Build it exactly like the save flow:
-          <table>
-            <tr><th>Left</th><th>Operator</th><th>Right</th></tr>
-            <tr><td>Dynamic content <code>PersonEmail</code> from <strong>Get item</strong></td><td>is equal to</td><td>Dynamic content <code>ActorEmail</code> from the trigger</td></tr>
-            <tr><td>Dynamic content <code>IsAdmin</code> from the trigger</td><td>is equal to</td><td>Expression <code>true</code></td></tr>
-          </table>
-          <p>Make the group logic <strong>Or</strong>. Use the Expression tab for <code>true</code>.</p>
-        </li>
-        <li><strong>Inside the Authorised? If no branch, add Control - Set variable.</strong>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Name</td><td><code>varSuccess</code></td></tr>
-            <tr><td>Value</td><td>Expression <code>false</code></td></tr>
-          </table>
-          <p>Then add a second <strong>Control - Set variable</strong> directly below it in the same branch.</p>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Name</td><td><code>varMessage</code></td></tr>
-            <tr><td>Value</td><td>Plain text: <code>You are not authorized to view this certificate.</code></td></tr>
-          </table>
-        </li>
-        <li><strong>Inside the Authorised? If yes branch, add SharePoint - Get files (properties only).</strong>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
-            <tr><td>Library Name</td><td>Select <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</td></tr>
-            <tr><td>Filter Query</td><td><code>TrainingRecordID eq </code> followed by <code>RecordID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td>Top Count</td><td><code>1</code></td></tr>
-          </table>
-        </li>
-        <li><strong>Still inside the Authorised? If yes branch, below Get files, add Control - Condition.</strong> Rename it if possible, e.g. <code>Condition - Found certificate?</code>. Left side expression:
-          <div class="code-card"><div class="code-title">Expression</div><pre>length(body('Get_files_(properties_only)')?['value'])</pre></div>
-          <table>
-            <tr><th>Left</th><th>Operator</th><th>Right</th></tr>
-            <tr><td>The expression above</td><td>is greater than</td><td><code>0</code></td></tr>
-          </table>
-        </li>
-        <li><strong>Inside the Found certificate? If no branch, add Control - Set variable.</strong>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Name</td><td><code>varSuccess</code></td></tr>
-            <tr><td>Value</td><td>Expression <code>false</code></td></tr>
-          </table>
-          <p>Then add a second <strong>Control - Set variable</strong> directly below it.</p>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Name</td><td><code>varMessage</code></td></tr>
-            <tr><td>Value</td><td>Plain text: <code>No certificate is on file for this record.</code></td></tr>
-          </table>
-        </li>
-        <li><strong>Inside the Found certificate? If yes branch, add Control - Apply to each.</strong> For the loop input, choose the <strong>value</strong> output from <strong>Get files (properties only)</strong>. This loop should run once because Top Count is 1.</li>
-        <li><strong>Inside that Apply to each loop, add SharePoint - Get file content.</strong>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
-            <tr><td>File Identifier</td><td><code>Identifier</code> from the current item in <strong>Get files (properties only)</strong>.</td></tr>
-          </table>
-        </li>
-        <li><strong>Still inside that same Apply to each loop, below Get file content, add Office 365 Outlook - Send an email (V2).</strong>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>To</td><td><code>ActorEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
-            <tr><td>Subject</td><td><code>Your Training Tracker certificate</code></td></tr>
-            <tr><td>Body</td><td><code>Your requested certificate is attached.</code></td></tr>
-            <tr><td>Attachments Name</td><td><code>File name with extension</code> from <strong>Get files (properties only)</strong>, or <code>Name</code> from that same group if that is what your picker shows.</td></tr>
-            <tr><td>Attachments Content</td><td>File content/body from <strong>Get file content</strong>.</td></tr>
-          </table>
-        </li>
-        <li><strong>Still inside the Found certificate? If yes branch, but below/outside the Apply to each loop, add Control - Set variable.</strong>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Name</td><td><code>varSuccess</code></td></tr>
-            <tr><td>Value</td><td>Expression <code>true</code></td></tr>
-          </table>
-          <p>Then add a second <strong>Control - Set variable</strong> directly below it.</p>
-          <table>
-            <tr><th>Field</th><th>Value</th></tr>
-            <tr><td>Name</td><td><code>varMessage</code></td></tr>
-            <tr><td>Value</td><td>Plain text: <code>Certificate emailed to you.</code></td></tr>
-          </table>
-        </li>
-        <li><strong>After the whole outer Authorised? condition, outside both branches, add exactly one Respond to a PowerApp or flow action.</strong>
-          <table>
-            <tr><th>Output type</th><th>Title</th><th>Value</th></tr>
-            <tr><td>Yes/No</td><td><code>success</code></td><td>Dynamic content <code>varSuccess</code>.</td></tr>
-            <tr><td>Text</td><td><code>message</code></td><td>Dynamic content <code>varMessage</code>.</td></tr>
-          </table>
-        </li>
-      </ol>
-
-      <h2>5. Add Temporary Test Buttons In Power Apps</h2>
-      <p>This is how you test without breaking the current working screen. Add the two test flows as data sources. Do not remove the old flows yet.</p>
-
-      <h3>Temporary Save Test Button</h3>
-      <p>Add a small temporary button to <code>scrCourseDetail</code>, or reuse an unused test button if you already have one. Set its <code>Text</code> to <code>TEST save library</code> and its <code>OnSelect</code> to this:</p>
-      <div class="code-card"><div class="code-title">Power Fx - temporary save test</div><pre>=Set(
-    varSaveResult,
-    'TT - Save Certificate Library TEST'.Run(
-        Text(datCompletion.SelectedDate, "yyyy-mm-dd"),
-        CountRows(colNewCertificate) > 0,
-        If(CountRows(colNewCertificate) > 0, First(colNewCertificate).Name, ""),
-        If(CountRows(colNewCertificate) > 0, {name: First(colNewCertificate).Name, contentBytes: First(colNewCertificate).Value}, Blank()),
-        Lower(varRecord.PersonEmail),
-        varCourse.CourseName,
-        varMyEmail,
-        varViewingForSelf,
-        varRecord.ID,
-        varCourse.CourseID,
-        varIsAdmin
-    )
-);
-If(
-    varSaveResult.success,
-    Notify("TEST save worked. Check TT Certificates (LTD).", NotificationType.Success),
-    Notify(varSaveResult.message, NotificationType.Error)
-)</pre></div>
-
-      <div class="callout warn">
-        <strong>If you get a red error "TriggerInputSchemaMismatch ... does not validate against format 'date'":</strong> your flow's <code>DateCompleted</code> trigger input is still typed <strong>Date</strong>. Go back to the flow's trigger and change it to <strong>Text</strong> (see the callout in section 2 above) &mdash; a Date-typed input will always fail this way, because Power Apps sends locale-formatted text (<code>06/08/2026</code>), never true ISO, no matter how the Date value is built on the app side. The code block above already sends the correct <code>Text(datCompletion.SelectedDate, "yyyy-mm-dd")</code> value; it only works once the trigger input itself is Text.
-      </div>
-
-      <div class="callout warn">
-        <strong>If you get "Missing column. Your formula is missing a column 'contentBytes' with a type of 'Blob'":</strong> the flow's <code>FileContent</code> trigger input needs a record with a column literally named <code>contentBytes</code>, not whatever field names the attachment control happens to use. Passing <code>First(colNewCertificate)</code> as-is (the old pattern from the original <code>TT - Save Certificate</code> flow) does not satisfy this. Build the record explicitly instead: <code>{name: First(colNewCertificate).Name, contentBytes: First(colNewCertificate).Value}</code>. The code block above already has this fix applied.
-      </div>
-
-      <h3>Temporary Email Test Button</h3>
-      <p>Add a second temporary button. Set its <code>Text</code> to <code>TEST email cert</code> and its <code>OnSelect</code> to this:</p>
-      <div class="code-card"><div class="code-title">Power Fx - temporary email test</div><pre>=Set(
-    varCertEmailResult,
-    'TT - Email Certificate Library TEST'.Run(varRecord.ID, varMyEmail, varIsAdmin)
-);
-If(
-    varCertEmailResult.success,
-    Notify(varCertEmailResult.message, NotificationType.Success),
-    Notify(varCertEmailResult.message, NotificationType.Error)
-)</pre></div>
-
-      <h3>Safe Test Script</h3>
-      <ol class="step-list">
-        <li>Pick one training record you can safely test with.</li>
-        <li>Open that record in <code>scrCourseDetail</code>.</li>
-        <li>Select a small PDF or image certificate using the existing file picker.</li>
-        <li>Click <strong>TEST save library</strong>.</li>
-        <li>Open SharePoint <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>. Confirm one file exists for that <code>TrainingRecordID</code> and its metadata columns are filled.</li>
-        <li>Click <strong>TEST email cert</strong>.</li>
-        <li>Confirm the email arrives and the attachment opens.</li>
-        <li>Run the test again with a different file. Confirm the library still has one current file for that <code>TrainingRecordID</code>, not duplicates.</li>
-      </ol>
-
-      <div class="callout danger">
-        <strong>Stop here if the test fails.</strong> Do not edit the live save/open buttons yet. The existing app can keep using the old list attachments while the new flows are fixed.
-      </div>
-
-      <h2>6. Cutover After The Test Passes</h2>
-      <p>Only do this section after the test save and test email both work.</p>
-
-      <h3>Rename Or Recreate Final Flows</h3>
-      <p>You can either rename the two test flows after they work, or create final clean copies manually. Recommended final names:</p>
-      <ul>
-        <li><code>TT - Save Certificate Library</code></li>
-        <li><code>TT - Email Certificate Library</code></li>
-      </ul>
-      <p>If you rename the test flows, remove and re-add them in Power Apps afterwards so the data source names are refreshed.</p>
-
-      <h3>Update <code>btnSaveCert.OnSelect</code></h3>
-      <p>Select <code>btnSaveCert</code>, open its <code>OnSelect</code> property, delete everything currently in there, and paste this complete formula in full. This is the whole thing, not a fragment &mdash; it already has both fixes (the <code>Text(...)</code> date wrapper and the <code>contentBytes</code> record) built in, and keeps every bit of the existing busy/error/notify behaviour unchanged.</p>
-      <div class="code-card"><div class="code-title">Power Fx - btnSaveCert.OnSelect (full formula)</div><pre>=Set(varCertError, "");
-Set(varCertStatusText, "Saving certificate...");
-Set(varCertBusy, true);
-Set(
-    varSaveResult,
-    IfError(
-        'TT - Save Certificate Library'.Run(
-            Text(datCompletion.SelectedDate, "yyyy-mm-dd"),
-            CountRows(colNewCertificate) > 0,
-            If(CountRows(colNewCertificate) > 0, First(colNewCertificate).Name, ""),
-            If(CountRows(colNewCertificate) > 0, {name: First(colNewCertificate).Name, contentBytes: First(colNewCertificate).Value}, Blank()),
-            Lower(varRecord.PersonEmail),
-            varCourse.CourseName,
-            varMyEmail,
-            varViewingForSelf,
-            varRecord.ID,
-            varCourse.CourseID,
-            varIsAdmin
-        ),
-        {success: false, message: "Flow could not be reached. Check your connection and try again."}
-    )
-);
-Set(varCertBusy, false);
-If(
-    varSaveResult.success,
-    Set(varCertStatusText, ""); Notify("Training record saved.", NotificationType.Success); Back(),
-    Set(varCertError, varSaveResult.message); Notify("Save failed &mdash; see the error below.", NotificationType.Error)
-)</pre></div>
-      <p>Only two things changed from the original: the flow name (<code>'TT - Save Certificate'</code> &rarr; <code>'TT - Save Certificate Library'</code>) and the two fixed arguments. Everything else &mdash; <code>varCertError</code>, <code>varCertStatusText</code>, <code>varCertBusy</code>, the <code>IfError</code> fallback, and the success/failure branch &mdash; is identical to what you already have.</p>
-
-      <h3>Update <code>btnOpenCertificate</code></h3>
-      <p>The old button tries to launch base64 returned by <code>TT - Get Certificate</code>. Replace that behaviour with an email request.</p>
-      <table>
-        <tr><th>Property</th><th>New value</th></tr>
-        <tr><td><code>Text</code></td><td><code>="Email certificate"</code></td></tr>
-        <tr><td><code>Visible</code></td><td><code>=!IsBlank(varRecord) &amp;&amp; !IsBlank(varRecord.DateCompleted)</code></td></tr>
-      </table>
-      <div class="code-card"><div class="code-title">Power Fx - btnOpenCertificate.OnSelect</div><pre>=Set(varCertError, "");
-Set(varCertStatusText, "Requesting certificate email...");
-Set(varCertBusy, true);
-Set(
-    varCertEmailResult,
-    IfError(
-        'TT - Email Certificate Library'.Run(varRecord.ID, varMyEmail, varIsAdmin),
-        {success: false, message: "Flow could not be reached. Check your connection and try again."}
-    )
-);
-Set(varCertBusy, false);
-If(
-    varCertEmailResult.success,
-    Set(varCertStatusText, ""); Notify(varCertEmailResult.message, NotificationType.Success),
-    Set(varCertError, varCertEmailResult.message); Notify("Could not email certificate - see the error below.", NotificationType.Error)
-)</pre></div>
-
-      <h3>Update <code>lblCurrentCertInfo.Text</code></h3>
-      <p>This label currently checks <code>varRecord.Attachments</code>. After cutover, it should not depend on list attachments.</p>
-      <div class="code-card"><div class="code-title">Power Fx - lblCurrentCertInfo.Text</div><pre>=If(
-    !IsBlank(varRecord) &amp;&amp; !IsBlank(varRecord.DateCompleted),
-    "Certificate metadata saved. Use Email certificate to request the file. Attach a new file below to replace it.",
-    "No certificate on file yet."
-)</pre></div>
-
-      <h3>Optional: Keep The Old Attachment UI Hidden, Not Deleted</h3>
-      <p>Do not delete the old attachments from <code>TT TrainingRecords</code> during the first cutover. Leave them in place as a fallback until the new library has been used successfully for a while. The app will stop reading them once you update the formulas above.</p>
-
-      <h2>7. Replace Email With In-App View</h2>
-      <p>The email round-trip is being retired. The point of this app is that anyone &mdash; a normal user or an admin doing an audit &mdash; can go person &rarr; record &rarr; course &rarr; certificate and have it just open, in the browser, in one click. This section changes the read side to do exactly that.</p>
-      <p><strong>What this does and does not touch:</strong> <code>TT - Save Certificate Library</code> and <code>btnSaveCert</code> are not affected by anything below. Only the certificate-reading flow (currently <code>TT - Email Certificate Library</code>) and <code>btnOpenCertificate</code> change.</p>
-      <div class="callout ok">
-        <strong>Why this avoids the original bug:</strong> the very first attempt at this (<code>TT - Get Certificate</code>, months ago) returned four separate typed fields (<code>success</code>, <code>message</code>, <code>fileName</code>, <code>fileContentBase64</code>) from <strong>Respond to a PowerApp or flow</strong>, and Power Apps Studio kept losing track of which fields existed. This version returns exactly <strong>one</strong> Text field containing a JSON string with all four values packed inside it. One field can't have a "which fields exist" problem.
-      </div>
-
-      <h3>7.1 Edit The Flow</h3>
-      <p>Open <code>TT - Email Certificate Library</code> (or whatever you renamed it to). You are keeping everything up to and including <strong>Get file content</strong> inside the <strong>Apply to each</strong> loop &mdash; that lookup and authorisation logic is already correct and does not change. You are only changing what happens with the file once you have it.</p>
-
-      <h4>Add two more top-level variables</h4>
-      <p>Same place as the existing <code>varSuccess</code>/<code>varMessage</code> initializers, directly under the trigger.</p>
-      <table>
-        <tr><th>Name</th><th>Type</th><th>Initial value</th></tr>
-        <tr><td><code>varFileName</code></td><td>String</td><td>empty</td></tr>
-        <tr><td><code>varFileContentBase64</code></td><td>String</td><td>empty</td></tr>
-      </table>
-      <p>Leave these two empty on every failure branch (Authorised? If no, Found certificate? If no) &mdash; you do not need to set them there, the empty initial value already covers it.</p>
-
-      <h4>Delete the Send an email action</h4>
-      <p>Inside the <strong>Apply to each</strong> loop, delete <strong>Office 365 Outlook &ndash; Send an email (V2)</strong>. Keep <strong>Get file content</strong> directly above where it was.</p>
-
-      <h4>Capture the file into the two new variables</h4>
-      <p>Still inside the <strong>Apply to each</strong> loop, directly below <strong>Get file content</strong>, add two <strong>Control &ndash; Set variable</strong> actions:</p>
-      <table>
-        <tr><th>Action</th><th>Name</th><th>Value</th></tr>
-        <tr><td>Set variable</td><td><code>varFileName</code></td><td><code>File name with extension</code> from <strong>Get files (properties only)</strong> (or <code>Name</code> from that same group, whichever your picker shows).</td></tr>
-        <tr><td>Set variable</td><td><code>varFileContentBase64</code></td><td>Expression: <code>base64(body('Get_file_content'))</code></td></tr>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td><code>Image</code></td><td><code>=varCertDataUri</code></td></tr>
+        <tr><td><code>ImagePosition</code></td><td><code>=ImagePosition.Fit</code></td></tr>
+        <tr><td><code>X</code></td><td><code>=Parent.Width * 0.1</code></td></tr>
+        <tr><td><code>Y</code></td><td><code>=Parent.Height * 0.1</code></td></tr>
+        <tr><td><code>Width</code></td><td><code>=Parent.Width * 0.8</code></td></tr>
+        <tr><td><code>Height</code></td><td><code>=Parent.Height * 0.75</code></td></tr>
+        <tr><td><code>Visible</code></td><td><code>=varCertViewerOpen &amp;&amp; !varCertIsPdf</code></td></tr>
       </table>
 
-      <h4>Update the success message</h4>
-      <p>Below the <strong>Apply to each</strong> loop, still inside <strong>Found certificate? If yes</strong>, you already have <code>Set variable varSuccess = true</code> and <code>Set variable varMessage</code>. Change the <code>varMessage</code> text from <code>Certificate emailed to you.</code> to <code>Certificate ready.</code></p>
-
-      <h4>Build the single JSON payload</h4>
-      <p>After the whole outer <strong>Authorised?</strong> condition, outside both branches &mdash; the same place the old <strong>Respond</strong> action sits &mdash; add a <strong>Data Operation &ndash; Compose</strong> action first, above the Respond action. Rename it if you like, e.g. <code>Compose - Build payload</code>. In its <strong>Inputs</strong> box, type this structure exactly, using <strong>Add dynamic content</strong> to insert each pill at the marked point (do not type the variable names as plain text, insert the actual pill each time):</p>
-      <div class="code-card"><div class="code-title">Compose - Inputs (type the braces/quotes, insert a dynamic content pill at each ← mark)</div><pre>{
-  "success": ←insert varSuccess pill here,
-  "message": "←insert varMessage pill here",
-  "fileName": "←insert varFileName pill here",
-  "fileContentBase64": "←insert varFileContentBase64 pill here"
-}</pre></div>
-      <div class="callout warn">
-        <strong>Quoting matters:</strong> <code>success</code> has no quotes around its pill (it is a true/false value). <code>message</code>, <code>fileName</code>, and <code>fileContentBase64</code> all have quotes around their pill (they are text). Get this wrong and the JSON will not parse on the app side later.
-      </div>
-
-      <h4>Replace the Respond action</h4>
-      <p>Delete the existing <strong>Respond to a PowerApp or flow</strong> action (the one with <code>success</code>/<code>message</code> outputs) and add a new one in its place, directly below <strong>Compose</strong>.</p>
+      <h3>2.4 Close Button</h3>
+      <p>Insert &rarr; search <strong>ModernButton</strong> &rarr; add it, same control type as <code>btnSaveCert</code>. Rename it <code>btnCloseCertViewer</code>.</p>
       <table>
-        <tr><th>Output type</th><th>Title</th><th>Value</th></tr>
-        <tr><td>Text</td><td><code>payload</code></td><td>Dynamic content: the <strong>Outputs</strong> of the <strong>Compose</strong> action.</td></tr>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td><code>Text</code></td><td><code>="Close"</code></td></tr>
+        <tr><td><code>BasePaletteColor</code></td><td><code>=RGBA(108,117,125,1)</code></td></tr>
+        <tr><td><code>Color</code></td><td><code>=RGBA(255,255,255,1)</code></td></tr>
+        <tr><td><code>X</code></td><td><code>=Parent.Width * 0.1</code></td></tr>
+        <tr><td><code>Y</code></td><td><code>=(Parent.Height * 0.1) + (Parent.Height * 0.75) + 12</code></td></tr>
+        <tr><td><code>Width</code></td><td><code>=140</code></td></tr>
+        <tr><td><code>Height</code></td><td><code>=44</code></td></tr>
+        <tr><td><code>Visible</code></td><td><code>=varCertViewerOpen</code></td></tr>
+        <tr><td><code>OnSelect</code></td><td><code>=Set(varCertViewerOpen, false); Set(varCertDataUri, "")</code></td></tr>
       </table>
-      <p>Save the flow.</p>
 
-      <h3>7.2 Update The App</h3>
-      <p>Select <code>btnOpenCertificate</code>.</p>
-      <table>
-        <tr><th>Property</th><th>New value</th></tr>
-        <tr><td><code>Text</code></td><td><code>="Open certificate"</code></td></tr>
-        <tr><td><code>Visible</code></td><td><code>=!IsBlank(varRecord) &amp;&amp; !IsBlank(varRecord.DateCompleted)</code></td></tr>
-      </table>
-      <p>Open its <code>OnSelect</code> property, delete everything currently in there, and paste this complete formula in full:</p>
+      <h2>3. Update <code>btnOpenCertificate</code></h2>
+      <p>The button itself keeps its existing <code>Text</code> ("Open certificate") and <code>Visible</code> properties from the earlier cutover section &mdash; only <code>OnSelect</code> changes. Select <code>btnOpenCertificate</code>, open <code>OnSelect</code>, delete everything currently in there, and paste this complete formula in full:</p>
       <div class="code-card"><div class="code-title">Power Fx - btnOpenCertificate.OnSelect (full formula)</div><pre>=Set(varCertError, "");
 Set(varCertStatusText, "Fetching certificate...");
 Set(varCertBusy, true);
@@ -769,313 +234,56 @@ If(
         {parsed: ParseJSON(varCertRaw.payload)},
         If(
             Boolean(parsed.success),
-            Set(varCertStatusText, ""); Download("data:application/octet-stream;base64," &amp; Trim(Text(parsed.fileContentBase64))),
+            Set(varCertStatusText, "");
+            Set(varCertFileNameLower, Lower(Text(parsed.fileName)));
+            Set(varCertIsPdf, EndsWith(varCertFileNameLower, ".pdf"));
+            Set(
+                varCertMimeType,
+                If(
+                    varCertIsPdf, "application/pdf",
+                    EndsWith(varCertFileNameLower, ".png"), "image/png",
+                    "image/jpeg"
+                )
+            );
+            Set(varCertDataUri, "data:" &amp; varCertMimeType &amp; ";base64," &amp; Trim(Text(parsed.fileContentBase64)));
+            Set(varCertViewerOpen, true),
             Set(varCertError, Text(parsed.message)); Notify("Could not open certificate &mdash; see the error below.", NotificationType.Error)
         )
     )
 )</pre></div>
-      <p>Note the <code>Boolean(...)</code> and <code>Text(...)</code> wrappers around the parsed fields &mdash; <code>ParseJSON</code> returns an untyped value in Power Fx, and Power Apps will throw a type-mismatch error if you use <code>parsed.success</code> or <code>parsed.message</code> directly without coercing them first. This is not optional.</p>
+      <p>Note the <code>Boolean(...)</code> and <code>Text(...)</code> wrappers around every field read off <code>parsed</code> &mdash; <code>ParseJSON</code> returns an untyped value in Power Fx, and Power Apps will throw a type-mismatch error if you use a parsed field directly without coercing it first. This is not optional.</p>
       <div class="callout warn">
-        <strong>Use <code>Download(...)</code>, not <code>Launch(...)</code>:</strong> <code>Launch()</code> with a <code>data:</code> URI silently does nothing in a lot of contexts &mdash; no error, no download, nothing &mdash; because most browsers, and Power Apps Studio's own Preview player especially (it runs inside an iframe), block navigating to a <code>data:</code> URI as a security measure. <code>Download()</code> is the function actually built for saving a data URI to a real file and is far more reliable here. If it still does nothing, test from the actual published app (not Studio Preview) &mdash; some sandboxed preview contexts block both. <code>Download</code> only takes one argument (the address) &mdash; it does not accept a filename, so the browser will save it with a generic downloaded filename rather than the certificate's original name.
-      </div>
-      <div class="callout warn">
-        <strong>"The URL passed to the function is not valid":</strong> <code>Download()</code> is strict about the data URI &mdash; even one stray leading/trailing space or newline character in the base64 text is enough to make it reject the whole thing with this exact error. That whitespace can sneak in anywhere along the round trip through <code>base64()</code>, JSON, and <code>ParseJSON</code> without anything looking visibly wrong. <code>Trim(...)</code> around the base64 value (already applied in the formula above) strips it defensively so this can't happen.
+        <strong>New variables used here:</strong> <code>varCertFileNameLower</code>, <code>varCertIsPdf</code>, <code>varCertMimeType</code>, <code>varCertDataUri</code>, <code>varCertViewerOpen</code> are all created the first time this formula runs &mdash; Power Apps creates variables on first use, you do not need to initialize them separately anywhere.
       </div>
 
-      <h4>Fix the label text</h4>
-      <p><code>lblCurrentCertInfo.Text</code> (built in section 6) still says "Use Email certificate to request the file." Update it:</p>
-      <div class="code-card"><div class="code-title">Power Fx - lblCurrentCertInfo.Text</div><pre>=If(
-    !IsBlank(varRecord) &amp;&amp; !IsBlank(varRecord.DateCompleted),
-    "Certificate on file. Use Open certificate to view it. Attach a new file below to replace it.",
-    "No certificate on file yet."
-)</pre></div>
-
-      <h3>7.3 Refresh The Data Source (do not skip this)</h3>
-      <p>The flow's output shape changed &mdash; two fields (<code>success</code>/<code>message</code>) became one (<code>payload</code>). Power Apps Studio can keep caching the old field list even after the flow is saved correctly, which is exactly the bug that ate an entire day earlier in this project. Do this cycle in full, in order, every time:</p>
+      <h2>4. Test Script</h2>
       <ol class="step-list">
-        <li>Remove <code>TT - Email Certificate Library</code> from the app's data sources.</li>
-        <li>Save the app itself (not just the flow).</li>
-        <li>Fully close the app.</li>
-        <li>Reopen it.</li>
-        <li>Add <code>TT - Email Certificate Library</code> back as a data source.</li>
-        <li>Save the app again.</li>
-        <li>Close and reopen once more.</li>
-        <li>Open <code>btnOpenCertificate.OnSelect</code> and confirm <code>.payload</code> autocompletes correctly after typing <code>varCertRaw.</code></li>
-      </ol>
-
-      <h3>7.4 Test Script</h3>
-      <ol class="step-list">
-        <li>Open a record that already has a certificate saved in <code>TT Certificates_LTD</code> from your earlier save test.</li>
+        <li>Open a record that already has a certificate saved in <code>TT Certificates_LTD</code>.</li>
         <li>Click <strong>Open certificate</strong>.</li>
-        <li>Confirm the file opens directly in the browser (no email, no wait).</li>
-        <li>Log in as (or impersonate/test with) a user who is not the record's owner and not an admin. Confirm they get the "not authorized" message, not the file.</li>
+        <li>Confirm the screen dims and the certificate renders inline &mdash; PDF viewer for a <code>.pdf</code>, Image control for a <code>.jpg</code>/<code>.jpeg</code>/<code>.png</code>.</li>
+        <li>Click <strong>Close</strong>. Confirm the popup disappears and the rest of the screen is usable again.</li>
+        <li>Open the same record again and click <strong>Open certificate</strong> a second time. Confirm it still works &mdash; this catches anything that only cleared on close but didn't reset properly for a second open.</li>
+        <li>Test as a user who is not the record's owner and not an admin. Confirm they get the "not authorized" message, not the file.</li>
       </ol>
 
-      <h3>7.5 Checklist</h3>
+      <h2>5. Checklist</h2>
       <ol class="step-list">
-        <li><code>TT - Save Certificate Library</code> and <code>btnSaveCert</code> untouched and still working.</li>
-        <li>Flow's <strong>Send an email</strong> action deleted; <code>varFileName</code>/<code>varFileContentBase64</code> variables added and populated.</li>
-        <li>Flow's Respond action returns one Text output, <code>payload</code>, built from <strong>Compose</strong>.</li>
-        <li><code>btnOpenCertificate</code> is <strong>Open certificate</strong> and calls the flow, parses <code>payload</code>, and launches the file directly.</li>
-        <li>Data source removed/re-added and app saved/closed/reopened per 7.3.</li>
+        <li><code>TT - Save Certificate Library</code>, <code>btnSaveCert</code>, and <code>TT - Email Certificate Library</code> all untouched and still working.</li>
+        <li><code>grpCertViewerBG</code>, <code>pdfCertViewer</code>, <code>imgCertViewer</code>, <code>btnCloseCertViewer</code> added to <code>scrCourseDetail</code>, last in the control tree.</li>
+        <li><code>btnOpenCertificate.OnSelect</code> replaced with the full formula above &mdash; no <code>Launch()</code> or <code>Download()</code> anywhere in it.</li>
+        <li>PDF certificates render in the PDF viewer; image certificates render in the Image control; the correct one shows automatically based on file extension.</li>
+        <li>Close button clears the viewer and it can be reopened cleanly.</li>
         <li>Tested as both an authorised person and an unauthorised person.</li>
       </ol>
 
-      <h2>8. Sources And Assumptions</h2>
+      <h2>6. Sources</h2>
       <ul>
-        <li>Power Apps UI is not a security layer over SharePoint data-source permissions. Microsoft reference: <a href="https://learn.microsoft.com/en-us/power-platform/admin/security/connect-data-sources" target="_blank" rel="noopener">Connecting and authenticating to data sources</a>.</li>
-        <li>Run-only flow users and flow-owner connections are the basis for using Power Automate as a controlled gate. Microsoft references: <a href="https://learn.microsoft.com/en-us/power-automate/create-team-flows" target="_blank" rel="noopener">Share a cloud flow</a> and <a href="https://learn.microsoft.com/en-us/power-automate/guide-to-cloud-flow-sharing-permissions" target="_blank" rel="noopener">Guide to cloud flow sharing and permissions</a>.</li>
-        <li>This guide assumes the flow's SharePoint actions run through an account that is allowed to read and write <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</li>
+        <li><a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-download" target="_blank" rel="noopener">Download function</a> and <a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-param" target="_blank" rel="noopener">Launch and Param functions</a> &mdash; Microsoft Learn, both confirm the Address/URL parameter is a web resource address, not documented as accepting base64 data URIs.</li>
+        <li><a href="https://community.powerplatform.com/forums/thread/details/?threadid=f6d421ce-b9ca-ef11-b8e8-6045bda8de07" target="_blank" rel="noopener">Community thread: Using Launch() to open a Base64 PDF in a new browser tab</a> &mdash; confirms the same base64-via-Launch limitation and that a real URL is expected.</li>
       </ul>
 
       <a class="back-link" href="index.html#certificate-privacy-upgrade">&larr; Back to the main Training Tracker guide</a>
     </main>
   </div>
-  <script>
-    function literalSegment(value) {
-      return {
-        id: crypto.randomUUID ? crypto.randomUUID().toUpperCase() : "00000000-0000-4000-8000-000000000000",
-        type: "literal",
-        value,
-        valueType: "string"
-      };
-    }
-
-    function variableTypeParameter(type) {
-      return {
-        id: crypto.randomUUID ? crypto.randomUUID().toUpperCase() : "00000000-0000-4000-8000-000000000001",
-        editor: "dropdown",
-        editorOptions: {
-          options: Array(
-            { displayName: "Boolean", value: "boolean" },
-            { displayName: "Integer", value: "integer" },
-            { displayName: "Float", value: "float" },
-            { displayName: "String", value: "string" },
-            { displayName: "Object", value: "object" },
-            { displayName: "Array", value: "array" }
-          ),
-          serialization: {}
-        },
-        info: { isDynamic: false },
-        hideInUI: false,
-        label: "Type",
-        parameterKey: "inputs.$.type",
-        parameterName: "type",
-        preservedValue: type,
-        required: true,
-        schema: {
-          type: "string",
-          title: "Type",
-          default: "boolean",
-          "x-ms-editor": "dropdown",
-          "x-ms-editor-options": {
-            options: Array(
-              { displayName: "Boolean", value: "boolean" },
-              { displayName: "Integer", value: "integer" },
-              { displayName: "Float", value: "float" },
-              { displayName: "String", value: "string" },
-              { displayName: "Object", value: "object" },
-              { displayName: "Array", value: "array" }
-            )
-          }
-        },
-        showErrors: false,
-        showTokens: true,
-        suppressCasting: true,
-        type: "string",
-        value: Array(literalSegment(type)),
-        visibility: "",
-        validationErrors: Array()
-      };
-    }
-
-    function variableValueParameter(type) {
-      const parameter = {
-        id: crypto.randomUUID ? crypto.randomUUID().toUpperCase() : "00000000-0000-4000-8000-000000000002",
-        info: { isDynamic: true, dynamicParameterReference: "inputs.$.value" },
-        hideInUI: false,
-        label: "Value",
-        parameterKey: "inputs.$.value",
-        parameterName: "value",
-        required: false,
-        schema: {
-          isDynamic: true,
-          key: "inputs.$.value",
-          name: "value",
-          required: false,
-          schema: { type },
-          summary: "",
-          suppressCasting: false,
-          title: "Value",
-          type,
-          visibility: "important",
-          dynamicParameterReference: "inputs.$.value"
-        },
-        showErrors: false,
-        showTokens: true,
-        suppressCasting: false,
-        type,
-        value: Array(literalSegment("")),
-        visibility: "important"
-      };
-      if (type === "boolean") {
-        parameter.editor = "combobox";
-        parameter.editorOptions = { options: Array({ displayName: "true", value: true, key: "true" }, { displayName: "false", value: false, key: "false" }) };
-        parameter.schema.editor = "combobox";
-        parameter.schema.editorOptions = parameter.editorOptions;
-        parameter.schema.enum = Array({ displayName: "true", value: true }, { displayName: "false", value: false });
-        parameter.schema.schema.enum = Array(true, false);
-      }
-      return parameter;
-    }
-
-    function buildInitializeVariableClipboard(name, type, nodeId) {
-      const parameters = Array(
-        {
-          id: crypto.randomUUID ? crypto.randomUUID().toUpperCase() : "00000000-0000-4000-8000-000000000003",
-          editor: "string",
-          info: { isDynamic: false },
-          hideInUI: false,
-          label: "Name",
-          parameterKey: "inputs.$.name",
-          parameterName: "name",
-          placeholder: "Enter variable name",
-          required: true,
-          schema: {
-            type: "string",
-            title: "Name",
-            description: "Enter variable name",
-            "x-ms-editor": "string"
-          },
-          showErrors: false,
-          showTokens: false,
-          suppressCasting: true,
-          type: "string",
-          value: Array(literalSegment(name)),
-          visibility: "",
-          validationErrors: Array()
-        },
-        variableTypeParameter(type),
-        variableValueParameter(type)
-      );
-
-      return JSON.stringify({
-        nodeId,
-        nodeData: {
-          id: nodeId,
-          nodeInputs: {
-            dynamicLoadStatus: "Succeeded",
-            parameterGroups: {
-              default: {
-                id: "default",
-                description: "",
-                parameters,
-                rawInputs: Array(
-                  {
-                    description: "Enter variable name",
-                    editor: "string",
-                    isNested: true,
-                    key: "inputs.$.name",
-                    name: "name",
-                    required: true,
-                    schema: { type: "string", title: "Name", description: "Enter variable name", "x-ms-editor": "string" },
-                    summary: "",
-                    suppressCasting: true,
-                    title: "Name",
-                    type: "string",
-                    visibility: ""
-                  },
-                  {
-                    default: "boolean",
-                    editor: "dropdown",
-                    isNested: true,
-                    key: "inputs.$.type",
-                    name: "type",
-                    required: true,
-                    schema: { type: "string", title: "Type", default: "boolean", "x-ms-editor": "dropdown" },
-                    summary: "",
-                    suppressCasting: true,
-                    title: "Type",
-                    type: "string",
-                    visibility: ""
-                  },
-                  {
-                    isDynamic: true,
-                    isNested: true,
-                    key: "inputs.$.value",
-                    name: "value",
-                    required: false,
-                    schema: { type },
-                    summary: "",
-                    suppressCasting: false,
-                    title: "Value",
-                    type,
-                    visibility: "important"
-                  }
-                )
-              }
-            }
-          },
-          nodeOutputs: { outputs: {} },
-          nodeDependencies: { inputs: {}, outputs: {} },
-          operationMetadata: {
-            iconUri: "https://content.powerapps.com/resource/makerx/static/pauto/images/designeroperations/Variable.276a45cc.png",
-            brandColor: "#770BD6",
-            isConnectToSystemsOperation: false
-          },
-          settings: {
-            secureInputs: { isSupported: true },
-            secureOutputs: { isSupported: true },
-            trackedProperties: { isSupported: false },
-            runAfter: { isSupported: true, value: Array() }
-          }
-        },
-        nodeTokenData: { tokens: Array(), upstreamNodeIds: Array("When_Power_Apps_calls_a_flow_(V2)") },
-        nodeOperationInfo: {
-          connectorId: "providers/Microsoft.ProcessSimple/operationGroups/Variable",
-          operationId: "InitializeVariable",
-          type: "InitializeVariable"
-        },
-        nodeConnectionData: null,
-        isScopeNode: false,
-        mslaNode: true
-      });
-    }
-
-    const SAVE_CONDITION_PROTOTYPE_BASE64 = "eyJub2RlSWQiOiJDb25kaXRpb25fLV9BdXRob3Jpc2VkIiwic2VyaWFsaXplZFZhbHVlIjp7InR5cGUiOiJJZiIsImV4cHJlc3Npb24iOnsib3IiOlt7ImVxdWFscyI6WyJAb3V0cHV0cygnR2V0X2l0ZW0nKT9bJ2JvZHkvUGVyc29uRW1haWwnXSIsIkB0cmlnZ2VyQm9keSgpP1sndGV4dF8zJ10iXX0seyJlcXVhbHMiOlsiQHRyaWdnZXJCb2R5KCk/Wydib29sZWFuXzInXSIsIkB0cnVlIl19XX0sImFjdGlvbnMiOnsiQ29uZGl0aW9uXzEiOnsidHlwZSI6IklmIiwiZXhwcmVzc2lvbiI6eyJhbmQiOlt7ImVxdWFscyI6WyJAdHJpZ2dlckJvZHkoKT9bJ2Jvb2xlYW4nXSIsIkB0cnVlIl19XX0sImFjdGlvbnMiOnsiR2V0X2ZpbGVzXyhwcm9wZXJ0aWVzX29ubHkpIjp7InR5cGUiOiJPcGVuQXBpQ29ubmVjdGlvbiIsImlucHV0cyI6eyJwYXJhbWV0ZXJzIjp7ImRhdGFzZXQiOiJodHRwczovL21vZGdvdnVrLnNoYXJlcG9pbnQuY29tL3RlYW1zLzE1OTgiLCJ0YWJsZSI6IjU0YWQ4MzQwLWRmN2YtNDE4NS04Y2VmLWIxOWEwYTNlMmYzMiIsIiRmaWx0ZXIiOiJUcmFpbmluZ1JlY29yZElEIGVxIEB7dHJpZ2dlckJvZHkoKT9bJ251bWJlciddfSJ9LCJob3N0Ijp7ImFwaUlkIjoiL3Byb3ZpZGVycy9NaWNyb3NvZnQuUG93ZXJBcHBzL2FwaXMvc2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUiLCJjb25uZWN0aW9uIjoic2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUiLCJvcGVyYXRpb25JZCI6IkdldEZpbGVJdGVtcyJ9fX0sIkFwcGx5X3RvX2VhY2giOnsidHlwZSI6IkZvcmVhY2giLCJmb3JlYWNoIjoiQG91dHB1dHMoJ0dldF9maWxlc18ocHJvcGVydGllc19vbmx5KScpP1snYm9keS92YWx1ZSddIiwiYWN0aW9ucyI6eyJEZWxldGVfZmlsZSI6eyJ0eXBlIjoiT3BlbkFwaUNvbm5lY3Rpb24iLCJpbnB1dHMiOnsicGFyYW1ldGVycyI6eyJkYXRhc2V0IjoiaHR0cHM6Ly9tb2Rnb3Z1ay5zaGFyZXBvaW50LmNvbS90ZWFtcy8xNTk4IiwiaWQiOiJAaXRlbXMoJ0FwcGx5X3RvX2VhY2gnKT9bJ3tJZGVudGlmaWVyfSddIn0sImhvc3QiOnsiYXBpSWQiOiIvcHJvdmlkZXJzL01pY3Jvc29mdC5Qb3dlckFwcHMvYXBpcy9zaGFyZWRfc2hhcmVwb2ludG9ubGluZSIsImNvbm5lY3Rpb24iOiJzaGFyZWRfc2hhcmVwb2ludG9ubGluZSIsIm9wZXJhdGlvbklkIjoiRGVsZXRlRmlsZSJ9fX19LCJydW5BZnRlciI6eyJHZXRfZmlsZXNfKHByb3BlcnRpZXNfb25seSkiOlsiU3VjY2VlZGVkIl19fSwiQ3JlYXRlX2ZpbGUiOnsidHlwZSI6Ik9wZW5BcGlDb25uZWN0aW9uIiwiaW5wdXRzIjp7InBhcmFtZXRlcnMiOnsiZGF0YXNldCI6Imh0dHBzOi8vbW9kZ292dWsuc2hhcmVwb2ludC5jb20vdGVhbXMvMTU5OCIsImZvbGRlclBhdGgiOiIvVFQgQ2VydGlmaWNhdGVzX0xURCIsIm5hbWUiOiJAY29uY2F0KHRyaWdnZXJCb2R5KCk/WydudW1iZXInXSwgJy0nLCB0cmlnZ2VyQm9keSgpP1sndGV4dCddKSIsImJvZHkiOiJAdHJpZ2dlckJvZHkoKT9bJ2ZpbGUnXT9bJ2NvbnRlbnRCeXRlcyddIn0sImhvc3QiOnsiYXBpSWQiOiIvcHJvdmlkZXJzL01pY3Jvc29mdC5Qb3dlckFwcHMvYXBpcy9zaGFyZWRfc2hhcmVwb2ludG9ubGluZSIsImNvbm5lY3Rpb24iOiJzaGFyZWRfc2hhcmVwb2ludG9ubGluZSIsIm9wZXJhdGlvbklkIjoiQ3JlYXRlRmlsZSJ9fSwicnVuQWZ0ZXIiOnsiQXBwbHlfdG9fZWFjaCI6WyJTdWNjZWVkZWQiXX0sInJ1bnRpbWVDb25maWd1cmF0aW9uIjp7ImNvbnRlbnRUcmFuc2ZlciI6eyJ0cmFuc2Zlck1vZGUiOiJDaHVua2VkIn19fSwiVXBkYXRlX2ZpbGVfcHJvcGVydGllcyI6eyJ0eXBlIjoiT3BlbkFwaUNvbm5lY3Rpb24iLCJpbnB1dHMiOnsicGFyYW1ldGVycyI6eyJkYXRhc2V0IjoiaHR0cHM6Ly9tb2Rnb3Z1ay5zaGFyZXBvaW50LmNvbS90ZWFtcy8xNTk4IiwidGFibGUiOiI1NGFkODM0MC1kZjdmLTQxODUtOGNlZi1iMTlhMGEzZTJmMzIiLCJpZCI6IkBvdXRwdXRzKCdDcmVhdGVfZmlsZScpP1snYm9keS9JdGVtSWQnXSIsIml0ZW0vVGl0bGUiOiJAdHJpZ2dlckJvZHkoKT9bJ3RleHRfMiddIiwiaXRlbS9UcmFpbmluZ1JlY29yZElEIjoiQHRyaWdnZXJCb2R5KCk/WydudW1iZXInXSIsIml0ZW0vUGVyc29uRW1haWwiOiJAdHJpZ2dlckJvZHkoKT9bJ3RleHRfMSddIiwiaXRlbS9Db3Vyc2VJRCI6IkB0cmlnZ2VyQm9keSgpP1snbnVtYmVyXzEnXSIsIml0ZW0vQ291cnNlTmFtZSI6IkB0cmlnZ2VyQm9keSgpP1sndGV4dF8yJ10iLCJpdGVtL0RhdGVDb21wbGV0ZWQiOiJAdHJpZ2dlckJvZHkoKT9bJ2RhdGUnXSIsIml0ZW0vVXBsb2FkZWRCeUVtYWlsIjoiQHRyaWdnZXJCb2R5KCk/Wyd0ZXh0XzMnXSIsIml0ZW0vVXBsb2FkZWRPbiI6IkB1dGNOb3coKSIsIml0ZW0vSXNDdXJyZW50Ijp0cnVlfSwiaG9zdCI6eyJhcGlJZCI6Ii9wcm92aWRlcnMvTWljcm9zb2Z0LlBvd2VyQXBwcy9hcGlzL3NoYXJlZF9zaGFyZXBvaW50b25saW5lIiwiY29ubmVjdGlvbiI6InNoYXJlZF9zaGFyZXBvaW50b25saW5lIiwib3BlcmF0aW9uSWQiOiJQYXRjaEZpbGVJdGVtIn19LCJydW5BZnRlciI6eyJDcmVhdGVfZmlsZSI6WyJTdWNjZWVkZWQiXX19fSwiZWxzZSI6eyJhY3Rpb25zIjp7fX19LCJVcGRhdGVfaXRlbSI6eyJ0eXBlIjoiT3BlbkFwaUNvbm5lY3Rpb24iLCJpbnB1dHMiOnsicGFyYW1ldGVycyI6eyJkYXRhc2V0IjoiaHR0cHM6Ly9tb2Rnb3Z1ay5zaGFyZXBvaW50LmNvbS90ZWFtcy8xNTk4IiwidGFibGUiOiIxNjVkNTg4NC1jODdiLTRhYTctYjhhMy05ZDAwNDk2ZWEyNGEiLCJpZCI6IkB0cmlnZ2VyQm9keSgpP1snbnVtYmVyJ10iLCJpdGVtL1BlcnNvbkVtYWlsIjoiQHRyaWdnZXJCb2R5KCk/Wyd0ZXh0XzEnXSIsIml0ZW0vQ291cnNlSUQiOiJAdHJpZ2dlckJvZHkoKT9bJ251bWJlcl8xJ10iLCJpdGVtL0NvdXJzZU5hbWUiOiJAdHJpZ2dlckJvZHkoKT9bJ3RleHRfMiddIiwiaXRlbS9EYXRlQ29tcGxldGVkIjoiQHRyaWdnZXJCb2R5KCk/WydkYXRlJ10iLCJpdGVtL1VwbG9hZGVkQnlFbWFpbCI6IkB0cmlnZ2VyQm9keSgpP1sndGV4dF8zJ10iLCJpdGVtL0xhc3RVcGRhdGVkQnlFbWFpbCI6IkB0cmlnZ2VyQm9keSgpP1sndGV4dF8zJ10iLCJpdGVtL0xhc3RVcGRhdGVkT24iOiJAdXRjTm93KCkiLCJpdGVtL0xhc3RTdGF0dXMiOiJDZXJ0aWZpY2F0ZSBzYXZlZCJ9LCJob3N0Ijp7ImFwaUlkIjoiL3Byb3ZpZGVycy9NaWNyb3NvZnQuUG93ZXJBcHBzL2FwaXMvc2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUiLCJjb25uZWN0aW9uIjoic2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUiLCJvcGVyYXRpb25JZCI6IlBhdGNoSXRlbSJ9fSwicnVuQWZ0ZXIiOnsiQ29uZGl0aW9uXzEiOlsiU3VjY2VlZGVkIl19fSwiQ3JlYXRlX2l0ZW0iOnsidHlwZSI6Ik9wZW5BcGlDb25uZWN0aW9uIiwiaW5wdXRzIjp7InBhcmFtZXRlcnMiOnsiZGF0YXNldCI6Imh0dHBzOi8vbW9kZ292dWsuc2hhcmVwb2ludC5jb20vdGVhbXMvMTU5OCIsInRhYmxlIjoiOWMzNTdmNDgtZWZiOS00NGFhLWFmZDYtZDQ3ZDdjZjk3Njg2IiwiaXRlbS9UaXRsZSI6IkB7dHJpZ2dlckJvZHkoKT9bJ3RleHRfMiddfSBjZXJ0aWZpY2F0ZSBzYXZlZCIsIml0ZW0vUGVyc29uRW1haWwiOiJAdHJpZ2dlckJvZHkoKT9bJ3RleHRfMSddIiwiaXRlbS9Db3Vyc2VJRCI6IkB0cmlnZ2VyQm9keSgpP1snbnVtYmVyXzEnXSIsIml0ZW0vRXZlbnRUeXBlIjoiQ2VydGlmaWNhdGUgc2F2ZWQiLCJpdGVtL0V2ZW50RGVzY3JpcHRpb24iOiJAe3RyaWdnZXJCb2R5KCk/Wyd0ZXh0XzInXX0gY2VydGlmaWNhdGUgc2F2ZWQuIiwiaXRlbS9BY3RvckVtYWlsIjoiQHRyaWdnZXJCb2R5KCk/Wyd0ZXh0XzMnXSJ9LCJob3N0Ijp7ImFwaUlkIjoiL3Byb3ZpZGVycy9NaWNyb3NvZnQuUG93ZXJBcHBzL2FwaXMvc2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUiLCJjb25uZWN0aW9uIjoic2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUiLCJvcGVyYXRpb25JZCI6IlBvc3RJdGVtIn19LCJydW5BZnRlciI6eyJVcGRhdGVfaXRlbSI6WyJTdWNjZWVkZWQiXX19LCJTZXRfdmFyaWFibGVfMiI6eyJ0eXBlIjoiU2V0VmFyaWFibGUiLCJpbnB1dHMiOnsibmFtZSI6InZhclN1Y2Nlc3MiLCJ2YWx1ZSI6dHJ1ZX0sInJ1bkFmdGVyIjp7IkNyZWF0ZV9pdGVtIjpbIlN1Y2NlZWRlZCJdfX0sIlNldF92YXJpYWJsZV8zIjp7InR5cGUiOiJTZXRWYXJpYWJsZSIsImlucHV0cyI6eyJuYW1lIjoidmFyTWVzc2FnZSIsInZhbHVlIjoiT0sifSwicnVuQWZ0ZXIiOnsiU2V0X3ZhcmlhYmxlXzIiOlsiU3VjY2VlZGVkIl19fX0sImVsc2UiOnsiYWN0aW9ucyI6eyJTZXRfdmFyaWFibGUiOnsidHlwZSI6IlNldFZhcmlhYmxlIiwiaW5wdXRzIjp7Im5hbWUiOiJ2YXJTdWNjZXNzIiwidmFsdWUiOmZhbHNlfX0sIlNldF92YXJpYWJsZV8xIjp7InR5cGUiOiJTZXRWYXJpYWJsZSIsImlucHV0cyI6eyJuYW1lIjoidmFyTWVzc2FnZSIsInZhbHVlIjoiWW91IGFyZSBub3QgYXV0aG9yaXplZCB0byBzYXZlIHRoaXMgY2VydGlmaWNhdGUuIn0sInJ1bkFmdGVyIjp7IlNldF92YXJpYWJsZSI6WyJTdWNjZWVkZWQiXX19fX0sInJ1bkFmdGVyIjp7IkdldF9pdGVtIjpbIlN1Y2NlZWRlZCJdfX0sImFsbENvbm5lY3Rpb25EYXRhIjp7IkdldF9maWxlc18ocHJvcGVydGllc19vbmx5KSI6eyJjb25uZWN0aW9uUmVmZXJlbmNlIjp7ImFwaSI6eyJpZCI6Ii9wcm92aWRlcnMvTWljcm9zb2Z0LlBvd2VyQXBwcy9hcGlzL3NoYXJlZF9zaGFyZXBvaW50b25saW5lIn0sImNvbm5lY3Rpb24iOnsiaWQiOiIvcHJvdmlkZXJzL01pY3Jvc29mdC5Qb3dlckFwcHMvYXBpcy9zaGFyZWRfc2hhcmVwb2ludG9ubGluZS9jb25uZWN0aW9ucy9hM2EwOWVjNmZjMjc0ZGU1OTYyMjg0MDhjMDRhYTE4ZCJ9LCJjb25uZWN0aW9uTmFtZSI6ImEzYTA5ZWM2ZmMyNzRkZTU5NjIyODQwOGMwNGFhMThkIn0sInJlZmVyZW5jZUtleSI6InNoYXJlZF9zaGFyZXBvaW50b25saW5lIn0sIkRlbGV0ZV9maWxlIjp7ImNvbm5lY3Rpb25SZWZlcmVuY2UiOnsiYXBpIjp7ImlkIjoiL3Byb3ZpZGVycy9NaWNyb3NvZnQuUG93ZXJBcHBzL2FwaXMvc2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUifSwiY29ubmVjdGlvbiI6eyJpZCI6Ii9wcm92aWRlcnMvTWljcm9zb2Z0LlBvd2VyQXBwcy9hcGlzL3NoYXJlZF9zaGFyZXBvaW50b25saW5lL2Nvbm5lY3Rpb25zL2EzYTA5ZWM2ZmMyNzRkZTU5NjIyODQwOGMwNGFhMThkIn0sImNvbm5lY3Rpb25OYW1lIjoiYTNhMDllYzZmYzI3NGRlNTk2MjI4NDA4YzA0YWExOGQifSwicmVmZXJlbmNlS2V5Ijoic2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUifSwiQ3JlYXRlX2ZpbGUiOnsiY29ubmVjdGlvblJlZmVyZW5jZSI6eyJhcGkiOnsiaWQiOiIvcHJvdmlkZXJzL01pY3Jvc29mdC5Qb3dlckFwcHMvYXBpcy9zaGFyZWRfc2hhcmVwb2ludG9ubGluZSJ9LCJjb25uZWN0aW9uIjp7ImlkIjoiL3Byb3ZpZGVycy9NaWNyb3NvZnQuUG93ZXJBcHBzL2FwaXMvc2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUvY29ubmVjdGlvbnMvYTNhMDllYzZmYzI3NGRlNTk2MjI4NDA4YzA0YWExOGQifSwiY29ubmVjdGlvbk5hbWUiOiJhM2EwOWVjNmZjMjc0ZGU1OTYyMjg0MDhjMDRhYTE4ZCJ9LCJyZWZlcmVuY2VLZXkiOiJzaGFyZWRfc2hhcmVwb2ludG9ubGluZSJ9LCJVcGRhdGVfZmlsZV9wcm9wZXJ0aWVzIjp7ImNvbm5lY3Rpb25SZWZlcmVuY2UiOnsiYXBpIjp7ImlkIjoiL3Byb3ZpZGVycy9NaWNyb3NvZnQuUG93ZXJBcHBzL2FwaXMvc2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUifSwiY29ubmVjdGlvbiI6eyJpZCI6Ii9wcm92aWRlcnMvTWljcm9zb2Z0LlBvd2VyQXBwcy9hcGlzL3NoYXJlZF9zaGFyZXBvaW50b25saW5lL2Nvbm5lY3Rpb25zL2EzYTA5ZWM2ZmMyNzRkZTU5NjIyODQwOGMwNGFhMThkIn0sImNvbm5lY3Rpb25OYW1lIjoiYTNhMDllYzZmYzI3NGRlNTk2MjI4NDA4YzA0YWExOGQifSwicmVmZXJlbmNlS2V5Ijoic2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUifSwiVXBkYXRlX2l0ZW0iOnsiY29ubmVjdGlvblJlZmVyZW5jZSI6eyJhcGkiOnsiaWQiOiIvcHJvdmlkZXJzL01pY3Jvc29mdC5Qb3dlckFwcHMvYXBpcy9zaGFyZWRfc2hhcmVwb2ludG9ubGluZSJ9LCJjb25uZWN0aW9uIjp7ImlkIjoiL3Byb3ZpZGVycy9NaWNyb3NvZnQuUG93ZXJBcHBzL2FwaXMvc2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUvY29ubmVjdGlvbnMvYTNhMDllYzZmYzI3NGRlNTk2MjI4NDA4YzA0YWExOGQifSwiY29ubmVjdGlvbk5hbWUiOiJhM2EwOWVjNmZjMjc0ZGU1OTYyMjg0MDhjMDRhYTE4ZCJ9LCJyZWZlcmVuY2VLZXkiOiJzaGFyZWRfc2hhcmVwb2ludG9ubGluZSJ9LCJDcmVhdGVfaXRlbSI6eyJjb25uZWN0aW9uUmVmZXJlbmNlIjp7ImFwaSI6eyJpZCI6Ii9wcm92aWRlcnMvTWljcm9zb2Z0LlBvd2VyQXBwcy9hcGlzL3NoYXJlZF9zaGFyZXBvaW50b25saW5lIn0sImNvbm5lY3Rpb24iOnsiaWQiOiIvcHJvdmlkZXJzL01pY3Jvc29mdC5Qb3dlckFwcHMvYXBpcy9zaGFyZWRfc2hhcmVwb2ludG9ubGluZS9jb25uZWN0aW9ucy9hM2EwOWVjNmZjMjc0ZGU1OTYyMjg0MDhjMDRhYTE4ZCJ9LCJjb25uZWN0aW9uTmFtZSI6ImEzYTA5ZWM2ZmMyNzRkZTU5NjIyODQwOGMwNGFhMThkIn0sInJlZmVyZW5jZUtleSI6InNoYXJlZF9zaGFyZXBvaW50b25saW5lIn19LCJzdGF0aWNSZXN1bHRzIjp7fSwiaXNTY29wZU5vZGUiOnRydWUsIm1zbGFOb2RlIjp0cnVlfQ==";
-    const EMAIL_CONDITION_PROTOTYPE_BASE64 = "eyJub2RlSWQiOiJDb25kaXRpb25fLV9BdXRob3Jpc2VkX0VtYWlsIiwic2VyaWFsaXplZFZhbHVlIjp7InR5cGUiOiJJZiIsImV4cHJlc3Npb24iOnsib3IiOlt7ImVxdWFscyI6WyJAb3V0cHV0cygnR2V0X2l0ZW0nKT9bJ2JvZHkvUGVyc29uRW1haWwnXSIsIkB0cmlnZ2VyQm9keSgpP1sndGV4dCddIl19LHsiZXF1YWxzIjpbIkB0cmlnZ2VyQm9keSgpP1snYm9vbGVhbiddIiwiQHRydWUiXX1dfSwiYWN0aW9ucyI6eyJHZXRfZmlsZXNfKHByb3BlcnRpZXNfb25seSkiOnsidHlwZSI6Ik9wZW5BcGlDb25uZWN0aW9uIiwiaW5wdXRzIjp7InBhcmFtZXRlcnMiOnsiZGF0YXNldCI6Imh0dHBzOi8vbW9kZ292dWsuc2hhcmVwb2ludC5jb20vdGVhbXMvMTU5OCIsInRhYmxlIjoiNTRhZDgzNDAtZGY3Zi00MTg1LThjZWYtYjE5YTBhM2UyZjMyIiwiJGZpbHRlciI6IlRyYWluaW5nUmVjb3JkSUQgZXEgQHt0cmlnZ2VyQm9keSgpP1snbnVtYmVyJ119IiwiJHRvcCI6MX0sImhvc3QiOnsiYXBpSWQiOiIvcHJvdmlkZXJzL01pY3Jvc29mdC5Qb3dlckFwcHMvYXBpcy9zaGFyZWRfc2hhcmVwb2ludG9ubGluZSIsImNvbm5lY3Rpb24iOiJzaGFyZWRfc2hhcmVwb2ludG9ubGluZSIsIm9wZXJhdGlvbklkIjoiR2V0RmlsZUl0ZW1zIn19fSwiQ29uZGl0aW9uXy1fRm91bmRfY2VydGlmaWNhdGUiOnsidHlwZSI6IklmIiwiZXhwcmVzc2lvbiI6eyJhbmQiOlt7ImdyZWF0ZXIiOlsiQGxlbmd0aChib2R5KCdHZXRfZmlsZXNfKHByb3BlcnRpZXNfb25seSknKT9bJ3ZhbHVlJ10pIiwwXX1dfSwiYWN0aW9ucyI6eyJBcHBseV90b19lYWNoIjp7InR5cGUiOiJGb3JlYWNoIiwiZm9yZWFjaCI6IkBvdXRwdXRzKCdHZXRfZmlsZXNfKHByb3BlcnRpZXNfb25seSknKT9bJ2JvZHkvdmFsdWUnXSIsImFjdGlvbnMiOnsiR2V0X2ZpbGVfY29udGVudCI6eyJ0eXBlIjoiT3BlbkFwaUNvbm5lY3Rpb24iLCJpbnB1dHMiOnsicGFyYW1ldGVycyI6eyJkYXRhc2V0IjoiaHR0cHM6Ly9tb2Rnb3Z1ay5zaGFyZXBvaW50LmNvbS90ZWFtcy8xNTk4IiwiaWQiOiJAaXRlbXMoJ0FwcGx5X3RvX2VhY2gnKT9bJ3tJZGVudGlmaWVyfSddIiwiaW5mZXJDb250ZW50VHlwZSI6dHJ1ZX0sImhvc3QiOnsiYXBpSWQiOiIvcHJvdmlkZXJzL01pY3Jvc29mdC5Qb3dlckFwcHMvYXBpcy9zaGFyZWRfc2hhcmVwb2ludG9ubGluZSIsImNvbm5lY3Rpb24iOiJzaGFyZWRfc2hhcmVwb2ludG9ubGluZSIsIm9wZXJhdGlvbklkIjoiR2V0RmlsZUNvbnRlbnQifX19LCJTZW5kX2FuX2VtYWlsXyhWMikiOnsidHlwZSI6Ik9wZW5BcGlDb25uZWN0aW9uIiwiaW5wdXRzIjp7InBhcmFtZXRlcnMiOnsiZW1haWxNZXNzYWdlL1RvIjoiQHRyaWdnZXJCb2R5KCk/Wyd0ZXh0J10iLCJlbWFpbE1lc3NhZ2UvU3ViamVjdCI6IllvdXIgVHJhaW5pbmcgVHJhY2tlciBjZXJ0aWZpY2F0ZSIsImVtYWlsTWVzc2FnZS9Cb2R5IjoiPHA+WW91ciByZXF1ZXN0ZWQgY2VydGlmaWNhdGUgaXMgYXR0YWNoZWQuPC9wPiIsImVtYWlsTWVzc2FnZS9BdHRhY2htZW50cyI6W3siTmFtZSI6IkBpdGVtcygnQXBwbHlfdG9fZWFjaCcpP1sne0ZpbGVuYW1lV2l0aEV4dGVuc2lvbn0nXSIsIkNvbnRlbnRCeXRlcyI6IkBib2R5KCdHZXRfZmlsZV9jb250ZW50JykifV0sImVtYWlsTWVzc2FnZS9JbXBvcnRhbmNlIjoiTm9ybWFsIn0sImhvc3QiOnsiYXBpSWQiOiIvcHJvdmlkZXJzL01pY3Jvc29mdC5Qb3dlckFwcHMvYXBpcy9zaGFyZWRfb2ZmaWNlMzY1IiwiY29ubmVjdGlvbiI6InNoYXJlZF9vZmZpY2UzNjUiLCJvcGVyYXRpb25JZCI6IlNlbmRFbWFpbFYyIn19LCJydW5BZnRlciI6eyJHZXRfZmlsZV9jb250ZW50IjpbIlN1Y2NlZWRlZCJdfX19fSwiU2V0X3ZhcmlhYmxlXzIiOnsidHlwZSI6IlNldFZhcmlhYmxlIiwiaW5wdXRzIjp7Im5hbWUiOiJ2YXJTdWNjZXNzIiwidmFsdWUiOnRydWV9LCJydW5BZnRlciI6eyJBcHBseV90b19lYWNoIjpbIlN1Y2NlZWRlZCJdfX0sIlNldF92YXJpYWJsZV8zIjp7InR5cGUiOiJTZXRWYXJpYWJsZSIsImlucHV0cyI6eyJuYW1lIjoidmFyTWVzc2FnZSIsInZhbHVlIjoiQ2VydGlmaWNhdGUgZW1haWxlZCB0byB5b3UuIn0sInJ1bkFmdGVyIjp7IlNldF92YXJpYWJsZV8yIjpbIlN1Y2NlZWRlZCJdfX19LCJlbHNlIjp7ImFjdGlvbnMiOnsiU2V0X3ZhcmlhYmxlIjp7InR5cGUiOiJTZXRWYXJpYWJsZSIsImlucHV0cyI6eyJuYW1lIjoidmFyU3VjY2VzcyIsInZhbHVlIjpmYWxzZX19LCJTZXRfdmFyaWFibGVfMSI6eyJ0eXBlIjoiU2V0VmFyaWFibGUiLCJpbnB1dHMiOnsibmFtZSI6InZhck1lc3NhZ2UiLCJ2YWx1ZSI6Ik5vIGNlcnRpZmljYXRlIGlzIG9uIGZpbGUgZm9yIHRoaXMgcmVjb3JkLiJ9LCJydW5BZnRlciI6eyJTZXRfdmFyaWFibGUiOlsiU3VjY2VlZGVkIl19fX19LCJydW5BZnRlciI6eyJHZXRfZmlsZXNfKHByb3BlcnRpZXNfb25seSkiOlsiU3VjY2VlZGVkIl19fX0sImVsc2UiOnsiYWN0aW9ucyI6eyJTZXRfdmFyaWFibGVfNCI6eyJ0eXBlIjoiU2V0VmFyaWFibGUiLCJpbnB1dHMiOnsibmFtZSI6InZhclN1Y2Nlc3MiLCJ2YWx1ZSI6ZmFsc2V9fSwiU2V0X3ZhcmlhYmxlXzUiOnsidHlwZSI6IlNldFZhcmlhYmxlIiwiaW5wdXRzIjp7Im5hbWUiOiJ2YXJNZXNzYWdlIiwidmFsdWUiOiJZb3UgYXJlIG5vdCBhdXRob3JpemVkIHRvIHZpZXcgdGhpcyBjZXJ0aWZpY2F0ZS4ifSwicnVuQWZ0ZXIiOnsiU2V0X3ZhcmlhYmxlXzQiOlsiU3VjY2VlZGVkIl19fX19LCJydW5BZnRlciI6eyJHZXRfaXRlbSI6WyJTdWNjZWVkZWQiXX19LCJhbGxDb25uZWN0aW9uRGF0YSI6eyJHZXRfZmlsZXNfKHByb3BlcnRpZXNfb25seSkiOnsiY29ubmVjdGlvblJlZmVyZW5jZSI6eyJhcGkiOnsiaWQiOiIvcHJvdmlkZXJzL01pY3Jvc29mdC5Qb3dlckFwcHMvYXBpcy9zaGFyZWRfc2hhcmVwb2ludG9ubGluZSJ9LCJjb25uZWN0aW9uIjp7ImlkIjoiL3Byb3ZpZGVycy9NaWNyb3NvZnQuUG93ZXJBcHBzL2FwaXMvc2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUvY29ubmVjdGlvbnMvYTNhMDllYzZmYzI3NGRlNTk2MjI4NDA4YzA0YWExOGQifSwiY29ubmVjdGlvbk5hbWUiOiJhM2EwOWVjNmZjMjc0ZGU1OTYyMjg0MDhjMDRhYTE4ZCJ9LCJyZWZlcmVuY2VLZXkiOiJzaGFyZWRfc2hhcmVwb2ludG9ubGluZSJ9LCJHZXRfZmlsZV9jb250ZW50Ijp7ImNvbm5lY3Rpb25SZWZlcmVuY2UiOnsiYXBpIjp7ImlkIjoiL3Byb3ZpZGVycy9NaWNyb3NvZnQuUG93ZXJBcHBzL2FwaXMvc2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUifSwiY29ubmVjdGlvbiI6eyJpZCI6Ii9wcm92aWRlcnMvTWljcm9zb2Z0LlBvd2VyQXBwcy9hcGlzL3NoYXJlZF9zaGFyZXBvaW50b25saW5lL2Nvbm5lY3Rpb25zL2EzYTA5ZWM2ZmMyNzRkZTU5NjIyODQwOGMwNGFhMThkIn0sImNvbm5lY3Rpb25OYW1lIjoiYTNhMDllYzZmYzI3NGRlNTk2MjI4NDA4YzA0YWExOGQifSwicmVmZXJlbmNlS2V5Ijoic2hhcmVkX3NoYXJlcG9pbnRvbmxpbmUifSwiU2VuZF9hbl9lbWFpbF8oVjIpIjp7ImNvbm5lY3Rpb25SZWZlcmVuY2UiOnsiYXBpIjp7ImlkIjoiL3Byb3ZpZGVycy9NaWNyb3NvZnQuUG93ZXJBcHBzL2FwaXMvc2hhcmVkX29mZmljZTM2NSJ9LCJjb25uZWN0aW9uIjp7ImlkIjoiL3Byb3ZpZGVycy9NaWNyb3NvZnQuUG93ZXJBcHBzL2FwaXMvc2hhcmVkX29mZmljZTM2NS9jb25uZWN0aW9ucy9zaGFyZWQtb2ZmaWNlMzY1LXBsYWNlaG9sZGVyIn0sImNvbm5lY3Rpb25OYW1lIjoic2hhcmVkLW9mZmljZTM2NS1wbGFjZWhvbGRlciJ9LCJyZWZlcmVuY2VLZXkiOiJzaGFyZWRfb2ZmaWNlMzY1In19LCJzdGF0aWNSZXN1bHRzIjp7fSwiaXNTY29wZU5vZGUiOnRydWUsIm1zbGFOb2RlIjp0cnVlfQ==";
-
-    document.querySelectorAll("button[data-flow-variable]").forEach((button) => {
-      button.addEventListener("click", async () => {
-        const oldText = button.textContent;
-        const variable = button.dataset.flowVariable === "success"
-          ? { name: "varSuccess", type: "boolean", nodeId: "Initialize_variable" }
-          : { name: "varMessage", type: "string", nodeId: "Initialize_variable_1" };
-        try {
-          await navigator.clipboard.writeText(buildInitializeVariableClipboard(variable.name, variable.type, variable.nodeId));
-          button.textContent = "Copied";
-        } catch (error) {
-          button.textContent = "Copy failed";
-        }
-        setTimeout(() => { button.textContent = oldText; }, 1600);
-      });
-    });
-
-    document.querySelectorAll("button[data-flow-condition]").forEach((button) => {
-      button.addEventListener("click", async () => {
-        const oldText = button.textContent;
-        const payload = button.dataset.flowCondition === "email"
-          ? EMAIL_CONDITION_PROTOTYPE_BASE64
-          : SAVE_CONDITION_PROTOTYPE_BASE64;
-        try {
-          await navigator.clipboard.writeText(atob(payload));
-          button.textContent = "Copied";
-        } catch (error) {
-          button.textContent = "Copy failed";
-        }
-        setTimeout(() => { button.textContent = oldText; }, 1600);
-      });
-    });
-  </script>
 </body>
 </html>
