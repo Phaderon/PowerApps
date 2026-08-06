@@ -276,7 +276,60 @@ If(
         <li>Tested as both an authorised person and an unauthorised person.</li>
       </ol>
 
-      <h2>6. Sources</h2>
+      <h2>6. Retention Notice Badge</h2>
+      <p>There is no download from inside the app &mdash; that's confirmed, not a gap we missed (see section 1). Since users can't retrieve their own uploaded file back out through the app afterwards, this adds a small rounded notice badge on <code>scrCourseDetail</code> telling them to keep their own copy before they submit, worded as a deliberate design choice rather than a limitation.</p>
+      <div class="callout ok">
+        <strong>Two things worth checking that may soften this in practice, though neither is guaranteed:</strong> a certificate saved as an image renders as a real <code>&lt;img&gt;</code> in the Image control, so a normal browser right-click &rarr; "Save image as" should work on it &mdash; that's a native browser feature, nothing to do with the <code>Launch</code>/<code>Download</code> restriction. For PDFs, the PDF viewer control's own built-in toolbar sometimes includes a download/print icon, depending on version &mdash; worth a look next time one's open.
+      </div>
+
+      <h3>Paste This Directly Into Power Apps Studio</h3>
+      <p>Select the screen (not any control inside it) in the tree view, then paste this. It adds one new top-level control, positioned above the Save/Cancel buttons regardless of the certificate panel's current height, since it's anchored off <code>btnSaveCert.Y</code> rather than a fixed Y position.</p>
+      <div class="code-card"><div class="code-title">YAML - paste onto scrCourseDetail</div><pre>      - grpCertRetentionNotice:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            BorderColor: =RGBA(168,101,0,0.35)
+            BorderThickness: =1
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(255,247,232,1)
+            Height: =44
+            RadiusBottomLeft: =20
+            RadiusBottomRight: =20
+            RadiusTopLeft: =20
+            RadiusTopRight: =20
+            Width: =796
+            X: =315
+            Y: =btnSaveCert.Y - 56
+          Children:
+            - icoCertRetentionNotice:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  Color: =RGBA(168,101,0,1)
+                  Height: =22
+                  Icon: =Icon.Information
+                  Width: =22
+                  X: =14
+                  Y: =11
+            - lblCertRetentionNotice:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Left
+                  Color: =RGBA(140,84,0,1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =Parent.Height
+                  PaddingLeft: =8
+                  PaddingTop: =6
+                  Size: =9
+                  Text: ="Keep your own copy of this file - once submitted, it can be viewed here but not retrieved as a separate download."
+                  VerticalAlign: =VerticalAlign.Middle
+                  Width: =734
+                  Wrap: =true
+                  X: =44
+                  Y: =0</pre></div>
+      <p class="small">Width 796 matches the combined span of the date and certificate panels (X 315 to 1111), so it sits flush under both. If your panels are positioned differently now, adjust <code>Width</code>/<code>X</code> to match after pasting &mdash; everything else (colours, icon, wording) will paste in correctly regardless.</p>
+
+      <h2>7. Sources</h2>
       <ul>
         <li><a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-download" target="_blank" rel="noopener">Download function</a> and <a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-param" target="_blank" rel="noopener">Launch and Param functions</a> &mdash; Microsoft Learn, both confirm the Address/URL parameter is a web resource address, not documented as accepting base64 data URIs.</li>
         <li><a href="https://community.powerplatform.com/forums/thread/details/?threadid=f6d421ce-b9ca-ef11-b8e8-6045bda8de07" target="_blank" rel="noopener">Community thread: Using Launch() to open a Base64 PDF in a new browser tab</a> &mdash; confirms the same base64-via-Launch limitation and that a real URL is expected.</li>
