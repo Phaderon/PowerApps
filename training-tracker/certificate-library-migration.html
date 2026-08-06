@@ -769,14 +769,14 @@ If(
         {parsed: ParseJSON(varCertRaw.payload)},
         If(
             Boolean(parsed.success),
-            Set(varCertStatusText, ""); Download("data:application/octet-stream;base64," &amp; Text(parsed.fileContentBase64), Text(parsed.fileName)),
+            Set(varCertStatusText, ""); Download("data:application/octet-stream;base64," &amp; Text(parsed.fileContentBase64)),
             Set(varCertError, Text(parsed.message)); Notify("Could not open certificate &mdash; see the error below.", NotificationType.Error)
         )
     )
 )</pre></div>
       <p>Note the <code>Boolean(...)</code> and <code>Text(...)</code> wrappers around the parsed fields &mdash; <code>ParseJSON</code> returns an untyped value in Power Fx, and Power Apps will throw a type-mismatch error if you use <code>parsed.success</code> or <code>parsed.message</code> directly without coercing them first. This is not optional.</p>
       <div class="callout warn">
-        <strong>Use <code>Download(...)</code>, not <code>Launch(...)</code>:</strong> <code>Launch()</code> with a <code>data:</code> URI silently does nothing in a lot of contexts &mdash; no error, no download, nothing &mdash; because most browsers, and Power Apps Studio's own Preview player especially (it runs inside an iframe), block navigating to a <code>data:</code> URI as a security measure. <code>Download()</code> is the function actually built for saving a data URI to a real file and is far more reliable here. If it still does nothing, test from the actual published app (not Studio Preview) &mdash; some sandboxed preview contexts block both.
+        <strong>Use <code>Download(...)</code>, not <code>Launch(...)</code>:</strong> <code>Launch()</code> with a <code>data:</code> URI silently does nothing in a lot of contexts &mdash; no error, no download, nothing &mdash; because most browsers, and Power Apps Studio's own Preview player especially (it runs inside an iframe), block navigating to a <code>data:</code> URI as a security measure. <code>Download()</code> is the function actually built for saving a data URI to a real file and is far more reliable here. If it still does nothing, test from the actual published app (not Studio Preview) &mdash; some sandboxed preview contexts block both. <code>Download</code> only takes one argument (the address) &mdash; it does not accept a filename, so the browser will save it with a generic downloaded filename rather than the certificate's original name.
       </div>
 
       <h4>Fix the label text</h4>
