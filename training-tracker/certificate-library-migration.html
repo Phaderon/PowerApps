@@ -274,6 +274,8 @@ If(
         <li>PDF certificates render in the PDF viewer; image certificates render in the Image control; the correct one shows automatically based on file extension.</li>
         <li>Close button clears the viewer and it can be reopened cleanly.</li>
         <li>Tested as both an authorised person and an unauthorised person.</li>
+        <li><code>grpCertRetentionNotice</code> pasted onto <code>scrCourseDetail</code> and visible above the Save/Cancel buttons (section 6).</li>
+        <li><code>TT - Save Certificate Library</code> deletes any existing file for the record before creating the new one, confirmed by re-uploading a test record and checking the library has exactly one file (section 7).</li>
       </ol>
 
       <h2>6. Retention Notice Badge</h2>
@@ -292,14 +294,14 @@ If(
             BorderThickness: =1
             DropShadow: =DropShadow.None
             Fill: =RGBA(255,247,232,1)
-            Height: =44
-            RadiusBottomLeft: =20
-            RadiusBottomRight: =20
-            RadiusTopLeft: =20
-            RadiusTopRight: =20
+            Height: =60
+            RadiusBottomLeft: =18
+            RadiusBottomRight: =18
+            RadiusTopLeft: =18
+            RadiusTopRight: =18
             Width: =796
             X: =315
-            Y: =btnSaveCert.Y - 56
+            Y: =btnSaveCert.Y - 72
           Children:
             - icoCertRetentionNotice:
                 Control: Classic/Icon@2.5.0
@@ -309,7 +311,7 @@ If(
                   Icon: =Icon.Information
                   Width: =22
                   X: =14
-                  Y: =11
+                  Y: =19
             - lblCertRetentionNotice:
                 Control: Label@2.5.1
                 Properties:
@@ -319,17 +321,55 @@ If(
                   FontWeight: =FontWeight.Semibold
                   Height: =Parent.Height
                   PaddingLeft: =8
-                  PaddingTop: =6
+                  PaddingTop: =8
                   Size: =9
-                  Text: ="Keep your own copy of this file - once submitted, it can be viewed here but not retrieved as a separate download."
+                  Text: ="Uploading a new certificate permanently replaces the old one - it can't be recovered. Keep your own copy, since certificates can only be viewed here, not downloaded."
                   VerticalAlign: =VerticalAlign.Middle
                   Width: =734
                   Wrap: =true
                   X: =44
                   Y: =0</pre></div>
-      <p class="small">Width 796 matches the combined span of the date and certificate panels (X 315 to 1111), so it sits flush under both. If your panels are positioned differently now, adjust <code>Width</code>/<code>X</code> to match after pasting &mdash; everything else (colours, icon, wording) will paste in correctly regardless.</p>
+      <p class="small">Width 796 matches the combined span of the date and certificate panels (X 315 to 1111), so it sits flush under both. If your panels are positioned differently now, adjust <code>Width</code>/<code>X</code> to match after pasting &mdash; everything else (colours, icon, wording) will paste in correctly regardless. Height went from 44 to 60 to fit the longer wording on three lines comfortably.</p>
 
-      <h2>7. Sources</h2>
+      <h2>7. Replace The Old Certificate On Re-Upload</h2>
+      <p><strong>Confirmed gap, not a guess:</strong> <code>TT - Save Certificate Library</code> currently only ever runs <strong>Create file</strong> when a new certificate is attached. There is no step that looks for an existing file for that <code>TrainingRecordID</code> and removes it first. Today, a re-upload adds a second file alongside the first &mdash; it does not replace it. The <code>IsCurrent</code> column in the library exists but nothing in the flow sets or checks it to filter old files out.</p>
+      <div class="callout danger">
+        <strong>This is more than clutter.</strong> The read flow (<code>TT - Email Certificate Library</code>, used by the viewer) filters by <code>TrainingRecordID eq X</code> with <strong>Top Count: 1</strong> and no sort order. Once two files exist for the same record, SharePoint decides which one comes back &mdash; not necessarily the newest. A re-upload could silently leave the viewer showing someone's <em>old</em> certificate, with no error and no way to tell from the app. Fix this before it comes up in a real audit.</p>
+      </div>
+
+      <h3>Add A Delete Step Before Create File</h3>
+      <p>Open <code>TT - Save Certificate Library</code>. Find the existing <strong>SharePoint &ndash; Create file</strong> action (inside the <strong>HasNewFile? If yes</strong> branch). Insert two new actions directly <strong>above</strong> it, still inside the same branch:</p>
+      <ol class="step-list">
+        <li><strong>Add SharePoint &ndash; Get files (properties only).</strong>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
+            <tr><td>Library Name</td><td><code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</td></tr>
+            <tr><td>Filter Query</td><td><code>TrainingRecordID eq </code> followed by <code>RecordID</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+          </table>
+          <p class="small">No Top Count here &mdash; leave it blank, so this catches every existing file for the record, including any duplicates that may have already piled up before this fix.</p>
+        </li>
+        <li><strong>Add Control &ndash; Apply to each.</strong> For the loop input, choose the <strong>value</strong> output from the <strong>Get files (properties only)</strong> action you just added.
+          <p>Inside that loop, add <strong>SharePoint &ndash; Delete file</strong>:</p>
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
+            <tr><td>Library Name</td><td><code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</td></tr>
+            <tr><td>Id</td><td><code>Identifier</code> from the current item in this loop's <strong>Get files (properties only)</strong>.</td></tr>
+          </table>
+        </li>
+      </ol>
+      <p>The existing <strong>Create file</strong> and <strong>Update file properties</strong> actions stay exactly as they are, running straight after this new loop finishes. Save the flow.</p>
+
+      <h3>Test</h3>
+      <ol class="step-list">
+        <li>Pick a test record that already has a certificate saved.</li>
+        <li>Upload a different file and click <strong>Save record</strong>.</li>
+        <li>Open <code>TT Certificates_LTD</code> in SharePoint directly and confirm there is exactly <strong>one</strong> file for that <code>TrainingRecordID</code> &mdash; the new one, not two.</li>
+        <li>Open the record in the app and click <strong>Open certificate</strong>. Confirm it shows the new file, not the old one.</li>
+      </ol>
+
+      <h2>8. Sources</h2>
       <ul>
         <li><a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-download" target="_blank" rel="noopener">Download function</a> and <a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-param" target="_blank" rel="noopener">Launch and Param functions</a> &mdash; Microsoft Learn, both confirm the Address/URL parameter is a web resource address, not documented as accepting base64 data URIs.</li>
         <li><a href="https://community.powerplatform.com/forums/thread/details/?threadid=f6d421ce-b9ca-ef11-b8e8-6045bda8de07" target="_blank" rel="noopener">Community thread: Using Launch() to open a Base64 PDF in a new browser tab</a> &mdash; confirms the same base64-via-Launch limitation and that a real URL is expected.</li>
