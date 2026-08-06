@@ -354,9 +354,9 @@ If(
           <table>
             <tr><th>Field</th><th>Value</th></tr>
             <tr><td>Site Address</td><td>Same Training Tracker SharePoint site.</td></tr>
-            <tr><td>Library Name</td><td><code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</td></tr>
-            <tr><td>Id</td><td><code>Identifier</code> from the current item in this loop's <strong>Get files (properties only)</strong>.</td></tr>
+            <tr><td>File Identifier</td><td><code>Identifier</code> from the current item in this loop's <strong>Get files (properties only)</strong>. Click the folder icon and switch to the dynamic content/expression view rather than browsing, since <code>Identifier</code> is not something you can navigate to by hand.</td></tr>
           </table>
+          <p class="small">This action only has two fields, Site Address and File Identifier &mdash; there is no separate Library Name field, unlike most of the other SharePoint actions in this guide. The identifier alone is enough to locate the file.</p>
         </li>
       </ol>
       <p>The existing <strong>Create file</strong> and <strong>Update file properties</strong> actions stay exactly as they are, running straight after this new loop finishes. Save the flow.</p>
