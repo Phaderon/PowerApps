@@ -624,21 +624,36 @@ If(
       <p>If you rename the test flows, remove and re-add them in Power Apps afterwards so the data source names are refreshed.</p>
 
       <h3>Update <code>btnSaveCert.OnSelect</code></h3>
-      <p>Replace the flow call name and copy over the same two argument fixes proven in the test button above (the <code>DateCompleted</code> and <code>FileContent</code> arguments), not the original flow's raw arguments.</p>
-      <div class="code-card"><div class="code-title">Power Fx - new live save call</div><pre>'TT - Save Certificate Library'.Run(
-    Text(datCompletion.SelectedDate, "yyyy-mm-dd"),
-    CountRows(colNewCertificate) > 0,
-    If(CountRows(colNewCertificate) > 0, First(colNewCertificate).Name, ""),
-    If(CountRows(colNewCertificate) > 0, {name: First(colNewCertificate).Name, contentBytes: First(colNewCertificate).Value}, Blank()),
-    Lower(varRecord.PersonEmail),
-    varCourse.CourseName,
-    varMyEmail,
-    varViewingForSelf,
-    varRecord.ID,
-    varCourse.CourseID,
-    varIsAdmin
+      <p>Select <code>btnSaveCert</code>, open its <code>OnSelect</code> property, delete everything currently in there, and paste this complete formula in full. This is the whole thing, not a fragment &mdash; it already has both fixes (the <code>Text(...)</code> date wrapper and the <code>contentBytes</code> record) built in, and keeps every bit of the existing busy/error/notify behaviour unchanged.</p>
+      <div class="code-card"><div class="code-title">Power Fx - btnSaveCert.OnSelect (full formula)</div><pre>=Set(varCertError, "");
+Set(varCertStatusText, "Saving certificate...");
+Set(varCertBusy, true);
+Set(
+    varSaveResult,
+    IfError(
+        'TT - Save Certificate Library'.Run(
+            Text(datCompletion.SelectedDate, "yyyy-mm-dd"),
+            CountRows(colNewCertificate) > 0,
+            If(CountRows(colNewCertificate) > 0, First(colNewCertificate).Name, ""),
+            If(CountRows(colNewCertificate) > 0, {name: First(colNewCertificate).Name, contentBytes: First(colNewCertificate).Value}, Blank()),
+            Lower(varRecord.PersonEmail),
+            varCourse.CourseName,
+            varMyEmail,
+            varViewingForSelf,
+            varRecord.ID,
+            varCourse.CourseID,
+            varIsAdmin
+        ),
+        {success: false, message: "Flow could not be reached. Check your connection and try again."}
+    )
+);
+Set(varCertBusy, false);
+If(
+    varSaveResult.success,
+    Set(varCertStatusText, ""); Notify("Training record saved.", NotificationType.Success); Back(),
+    Set(varCertError, varSaveResult.message); Notify("Save failed &mdash; see the error below.", NotificationType.Error)
 )</pre></div>
-      <p>In the full existing formula, this replaces the old <code>'TT - Save Certificate'.Run(...)</code> call inside <code>IfError</code>. Keep the surrounding busy/error/notify code.</p>
+      <p>Only two things changed from the original: the flow name (<code>'TT - Save Certificate'</code> &rarr; <code>'TT - Save Certificate Library'</code>) and the two fixed arguments. Everything else &mdash; <code>varCertError</code>, <code>varCertStatusText</code>, <code>varCertBusy</code>, the <code>IfError</code> fallback, and the success/failure branch &mdash; is identical to what you already have.</p>
 
       <h3>Update <code>btnOpenCertificate</code></h3>
       <p>The old button tries to launch base64 returned by <code>TT - Get Certificate</code>. Replace that behaviour with an email request.</p>
