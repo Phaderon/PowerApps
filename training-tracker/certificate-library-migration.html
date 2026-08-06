@@ -690,62 +690,132 @@ If(
       <h3>Optional: Keep The Old Attachment UI Hidden, Not Deleted</h3>
       <p>Do not delete the old attachments from <code>TT TrainingRecords</code> during the first cutover. Leave them in place as a fallback until the new library has been used successfully for a while. The app will stop reading them once you update the formulas above.</p>
 
-      <h2>7. What To Undo From The Old Guide</h2>
+      <h2>7. Replace Email With In-App View</h2>
+      <p>The email round-trip is being retired. The point of this app is that anyone &mdash; a normal user or an admin doing an audit &mdash; can go person &rarr; record &rarr; course &rarr; certificate and have it just open, in the browser, in one click. This section changes the read side to do exactly that.</p>
+      <p><strong>What this does and does not touch:</strong> <code>TT - Save Certificate Library</code> and <code>btnSaveCert</code> are not affected by anything below. Only the certificate-reading flow (currently <code>TT - Email Certificate Library</code>) and <code>btnOpenCertificate</code> change.</p>
+      <div class="callout ok">
+        <strong>Why this avoids the original bug:</strong> the very first attempt at this (<code>TT - Get Certificate</code>, months ago) returned four separate typed fields (<code>success</code>, <code>message</code>, <code>fileName</code>, <code>fileContentBase64</code>) from <strong>Respond to a PowerApp or flow</strong>, and Power Apps Studio kept losing track of which fields existed. This version returns exactly <strong>one</strong> Text field containing a JSON string with all four values packed inside it. One field can't have a "which fields exist" problem.
+      </div>
+
+      <h3>7.1 Edit The Flow</h3>
+      <p>Open <code>TT - Email Certificate Library</code> (or whatever you renamed it to). You are keeping everything up to and including <strong>Get file content</strong> inside the <strong>Apply to each</strong> loop &mdash; that lookup and authorisation logic is already correct and does not change. You are only changing what happens with the file once you have it.</p>
+
+      <h4>Add two more top-level variables</h4>
+      <p>Same place as the existing <code>varSuccess</code>/<code>varMessage</code> initializers, directly under the trigger.</p>
       <table>
-        <tr><th>Old guide item</th><th>Action now</th><th>Reason</th></tr>
-        <tr>
-          <td><code>TT - Get Certificate</code> base64 return flow</td>
-          <td>Stop using it after cutover. Leave it turned off or delete it later.</td>
-          <td>The new email flow avoids the Power Apps returned-schema bug and keeps certificate bytes out of the app.</td>
-        </tr>
-        <tr>
-          <td><code>btnOpenCertificate</code> formula using <code>fileContentBase64</code></td>
-          <td>Replace with the email-flow formula above.</td>
-          <td>No base64 launch needed.</td>
-        </tr>
-        <tr>
-          <td><code>TT - Save Certificate</code> deleting and adding list attachments</td>
-          <td>Stop using it after the new library save flow passes testing.</td>
-          <td>Certificate files now live in <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>, not as list item attachments.</td>
-        </tr>
-        <tr>
-          <td><code>lblCurrentCertInfo</code> checking <code>varRecord.Attachments</code></td>
-          <td>Replace with the <code>DateCompleted</code>-based message above.</td>
-          <td>Normal users may no longer have access to raw file storage.</td>
-        </tr>
-        <tr>
-          <td>Old list attachments already uploaded</td>
-          <td>Do not delete immediately. Migrate later, after the new path works.</td>
-          <td>They are your rollback safety net.</td>
-        </tr>
+        <tr><th>Name</th><th>Type</th><th>Initial value</th></tr>
+        <tr><td><code>varFileName</code></td><td>String</td><td>empty</td></tr>
+        <tr><td><code>varFileContentBase64</code></td><td>String</td><td>empty</td></tr>
+      </table>
+      <p>Leave these two empty on every failure branch (Authorised? If no, Found certificate? If no) &mdash; you do not need to set them there, the empty initial value already covers it.</p>
+
+      <h4>Delete the Send an email action</h4>
+      <p>Inside the <strong>Apply to each</strong> loop, delete <strong>Office 365 Outlook &ndash; Send an email (V2)</strong>. Keep <strong>Get file content</strong> directly above where it was.</p>
+
+      <h4>Capture the file into the two new variables</h4>
+      <p>Still inside the <strong>Apply to each</strong> loop, directly below <strong>Get file content</strong>, add two <strong>Control &ndash; Set variable</strong> actions:</p>
+      <table>
+        <tr><th>Action</th><th>Name</th><th>Value</th></tr>
+        <tr><td>Set variable</td><td><code>varFileName</code></td><td><code>File name with extension</code> from <strong>Get files (properties only)</strong> (or <code>Name</code> from that same group, whichever your picker shows).</td></tr>
+        <tr><td>Set variable</td><td><code>varFileContentBase64</code></td><td>Expression: <code>base64(body('Get_file_content'))</code></td></tr>
       </table>
 
-      <h2>8. Migrating Existing Attachments Later</h2>
-      <p>This is deliberately not part of the first test. Once the new path works, existing certificates can be copied from <code>TT TrainingRecords</code> attachments into <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code> with a separate one-time admin flow:</p>
-      <ol>
-        <li>List rows from <code>TT TrainingRecords</code>.</li>
-        <li>For each row, get attachments.</li>
-        <li>For each attachment, get attachment content.</li>
-        <li>Create file in <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</li>
-        <li>Update file properties using the row's ID, person email, course ID, course name, date completed, and upload fields.</li>
-      </ol>
-      <p>Do that only after the new save/email path is proven. Until then, old attachments can stay where they are.</p>
+      <h4>Update the success message</h4>
+      <p>Below the <strong>Apply to each</strong> loop, still inside <strong>Found certificate? If yes</strong>, you already have <code>Set variable varSuccess = true</code> and <code>Set variable varMessage</code>. Change the <code>varMessage</code> text from <code>Certificate emailed to you.</code> to <code>Certificate ready.</code></p>
 
-      <h2>9. Final Lockdown Checklist</h2>
+      <h4>Build the single JSON payload</h4>
+      <p>After the whole outer <strong>Authorised?</strong> condition, outside both branches &mdash; the same place the old <strong>Respond</strong> action sits &mdash; add a <strong>Data Operation &ndash; Compose</strong> action first, above the Respond action. Rename it if you like, e.g. <code>Compose - Build payload</code>. In its <strong>Inputs</strong> box, type this structure exactly, using <strong>Add dynamic content</strong> to insert each pill at the marked point (do not type the variable names as plain text, insert the actual pill each time):</p>
+      <div class="code-card"><div class="code-title">Compose - Inputs (type the braces/quotes, insert a dynamic content pill at each ← mark)</div><pre>{
+  "success": ←insert varSuccess pill here,
+  "message": "←insert varMessage pill here",
+  "fileName": "←insert varFileName pill here",
+  "fileContentBase64": "←insert varFileContentBase64 pill here"
+}</pre></div>
+      <div class="callout warn">
+        <strong>Quoting matters:</strong> <code>success</code> has no quotes around its pill (it is a true/false value). <code>message</code>, <code>fileName</code>, and <code>fileContentBase64</code> all have quotes around their pill (they are text). Get this wrong and the JSON will not parse on the app side later.
+      </div>
+
+      <h4>Replace the Respond action</h4>
+      <p>Delete the existing <strong>Respond to a PowerApp or flow</strong> action (the one with <code>success</code>/<code>message</code> outputs) and add a new one in its place, directly below <strong>Compose</strong>.</p>
+      <table>
+        <tr><th>Output type</th><th>Title</th><th>Value</th></tr>
+        <tr><td>Text</td><td><code>payload</code></td><td>Dynamic content: the <strong>Outputs</strong> of the <strong>Compose</strong> action.</td></tr>
+      </table>
+      <p>Save the flow.</p>
+
+      <h3>7.2 Update The App</h3>
+      <p>Select <code>btnOpenCertificate</code>.</p>
+      <table>
+        <tr><th>Property</th><th>New value</th></tr>
+        <tr><td><code>Text</code></td><td><code>="Open certificate"</code></td></tr>
+        <tr><td><code>Visible</code></td><td><code>=!IsBlank(varRecord) &amp;&amp; !IsBlank(varRecord.DateCompleted)</code></td></tr>
+      </table>
+      <p>Open its <code>OnSelect</code> property, delete everything currently in there, and paste this complete formula in full:</p>
+      <div class="code-card"><div class="code-title">Power Fx - btnOpenCertificate.OnSelect (full formula)</div><pre>=Set(varCertError, "");
+Set(varCertStatusText, "Fetching certificate...");
+Set(varCertBusy, true);
+Set(
+    varCertRaw,
+    IfError(
+        'TT - Email Certificate Library'.Run(varRecord.ID, varMyEmail, varIsAdmin),
+        Blank()
+    )
+);
+Set(varCertBusy, false);
+If(
+    IsBlank(varCertRaw),
+    Set(varCertError, "Flow could not be reached. Check your connection and try again."); Notify("Could not open certificate &mdash; see the error below.", NotificationType.Error),
+    With(
+        {parsed: ParseJSON(varCertRaw.payload)},
+        If(
+            Boolean(parsed.success),
+            Set(varCertStatusText, ""); Launch("data:application/octet-stream;base64," &amp; Text(parsed.fileContentBase64)),
+            Set(varCertError, Text(parsed.message)); Notify("Could not open certificate &mdash; see the error below.", NotificationType.Error)
+        )
+    )
+)</pre></div>
+      <p>Note the <code>Boolean(...)</code> and <code>Text(...)</code> wrappers around the parsed fields &mdash; <code>ParseJSON</code> returns an untyped value in Power Fx, and Power Apps will throw a type-mismatch error if you use <code>parsed.success</code> or <code>parsed.message</code> directly without coercing them first. This is not optional.</p>
+
+      <h4>Fix the label text</h4>
+      <p><code>lblCurrentCertInfo.Text</code> (built in section 6) still says "Use Email certificate to request the file." Update it:</p>
+      <div class="code-card"><div class="code-title">Power Fx - lblCurrentCertInfo.Text</div><pre>=If(
+    !IsBlank(varRecord) &amp;&amp; !IsBlank(varRecord.DateCompleted),
+    "Certificate on file. Use Open certificate to view it. Attach a new file below to replace it.",
+    "No certificate on file yet."
+)</pre></div>
+
+      <h3>7.3 Refresh The Data Source (do not skip this)</h3>
+      <p>The flow's output shape changed &mdash; two fields (<code>success</code>/<code>message</code>) became one (<code>payload</code>). Power Apps Studio can keep caching the old field list even after the flow is saved correctly, which is exactly the bug that ate an entire day earlier in this project. Do this cycle in full, in order, every time:</p>
       <ol class="step-list">
-        <li>New library <code>TT Certificates_LTD</code> exists with exact columns, optionally renamed for display as <code>TT Certificates (LTD)</code>.</li>
-        <li><code>TT - Save Certificate Library TEST</code> saves one file and fills metadata.</li>
-        <li><code>TT - Email Certificate Library TEST</code> emails that file to the authorised user.</li>
-        <li>Unauthorised user test fails with the expected message.</li>
-        <li>Live <code>btnSaveCert</code> calls the final library save flow.</li>
-        <li>Live <code>btnOpenCertificate</code> is now <strong>Email certificate</strong> and calls the final email flow.</li>
-        <li><code>lblCurrentCertInfo</code> no longer checks <code>varRecord.Attachments</code>.</li>
-        <li>Normal app users are removed from direct access to <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</li>
-        <li>Normal app users still have whatever access they need to the metadata lists for the app to run.</li>
-        <li>Old list attachments are retained until you are happy with the new route.</li>
+        <li>Remove <code>TT - Email Certificate Library</code> from the app's data sources.</li>
+        <li>Save the app itself (not just the flow).</li>
+        <li>Fully close the app.</li>
+        <li>Reopen it.</li>
+        <li>Add <code>TT - Email Certificate Library</code> back as a data source.</li>
+        <li>Save the app again.</li>
+        <li>Close and reopen once more.</li>
+        <li>Open <code>btnOpenCertificate.OnSelect</code> and confirm <code>.payload</code> autocompletes correctly after typing <code>varCertRaw.</code></li>
       </ol>
 
-      <h2>10. Sources And Assumptions</h2>
+      <h3>7.4 Test Script</h3>
+      <ol class="step-list">
+        <li>Open a record that already has a certificate saved in <code>TT Certificates_LTD</code> from your earlier save test.</li>
+        <li>Click <strong>Open certificate</strong>.</li>
+        <li>Confirm the file opens directly in the browser (no email, no wait).</li>
+        <li>Log in as (or impersonate/test with) a user who is not the record's owner and not an admin. Confirm they get the "not authorized" message, not the file.</li>
+      </ol>
+
+      <h3>7.5 Checklist</h3>
+      <ol class="step-list">
+        <li><code>TT - Save Certificate Library</code> and <code>btnSaveCert</code> untouched and still working.</li>
+        <li>Flow's <strong>Send an email</strong> action deleted; <code>varFileName</code>/<code>varFileContentBase64</code> variables added and populated.</li>
+        <li>Flow's Respond action returns one Text output, <code>payload</code>, built from <strong>Compose</strong>.</li>
+        <li><code>btnOpenCertificate</code> is <strong>Open certificate</strong> and calls the flow, parses <code>payload</code>, and launches the file directly.</li>
+        <li>Data source removed/re-added and app saved/closed/reopened per 7.3.</li>
+        <li>Tested as both an authorised person and an unauthorised person.</li>
+      </ol>
+
+      <h2>8. Sources And Assumptions</h2>
       <ul>
         <li>Power Apps UI is not a security layer over SharePoint data-source permissions. Microsoft reference: <a href="https://learn.microsoft.com/en-us/power-platform/admin/security/connect-data-sources" target="_blank" rel="noopener">Connecting and authenticating to data sources</a>.</li>
         <li>Run-only flow users and flow-owner connections are the basis for using Power Automate as a controlled gate. Microsoft references: <a href="https://learn.microsoft.com/en-us/power-automate/create-team-flows" target="_blank" rel="noopener">Share a cloud flow</a> and <a href="https://learn.microsoft.com/en-us/power-automate/guide-to-cloud-flow-sharing-permissions" target="_blank" rel="noopener">Guide to cloud flow sharing and permissions</a>.</li>
