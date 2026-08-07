@@ -1391,11 +1391,94 @@ ClearCollect(
 ) As C,</pre>
         </div>
 
-        <h3>Team Member Course Filter (not yet live &mdash; three spots, not one)</h3>
+        <h3>Team Member Course Filter (not yet live &mdash; four fixes, not one)</h3>
         <div class="callout warn">
-          <strong>This needs more than the guide previously said.</strong> Checked against your live export: the same course-filter predicate appears <strong>three separate times</strong> on <code>scrTeamMember</code> &mdash; twice inside <code>galMyChain.Items</code> (once for <code>PersonRequired</code>, once for <code>PersonInDate</code>) and once more inside <code>galMyChain.OnSelect</code> (building <code>colViewTraining</code>). All three need the same exclusion clause, or the count badges on the team list and the drilldown course list will disagree with each other.
+          <strong>This needs more than the guide previously said, twice over.</strong> Checked against your live export: the same course-filter predicate appears <strong>three separate times</strong> on <code>scrTeamMember</code> &mdash; twice inside <code>galMyChain.Items</code> (once for <code>PersonRequired</code>, once for <code>PersonInDate</code>) and once more inside <code>galMyChain.OnSelect</code> (building <code>colViewTraining</code>). All three need the same exclusion clause, or the count badges on the team list and the drilldown course list will disagree with each other. <strong>On top of that</strong>, all three read <code>P.RemoteWorker</code>/<code>ThisItem.RemoteWorker</code> off <code>colMyChain</code> &mdash; and <code>colMyChain</code> is a reshaped collection built with an explicit field list in <code>OnVisible</code> that does not currently include <code>RemoteWorker</code> at all. Without the fix below first, all three formulas below will throw <code>Name isn't valid. 'RemoteWorker' isn't recognized.</code> the moment you paste them.
         </div>
-        <p>Select <code>galMyChain</code>, delete everything currently in <code>Items</code>, and paste this complete replacement. It fixes both of the first two occurrences at once.</p>
+        <p>Do this one first. Select <code>scrTeamMember</code>, delete everything currently in <code>OnVisible</code>, and paste this complete replacement &mdash; this is the entire property, not a fragment, since it's short enough to reproduce in full safely. The only change is <code>RemoteWorker: Coalesce(P.RemoteWorker, false),</code> added to all three <code>colMyChain</code> record shapes (chain levels 1, 2, and 3).</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>scrTeamMember.OnVisible (full formula)</span>
+            <button data-copy="teammember-full-onvisible" type="button">Copy</button>
+          </div>
+<pre id="teammember-full-onvisible">=Set(varChainDepth, 3);
+ClearCollect(colAllPeople, Filter('TT Personnel', Active = true));
+ClearCollect(colAllRecords, 'TT TrainingRecords');
+
+ClearCollect(
+    colChainL1,
+    Filter(colAllPeople, Lower(LineManagerEmail) = varMyEmail)
+);
+
+ClearCollect(
+    colChainL2,
+    Filter(
+        colAllPeople,
+        Lower(LineManagerEmail) in ForAll(colChainL1, Lower(Email)).Value
+    )
+);
+
+ClearCollect(
+    colMyChain,
+    ForAll(
+        colChainL1 As P,
+        {
+            Email: Lower(P.Email),
+            Name: P.Title,
+            StaffType: Coalesce(P.StaffType.Value, ""),
+            ManagerCanEdit: Coalesce(P.ManagerCanEdit, false),
+            HasM365: Coalesce(P.HasM365Access, false),
+            RemoteWorker: Coalesce(P.RemoteWorker, false),
+            ManagerEmail: Lower(P.LineManagerEmail),
+            ChainLevel: 1,
+            IsExpanded: false
+        }
+    )
+);
+
+Collect(
+    colMyChain,
+    ForAll(
+        colChainL2 As P,
+        {
+            Email: Lower(P.Email),
+            Name: P.Title,
+            StaffType: Coalesce(P.StaffType.Value, ""),
+            ManagerCanEdit: Coalesce(P.ManagerCanEdit, false),
+            HasM365: Coalesce(P.HasM365Access, false),
+            RemoteWorker: Coalesce(P.RemoteWorker, false),
+            ManagerEmail: Lower(P.LineManagerEmail),
+            ChainLevel: 2,
+            IsExpanded: false
+        }
+    )
+);
+
+If(
+    varChainDepth &gt;= 3,
+    Collect(
+        colMyChain,
+        ForAll(
+            Filter(
+                colAllPeople,
+                Lower(LineManagerEmail) in ForAll(colChainL2, Lower(Email)).Value
+            ) As P,
+            {
+                Email: Lower(P.Email),
+                Name: P.Title,
+                StaffType: Coalesce(P.StaffType.Value, ""),
+                ManagerCanEdit: Coalesce(P.ManagerCanEdit, false),
+                HasM365: Coalesce(P.HasM365Access, false),
+                RemoteWorker: Coalesce(P.RemoteWorker, false),
+                ManagerEmail: Lower(P.LineManagerEmail),
+                ChainLevel: 3,
+                IsExpanded: false
+            }
+        )
+    )
+)</pre>
+        </div>
+        <p>Now the three <code>galMyChain</code> fixes below will actually resolve. Select <code>galMyChain</code>, delete everything currently in <code>Items</code>, and paste this complete replacement. It fixes both of the first two occurrences at once.</p>
         <div class="code-card">
           <div class="code-toolbar">
             <span>galMyChain.Items (full formula)</span>
