@@ -276,6 +276,7 @@ If(
         <li>Tested as both an authorised person and an unauthorised person.</li>
         <li><code>grpCertRetentionNotice</code> pasted onto <code>scrCourseDetail</code> and visible above the Save/Cancel buttons (section 6).</li>
         <li><code>TT - Save Certificate Library</code> deletes any existing file for the record before creating the new one, confirmed by re-uploading a test record and checking the library has exactly one file (section 7).</li>
+        <li><code>icoUploadCert.OnSelect</code> wired to actually open the file picker (section 9), and <code>recCertPanelBG</code> resized so nothing scrolls.</li>
       </ol>
 
       <h2>6. Retention Notice Badge</h2>
@@ -369,7 +370,20 @@ If(
         <li>Open the record in the app and click <strong>Open certificate</strong>. Confirm it shows the new file, not the old one.</li>
       </ol>
 
-      <h2>8. Sources</h2>
+      <h2>9. Clean Up The Certificate Panel Layout</h2>
+      <p>Once the viewer and replacement fix above are both live and tested, the certificate panel itself can look janky &mdash; the file picker needing a scroll to reach, cramped spacing between the icon and text, and a paperclip icon that looks clickable but does nothing. None of this is a limitation of the classic <code>Attachments</code> control (<code>ctrlNewCertificate</code>) &mdash; it's layout sizing plus one unwired icon, so it's fixed in place rather than by swapping to a Modern file picker. Swapping controls now would mean rebuilding the property model the save formula is wired against (<code>ctrlNewCertificate.Attachments</code>, <code>contentBytes</code>, and everything downstream of it), for a purely cosmetic fix &mdash; not worth the risk to logic that's already tested and working.</p>
+
+      <h3>9.1 Wire Up The Paperclip Icon</h3>
+      <p>Select <code>icoUploadCert</code>. It currently has no <code>OnSelect</code>, which is why it looks clickable but isn't. Set its <code>OnSelect</code> to match how <code>btnPickCertificate</code> already opens the same picker:</p>
+      <div class="code-card"><div class="code-title">Power Fx - icoUploadCert.OnSelect</div><pre>=Select(ctrlNewCertificate)</pre></div>
+
+      <h3>9.2 Resize The Panel So Nothing Scrolls</h3>
+      <p>This step is manual in Studio &mdash; there's no paste-ready formula for it, because the right numbers depend on the panel's current live size, and giving fixed pixel values here would risk being stale against whatever you've already adjusted by hand. Select <code>recCertPanelBG</code> and increase its <code>Height</code> until <code>ctrlNewCertificate</code> fits fully inside it without needing to scroll, then nudge <code>icoUploadCert</code> and <code>lblCurrentCertInfo</code>'s <code>X</code>/<code>Y</code> apart for breathing room.</p>
+      <div class="callout ok">
+        <strong>Nothing else needs adjusting afterward.</strong> <code>grpCertRetentionNotice</code> (section 6) is anchored to <code>btnSaveCert.Y - 72</code>, which itself derives from the panel's height &mdash; it repositions itself correctly the moment the panel gets taller, no manual follow-up needed there.
+      </div>
+
+      <h2>10. Sources</h2>
       <ul>
         <li><a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-download" target="_blank" rel="noopener">Download function</a> and <a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-param" target="_blank" rel="noopener">Launch and Param functions</a> &mdash; Microsoft Learn, both confirm the Address/URL parameter is a web resource address, not documented as accepting base64 data URIs.</li>
         <li><a href="https://community.powerplatform.com/forums/thread/details/?threadid=f6d421ce-b9ca-ef11-b8e8-6045bda8de07" target="_blank" rel="noopener">Community thread: Using Launch() to open a Base64 PDF in a new browser tab</a> &mdash; confirms the same base64-via-Launch limitation and that a real URL is expected.</li>
