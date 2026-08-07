@@ -306,12 +306,26 @@
 
     <main>
       <div class="topline">
-        <span class="pill">Current step: schema and app setup</span>
-        <span class="pill">Updated 31 Jul 2026</span>
+        <span class="pill">Current step: Remote Worker Exclusions</span>
+        <span class="pill">Updated 7 Aug 2026</span>
         <span class="pill">Training Tracker only</span>
       </div>
       <h1>Training Tracker v3 Fix Guide</h1>
       <p class="lead">The old full build guide has been retired from this URL for now. This page is the new working area for the v3 YAML fixes, starting with the SharePoint schema that must exist before the pasted screens will stop red-lining.</p>
+
+      <div class="progress-banner">
+        <strong>Where you are on this page:</strong>
+        <ul>
+          <li class="done-item">✅ Done &mdash; Schema, app setup, and Fixes 1&ndash;8 (collapsed below, click to re-open if you need to re-check a step).</li>
+          <li class="done-item">✅ Done &mdash; Add Mode Buttons build pass (collapsed below).</li>
+          <li class="next-item">▶ You are here &mdash; <a href="#remote-worker-exclusions">Remote Worker Exclusions</a>, rebuilt with complete verified formulas.</li>
+          <li>Then &mdash; <a href="#snapshot-dashboard-build">Snapshot Dashboard</a> (not started).</li>
+          <li>Superseded, not part of the current build &mdash; <a href="#certificate-privacy-upgrade">Certificate Privacy Upgrade</a> below describes an earlier approach (collapsed). The certificate system that's actually live is a different, later design: <a href="certificate-library-migration.html"><strong>Certificate Library &amp; In-App Viewer &mdash; Full Guide</strong></a>.</li>
+        </ul>
+      </div>
+
+      <details class="done">
+        <summary>✅ Done: Schema, app setup, and Fixes 1&ndash;8 (click to expand if you need to re-check a step)</summary>
 
       <section id="what-this-page-is">
         <h2>What This Page Is</h2>
@@ -945,6 +959,8 @@ Set(varConfirmArchive, 0)</pre>
         </div>
       </section>
 
+      </details>
+
       <section id="remote-worker-exclusions">
         <h2>Build Pass - Remote Worker Exclusions</h2>
         <p>This pass lets you mark a person as a remote worker and mark specific courses as excluded for remote workers. When both are true, that person does not see that course, and it does not count against their compliance.</p>
@@ -1565,6 +1581,11 @@ Navigate(scrMyTraining, ScreenTransition.Cover)</pre>
 
       <section id="certificate-privacy-upgrade">
         <h2>Optional Upgrade &mdash; Certificate Privacy (Power Automate)</h2>
+        <div class="callout ok">
+          <strong>Superseded &mdash; this whole section describes an earlier design.</strong> The certificate system actually live today is different (a locked document library, <code>TT - Save Certificate Library</code> / <code>TT - Email Certificate Library</code>, and an in-app viewer, not the <code>TT - Save Certificate</code> / <code>TT - Get Certificate</code> flows and file picker described below). Go here instead: <a href="certificate-library-migration.html"><strong>Certificate Library &amp; In-App Viewer &mdash; Full Guide</strong></a>. Everything below is collapsed and kept only in case something in the old design is ever worth referencing.
+        </div>
+        <details class="done">
+          <summary>Show the superseded design (click to expand)</summary>
         <div class="callout warn">
           <strong>This is separate from the v3 build above.</strong> Nothing here is required to make Training Tracker work. It exists because certificates are personal data tied to a named employee, and the direct SharePoint-list design means anyone with read access to the raw list can browse everyone's certificate, not just their own or their team's. This section removes the certificate save/replace path from direct SharePoint writes and routes it through one Power Automate flow instead. Skip this whole section if you are not doing this upgrade.
         </div>
@@ -1911,6 +1932,7 @@ Clear(colNewCertificate)</pre>
           <li>Tested live: save with no new file (date-only change), save with a new file on a record with no existing certificate, save with a new file replacing an existing one, save as an admin on someone else's record, confirm a non-admin cannot save to someone else's record, open/download an existing certificate as the record's own person, open/download the same certificate as an admin, confirm a different non-admin person cannot open someone else's certificate.</li>
           <li>Spinner/status text appears on both buttons while their flow is running, and controls visibly grey out; confirm a genuine failure (e.g. temporarily rename a field in a flow to force an error) shows the amber error banner with real wording, and that it clears on the &times; icon and on the next attempt.</li>
         </ul>
+        </details>
       </section>
 
       <section id="yaml-links">
