@@ -1296,7 +1296,7 @@ Set(varEditCourse, Blank())
                                 },
                                 !IsBlank(rec.DateCompleted) &&
                                 C.RecurrenceMonths > 0 &&
-                                DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") < Today()
+                                DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") &lt; Today()
                             )
                         )
                     ),
@@ -1314,7 +1314,7 @@ Set(varEditCourse, Blank())
                                 !IsBlank(rec.DateCompleted) &&
                                 C.RecurrenceMonths > 0 &&
                                 DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") >= Today() &&
-                                DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") <= DateAdd(Today(), 60, "Days")
+                                DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") &lt;= DateAdd(Today(), 60, "Days")
                             )
                         )
                     ),
@@ -1360,8 +1360,8 @@ ClearCollect(colPersonDetail,
             TrainingStatus:
                 If(IsBlank(rec.DateCompleted),"Not Started",
                    C.RecurrenceMonths=0,"Complete",
-                   DateAdd(rec.DateCompleted,C.RecurrenceMonths,"Months")<Today(),"Expired",
-                   DateAdd(rec.DateCompleted,C.RecurrenceMonths,"Months")<=DateAdd(Today(),60,"Days"),"Expiring Soon",
+                   DateAdd(rec.DateCompleted,C.RecurrenceMonths,"Months")&lt;Today(),"Expired",
+                   DateAdd(rec.DateCompleted,C.RecurrenceMonths,"Months")&lt;=DateAdd(Today(),60,"Days"),"Expiring Soon",
                    "In Date"),
             RecordID: rec.ID
         })
@@ -1482,9 +1482,9 @@ ClearCollect(
                     If(IsBlank(rec.DateCompleted), "Not Started",
                        C.RecurrenceMonths = 0, "Complete",
                        DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                               "Months") < Today(), "Expired",
+                               "Months") &lt; Today(), "Expired",
                        DateAdd(rec.DateCompleted, C.RecurrenceMonths,
-                               "Months") <= DateAdd(Today(), 60,
+                               "Months") &lt;= DateAdd(Today(), 60,
                                "Days"), "Expiring Soon",
                        "In Date"),
                 CanEdit: ThisItem.ManagerCanEdit
