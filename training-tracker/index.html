@@ -296,6 +296,7 @@
         <a href="#stale-course-detail-fix">Stale Course Names</a>
         <a href="#admin-add-mode-buttons">Add Mode Buttons</a>
         <a href="#remote-worker-exclusions">Remote Worker Exclusions</a>
+        <a href="#course-expiry-reminders">Course Expiry Reminder Emails</a>
         <a href="#snapshot-dashboard-build">Snapshot Dashboard</a>
         <a href="#certificate-privacy-upgrade">Certificate Privacy Upgrade (Optional)</a>
         <a href="certificate-library-migration.html">Certificate Library Migration</a>
@@ -319,6 +320,7 @@
           <li class="done-item">✅ Done &mdash; Schema, app setup, and Fixes 1&ndash;8 (collapsed below, click to re-open if you need to re-check a step).</li>
           <li class="done-item">✅ Done &mdash; Add Mode Buttons build pass (collapsed below).</li>
           <li class="next-item">▶ You are here &mdash; <a href="#remote-worker-exclusions">Remote Worker Exclusions</a>, rebuilt with complete verified formulas.</li>
+          <li>Then &mdash; <a href="#course-expiry-reminders">Course Expiry Reminder Emails</a> (spec'd, not built yet &mdash; has a <code>TestMode</code> safety switch so it can't email your 125 real people while data is still being populated).</li>
           <li>Then &mdash; <a href="#snapshot-dashboard-build">Snapshot Dashboard</a> (not started).</li>
           <li>Superseded, not part of the current build &mdash; <a href="#certificate-privacy-upgrade">Certificate Privacy Upgrade</a> below describes an earlier approach (collapsed). The certificate system that's actually live is a different, later design: <a href="certificate-library-migration.html"><strong>Certificate Library &amp; In-App Viewer &mdash; Full Guide</strong></a>.</li>
         </ul>
@@ -1518,6 +1520,138 @@ ClearCollect(
     )
 );
 Navigate(scrMyTraining, ScreenTransition.Cover)</pre>
+        </div>
+        <div class="callout ok">
+          <strong>Next up once this is live and tested:</strong> <a href="#course-expiry-reminders"><strong>Course Expiry Reminder Emails</strong></a> &mdash; the mandatory-course email reminder feature, built with a safety switch so it cannot email your 125 real people while the app and data are still being populated.
+        </div>
+      </section>
+
+      <section id="course-expiry-reminders">
+        <h2>Build Pass - Course Expiry Reminder Emails</h2>
+        <p>A scheduled flow that emails a person when a mandatory course is 30 days from expiring, and again when it has expired. Default for everyone, no opt-out &mdash; this is a compliance reminder, not a marketing email, and an opt-in toggle would just mean most people never turn it on.</p>
+
+        <div class="callout danger">
+          <strong>Read this before building anything else in this section.</strong> The current database has roughly 125 people in it, and the data isn't fully populated yet &mdash; meaning most people currently show as having no completed courses on file. Built naively, this flow would email all 125 of them the moment it first runs, about an app they don't know exists yet. The <code>TestMode</code> switch below is not optional polish, it is the thing that makes it safe to build and test this feature at all before the data is ready. Do not skip Step 1, and do not flip <code>TestMode</code> to <code>false</code> until you have deliberately decided the data is ready and the wording is right.
+        </div>
+
+        <h3>Step 1 &mdash; Build The Flow With The Safety Switch First</h3>
+        <ol class="step-list">
+          <li>Go to <a href="https://make.powerautomate.com" target="_blank" rel="noopener">make.powerautomate.com</a>, signed in as the same account used for the other Training Tracker flows.</li>
+          <li><strong>Create &rarr; Scheduled cloud flow.</strong> Name it exactly <code>TT - Course Expiry Reminders</code>. Set it to run <strong>Daily</strong>, starting at a time before your working day begins (e.g. <code>07:00</code>).</li>
+          <li>Add an <strong>Initialize variable</strong> action, name <code>TestMode</code>, type <strong>Boolean</strong>, value <code>true</code>.</li>
+          <li>Add a second <strong>Initialize variable</strong> action, name <code>TestModeRecipient</code>, type <strong>String</strong>, value your own email address.</li>
+        </ol>
+        <div class="callout warn">
+          <strong>These two actions must be the first two actions in the flow, right after the trigger, before anything else.</strong> Every email this flow sends will read its recipient through these two variables. Leave <code>TestMode</code> as <code>true</code> for every test run until you have deliberately decided the data is ready and you're ready to email real people &mdash; then, and only then, edit this one action and change the value to <code>false</code>. That is the entire cutover.
+        </div>
+
+        <h3>Step 2 &mdash; Pull The Data</h3>
+        <p>Add three <strong>SharePoint &ndash; Get items</strong> actions, one after another.</p>
+        <table>
+          <thead><tr><th>Action name</th><th>List</th><th>Filter Query</th></tr></thead>
+          <tbody>
+            <tr><td>Get Active People</td><td><code>TT Personnel</code></td><td><code>Active eq true</code></td></tr>
+            <tr><td>Get Active Courses</td><td><code>TT Courses</code></td><td><code>Status/Value eq 'Active'</code></td></tr>
+            <tr><td>Get Training Records</td><td><code>TT TrainingRecords</code></td><td>leave blank &mdash; pull all, filtered per-person/course inside the loop below</td></tr>
+          </tbody>
+        </table>
+        <p class="small">No Top Count on any of these &mdash; leave them all blank so nobody and no course is silently skipped once the list grows past the default 100-item page size.</p>
+
+        <h3>Step 3 &mdash; Loop Every Person, Then Every Applicable Course</h3>
+        <ol class="step-list">
+          <li>Add an <strong>Apply to each</strong> over the <strong>value</strong> from <em>Get Active People</em>. Rename it <code>Apply to each Person</code>.</li>
+          <li>Inside it, add a second <strong>Apply to each</strong> over a filtered array expression, not the raw list &mdash; click the field, switch to expression mode, and paste this so only courses that actually apply to this person (matching staff type, not remote-worker-excluded, and not a one-off course that never expires) are considered:
+            <div class="code-card">
+              <div class="code-toolbar">
+                <span>Apply to each Course &mdash; Items expression</span>
+                <button data-copy="expiry-course-loop-filter" type="button">Copy</button>
+              </div>
+<pre id="expiry-course-loop-filter">filter(
+    body('Get_Active_Courses')?['value'],
+    and(
+        greater(item()?['RecurrenceMonths'], 0),
+        contains(string(item()?['ApplicableTo']), items('Apply_to_each_Person')?['StaffType']?['Value']),
+        not(
+            and(
+                equals(items('Apply_to_each_Person')?['RemoteWorker'], true),
+                equals(item()?['ExcludeRemoteWorkers'], true)
+            )
+        )
+    )
+)</pre>
+            </div>
+            <p class="small">The action names inside the expression (<code>Get_Active_Courses</code>, <code>Apply_to_each_Person</code>) must match your actual action names exactly, underscores in place of spaces &mdash; Power Automate does this substitution automatically when you reference a prior step through the expression editor's dynamic content picker rather than typing it by hand. Build this by picking fields from the picker first, then adjust, rather than typing the whole thing from scratch.</p>
+          </li>
+        </ol>
+
+        <h3>Step 4 &mdash; Find This Person's Record For This Course, Compute The Expiry Date</h3>
+        <p>Inside the course loop, add a <strong>Filter array</strong> action on the <strong>value</strong> from <em>Get Training Records</em>, condition: <code>PersonEmail</code> is equal to <code>Apply to each Person &rarr; Email</code>, AND <code>CourseID</code> is equal to <code>Apply to each Course &rarr; ID</code>. Then add a <strong>Condition</strong>: <code>length(body('Filter_array'))</code> is greater than <code>0</code> &mdash; this skips anyone who has never completed the course at all, since a course that was never done isn't "expiring," it's simply outstanding (a different notification, not built here).</p>
+        <p>Inside the <strong>Yes</strong> branch, add a <strong>Compose</strong> action named <code>Expiry Date</code>, value:</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>Compose &mdash; Expiry Date</span>
+            <button data-copy="expiry-date-compose" type="button">Copy</button>
+          </div>
+<pre id="expiry-date-compose">addToTime(
+    first(body('Filter_array'))?['DateCompleted'],
+    items('Apply_to_each_Course')?['RecurrenceMonths'],
+    'Month'
+)</pre>
+        </div>
+
+        <h3>Step 5 &mdash; The Two Date-Match Conditions</h3>
+        <p>Still inside the <strong>Yes</strong> branch, add two <strong>Condition</strong> actions, side by side (not nested inside each other). Both compare dates as plain <code>yyyy-MM-dd</code> text, which avoids time-of-day/timezone mismatches causing a real match to be missed.</p>
+        <table>
+          <thead><tr><th>Condition name</th><th>Left side</th><th>Operator</th><th>Right side</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Expiring In 30 Days?</td>
+              <td><code>formatDateTime(outputs('Expiry_Date'), 'yyyy-MM-dd')</code></td>
+              <td>is equal to</td>
+              <td><code>formatDateTime(addDays(utcNow(), 30), 'yyyy-MM-dd')</code></td>
+            </tr>
+            <tr>
+              <td>Expired Today?</td>
+              <td><code>formatDateTime(outputs('Expiry_Date'), 'yyyy-MM-dd')</code></td>
+              <td>is equal to</td>
+              <td><code>formatDateTime(utcNow(), 'yyyy-MM-dd')</code></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="small">Exact-day match, not "less than 30 days" &mdash; this is deliberate. A "less than" comparison would re-send the same warning every single day for a month. An exact-day match means each person gets the 30-day warning once, and the expired notice once, and that's it.</p>
+
+        <h3>Step 6 &mdash; Send The Email, Through The Safety Switch</h3>
+        <p>In each condition's <strong>Yes</strong> branch, add an <strong>Office 365 Outlook &ndash; Send an email (V2)</strong> action. Both use the same recipient expression &mdash; this is the one line that actually enforces <code>TestMode</code>:</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>Send an email (V2) &mdash; To field</span>
+            <button data-copy="expiry-email-to-field" type="button">Copy</button>
+          </div>
+<pre id="expiry-email-to-field">if(
+    variables('TestMode'),
+    variables('TestModeRecipient'),
+    items('Apply_to_each_Person')?['Email']
+)</pre>
+        </div>
+        <p>Set <strong>From (Send as)</strong> to your shared mailbox address (the one you already have Send-on-Behalf permission for). Subject and body are plain text/dynamic content, so type them normally &mdash; no <strong>fx</strong> needed, only boolean fields need that. Include the real person's name and course inside the body even while testing, so a <code>TestMode</code> email still tells you exactly who and what it would have been about:</p>
+        <table>
+          <thead><tr><th>Field</th><th>Suggested content</th></tr></thead>
+          <tbody>
+            <tr><td>Subject (30-day)</td><td><code>concat('Training reminder: ', items('Apply_to_each_Course')?['Title'], ' expires soon')</code></td></tr>
+            <tr><td>Subject (expired)</td><td><code>concat('Training overdue: ', items('Apply_to_each_Course')?['Title'], ' has expired')</code></td></tr>
+          </tbody>
+        </table>
+        <p class="small">Build the body with plain dynamic content (person's name, course name, expiry date) inserted via the picker &mdash; the same "click a field from the picker, never hand-type <code>text_N</code>" rule from the certificate flows applies here too.</p>
+
+        <h3>Step 7 &mdash; Test In TestMode Before Touching The Switch</h3>
+        <ol class="step-list">
+          <li>Save the flow with <code>TestMode</code> still <code>true</code>. Run it manually once (the &#9654; <strong>Test</strong> button, or wait for the scheduled run).</li>
+          <li>Confirm every email that arrives lands in your own inbox, not anyone else's &mdash; check the flow run history's count of emails sent against how many you actually received; they should match exactly.</li>
+          <li>Read the content of each test email as if you were the named person &mdash; does it make sense, is the course name right, is the expiry date right?</li>
+          <li>Only once you're satisfied, and only once the training data is actually populated enough that this won't blindside 125 people who don't know the app exists: open the flow, edit the first <strong>Initialize variable</strong> action, change <code>TestMode</code>'s value to <code>false</code>, save.</li>
+        </ol>
+        <div class="callout warn">
+          <strong>After flipping to live, watch the first real run closely.</strong> Check the run history's email count against what you'd expect from the actual number of people genuinely due a reminder that day &mdash; a much higher number than expected is a sign something in the filter logic matched more broadly than intended, and is worth pausing the flow to investigate before the next scheduled run.
         </div>
       </section>
 
