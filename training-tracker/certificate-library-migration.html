@@ -276,7 +276,7 @@ If(
         <li>Tested as both an authorised person and an unauthorised person.</li>
         <li><code>grpCertRetentionNotice</code> pasted onto <code>scrCourseDetail</code> and visible above the Save/Cancel buttons (section 6).</li>
         <li><code>TT - Save Certificate Library</code> deletes any existing file for the record before creating the new one, confirmed by re-uploading a test record and checking the library has exactly one file (section 7).</li>
-        <li><code>icoUploadCert.OnSelect</code> wired to actually open the file picker (section 9), and <code>recCertPanelBG</code> resized so nothing scrolls.</li>
+        <li><code>ctrlNewCertificate</code> made transparent and <code>btnCertDropZoneBG</code> added behind it, so the panel shows a styled drag-and-drop zone instead of native browser chrome (section 9). Drag-and-drop and click-to-browse both tested working, and the save formula confirmed untouched.</li>
       </ol>
 
       <h2>6. Retention Notice Badge</h2>
@@ -370,18 +370,60 @@ If(
         <li>Open the record in the app and click <strong>Open certificate</strong>. Confirm it shows the new file, not the old one.</li>
       </ol>
 
-      <h2>9. Clean Up The Certificate Panel Layout</h2>
-      <p>Once the viewer and replacement fix above are both live and tested, the certificate panel itself can look janky &mdash; the file picker needing a scroll to reach, cramped spacing between the icon and text, and a paperclip icon that looks clickable but does nothing. None of this is a limitation of the classic <code>Attachments</code> control (<code>ctrlNewCertificate</code>) &mdash; it's layout sizing plus one unwired icon, so it's fixed in place rather than by swapping to a Modern file picker. Swapping controls now would mean rebuilding the property model the save formula is wired against (<code>ctrlNewCertificate.Attachments</code>, <code>contentBytes</code>, and everything downstream of it), for a purely cosmetic fix &mdash; not worth the risk to logic that's already tested and working.</p>
-
-      <h3>9.1 Wire Up The Paperclip Icon</h3>
-      <p>Select <code>icoUploadCert</code>. It currently has no <code>OnSelect</code>, which is why it looks clickable but isn't. Set its <code>OnSelect</code> to match how <code>btnPickCertificate</code> already opens the same picker:</p>
-      <div class="code-card"><div class="code-title">Power Fx - icoUploadCert.OnSelect</div><pre>=Select(ctrlNewCertificate)</pre></div>
-
-      <h3>9.2 Resize The Panel So Nothing Scrolls</h3>
-      <p>This step is manual in Studio &mdash; there's no paste-ready formula for it, because the right numbers depend on the panel's current live size, and giving fixed pixel values here would risk being stale against whatever you've already adjusted by hand. Select <code>recCertPanelBG</code> and increase its <code>Height</code> until <code>ctrlNewCertificate</code> fits fully inside it without needing to scroll, then nudge <code>icoUploadCert</code> and <code>lblCurrentCertInfo</code>'s <code>X</code>/<code>Y</code> apart for breathing room.</p>
-      <div class="callout ok">
-        <strong>Nothing else needs adjusting afterward.</strong> <code>grpCertRetentionNotice</code> (section 6) is anchored to <code>btnSaveCert.Y - 72</code>, which itself derives from the panel's height &mdash; it repositions itself correctly the moment the panel gets taller, no manual follow-up needed there.
+      <h2>9. Reskin The Certificate Upload As A Drag-And-Drop Zone</h2>
+      <div class="callout warn">
+        <strong>Correction to an earlier version of this section:</strong> it previously said to set <code>icoUploadCert.OnSelect = Select(ctrlNewCertificate)</code> to wire up the paperclip icon. Tested live, that does nothing &mdash; the classic <code>Attachments</code> control has no documented <code>OnSelect</code> property (only <code>OnAddFile</code>/<code>OnRemoveFile</code>/<code>OnUndoRemoveFile</code>), and <code>Select()</code> only works on controls that expose one. Remove that formula if you added it &mdash; it's a harmless no-op, but it isn't doing anything.
       </div>
+      <p>The real fix doesn't try to trigger the control programmatically at all. The classic <code>Attachments</code> control (<code>ctrlNewCertificate</code>) already supports native drag-and-drop and click-to-browse &mdash; the only problem is how it looks. So instead of hiding or shrinking it, this makes it fully <strong>transparent</strong> and stacks a nicer-looking decorative box directly underneath it, in the exact same position and size. You see the pretty box; every click and drag actually lands on the real, still fully-functional control sitting invisibly on top of it. This is a known, real pattern &mdash; every property used below is a documented property of the Attachments control, nothing invented.</p>
+      <p>Nothing about the save formula, <code>btnSaveCert</code>, or how the file gets read off <code>ctrlNewCertificate.Attachments</code> changes. This section is entirely cosmetic.</p>
+
+      <h3>9.1 Add The Decorative Drop-Zone Background</h3>
+      <p>Insert &rarr; search <strong>Button</strong> &rarr; classic Button (not ModernButton). Rename it <code>btnCertDropZoneBG</code>. Its size and position are set relative to <code>ctrlNewCertificate</code>'s current values, so it always matches exactly, however that control is currently sized &mdash; you don't need to know or copy any pixel numbers by hand.</p>
+      <table>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td><code>Text</code></td><td><code>="Click to select a file, or drag and drop"</code></td></tr>
+        <tr><td><code>Fill</code></td><td><code>=RGBA(232,244,239,1)</code> (adjust to taste &mdash; this is a light tint of this app's green)</td></tr>
+        <tr><td><code>BorderColor</code></td><td><code>=RGBA(0,78,66,0.4)</code></td></tr>
+        <tr><td><code>BorderStyle</code></td><td><code>=BorderStyle.Dashed</code></td></tr>
+        <tr><td><code>BorderThickness</code></td><td><code>=2</code></td></tr>
+        <tr><td><code>Color</code></td><td><code>=RGBA(0,78,66,1)</code></td></tr>
+        <tr><td><code>X</code></td><td><code>=ctrlNewCertificate.X</code></td></tr>
+        <tr><td><code>Y</code></td><td><code>=ctrlNewCertificate.Y</code></td></tr>
+        <tr><td><code>Width</code></td><td><code>=ctrlNewCertificate.Width</code></td></tr>
+        <tr><td><code>Height</code></td><td><code>=ctrlNewCertificate.Height</code></td></tr>
+        <tr><td><code>DisplayMode</code></td><td><code>=DisplayMode.View</code></td></tr>
+      </table>
+      <p class="small"><code>DisplayMode.View</code> makes this purely decorative and non-interactive &mdash; it can never intercept a click or a dropped file, so there's no risk of it stealing input from the real control above it.</p>
+      <div class="callout warn">
+        <strong>Z-order matters here.</strong> This new button must render <em>behind</em> <code>ctrlNewCertificate</code>, not in front of it, or it'll visually cover the real control and block drags/clicks from reaching it. Studio adds newly inserted controls at the front by default. In the tree view (left-hand panel), drag <code>btnCertDropZoneBG</code> so it sits directly <strong>above</strong> <code>ctrlNewCertificate</code> in the list &mdash; controls listed earlier in the tree render further back. If you're unsure which is in front after moving it, right-click <code>btnCertDropZoneBG</code> and check for a "Send backward" option, or just drag a test file onto the zone and confirm the file gets picked up rather than nothing happening.
+      </div>
+
+      <h3>9.2 Make The Real Attachments Control Invisible</h3>
+      <p>Select <code>ctrlNewCertificate</code> and change these properties. Nothing else on it &mdash; not <code>Items</code>, not <code>OnAddFile</code>, not its size or position &mdash; needs to change.</p>
+      <table>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td><code>Fill</code></td><td><code>=RGBA(255,255,255,0)</code></td></tr>
+        <tr><td><code>BorderThickness</code></td><td><code>=0</code></td></tr>
+        <tr><td><code>AddAttachmentText</code></td><td><code>=""</code></td></tr>
+        <tr><td><code>NoAttachmentsText</code></td><td><code>=""</code></td></tr>
+        <tr><td><code>DropTargetBackgroundColor</code></td><td><code>=RGBA(0,78,66,0.12)</code></td></tr>
+        <tr><td><code>DropTargetBorderColor</code></td><td><code>=RGBA(0,78,66,0.6)</code></td></tr>
+        <tr><td><code>DropTargetBorderThickness</code></td><td><code>=2</code></td></tr>
+        <tr><td><code>DropTargetTextColor</code></td><td><code>=RGBA(0,78,66,1)</code></td></tr>
+      </table>
+      <p class="small">Blanking <code>AddAttachmentText</code> and <code>NoAttachmentsText</code> removes the native "Click to select a file, or drag and drop" / "No file chosen" text &mdash; that's now <code>btnCertDropZoneBG</code>'s job. The <code>DropTarget*</code> properties still show a highlight while a file is actively being dragged over the zone, so there's visual feedback mid-drag even though the control is otherwise invisible.</p>
+      <p>If <code>ctrlNewCertificate</code>'s current <code>Height</code> is taller than it needs to be for one file (from the earlier attempt to shrink it), leave it as-is rather than trying to compress it further &mdash; the control's own minimum internal height doesn't change just because it's transparent now, and forcing it smaller still produces the same internal scrollbar as before. Whatever footprint it naturally needs, <code>btnCertDropZoneBG</code> now covers with a deliberately-styled box instead of blank native space, so the size no longer needs fighting.</p>
+
+      <h3>9.3 Retire The Paperclip Icon</h3>
+      <p><code>icoUploadCert</code> is now redundant &mdash; the entire zone is clickable and drag-droppable, so a separate icon prompting the same action is one more thing to keep aligned for no benefit. Delete its <code>OnSelect</code> formula (the non-functional <code>Select(ctrlNewCertificate)</code> from the earlier version of this guide) if present, and either delete the icon control entirely or leave it purely as static decoration inside the new zone with no <code>OnSelect</code> at all.</p>
+
+      <h3>Test</h3>
+      <ol class="step-list">
+        <li>Open a record's certificate panel. Confirm you see the dashed drop-zone box with the custom text, not native browser chrome.</li>
+        <li>Drag a PDF or image file onto the box. Confirm the drop-target highlight appears while dragging, and the file attaches on drop.</li>
+        <li>Clear it and instead click the box, browse to a file, and select it. Confirm that works too &mdash; drag-and-drop and click-to-browse both go through the same underlying control.</li>
+        <li>Click <strong>Save record</strong>. Confirm the save flow works exactly as before &mdash; this step touches nothing in <code>btnSaveCert</code>, so it should be unaffected.</li>
+      </ol>
 
       <h2>10. Sources</h2>
       <ul>
