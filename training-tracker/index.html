@@ -1084,33 +1084,6 @@ Set(varConfirmArchive, 0)</pre>
     )
 )</pre>
         </div>
-        <p>In <code>btnSavePerson.OnSelect</code>, add this field inside the edit-person patch record.</p>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <span>btnSavePerson Patch field</span>
-            <button data-copy="save-person-remote-field" type="button">Copy</button>
-          </div>
-<pre id="save-person-remote-field">RemoteWorker: chkEditRemoteWorker.Checked,</pre>
-        </div>
-
-        <h3>Patch Course Writes</h3>
-        <p>In <code>btnAddCourse.OnSelect</code>, add this field inside the <code>Patch('TT Courses', ...)</code> record.</p>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <span>btnAddCourse Patch field</span>
-            <button data-copy="add-course-remote-field" type="button">Copy</button>
-          </div>
-<pre id="add-course-remote-field">ExcludeRemoteWorkers: chkNewExcludeRemote.Checked,</pre>
-        </div>
-        <p>In <code>btnSaveCourse.OnSelect</code>, add this field inside the edit-course patch record.</p>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <span>btnSaveCourse Patch field</span>
-            <button data-copy="save-course-remote-field" type="button">Copy</button>
-          </div>
-<pre id="save-course-remote-field">ExcludeRemoteWorkers: chkEditExcludeRemote.Checked,</pre>
-        </div>
-
         <h3>Patch Person Writes (already live &mdash; shown for reference)</h3>
         <p>Checked against your live export: <code>btnSavePerson.OnSelect</code>, <code>btnAddCourse.OnSelect</code>, and <code>btnSaveCourse.OnSelect</code> already have <code>RemoteWorker</code>/<code>ExcludeRemoteWorkers</code> wired in correctly. Nothing to change on these three &mdash; they're included below in full only so this guide has the real, current formula on record instead of a fragment.</p>
         <div class="code-card">
@@ -2134,13 +2107,35 @@ Clear(colNewCertificate)</pre>
 
   <script>
     document.querySelectorAll('button[data-copy]').forEach((button) => {
-      button.addEventListener('click', async () => {
+      button.addEventListener('click', () => {
         const target = document.getElementById(button.dataset.copy);
         if (!target) return;
-        await navigator.clipboard.writeText(target.innerText);
+        const text = target.innerText;
         const old = button.textContent;
-        button.textContent = 'Copied';
-        setTimeout(() => { button.textContent = old; }, 1300);
+        function flash(label) {
+          button.textContent = label;
+          setTimeout(() => { button.textContent = old; }, 1300);
+        }
+        // Synchronous execCommand first -- works under locked-down/corporate
+        // browser policies where the async Clipboard API silently no-ops
+        // (button says "Copied" but the clipboard never actually updates,
+        // so the next paste is whatever was copied earlier in the session).
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        var copied = false;
+        try { copied = document.execCommand('copy'); } catch (e) { copied = false; }
+        document.body.removeChild(textarea);
+        if (copied) { flash('Copied'); return; }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => flash('Copied')).catch(() => flash('Select the box & Ctrl+C'));
+        } else {
+          flash('Select the box & Ctrl+C');
+        }
       });
     });
 
