@@ -1093,57 +1093,415 @@ Set(varConfirmArchive, 0)</pre>
 <pre id="save-course-remote-field">ExcludeRemoteWorkers: chkEditExcludeRemote.Checked,</pre>
         </div>
 
-        <h3>Compliance Formula Changes</h3>
-        <p>In <code>scrAdminDash.OnVisible</code>, add this field to each person row created in <code>colCompliance</code>.</p>
+        <h3>Patch Person Writes (already live &mdash; shown for reference)</h3>
+        <p>Checked against your live export: <code>btnSavePerson.OnSelect</code>, <code>btnAddCourse.OnSelect</code>, and <code>btnSaveCourse.OnSelect</code> already have <code>RemoteWorker</code>/<code>ExcludeRemoteWorkers</code> wired in correctly. Nothing to change on these three &mdash; they're included below in full only so this guide has the real, current formula on record instead of a fragment.</p>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>colCompliance row field</span>
-            <button data-copy="compliance-remote-row-field" type="button">Copy</button>
+            <span>btnSavePerson.OnSelect (full formula, live and correct)</span>
+            <button data-copy="save-person-full-onselect" type="button">Copy</button>
           </div>
-<pre id="compliance-remote-row-field">RemoteWorker: Coalesce(P.RemoteWorker, false),</pre>
+<pre id="save-person-full-onselect">=Patch('TT Personnel', varEditPerson,
+    {
+        Title:            Trim(txtEditPersonName.Text),
+        StaffType:        {Value: drpEditPersonType.Selected.Value},
+        LineManagerEmail: Lower(Trim(txtEditPersonManager.Text)),
+        RemoteWorker: chkEditRemoteWorker.Checked,
+        IsAdmin:          tglEditAdmin.Checked,
+        HasM365Access:    tglEditM365.Checked,
+        LastUpdatedByEmail: varMyEmail,
+        LastUpdatedOn: Now(),
+        LastStatus: "Updated"
+    }
+);
+Patch('TT AuditLog', Defaults('TT AuditLog'),
+    {
+        Title: Trim(txtEditPersonName.Text) &amp; " updated",
+        EntityType: "Person",
+        EntityID: Text(varEditPerson.ID),
+        PersonEmail: Lower(varEditPerson.Email),
+        CourseID: "",
+        EventType: "Person updated",
+        EventDescription: Trim(txtEditPersonName.Text) &amp; " profile updated.",
+        ActorEmail: varMyEmail,
+        EventDateTime: Now(),
+        Notes: ""
+    }
+);
+Refresh('TT Personnel');
+Set(varEditPerson, Blank());
+Notify(Trim(txtEditPersonName.Text) &amp; " updated.", NotificationType.Success)</pre>
         </div>
-        <p>In <code>scrAdminDash.OnVisible</code>, replace the course requirement predicate inside <code>req: Filter(colCourses, ...)</code> with this version.</p>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>scrAdminDash.OnVisible req predicate</span>
-            <button data-copy="admin-req-remote-predicate" type="button">Copy</button>
+            <span>btnAddCourse.OnSelect (full formula, live and correct)</span>
+            <button data-copy="add-course-full-onselect" type="button">Copy</button>
           </div>
-<pre id="admin-req-remote-predicate">Coalesce(Status.Value, "Active") = "Active" &&
-CountIf(ApplicableTo, Value = P.StaffType.Value) > 0 &&
-!(Coalesce(P.RemoteWorker, false) && Coalesce(ExcludeRemoteWorkers, false))</pre>
+<pre id="add-course-full-onselect">=If(
+    IsBlank(Trim(txtNewCourse.Text)) || CountRows(Filter(cmbNewApplic.SelectedItems, !IsBlank(Value))) = 0 || IsBlank(drpNewProvider.Selected.Value) || IsBlank(Trim(txtNewCourseURL.Text)),
+    Notify("Course needs a name, staff type, provider and URL.",
+           NotificationType.Warning),
+    IfError(
+        With(
+            {
+                savedCourse: Patch('TT Courses', Defaults('TT Courses'),
+                    {
+                        Title:            Trim(txtNewCourse.Text),
+                        ApplicableTo:     ForAll(Filter(cmbNewApplic.SelectedItems, !IsBlank(Value)), {Value: Value}),
+                        ExcludeRemoteWorkers: chkNewExcludeRemote.Checked,
+                        RecurrenceMonths: drpNewRecur.Selected.Months,
+                        CourseHost:       {Value: drpNewProvider.Selected.Value},
+                        CourseURL:        Trim(txtNewCourseURL.Text),
+                        CourseDescription: Trim(txtNewCourseDesc.Text),
+                        Status:           {Value: "Active"},
+                        LastUpdatedByEmail: varMyEmail,
+                        LastUpdatedOn: Now(),
+                        LastStatus: "Created"
+                    }
+                )
+            },
+            Patch('TT AuditLog', Defaults('TT AuditLog'),
+                {
+                    Title: savedCourse.Title &amp; " added",
+                    EntityType: "Course",
+                    EntityID: Text(savedCourse.ID),
+                    PersonEmail: "",
+                    CourseID: Text(savedCourse.ID),
+                    EventType: "Course added",
+                    EventDescription: savedCourse.Title &amp; " added to the mandatory course list.",
+                    ActorEmail: varMyEmail,
+                    EventDateTime: Now(),
+                    Notes: ""
+                }
+            );
+            Notify("Course added.", NotificationType.Success);
+            Reset(txtNewCourse); Reset(cmbNewApplic); Reset(drpNewRecur); Reset(drpNewProvider); Reset(txtNewCourseURL); Reset(txtNewCourseDesc);
+            ClearCollect(colCourses, 'TT Courses');
+            true
+        ),
+        Notify("Course could not be added: " &amp; FirstError.Message, NotificationType.Error);
+        true
+    )
+)</pre>
         </div>
-        <p>In <code>galCompliance.OnSelect</code>, replace the course filter predicate with this version.</p>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>galCompliance.OnSelect course predicate</span>
-            <button data-copy="detail-remote-predicate" type="button">Copy</button>
+            <span>btnSaveCourse.OnSelect (full formula, live and correct)</span>
+            <button data-copy="save-course-full-onselect" type="button">Copy</button>
           </div>
-<pre id="detail-remote-predicate">Coalesce(Status.Value, "Active") = "Active" &&
-CountIf(ApplicableTo, Value = varDrillPerson.StaffType) > 0 &&
-!(Coalesce(varDrillPerson.RemoteWorker, false) && Coalesce(ExcludeRemoteWorkers, false))</pre>
-        </div>
-        <h3>My Training Course Filter</h3>
-        <p>In <code>scrMyTraining.OnVisible</code>, find the active-course filter that builds the current user's course list. Replace its predicate with this version. This keeps remote-excluded courses out of the normal user's own list.</p>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <span>scrMyTraining.OnVisible course predicate</span>
-            <button data-copy="my-training-remote-predicate" type="button">Copy</button>
-          </div>
-<pre id="my-training-remote-predicate">Coalesce(Status.Value, "Active") = "Active" &&
-CountIf(ApplicableTo, Value = varMe.StaffType.Value) > 0 &&
-!(Coalesce(varMe.RemoteWorker, false) && Coalesce(ExcludeRemoteWorkers, false))</pre>
+<pre id="save-course-full-onselect">=If(
+    IsBlank(txtEditCourse.Text) || CountRows(cmbEditApplic.SelectedItems) = 0 || IsBlank(drpEditProvider.Selected.Value) || IsBlank(Trim(txtEditCourseURL.Text)),
+    Notify("Course needs a name, staff type, provider and URL.", NotificationType.Warning),
+    Patch('TT Courses', varEditCourse,
+        {
+            Title:            Trim(txtEditCourse.Text),
+            ApplicableTo:     ForAll(cmbEditApplic.SelectedItems, {Value: Value}),
+            RecurrenceMonths: drpEditRecur.Selected.Months,
+            ExcludeRemoteWorkers: chkEditExcludeRemote.Checked,
+            CourseHost:       {Value: drpEditProvider.Selected.Value},
+            CourseURL:        Trim(txtEditCourseURL.Text),
+            CourseDescription: Trim(txtEditCourseDesc.Text),
+            LastUpdatedByEmail: varMyEmail,
+            LastUpdatedOn: Now(),
+            LastStatus: "Updated"
+        }
+    );
+    Patch('TT AuditLog', Defaults('TT AuditLog'),
+        {
+            Title: Trim(txtEditCourse.Text) &amp; " updated",
+            EntityType: "Course",
+            EntityID: Text(varEditCourse.ID),
+            PersonEmail: "",
+            CourseID: Text(varEditCourse.ID),
+            EventType: "Course updated",
+            EventDescription: Trim(txtEditCourse.Text) &amp; " course settings updated.",
+            ActorEmail: varMyEmail,
+            EventDateTime: Now(),
+            Notes: ""
+        }
+    );
+Notify("Course updated. Expiry dates recalculate automatically.",
+       NotificationType.Success);
+Refresh('TT Courses');
+ClearCollect(colCourses, 'TT Courses');
+Set(varEditCourse, Blank())
+)</pre>
         </div>
 
-        <h3>Team Member Course Filter</h3>
-        <p>In the <code>scrTeamMember</code> helper formula or <code>OnVisible</code> block, find the active-course filter that builds the viewed person's course list. Replace its predicate with this version. If your current variable name is different, keep the same structure but swap <code>varViewingPerson</code> for the row/person variable already used on that screen.</p>
+        <h3>Compliance Formula Changes (not yet live &mdash; still needs doing)</h3>
+        <p>Checked against your live export: this one is genuinely not done yet. Select <code>scrAdminDash</code>, delete everything currently in <code>OnVisible</code>'s <code>ClearCollect(colCompliance, ...)</code> statement, and paste this complete replacement. It's only this one statement inside <code>OnVisible</code>, not the whole property &mdash; the rest of <code>OnVisible</code> (theme setup, other <code>ClearCollect</code>s, <code>colRiskByType</code>, and whatever comes after it) is untouched and stays exactly as it is. Two changes from what you have now: a <code>RemoteWorker</code> field added to each person's row, and the exclusion clause added to <code>req</code>.</p>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>scrTeamMember viewed-person course predicate</span>
-            <button data-copy="team-member-remote-predicate" type="button">Copy</button>
+            <span>ClearCollect(colCompliance, ...) &mdash; full statement</span>
+            <button data-copy="compliance-clearcollect-full" type="button">Copy</button>
           </div>
-<pre id="team-member-remote-predicate">Coalesce(Status.Value, "Active") = "Active" &&
-CountIf(ApplicableTo, Value = varViewingPerson.StaffType.Value) > 0 &&
-!(Coalesce(varViewingPerson.RemoteWorker, false) && Coalesce(ExcludeRemoteWorkers, false))</pre>
+<pre id="compliance-clearcollect-full">ClearCollect(
+    colCompliance,
+    ForAll(
+        colAllPeople As P,
+        With(
+            {
+                req: Filter(
+                    colCourses,
+                    Coalesce(Status.Value, "Active") = "Active" &&
+                    CountIf(ApplicableTo, Value = P.StaffType.Value) > 0 &&
+                    !(Coalesce(P.RemoteWorker, false) && Coalesce(ExcludeRemoteWorkers, false))
+                )
+            },
+            With(
+                {
+                    okCount: CountRows(
+                        Filter(
+                            req As C,
+                            With(
+                                {
+                                    rec: LookUp(
+                                        colAllRecords,
+                                        Lower(PersonEmail) = Lower(P.Email) &&
+                                        CourseID = C.ID
+                                    )
+                                },
+                                !IsBlank(rec.DateCompleted) &&
+                                (
+                                    C.RecurrenceMonths = 0 ||
+                                    DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") >= Today()
+                                )
+                            )
+                        )
+                    )
+                },
+                {
+                    PersonID:      P.ID,
+                    Name:          P.Title,
+                    Email:         Lower(P.Email),
+                    StaffType:     P.StaffType.Value,
+                    LineManager:   P.LineManagerEmail,
+                    ManagerEdit:   Coalesce(P.ManagerCanEdit, false),
+                    RemoteWorker:  Coalesce(P.RemoteWorker, false),
+                    Required:      CountRows(req),
+                    InDate:        okCount,
+                    Outstanding:   CountRows(req) - okCount,
+                    MissingRecords: CountRows(
+                        Filter(
+                            req As C,
+                            IsBlank(
+                                LookUp(
+                                    colAllRecords,
+                                    Lower(PersonEmail) = Lower(P.Email) &&
+                                    CourseID = C.ID
+                                ).ID
+                            )
+                        )
+                    ),
+                    ExpiredItems: CountRows(
+                        Filter(
+                            req As C,
+                            With(
+                                {
+                                    rec: LookUp(
+                                        colAllRecords,
+                                        Lower(PersonEmail) = Lower(P.Email) &&
+                                        CourseID = C.ID
+                                    )
+                                },
+                                !IsBlank(rec.DateCompleted) &&
+                                C.RecurrenceMonths > 0 &&
+                                DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") < Today()
+                            )
+                        )
+                    ),
+                    ExpiringItems: CountRows(
+                        Filter(
+                            req As C,
+                            With(
+                                {
+                                    rec: LookUp(
+                                        colAllRecords,
+                                        Lower(PersonEmail) = Lower(P.Email) &&
+                                        CourseID = C.ID
+                                    )
+                                },
+                                !IsBlank(rec.DateCompleted) &&
+                                C.RecurrenceMonths > 0 &&
+                                DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") >= Today() &&
+                                DateAdd(rec.DateCompleted, C.RecurrenceMonths, "Months") <= DateAdd(Today(), 60, "Days")
+                            )
+                        )
+                    ),
+                    CompliancePct: If(
+                                       CountRows(req) = 0,
+                                       100,
+                                       Round(100 * okCount / Max(CountRows(req), 1), 0)
+                                   ),
+                    AttentionState: If(
+                                        CountRows(req) - okCount = 0,
+                                        "Clear",
+                                        okCount = 0,
+                                        "Critical",
+                                        "Needs attention"
+                                    )
+                }
+            )
+        )
+    )
+)</pre>
+        </div>
+        <p>Select <code>galCompliance</code>, delete everything currently in <code>OnSelect</code>, and paste this complete replacement. Only the <code>Filter(colCourses, ...)</code> predicate inside it changed &mdash; the timeline <code>ClearCollect</code> at the end is unchanged.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>galCompliance.OnSelect (full formula)</span>
+            <button data-copy="galcompliance-full-onselect" type="button">Copy</button>
+          </div>
+<pre id="galcompliance-full-onselect">=Set(varDrillPerson, ThisItem);
+ClearCollect(colPersonDetail,
+    ForAll(
+        Filter(colCourses,
+            Coalesce(Status.Value, "Active") = "Active" &&
+            CountIf(ApplicableTo, Value = varDrillPerson.StaffType) > 0 &&
+            !(Coalesce(varDrillPerson.RemoteWorker, false) && Coalesce(ExcludeRemoteWorkers, false))) As C,
+        With({rec: LookUp(colAllRecords,
+                      Lower(PersonEmail) = varDrillPerson.Email && CourseID = C.ID)},
+        {
+            CourseName: C.Title,
+            DateDone:   rec.DateCompleted,
+            UploadedBy: rec.UploadedByEmail,
+            ExpiresOn:  If(IsBlank(rec.DateCompleted)||C.RecurrenceMonths=0,Blank(),
+                           DateAdd(rec.DateCompleted,C.RecurrenceMonths,"Months")),
+            TrainingStatus:
+                If(IsBlank(rec.DateCompleted),"Not Started",
+                   C.RecurrenceMonths=0,"Complete",
+                   DateAdd(rec.DateCompleted,C.RecurrenceMonths,"Months")<Today(),"Expired",
+                   DateAdd(rec.DateCompleted,C.RecurrenceMonths,"Months")<=DateAdd(Today(),60,"Days"),"Expiring Soon",
+                   "In Date"),
+            RecordID: rec.ID
+        })
+    )
+);
+ClearCollect(
+    colPersonTimeline,
+    SortByColumns(
+        Filter(colAuditLog, Lower(PersonEmail) = varDrillPerson.Email),
+        "EventDateTime",
+        SortOrder.Descending
+    )
+)</pre>
+        </div>
+
+        <h3>My Training Course Filter (not yet live)</h3>
+        <p>This one exception to "paste the whole property": <code>scrMyTraining.OnVisible</code> is a very long formula (theme setup, <code>colMyRecords</code>, <code>colMyTraining</code>, <code>colMyArchive</code>, and more beyond that) and reproducing all of it here risks a transcription error somewhere that has nothing to do with this change. Instead, find this exact <code>Filter(colCourses, ...)</code> block inside it &mdash; it only appears once, building <code>colMyTraining</code> &mdash; and replace just that block.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>scrMyTraining.OnVisible &mdash; Filter(colCourses, ...) block</span>
+            <button data-copy="my-training-remote-predicate" type="button">Copy</button>
+          </div>
+<pre id="my-training-remote-predicate">Filter(colCourses,
+    Status.Value = "Active" &&
+    CountIf(ApplicableTo, Value = varMe.StaffType.Value) > 0 &&
+    !(Coalesce(varMe.RemoteWorker, false) && Coalesce(ExcludeRemoteWorkers, false))
+) As C,</pre>
+        </div>
+
+        <h3>Team Member Course Filter (not yet live &mdash; three spots, not one)</h3>
+        <div class="callout warn">
+          <strong>This needs more than the guide previously said.</strong> Checked against your live export: the same course-filter predicate appears <strong>three separate times</strong> on <code>scrTeamMember</code> &mdash; twice inside <code>galMyChain.Items</code> (once for <code>PersonRequired</code>, once for <code>PersonInDate</code>) and once more inside <code>galMyChain.OnSelect</code> (building <code>colViewTraining</code>). All three need the same exclusion clause, or the count badges on the team list and the drilldown course list will disagree with each other.
+        </div>
+        <p>Select <code>galMyChain</code>, delete everything currently in <code>Items</code>, and paste this complete replacement. It fixes both of the first two occurrences at once.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>galMyChain.Items (full formula)</span>
+            <button data-copy="galmychain-full-items" type="button">Copy</button>
+          </div>
+<pre id="galmychain-full-items">=Filter(
+    AddColumns(
+        colMyChain As P,
+        PersonRequired,
+        CountRows(
+            Filter(colCourses,
+                Status.Value = "Active" &&
+                CountIf(ApplicableTo, Value = P.StaffType) > 0 &&
+                !(Coalesce(P.RemoteWorker, false) && Coalesce(ExcludeRemoteWorkers, false)))
+        ),
+        PersonInDate,
+        CountRows(
+            Filter(
+                Filter(colCourses,
+                    Status.Value = "Active" &&
+                    CountIf(ApplicableTo, Value = P.StaffType) > 0 &&
+                    !(Coalesce(P.RemoteWorker, false) && Coalesce(ExcludeRemoteWorkers, false))) As C,
+                With({rec: LookUp(colAllRecords,
+                        Lower(PersonEmail) = P.Email &&
+                        CourseID = C.ID)},
+                    !IsBlank(rec.DateCompleted) &&
+                    (C.RecurrenceMonths = 0 ||
+                     DateAdd(rec.DateCompleted, C.RecurrenceMonths,
+                             "Months") >= Today())
+                )
+            )
+        )
+    ) As R,
+    R.ChainLevel = 1 ||
+    (R.ChainLevel = 2 &&
+     LookUp(colMyChain, Lower(Email) = Lower(R.ManagerEmail), IsExpanded) = true) ||
+    (R.ChainLevel = 3 &&
+     LookUp(colMyChain, Lower(Email) = Lower(R.ManagerEmail), IsExpanded) = true)
+)</pre>
+        </div>
+        <p>Select <code>galMyChain</code> again, delete everything currently in <code>OnSelect</code>, and paste this complete replacement. It fixes the third occurrence, inside <code>colViewTraining</code>.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>galMyChain.OnSelect (full formula)</span>
+            <button data-copy="galmychain-full-onselect" type="button">Copy</button>
+          </div>
+<pre id="galmychain-full-onselect">=Set(varViewingPerson, LookUp('TT Personnel', Lower(Email) = Lower(ThisItem.Email)));
+Set(varViewingForSelf, false);
+ClearCollect(
+    colViewRecords,
+    Filter(colAllRecords, Lower(PersonEmail) = Lower(ThisItem.Email))
+);
+ClearCollect(
+    colViewTraining,
+    ForAll(
+        Filter(
+            colCourses,
+            Status.Value = "Active" &&
+            CountIf(ApplicableTo, Value = ThisItem.StaffType) > 0 &&
+            !(Coalesce(ThisItem.RemoteWorker, false) && Coalesce(ExcludeRemoteWorkers, false))
+        ) As C,
+        With(
+            {rec: LookUp(colViewRecords, CourseID = C.ID)},
+            {
+                CourseID:    C.ID,
+                CourseName:  C.Title,
+                CourseURL:   C.CourseURL,
+                CourseHost:  C.CourseHost,
+                CourseDescription: C.CourseDescription,
+                RecurMonths: C.RecurrenceMonths,
+                RecurText:   Switch(C.RecurrenceMonths,
+                                 0,  "One-off",
+                                 12, "Every year",
+                                 24, "Every 2 years",
+                                 "Every " &amp; C.RecurrenceMonths &amp; " months"),
+                RecordID:    rec.ID,
+                DateDone:    rec.DateCompleted,
+                UploadedBy:  rec.UploadedByEmail,
+                ExpiresOn:   If(IsBlank(rec.DateCompleted) || C.RecurrenceMonths = 0,
+                                 Blank(),
+                                 DateAdd(rec.DateCompleted,
+                                         C.RecurrenceMonths, "Months")),
+                TrainingStatus:
+                    If(IsBlank(rec.DateCompleted), "Not Started",
+                       C.RecurrenceMonths = 0, "Complete",
+                       DateAdd(rec.DateCompleted, C.RecurrenceMonths,
+                               "Months") < Today(), "Expired",
+                       DateAdd(rec.DateCompleted, C.RecurrenceMonths,
+                               "Months") <= DateAdd(Today(), 60,
+                               "Days"), "Expiring Soon",
+                       "In Date"),
+                CanEdit: ThisItem.ManagerCanEdit
+            }
+        )
+    )
+);
+Navigate(scrMyTraining, ScreenTransition.Cover)</pre>
         </div>
       </section>
 
