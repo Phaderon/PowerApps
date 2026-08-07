@@ -976,13 +976,92 @@ Set(varConfirmArchive, 0)</pre>
         </table>
 
         <h3>Patch Person Writes</h3>
-        <p>In <code>btnAddPerson.OnSelect</code>, add this field inside the <code>Patch('TT Personnel', ...)</code> record.</p>
+        <div class="callout warn">
+          <strong>Do not paste just the one field.</strong> An earlier version of this section only gave the single <code>RemoteWorker: ...</code> line to drop into the existing Patch record by hand, and in practice that's exactly how it ends up pasted in the wrong place with no error until it silently doesn't do anything. Delete the entire <code>btnAddPerson.OnSelect</code> formula and paste the complete version below instead.
+        </div>
+        <p>Select <code>btnAddPerson</code> on <code>scrAdminManage</code>, delete everything currently in <code>OnSelect</code>, and paste this complete formula in full. The only change from what was there before is <code>RemoteWorker: chkNewRemoteWorker.Default,</code> inserted into the new-person <code>Patch('TT Personnel', ...)</code> record &mdash; everything else (reactivation branch, audit log writes, notify/reset calls) is unchanged.</p>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>btnAddPerson Patch field</span>
-            <button data-copy="add-person-remote-field" type="button">Copy</button>
+            <span>btnAddPerson.OnSelect (full formula)</span>
+            <button data-copy="add-person-full-onselect" type="button">Copy</button>
           </div>
-<pre id="add-person-remote-field">RemoteWorker: chkNewRemoteWorker.Default,</pre>
+<pre id="add-person-full-onselect">=With(
+    {
+        newEmail: Lower(If(!IsBlank(cmbNewPerson.Selected.Mail),
+                           cmbNewPerson.Selected.Mail, Trim(txtManualEmail.Text))),
+        newName:  If(!IsBlank(cmbNewPerson.Selected.DisplayName),
+                     cmbNewPerson.Selected.DisplayName, Trim(txtManualName.Text)),
+        newType:  drpNewType.Selected.Value,
+        newHasM365: tglHasM365.Checked,
+        newManager: Lower(Trim(txtNewManager.Text))
+    },
+    If(
+        IsBlank(newEmail) || IsBlank(newName),
+        Notify("Email and name are required.", NotificationType.Warning),
+
+        !IsBlank(LookUp('TT Personnel', Email = newEmail)),
+        With(
+            {
+                savedPerson: Patch('TT Personnel',
+                    LookUp('TT Personnel', Email = newEmail),
+                    {
+                        Active: true,
+                        LastUpdatedByEmail: varMyEmail,
+                        LastUpdatedOn: Now(),
+                        LastStatus: "Reactivated"
+                    }
+                )
+            },
+            Patch('TT AuditLog', Defaults('TT AuditLog'),
+                {
+                    Title: newName &amp; " reactivated",
+                    EntityType: "Person",
+                    EntityID: Text(savedPerson.ID),
+                    PersonEmail: newEmail,
+                    CourseID: "",
+                    EventType: "Person reactivated",
+                    EventDescription: newName &amp; " reactivated in Training Tracker.",
+                    ActorEmail: varMyEmail,
+                    EventDateTime: Now(),
+                    Notes: ""
+                }
+            )
+        );
+        Notify("Already in system - reactivated.", NotificationType.Warning),
+
+        With(
+            {
+                savedPerson: Patch('TT Personnel', Defaults('TT Personnel'),
+                    {Title:newName, Email:newEmail, StaffType:{Value:newType},
+                     IsAdmin:tglNewAdmin.Checked, Active:true,
+                     HasM365Access:newHasM365, LineManagerEmail:newManager,
+                     RemoteWorker: chkNewRemoteWorker.Default,
+                     ManagerCanEdit:false,
+                     LastUpdatedByEmail: varMyEmail,
+                     LastUpdatedOn: Now(),
+                     LastStatus: "Created"}
+                )
+            },
+            Patch('TT AuditLog', Defaults('TT AuditLog'),
+                {
+                    Title: newName &amp; " added",
+                    EntityType: "Person",
+                    EntityID: Text(savedPerson.ID),
+                    PersonEmail: newEmail,
+                    CourseID: "",
+                    EventType: "Person added",
+                    EventDescription: newName &amp; " added to Training Tracker.",
+                    ActorEmail: varMyEmail,
+                    EventDateTime: Now(),
+                    Notes: ""
+                }
+            )
+        );
+        Notify(newName &amp; " added.", NotificationType.Success);
+        Reset(cmbNewPerson); Reset(txtManualEmail); Reset(txtManualName);
+        Reset(drpNewType); Reset(tglNewAdmin); Reset(tglHasM365); Reset(txtNewManager)
+    )
+)</pre>
         </div>
         <p>In <code>btnSavePerson.OnSelect</code>, add this field inside the edit-person patch record.</p>
         <div class="code-card">
