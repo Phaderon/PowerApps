@@ -958,6 +958,9 @@ Set(varConfirmArchive, 0)</pre>
 
         <h3>Add Person Checkboxes</h3>
         <p>Add two modern checkboxes on <code>scrAdminManage</code>.</p>
+        <div class="callout warn">
+          <strong>Two different property names for two different things &mdash; confirmed live, not a guess.</strong> This control's own properties panel only lists <code>Default</code> (used below to set the checkbox's initial state), with no <code>Checked</code> option anywhere in it. But when <em>reading</em> the checkbox's current value back out in another formula (a Patch record, for example), only <code>.Checked</code> resolves &mdash; <code>.Default</code> throws <code>Found type 'Error'</code> there, even though it's the only settable option shown in the panel. Use <code>Default</code> in the table below to set it; use <code>.Checked</code> everywhere else you read it.
+        </div>
         <table>
           <thead><tr><th>Control</th><th>Visible</th><th>Default</th><th>Label</th><th>Suggested position</th></tr></thead>
           <tbody>
@@ -979,7 +982,7 @@ Set(varConfirmArchive, 0)</pre>
         <div class="callout warn">
           <strong>Do not paste just the one field.</strong> An earlier version of this section only gave the single <code>RemoteWorker: ...</code> line to drop into the existing Patch record by hand, and in practice that's exactly how it ends up pasted in the wrong place with no error until it silently doesn't do anything. Delete the entire <code>btnAddPerson.OnSelect</code> formula and paste the complete version below instead.
         </div>
-        <p>Select <code>btnAddPerson</code> on <code>scrAdminManage</code>, delete everything currently in <code>OnSelect</code>, and paste this complete formula in full. The only change from what was there before is <code>RemoteWorker: chkNewRemoteWorker.Default,</code> inserted into the new-person <code>Patch('TT Personnel', ...)</code> record &mdash; everything else (reactivation branch, audit log writes, notify/reset calls) is unchanged.</p>
+        <p>Select <code>btnAddPerson</code> on <code>scrAdminManage</code>, delete everything currently in <code>OnSelect</code>, and paste this complete formula in full. The only change from what was there before is <code>RemoteWorker: chkNewRemoteWorker.Checked,</code> inserted into the new-person <code>Patch('TT Personnel', ...)</code> record &mdash; everything else (reactivation branch, audit log writes, notify/reset calls) is unchanged.</p>
         <div class="code-card">
           <div class="code-toolbar">
             <span>btnAddPerson.OnSelect (full formula)</span>
@@ -1035,7 +1038,7 @@ Set(varConfirmArchive, 0)</pre>
                     {Title:newName, Email:newEmail, StaffType:{Value:newType},
                      IsAdmin:tglNewAdmin.Checked, Active:true,
                      HasM365Access:newHasM365, LineManagerEmail:newManager,
-                     RemoteWorker: chkNewRemoteWorker.Default,
+                     RemoteWorker: chkNewRemoteWorker.Checked,
                      ManagerCanEdit:false,
                      LastUpdatedByEmail: varMyEmail,
                      LastUpdatedOn: Now(),
@@ -1069,7 +1072,7 @@ Set(varConfirmArchive, 0)</pre>
             <span>btnSavePerson Patch field</span>
             <button data-copy="save-person-remote-field" type="button">Copy</button>
           </div>
-<pre id="save-person-remote-field">RemoteWorker: chkEditRemoteWorker.Default,</pre>
+<pre id="save-person-remote-field">RemoteWorker: chkEditRemoteWorker.Checked,</pre>
         </div>
 
         <h3>Patch Course Writes</h3>
@@ -1079,7 +1082,7 @@ Set(varConfirmArchive, 0)</pre>
             <span>btnAddCourse Patch field</span>
             <button data-copy="add-course-remote-field" type="button">Copy</button>
           </div>
-<pre id="add-course-remote-field">ExcludeRemoteWorkers: chkNewExcludeRemote.Default,</pre>
+<pre id="add-course-remote-field">ExcludeRemoteWorkers: chkNewExcludeRemote.Checked,</pre>
         </div>
         <p>In <code>btnSaveCourse.OnSelect</code>, add this field inside the edit-course patch record.</p>
         <div class="code-card">
@@ -1087,7 +1090,7 @@ Set(varConfirmArchive, 0)</pre>
             <span>btnSaveCourse Patch field</span>
             <button data-copy="save-course-remote-field" type="button">Copy</button>
           </div>
-<pre id="save-course-remote-field">ExcludeRemoteWorkers: chkEditExcludeRemote.Default,</pre>
+<pre id="save-course-remote-field">ExcludeRemoteWorkers: chkEditExcludeRemote.Checked,</pre>
         </div>
 
         <h3>Compliance Formula Changes</h3>
