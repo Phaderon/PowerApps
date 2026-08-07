@@ -959,7 +959,7 @@ Set(varConfirmArchive, 0)</pre>
         <h3>Add Person Checkboxes</h3>
         <p>Add two modern checkboxes on <code>scrAdminManage</code>.</p>
         <table>
-          <thead><tr><th>Control</th><th>Visible</th><th>Checked</th><th>Label</th><th>Suggested position</th></tr></thead>
+          <thead><tr><th>Control</th><th>Visible</th><th>Default</th><th>Label</th><th>Suggested position</th></tr></thead>
           <tbody>
             <tr><td><code>chkNewRemoteWorker</code></td><td><code>varTab = "People" && IsBlank(varEditPerson)</code></td><td><code>false</code></td><td><code>"Remote worker"</code></td><td><code>X 430 / Y 404 / W 190 / H 32</code></td></tr>
             <tr><td><code>chkEditRemoteWorker</code></td><td><code>varTab = "People" && !IsBlank(varEditPerson)</code></td><td><code>Coalesce(varEditPerson.RemoteWorker, false)</code></td><td><code>"Remote worker"</code></td><td><code>X 430 / Y 308 / W 190 / H 32</code></td></tr>
@@ -968,7 +968,7 @@ Set(varConfirmArchive, 0)</pre>
 
         <h3>Add Course Checkboxes</h3>
         <table>
-          <thead><tr><th>Control</th><th>Visible</th><th>Checked</th><th>Label</th><th>Suggested position</th></tr></thead>
+          <thead><tr><th>Control</th><th>Visible</th><th>Default</th><th>Label</th><th>Suggested position</th></tr></thead>
           <tbody>
             <tr><td><code>chkNewExcludeRemote</code></td><td><code>varTab = "Courses" && IsBlank(varEditCourse)</code></td><td><code>false</code></td><td><code>"Exclude remote workers"</code></td><td><code>X 32 / Y 416 / W 240 / H 24</code></td></tr>
             <tr><td><code>chkEditExcludeRemote</code></td><td><code>varTab = "Courses" && !IsBlank(varEditCourse)</code></td><td><code>Coalesce(varEditCourse.ExcludeRemoteWorkers, false)</code></td><td><code>"Exclude remote workers"</code></td><td><code>X 32 / Y 416 / W 240 / H 24</code></td></tr>
@@ -982,7 +982,7 @@ Set(varConfirmArchive, 0)</pre>
             <span>btnAddPerson Patch field</span>
             <button data-copy="add-person-remote-field" type="button">Copy</button>
           </div>
-<pre id="add-person-remote-field">RemoteWorker: chkNewRemoteWorker.Checked,</pre>
+<pre id="add-person-remote-field">RemoteWorker: chkNewRemoteWorker.Default,</pre>
         </div>
         <p>In <code>btnSavePerson.OnSelect</code>, add this field inside the edit-person patch record.</p>
         <div class="code-card">
@@ -990,7 +990,7 @@ Set(varConfirmArchive, 0)</pre>
             <span>btnSavePerson Patch field</span>
             <button data-copy="save-person-remote-field" type="button">Copy</button>
           </div>
-<pre id="save-person-remote-field">RemoteWorker: chkEditRemoteWorker.Checked,</pre>
+<pre id="save-person-remote-field">RemoteWorker: chkEditRemoteWorker.Default,</pre>
         </div>
 
         <h3>Patch Course Writes</h3>
@@ -1000,7 +1000,7 @@ Set(varConfirmArchive, 0)</pre>
             <span>btnAddCourse Patch field</span>
             <button data-copy="add-course-remote-field" type="button">Copy</button>
           </div>
-<pre id="add-course-remote-field">ExcludeRemoteWorkers: chkNewExcludeRemote.Checked,</pre>
+<pre id="add-course-remote-field">ExcludeRemoteWorkers: chkNewExcludeRemote.Default,</pre>
         </div>
         <p>In <code>btnSaveCourse.OnSelect</code>, add this field inside the edit-course patch record.</p>
         <div class="code-card">
@@ -1008,7 +1008,7 @@ Set(varConfirmArchive, 0)</pre>
             <span>btnSaveCourse Patch field</span>
             <button data-copy="save-course-remote-field" type="button">Copy</button>
           </div>
-<pre id="save-course-remote-field">ExcludeRemoteWorkers: chkEditExcludeRemote.Checked,</pre>
+<pre id="save-course-remote-field">ExcludeRemoteWorkers: chkEditExcludeRemote.Default,</pre>
         </div>
 
         <h3>Compliance Formula Changes</h3>
