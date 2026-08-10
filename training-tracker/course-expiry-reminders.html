@@ -231,6 +231,31 @@
       color: var(--muted);
       font-size: .92rem;
     }
+    .placement {
+      border: 1px solid #cfe7db;
+      border-left: 5px solid var(--primary);
+      background: #f1faf5;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin: 12px 0 16px;
+    }
+    .placement strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--primary);
+    }
+    .placement code {
+      background: #ffffff;
+      border-color: #cfe7db;
+    }
+    .path {
+      font-family: var(--mono);
+      font-size: .9rem;
+      color: #1d3b32;
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-bottom: 2px;
+    }
     .back-link { display: inline-block; margin-top: 24px; font-weight: 600; }
     .small { color: var(--muted); font-size: .92rem; }
     .toast {
@@ -505,6 +530,10 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       </div>
 
       <h3>4.1 First Actions: Safety Variables</h3>
+      <div class="placement">
+        <strong>Where these actions go</strong>
+        <div class="path">Top level, directly underneath Recurrence.</div>
+      </div>
       <p>Add these actions immediately after the recurrence trigger, in this order.</p>
       <table>
         <thead><tr><th>Action</th><th>Name</th><th>Type</th><th>Value</th></tr></thead>
@@ -519,6 +548,10 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <p class="small">Example app base: <code>https://apps.powerapps.com/play/YOUR-APP-ID?tenantId=YOUR-TENANT-ID</code>. Your reminder link will append <code>&amp;target=course&amp;courseId=...</code>.</p>
 
       <h3>4.2 Pull The Data</h3>
+      <div class="placement">
+        <strong>Where these actions go</strong>
+        <div class="path">Top level, directly underneath AppDeepLinkBase.</div>
+      </div>
       <p>Add these SharePoint <strong>Get items</strong> actions. Use the same SharePoint connection account that has permission to the locked reminder log.</p>
       <table>
         <thead><tr><th>Action name</th><th>List</th><th>Filter Query</th></tr></thead>
@@ -530,6 +563,10 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       </table>
 
       <h3>4.3 Loop People And Applicable Courses</h3>
+      <div class="placement">
+        <strong>Where these actions go</strong>
+        <div class="path">Apply to each Person sits at top level. Apply to each Course sits inside Apply to each Person.</div>
+      </div>
       <ol class="step-list">
         <li>Add <strong>Apply to each</strong> over <strong>value</strong> from <code>Get Active People</code>. Rename it <code>Apply to each Person</code>.</li>
         <li>Inside it, add another <strong>Apply to each</strong>. Use this expression for its input. Rename it <code>Apply to each Course</code>.</li>
@@ -553,6 +590,10 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       </div>
 
       <h3>4.4 Find The Matching Training Record</h3>
+      <div class="placement">
+        <strong>Where these actions go</strong>
+        <div class="path">Apply to each Person &gt; Apply to each Course</div>
+      </div>
       <p>Inside the course loop, add <strong>Filter array</strong>. Use <strong>value</strong> from <code>Get Training Records</code> as the source. Use advanced mode and paste this.</p>
       <div class="code-card">
         <div class="code-title">Power Automate expression - Filter array advanced mode <button data-copy="record-filter-expression">Copy</button></div>
@@ -581,6 +622,10 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       </ol>
 
       <h3>4.5 Compose Dates And Reminder Type</h3>
+      <div class="placement">
+        <strong>Where these actions go</strong>
+        <div class="path">Apply to each Person &gt; Apply to each Course &gt; Record exists &gt; True / If yes</div>
+      </div>
       <p>Stay inside <strong>Record exists - True / If yes</strong>. Add these Compose actions in order. Do not put them underneath the whole condition and do not put them in the False branch.</p>
       <table>
         <thead><tr><th>Compose name</th><th>Expression</th></tr></thead>
@@ -620,6 +665,10 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <p>Still inside <strong>Record exists - True / If yes</strong>, add a Condition named <code>Reminder due</code>. Left side: <code>outputs('Reminder_Type')</code>. Operator: is not equal to. Right side: leave blank. Everything below goes inside its <strong>True</strong> / <strong>If yes</strong> branch.</p>
 
       <h3>4.6 Build Link, Recipients, Subject, And Duplicate Key</h3>
+      <div class="placement">
+        <strong>Where these actions go</strong>
+        <div class="path">Apply to each Person &gt; Apply to each Course &gt; Record exists &gt; True / If yes &gt; Reminder due &gt; True / If yes</div>
+      </div>
       <p>Inside <code>Reminder due - True / If yes</code>, add these Compose actions.</p>
       <table>
         <thead><tr><th>Compose name</th><th>Expression</th></tr></thead>
@@ -633,7 +682,11 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       </table>
 
       <h3>4.7 Check The Locked Log Before Sending</h3>
-      <p>Add <strong>SharePoint - Get items</strong>, name it <code>Get Existing Reminder Log</code>, list <code>TT ReminderLog</code>. For Filter Query, use this expression.</p>
+      <div class="placement">
+        <strong>Where this action goes</strong>
+        <div class="path">Apply to each Person &gt; Apply to each Course &gt; Record exists &gt; True / If yes &gt; Reminder due &gt; True / If yes</div>
+      </div>
+      <p>Add <strong>SharePoint - Get items</strong> directly underneath <code>Email Subject</code>, still inside <code>Reminder due - True / If yes</code>. Name it <code>Get Existing Reminder Log</code>, list <code>TT ReminderLog</code>. For Filter Query, use this expression.</p>
       <div class="code-card">
         <div class="code-title">Power Automate expression - Reminder log filter <button data-copy="log-filter-expression">Copy</button></div>
 <pre id="log-filter-expression">concat("ReminderKey eq '", outputs('Reminder_Key'), "'")</pre>
@@ -641,6 +694,10 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <p>Add a Condition named <code>Not already sent</code>. Left side expression: <code>length(body('Get_Existing_Reminder_Log')?['value'])</code>. Operator: is equal to. Right side: <code>0</code>. Only send the email inside the <strong>True</strong> / <strong>If yes</strong> branch.</p>
 
       <h3>4.8 Send The Email</h3>
+      <div class="placement">
+        <strong>Where this action goes</strong>
+        <div class="path">Apply to each Person &gt; Apply to each Course &gt; Record exists &gt; True / If yes &gt; Reminder due &gt; True / If yes &gt; Not already sent &gt; True / If yes</div>
+      </div>
       <p>Inside <code>Not already sent - True / If yes</code>, add <strong>Office 365 Outlook - Send an email (V2)</strong>.</p>
       <table>
         <thead><tr><th>Field</th><th>Value</th></tr></thead>
@@ -679,6 +736,10 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <p class="small">Replace <code>PERSON NAME</code>, <code>COURSE NAME</code>, <code>EXPIRY DATE</code>, <code>REMINDER TYPE</code>, and <code>DEEP LINK</code> with dynamic content or Compose outputs. During TestMode, the body should still show the real person/course so you can verify exactly what would have been sent.</p>
 
       <h3>4.9 Write The Reminder Log</h3>
+      <div class="placement">
+        <strong>Where this action goes</strong>
+        <div class="path">Directly underneath Send an email (V2), inside Not already sent &gt; True / If yes.</div>
+      </div>
       <p>Immediately after the email action, still inside <code>Not already sent - True / If yes</code>, add <strong>SharePoint - Create item</strong> against <code>TT ReminderLog</code>.</p>
       <table>
         <thead><tr><th>Column</th><th>Value</th></tr></thead>
