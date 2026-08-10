@@ -880,8 +880,11 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       </div>
       <h4>Exact Body Placeholder Replacements</h4>
       <p>After pasting the HTML into the Body field, replace the placeholder words one by one. Click in the body text, delete the placeholder, then insert the dynamic content shown here.</p>
+      <div class="callout warn">
+        <strong>If Power Automate only shows <code>Current item</code>:</strong> do not use it. Click the <strong>Expression</strong> tab instead and paste the expression from the fallback column. This is normal inside nested loops; the designer often hides the useful fields and only exposes <code>Current item</code>.
+      </div>
       <table>
-        <thead><tr><th>Placeholder in HTML</th><th>Replace with this exact dynamic content</th><th>Expression fallback if the token is hard to find</th></tr></thead>
+        <thead><tr><th>Placeholder in HTML</th><th>Preferred token if it appears</th><th>Use this expression if you only see Current item</th></tr></thead>
         <tbody>
           <tr><td><code>PERSON NAME</code></td><td><code>Title</code> from <code>Apply to each Person</code></td><td><code>items('Apply_to_each_Person')?['Title']</code></td></tr>
           <tr><td><code>COURSE NAME</code></td><td><code>Title</code> from <code>Apply to each Course</code></td><td><code>items('Apply_to_each_Course')?['Title']</code></td></tr>
