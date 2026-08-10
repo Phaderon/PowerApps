@@ -520,6 +520,9 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
 
       <h2>4. Build The Flow Safely</h2>
       <p>Create a scheduled cloud flow called <code>TT - Course Expiry Reminders</code>. Set it to run daily, but set the first automatic start date far in the future while building, for example <code>2099-01-01 07:00</code>. This lets you use manual tests without any automatic scheduled run happening while the app is unfinished.</p>
+      <div class="callout danger">
+        <strong>Nesting limit fix:</strong> do not create a separate <code>Reminder due</code> condition. An earlier draft used that pattern, but Power Automate can reject the flow because <code>Send an email (V2)</code> becomes nested too deeply. If you already built it, move everything from <code>Reminder due - True / If yes</code> up into <code>Record exists - True / If yes</code>, then delete the empty <code>Reminder due</code> condition. The final condition is now <code>Ready to send</code>.
+      </div>
 
       <div class="sticky-flow" id="sticky-flow">
         <div class="sticky-flow-title">
@@ -545,19 +548,16 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
             │   ├── Today Short
             │   ├── Overdue Days
             │   ├── Reminder Type
-            │   └── Reminder due
+            │   ├── Deep Link
+            │   ├── Reminder Key
+            │   ├── Email To
+            │   ├── Email CC
+            │   ├── Email Subject
+            │   ├── Get Existing Reminder Log
+            │   └── Ready to send
             │       ├── True / If yes
-            │       │   ├── Deep Link
-            │       │   ├── Reminder Key
-            │       │   ├── Email To
-            │       │   ├── Email CC
-            │       │   ├── Email Subject
-            │       │   ├── Get Existing Reminder Log
-            │       │   └── Not already sent
-            │       │       ├── True / If yes
-            │       │       │   ├── Send an email (V2)
-            │       │       │   └── Create item in TT ReminderLog
-            │       │       └── False / If no - leave empty
+            │       │   ├── Send an email (V2)
+            │       │   └── Create item in TT ReminderLog
             │       └── False / If no - leave empty
             └── False / If no - leave empty</pre>
       </div>
@@ -584,19 +584,16 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
             │   ├── Today Short
             │   ├── Overdue Days
             │   ├── Reminder Type
-            │   └── Reminder due
+            │   ├── Deep Link
+            │   ├── Reminder Key
+            │   ├── Email To
+            │   ├── Email CC
+            │   ├── Email Subject
+            │   ├── Get Existing Reminder Log
+            │   └── Ready to send
             │       ├── True / If yes
-            │       │   ├── Deep Link
-            │       │   ├── Reminder Key
-            │       │   ├── Email To
-            │       │   ├── Email CC
-            │       │   ├── Email Subject
-            │       │   ├── Get Existing Reminder Log
-            │       │   └── Not already sent
-            │       │       ├── True / If yes
-            │       │       │   ├── Send an email (V2)
-            │       │       │   └── Create item in TT ReminderLog
-            │       │       └── False / If no - leave empty
+            │       │   ├── Send an email (V2)
+            │       │   └── Create item in TT ReminderLog
             │       └── False / If no - leave empty
             └── False / If no - leave empty</pre>
         <p class="flow-note">Rule of thumb: only the safety variables and the three Get items actions sit at the top level. Everything after that is inside Person, then Course, then the relevant True branch.</p>
@@ -751,22 +748,22 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
     )
 )</pre>
       </div>
-      <p>Still inside <strong>Record exists - True / If yes</strong>, add a Condition named <code>Reminder due</code>. Left side: <code>outputs('Reminder_Type')</code>. Operator: is not equal to. Right side: leave blank. Everything below goes inside its <strong>True</strong> / <strong>If yes</strong> branch.</p>
+      <div class="callout danger">
+        <strong>Do not add a separate <code>Reminder due</code> condition.</strong> Power Automate has a nesting limit, and that extra condition pushes <code>Send an email (V2)</code> too deep. The reminder-type check is handled later by the combined <code>Ready to send</code> condition.
+      </div>
 
       <h3 id="flow-step-4-6" class="flow-step">4.6 Build Link, Recipients, Subject, And Duplicate Key</h3>
       <div class="placement">
         <strong>Where these actions go</strong>
 <pre class="mini-tree">Record exists
 └── True / If yes
-    └── Reminder due
-        └── True / If yes
-            ├── Deep Link
-            ├── Reminder Key
-            ├── Email To
-            ├── Email CC
-            └── Email Subject</pre>
+    ├── Deep Link
+    ├── Reminder Key
+    ├── Email To
+    ├── Email CC
+    └── Email Subject</pre>
       </div>
-      <p>Inside <code>Reminder due - True / If yes</code>, add these Compose actions.</p>
+      <p>Stay inside <code>Record exists - True / If yes</code>. Add these Compose actions directly underneath <code>Reminder Type</code>.</p>
       <table>
         <thead><tr><th>Compose name</th><th>Expression</th></tr></thead>
         <tbody>
@@ -781,39 +778,56 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <h3 id="flow-step-4-7" class="flow-step">4.7 Check The Locked Log Before Sending</h3>
       <div class="placement">
         <strong>Where this action goes</strong>
-<pre class="mini-tree">Reminder due
+<pre class="mini-tree">Record exists
 └── True / If yes
+    ├── Reminder Type
     ├── Deep Link
     ├── Reminder Key
     ├── Email To
     ├── Email CC
     ├── Email Subject
     ├── Get Existing Reminder Log
-    └── Not already sent</pre>
+    └── Ready to send</pre>
       </div>
-      <p>Add <strong>SharePoint - Get items</strong> directly underneath <code>Email Subject</code>, still inside <code>Reminder due - True / If yes</code>. Name it <code>Get Existing Reminder Log</code>, list <code>TT ReminderLog</code>. For Filter Query, use this expression.</p>
+      <p>Add <strong>SharePoint - Get items</strong> directly underneath <code>Email Subject</code>, still inside <code>Record exists - True / If yes</code>. Name it <code>Get Existing Reminder Log</code>, list <code>TT ReminderLog</code>. For Filter Query, use this expression.</p>
       <div class="code-card">
         <div class="code-title">Power Automate expression - Reminder log filter <button data-copy="log-filter-expression">Copy</button></div>
 <pre id="log-filter-expression">concat("ReminderKey eq '", outputs('Reminder_Key'), "'")</pre>
       </div>
-      <p>Add a Condition named <code>Not already sent</code>. Left side expression: <code>length(body('Get_Existing_Reminder_Log')?['value'])</code>. Operator: is equal to. Right side: <code>0</code>. Only send the email inside the <strong>True</strong> / <strong>If yes</strong> branch.</p>
+      <p>Add one final Condition named <code>Ready to send</code>. This replaces the old two-condition pattern and keeps the flow under Power Automate's nesting limit.</p>
+      <table>
+        <thead><tr><th>Condition field</th><th>Set this</th></tr></thead>
+        <tbody>
+          <tr><td>Left side</td><td>Use the expression below.</td></tr>
+          <tr><td>Operator</td><td><strong>is equal to</strong></td></tr>
+          <tr><td>Right side</td><td><code>true</code></td></tr>
+        </tbody>
+      </table>
+      <div class="code-card">
+        <div class="code-title">Power Automate expression - Ready to send left side <button data-copy="ready-to-send-expression">Copy</button></div>
+<pre id="ready-to-send-expression">and(
+    not(equals(outputs('Reminder_Type'), '')),
+    equals(length(body('Get_Existing_Reminder_Log')?['value']), 0)
+)</pre>
+      </div>
+      <p>Only send the email inside <code>Ready to send - True / If yes</code>. Leave <code>Ready to send - False / If no</code> empty.</p>
 
       <h3 id="flow-step-4-8" class="flow-step">4.8 Send The Email</h3>
       <div class="placement">
         <strong>Where this action goes</strong>
-<pre class="mini-tree">Not already sent
+<pre class="mini-tree">Ready to send
 └── True / If yes
     └── Send an email (V2)</pre>
       </div>
-      <p>Inside <code>Not already sent - True / If yes</code>, add <strong>Office 365 Outlook - Send an email (V2)</strong>.</p>
+      <p>Inside <code>Ready to send - True / If yes</code>, add <strong>Office 365 Outlook - Send an email (V2)</strong>. The <code>Cc</code> field is not shown by default in some versions of the Power Automate designer; open <strong>Advanced parameters</strong> / <strong>Show advanced options</strong> and add <strong>Cc</strong>.</p>
       <table>
         <thead><tr><th>Field</th><th>Value</th></tr></thead>
         <tbody>
-          <tr><td>To</td><td>Output from <code>Email To</code>.</td></tr>
-          <tr><td>Cc</td><td>Output from <code>Email CC</code>.</td></tr>
-          <tr><td>Subject</td><td>Output from <code>Email Subject</code>.</td></tr>
-          <tr><td>From / Send as</td><td>Your shared mailbox if you have permission, otherwise leave as the flow account.</td></tr>
-          <tr><td>Body</td><td>Use the HTML template below. If the designer shows a code view button, paste it there; otherwise build the same content in the rich text editor and insert the dynamic tokens where shown.</td></tr>
+          <tr><td>To</td><td>Dynamic content: <code>Outputs</code> from the <code>Email To</code> Compose action. If using Expression instead, paste <code>outputs('Email_To')</code>.</td></tr>
+          <tr><td>Cc</td><td>Open <strong>Advanced parameters</strong>, add <strong>Cc</strong>, then use dynamic content: <code>Outputs</code> from <code>Email CC</code>. If using Expression instead, paste <code>outputs('Email_CC')</code>.</td></tr>
+          <tr><td>Subject</td><td>Dynamic content: <code>Outputs</code> from <code>Email Subject</code>. If using Expression instead, paste <code>outputs('Email_Subject')</code>.</td></tr>
+          <tr><td>From / Send as</td><td>Only use this if you have permission to send from the shared mailbox. If you are not sure, leave it blank and let the flow send as the connection account.</td></tr>
+          <tr><td>Body</td><td>Paste the HTML template below, then replace each placeholder using the exact mapping table under the template.</td></tr>
         </tbody>
       </table>
       <div class="code-card">
@@ -840,17 +854,32 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
   &lt;/div&gt;
 &lt;/div&gt;</pre>
       </div>
-      <p class="small">Replace <code>PERSON NAME</code>, <code>COURSE NAME</code>, <code>EXPIRY DATE</code>, <code>REMINDER TYPE</code>, and <code>DEEP LINK</code> with dynamic content or Compose outputs. During TestMode, the body should still show the real person/course so you can verify exactly what would have been sent.</p>
+      <h4>Exact Body Placeholder Replacements</h4>
+      <p>After pasting the HTML into the Body field, replace the placeholder words one by one. Click in the body text, delete the placeholder, then insert the dynamic content shown here.</p>
+      <table>
+        <thead><tr><th>Placeholder in HTML</th><th>Replace with this exact dynamic content</th><th>Expression fallback if the token is hard to find</th></tr></thead>
+        <tbody>
+          <tr><td><code>PERSON NAME</code></td><td><code>Title</code> from <code>Apply to each Person</code></td><td><code>items('Apply_to_each_Person')?['Title']</code></td></tr>
+          <tr><td><code>COURSE NAME</code></td><td><code>Title</code> from <code>Apply to each Course</code></td><td><code>items('Apply_to_each_Course')?['Title']</code></td></tr>
+          <tr><td><code>EXPIRY DATE</code></td><td><code>Outputs</code> from <code>Expiry Date Short</code></td><td><code>outputs('Expiry_Date_Short')</code></td></tr>
+          <tr><td><code>REMINDER TYPE</code></td><td><code>Outputs</code> from <code>Reminder Type</code></td><td><code>outputs('Reminder_Type')</code></td></tr>
+          <tr><td><code>DEEP LINK</code></td><td><code>Outputs</code> from <code>Deep Link</code></td><td><code>outputs('Deep_Link')</code></td></tr>
+        </tbody>
+      </table>
+      <div class="callout warn">
+        <strong>Important:</strong> replace <code>DEEP LINK</code> inside the button's <code>href</code> value, not as visible text. The button should still say <strong>Open this course</strong>; only the hidden link target changes.
+      </div>
+      <p class="small">During TestMode, the email still shows the real person/course details so you can verify exactly what would have been sent, but the actual To address remains your test inbox because <code>Email To</code> handles the safety routing.</p>
 
       <h3 id="flow-step-4-9" class="flow-step">4.9 Write The Reminder Log</h3>
       <div class="placement">
         <strong>Where this action goes</strong>
-<pre class="mini-tree">Not already sent
+<pre class="mini-tree">Ready to send
 └── True / If yes
     ├── Send an email (V2)
     └── Create item in TT ReminderLog</pre>
       </div>
-      <p>Immediately after the email action, still inside <code>Not already sent - True / If yes</code>, add <strong>SharePoint - Create item</strong> against <code>TT ReminderLog</code>.</p>
+      <p>Immediately after the email action, still inside <code>Ready to send - True / If yes</code>, add <strong>SharePoint - Create item</strong> against <code>TT ReminderLog</code>.</p>
       <table>
         <thead><tr><th>Column</th><th>Value</th></tr></thead>
         <tbody>
@@ -966,13 +995,13 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
     ├── Expiry Date Short
     ├── Today Short
     ├── Overdue Days
-    ├── Reminder Type
-    └── Reminder due`
+    └── Reminder Type`
       },
       'flow-step-4-6': {
         label: '4.6 Link and recipients',
-        tree: `Reminder due
+        tree: `Record exists
 └── True / If yes
+    ├── Reminder Type
     ├── Deep Link
     ├── Reminder Key
     ├── Email To
@@ -981,25 +1010,26 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       },
       'flow-step-4-7': {
         label: '4.7 Locked log check',
-        tree: `Reminder due
+        tree: `Record exists
 └── True / If yes
+    ├── Reminder Type
     ├── Deep Link
     ├── Reminder Key
     ├── Email To
     ├── Email CC
     ├── Email Subject
     ├── Get Existing Reminder Log (here)
-    └── Not already sent`
+    └── Ready to send`
       },
       'flow-step-4-8': {
         label: '4.8 Send email',
-        tree: `Not already sent
+        tree: `Ready to send
 └── True / If yes
     └── Send an email (V2) (here)`
       },
       'flow-step-4-9': {
         label: '4.9 Write reminder log',
-        tree: `Not already sent
+        tree: `Ready to send
 └── True / If yes
     ├── Send an email (V2)
     └── Create item in TT ReminderLog (here)`
