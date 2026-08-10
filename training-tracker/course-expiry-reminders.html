@@ -385,7 +385,24 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
     equals(item()?['CourseID'], items('Apply_to_each_Course')?['ID'])
 )</pre>
       </div>
-      <p>Add a Condition named <code>Record exists?</code>. Left side expression: <code>length(body('Filter_array'))</code>. Operator: is greater than. Right side: <code>0</code>. Everything below goes inside the <strong>If yes</strong> branch.</p>
+      <p>Now add a condition immediately underneath this <strong>Filter array</strong>. This condition stops the flow trying to calculate an expiry date when the person has no training record for that course yet.</p>
+      <ol class="step-list">
+        <li>Click the small <strong>+</strong> directly underneath the <strong>Filter array</strong> action.</li>
+        <li>Choose <strong>Add an action</strong>.</li>
+        <li>Search for <strong>Condition</strong>, then select the built-in <strong>Control - Condition</strong> action.</li>
+        <li>Open the condition's three-dot menu and rename it to <code>Record exists?</code>.</li>
+        <li>Click the left value box, then choose the <strong>Expression</strong> tab in the dynamic-content panel.</li>
+        <li>Paste this expression, then click <strong>Add</strong>.</li>
+      </ol>
+      <div class="code-card">
+        <div class="code-title">Power Automate expression - Record exists left side <button data-copy="record-exists-expression">Copy</button></div>
+<pre id="record-exists-expression">length(body('Filter_array'))</pre>
+      </div>
+      <ol class="step-list">
+        <li>Set the middle operator dropdown to <strong>is greater than</strong>.</li>
+        <li>Type <code>0</code> into the right value box.</li>
+        <li>Everything in the next section goes inside the <strong>True</strong> / <strong>If yes</strong> branch. Leave the <strong>False</strong> / <strong>If no</strong> branch empty.</li>
+      </ol>
 
       <h3>4.5 Compose Dates And Reminder Type</h3>
       <p>Inside <strong>Record exists? If yes</strong>, add these Compose actions in order.</p>
