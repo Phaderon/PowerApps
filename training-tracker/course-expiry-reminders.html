@@ -813,6 +813,30 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <p>Only send the email inside <code>Ready to send - True / If yes</code>. Leave <code>Ready to send - False / If no</code> empty.</p>
 
       <h3 id="flow-step-4-8" class="flow-step">4.8 Send The Email</h3>
+      <div class="callout danger">
+        <strong>Catch-up checkpoint if you built the earlier nested version:</strong>
+        <ol class="step-list">
+          <li>Open the <code>Reminder due</code> condition.</li>
+          <li>Move these actions from <code>Reminder due - True / If yes</code> up one level so they sit directly inside <code>Record exists - True / If yes</code>: <code>Deep Link</code>, <code>Reminder Key</code>, <code>Email To</code>, <code>Email CC</code>, <code>Email Subject</code>, <code>Get Existing Reminder Log</code>, and the old <code>Not already sent</code> condition.</li>
+          <li>Delete the now-empty <code>Reminder due</code> condition.</li>
+          <li>Rename <code>Not already sent</code> to <code>Ready to send</code>.</li>
+          <li>Open <code>Ready to send</code> and change the left side to the <code>Ready to send left side</code> expression from 4.7.</li>
+          <li>Set the operator to <strong>is equal to</strong> and the right side to <code>true</code>.</li>
+          <li>Only when that saves cleanly, continue with the email action below inside <code>Ready to send - True / If yes</code>.</li>
+        </ol>
+<pre class="mini-tree">Record exists
+└── True / If yes
+    ├── Reminder Type
+    ├── Deep Link
+    ├── Reminder Key
+    ├── Email To
+    ├── Email CC
+    ├── Email Subject
+    ├── Get Existing Reminder Log
+    └── Ready to send
+        └── True / If yes
+            └── Send an email (V2)</pre>
+      </div>
       <div class="placement">
         <strong>Where this action goes</strong>
 <pre class="mini-tree">Ready to send
@@ -867,7 +891,7 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
         </tbody>
       </table>
       <div class="callout warn">
-        <strong>Important:</strong> replace <code>DEEP LINK</code> inside the button's <code>href</code> value, not as visible text. The button should still say <strong>Open this course</strong>; only the hidden link target changes.
+        <strong>Important:</strong> replace <code>DEEP LINK</code> inside the button's <code>href</code> value with <code>Outputs</code> from the <code>Deep Link</code> Compose action. Do not use <code>AppDeepLinkBase</code>, and do not use the old long expression again here. The button should still say <strong>Open this course</strong>; only the hidden link target changes.
       </div>
       <p class="small">During TestMode, the email still shows the real person/course details so you can verify exactly what would have been sent, but the actual To address remains your test inbox because <code>Email To</code> handles the safety routing.</p>
 
