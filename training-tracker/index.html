@@ -296,7 +296,7 @@
         <a href="#stale-course-detail-fix">Stale Course Names</a>
         <a href="#admin-add-mode-buttons">Add Mode Buttons</a>
         <a href="#remote-worker-exclusions">Remote Worker Exclusions</a>
-        <a href="#course-expiry-reminders">Course Expiry Reminder Emails</a>
+        <a href="course-expiry-reminders.html">Course Expiry Reminder Emails</a>
         <a href="#snapshot-dashboard-build">Snapshot Dashboard</a>
         <a href="#certificate-privacy-upgrade">Certificate Privacy Upgrade (Optional)</a>
         <a href="certificate-library-migration.html">Certificate Library Migration</a>
@@ -307,8 +307,8 @@
 
     <main>
       <div class="topline">
-        <span class="pill">Current step: Remote Worker Exclusions</span>
-        <span class="pill">Updated 7 Aug 2026</span>
+        <span class="pill">Current step: Course Expiry Reminder Emails</span>
+        <span class="pill">Updated 10 Aug 2026</span>
         <span class="pill">Training Tracker only</span>
       </div>
       <h1>Training Tracker v3 Fix Guide</h1>
@@ -319,8 +319,8 @@
         <ul>
           <li class="done-item">✅ Done &mdash; Schema, app setup, and Fixes 1&ndash;8 (collapsed below, click to re-open if you need to re-check a step).</li>
           <li class="done-item">✅ Done &mdash; Add Mode Buttons build pass (collapsed below).</li>
-          <li class="next-item">▶ You are here &mdash; <a href="#remote-worker-exclusions">Remote Worker Exclusions</a>, rebuilt with complete verified formulas.</li>
-          <li>Then &mdash; <a href="#course-expiry-reminders">Course Expiry Reminder Emails</a> (spec'd, not built yet &mdash; has a <code>TestMode</code> safety switch so it can't email your 125 real people while data is still being populated).</li>
+          <li class="done-item">Done or nearly done &mdash; <a href="#remote-worker-exclusions">Remote Worker Exclusions</a>, rebuilt with complete verified formulas.</li>
+          <li class="next-item">Current focus &mdash; <a href="course-expiry-reminders.html">Course Expiry Reminder Emails</a>, rebuilt as a separate start-to-finish guide with locked reminder log, double safety switch, duplicate-send protection, rich email, and deep links.</li>
           <li>Then &mdash; <a href="#snapshot-dashboard-build">Snapshot Dashboard</a> (not started).</li>
           <li>Superseded, not part of the current build &mdash; <a href="#certificate-privacy-upgrade">Certificate Privacy Upgrade</a> below describes an earlier approach (collapsed). The certificate system that's actually live is a different, later design: <a href="certificate-library-migration.html"><strong>Certificate Library &amp; In-App Viewer &mdash; Full Guide</strong></a>.</li>
         </ul>
@@ -1584,6 +1584,9 @@ Navigate(scrMyTraining, ScreenTransition.Cover)</pre>
 
       <section id="course-expiry-reminders">
         <h2>Build Pass - Course Expiry Reminder Emails</h2>
+        <div class="callout danger">
+          <strong>Superseded by the new full guide.</strong> Do not build from this older inline sketch. It only covers a basic 30-day/expired-today reminder and does not include the locked <code>TT ReminderLog</code>, double safety switch, duplicate-send protection, rich HTML email, or deep link routing. Use the new page instead: <a href="course-expiry-reminders.html"><strong>Course Expiry Reminder Emails - Full Guide</strong></a>.
+        </div>
         <p>A scheduled flow that emails a person when a mandatory course is 30 days from expiring, and again when it has expired. Default for everyone, no opt-out &mdash; this is a compliance reminder, not a marketing email, and an opt-in toggle would just mean most people never turn it on.</p>
 
         <div class="callout danger">

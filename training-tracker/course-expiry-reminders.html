@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Training Tracker Course Expiry Reminders</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --paper: #ffffff;
+      --ink: #172033;
+      --muted: #637084;
+      --line: #d9e1ec;
+      --primary: #004e42;
+      --primary-soft: #e8f4ef;
+      --green: #1f7a4d;
+      --amber: #a86500;
+      --red: #a33a3a;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --shadow: 0 12px 32px rgba(20, 34, 56, .10);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+    }
+    a { color: var(--primary); }
+    .shell {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    main {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+    }
+    h1 { margin: 0 0 8px; font-size: 2rem; }
+    h2 { margin: 34px 0 10px; font-size: 1.35rem; border-top: 1px solid var(--line); padding-top: 22px; }
+    h2:first-of-type { border-top: 0; padding-top: 0; }
+    h3 { margin: 24px 0 8px; font-size: 1.05rem; }
+    h4 { margin: 18px 0 6px; font-size: .95rem; }
+    .lead { margin: 0 0 20px; color: var(--muted); font-size: 1.05rem; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: .8rem;
+      font-weight: 700;
+      margin: 0 8px 16px 0;
+    }
+    .callout {
+      border-left: 4px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 16px 0;
+    }
+    .warn { border-left-color: var(--amber); background: #fff7e8; }
+    .danger { border-left-color: var(--red); background: #fff0f0; }
+    .ok { border-left-color: var(--green); background: #edf8f2; }
+    code {
+      font-family: var(--mono);
+      background: #eef3f8;
+      border: 1px solid #dce5f0;
+      border-radius: 6px;
+      padding: 1px 5px;
+      font-size: .92em;
+    }
+    pre {
+      margin: 0;
+      overflow-x: auto;
+      background: #101827;
+      color: #f4f7fb;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: var(--mono);
+      font-size: .9rem;
+      line-height: 1.5;
+    }
+    .code-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 12px 0 18px;
+    }
+    .code-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: #eef3f8;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: 8px 14px;
+    }
+    .code-title button {
+      border: 1px solid var(--primary);
+      background: var(--primary);
+      color: #fff;
+      border-radius: 7px;
+      padding: 5px 9px;
+      cursor: pointer;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 18px;
+      font-size: .95rem;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #eef3f8; }
+    .step-list { padding-left: 22px; }
+    .step-list li { margin-bottom: 10px; }
+    .back-link { display: inline-block; margin-top: 24px; font-weight: 600; }
+    .small { color: var(--muted); font-size: .92rem; }
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 10px;
+      padding: 10px 14px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .18s ease, transform .18s ease;
+      pointer-events: none;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 860px) {
+      .shell { padding: 12px; }
+      main { padding: 18px; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <main>
+      <span class="pill">Training Tracker only</span>
+      <span class="pill">Reminder emails</span>
+      <span class="pill">Locked log safe</span>
+      <h1>Build Course Expiry Reminder Emails</h1>
+      <p class="lead">This replaces the earlier reminder sketch with a safer end-to-end build: locked reminder log, test-only routing by default, duplicate-send protection, escalation rules, rich email body, and a deep link that opens the exact course in Training Tracker.</p>
+
+      <div class="callout danger">
+        <strong>Safety rule:</strong> until both <code>TestMode</code> is <code>false</code> and <code>LiveEmailsEnabled</code> is <code>true</code>, every email goes to your test inbox. The guide deliberately uses two switches, a far-future schedule start, and a locked reminder log so a half-built flow cannot blast 120 staff by accident.
+      </div>
+
+      <h2>1. Business Rule</h2>
+      <p>Use a staged compliance cadence rather than one reminder. This is close to how LMS/compliance platforms usually handle renewals: early warning, final warning, overdue chase, then manager/admin escalation.</p>
+      <table>
+        <thead><tr><th>When</th><th>Send to</th><th>Reminder type</th></tr></thead>
+        <tbody>
+          <tr><td>30 days before expiry</td><td>Staff member</td><td><code>DUE_30</code></td></tr>
+          <tr><td>7 days before expiry</td><td>Staff member</td><td><code>DUE_7</code></td></tr>
+          <tr><td>Expiry day</td><td>Staff member</td><td><code>EXPIRED_TODAY</code></td></tr>
+          <tr><td>7, 14, 21, 28 days overdue</td><td>Staff member. Add line manager from 14 days overdue.</td><td><code>OVERDUE_WEEKLY</code></td></tr>
+          <tr><td>30 days overdue</td><td>Staff member, line manager, and admin/shared mailbox</td><td><code>OVERDUE_30</code></td></tr>
+          <tr><td>Every 7 days after 30 days overdue</td><td>Staff member, line manager, and admin/shared mailbox</td><td><code>OVERDUE_ESCALATED</code></td></tr>
+        </tbody>
+      </table>
+
+      <h2>2. Locked Log Design</h2>
+      <p>Create a new SharePoint list called <code>TT ReminderLog</code>. This list can be completely locked down to the few people who administer Training Tracker.</p>
+      <div class="callout ok">
+        <strong>Yes, a locked log can still work.</strong> A scheduled Power Automate flow runs using its configured SharePoint connection. Normal staff do not need access to <code>TT ReminderLog</code> because they never open, read, or write this list directly. The account used by the flow's SharePoint connection must have permission to create/read rows in <code>TT ReminderLog</code>. If the flow is built using your account, your account must be one of the permitted people.
+      </div>
+      <table>
+        <thead><tr><th>Column internal name</th><th>Type</th><th>Required?</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>Title</code></td><td>Single line text</td><td>Yes</td><td>Use the reminder key.</td></tr>
+          <tr><td><code>ReminderKey</code></td><td>Single line text</td><td>Yes</td><td>Set Enforce unique values to Yes if SharePoint allows it.</td></tr>
+          <tr><td><code>PersonEmail</code></td><td>Single line text</td><td>Yes</td><td>Lowercase staff email.</td></tr>
+          <tr><td><code>PersonName</code></td><td>Single line text</td><td>No</td><td>Display name at send time.</td></tr>
+          <tr><td><code>CourseID</code></td><td>Number</td><td>Yes</td><td><code>TT Courses.ID</code>.</td></tr>
+          <tr><td><code>CourseName</code></td><td>Single line text</td><td>Yes</td><td>Course title at send time.</td></tr>
+          <tr><td><code>TrainingRecordID</code></td><td>Number</td><td>No</td><td><code>TT TrainingRecords.ID</code>.</td></tr>
+          <tr><td><code>ExpiryDate</code></td><td>Date only</td><td>Yes</td><td>The date the course expires.</td></tr>
+          <tr><td><code>ReminderType</code></td><td>Choice or single line text</td><td>Yes</td><td>Use the values in section 1.</td></tr>
+          <tr><td><code>OverdueDays</code></td><td>Number</td><td>No</td><td>Zero before/on expiry, positive after expiry.</td></tr>
+          <tr><td><code>SentOn</code></td><td>Date and time</td><td>Yes</td><td>Use <code>utcNow()</code>.</td></tr>
+          <tr><td><code>SentTo</code></td><td>Single line text</td><td>Yes</td><td>The address actually used in the To field.</td></tr>
+          <tr><td><code>WouldHaveSentTo</code></td><td>Single line text</td><td>Yes</td><td>The real staff address, even in test mode.</td></tr>
+          <tr><td><code>CcTo</code></td><td>Single line text</td><td>No</td><td>Manager/admin escalation recipients actually used.</td></tr>
+          <tr><td><code>TestMode</code></td><td>Yes/No</td><td>Yes</td><td>True while testing.</td></tr>
+          <tr><td><code>LiveEmailsEnabled</code></td><td>Yes/No</td><td>Yes</td><td>Second safety switch.</td></tr>
+          <tr><td><code>FlowRunName</code></td><td>Single line text</td><td>No</td><td>Optional run identifier for troubleshooting.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>3. Add Deep Linking To The App</h2>
+      <p>The email button will pass <code>target=course</code>, <code>courseId</code>, <code>recordId</code>, and <code>personEmail</code>. The app must read those parameters and open the same course context that a normal gallery click would have opened.</p>
+
+      <h3>3.1 App.OnStart Addition</h3>
+      <p>Add this to the end of the existing <code>App.OnStart</code>. Formula bar paste: no leading equals sign.</p>
+      <div class="code-card">
+        <div class="code-title">Power Fx - App.OnStart addition <button data-copy="onstart-deeplink">Copy</button></div>
+<pre id="onstart-deeplink">Set(varDeepLinkTarget, Lower(Param("target")));
+Set(varDeepLinkCourseID, If(IsBlank(Param("courseId")), Blank(), Value(Param("courseId"))));
+Set(varDeepLinkRecordID, If(IsBlank(Param("recordId")), Blank(), Value(Param("recordId"))));
+Set(varDeepLinkPersonEmail, Lower(Param("personEmail")));
+Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(varDeepLinkCourseID))</pre>
+      </div>
+
+      <h3>3.2 App.StartScreen</h3>
+      <p>If your normal start screen is still <code>scrStart</code>, set <code>App.StartScreen</code> to this. It sends reminder links into the normal user training route; the timer below does the final course navigation.</p>
+      <div class="code-card">
+        <div class="code-title">Power Fx - App.StartScreen <button data-copy="startscreen-deeplink">Copy</button></div>
+<pre id="startscreen-deeplink">If(
+    Lower(Param("target")) = "course" &amp;&amp; !IsBlank(Param("courseId")),
+    scrMyTraining,
+    scrStart
+)</pre>
+      </div>
+
+      <h3>3.3 Add Hidden Timer To <code>scrMyTraining</code></h3>
+      <p>Insert a Timer control on <code>scrMyTraining</code>, rename it <code>tmrOpenReminderCourse</code>, and set these properties.</p>
+      <table>
+        <thead><tr><th>Property</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td><code>Duration</code></td><td><code>500</code></td></tr>
+          <tr><td><code>AutoStart</code></td><td><code>varPendingCourseDeepLink</code></td></tr>
+          <tr><td><code>Start</code></td><td><code>varPendingCourseDeepLink</code></td></tr>
+          <tr><td><code>Repeat</code></td><td><code>false</code></td></tr>
+          <tr><td><code>Visible</code></td><td><code>false</code></td></tr>
+        </tbody>
+      </table>
+      <p>Set <code>tmrOpenReminderCourse.OnTimerEnd</code> to this complete formula. It deliberately ignores <code>personEmail</code> unless the current user is an admin, so a normal user cannot forge a link to someone else's record.</p>
+      <div class="code-card">
+        <div class="code-title">Power Fx - tmrOpenReminderCourse.OnTimerEnd <button data-copy="timer-deeplink">Copy</button></div>
+<pre id="timer-deeplink">If(
+    varPendingCourseDeepLink,
+    Set(varPendingCourseDeepLink, false);
+    Refresh('TT Courses');
+    Refresh('TT TrainingRecords');
+    ClearCollect(colCourses, 'TT Courses');
+    ClearCollect(colAllRecords, 'TT TrainingRecords');
+    With(
+        {
+            targetEmail: If(
+                varIsAdmin &amp;&amp; !IsBlank(varDeepLinkPersonEmail),
+                varDeepLinkPersonEmail,
+                varMyEmail
+            ),
+            C: LookUp('TT Courses', ID = varDeepLinkCourseID)
+        },
+        If(
+            IsBlank(C.ID),
+            Notify("This reminder link could not find the course.", NotificationType.Error),
+            With(
+                {
+                    P: LookUp('TT Personnel', Lower(Email) = targetEmail),
+                    R: LookUp('TT TrainingRecords', Lower(PersonEmail) = targetEmail &amp;&amp; CourseID = C.ID)
+                },
+                If(
+                    IsBlank(R.ID),
+                    Notify("This reminder link could not find the training record.", NotificationType.Error),
+                    Set(varViewingForSelf, targetEmail = varMyEmail);
+                    Set(varViewingPerson, If(targetEmail = varMyEmail, Blank(), P));
+                    Set(
+                        varCourse,
+                        {
+                            CourseID: C.ID,
+                            CourseName: C.Title,
+                            CourseURL: C.CourseURL,
+                            CourseHost: C.CourseHost,
+                            CourseDescription: C.CourseDescription,
+                            RecurMonths: C.RecurrenceMonths,
+                            RecurText: Switch(
+                                C.RecurrenceMonths,
+                                0, "One-off",
+                                12, "Every year",
+                                24, "Every 2 years",
+                                "Every " &amp; C.RecurrenceMonths &amp; " months"
+                            ),
+                            RecordID: R.ID,
+                            DateDone: R.DateCompleted,
+                            UploadedBy: R.UploadedByEmail,
+                            ExpiresOn: If(
+                                IsBlank(R.DateCompleted) || C.RecurrenceMonths = 0,
+                                Blank(),
+                                DateAdd(R.DateCompleted, C.RecurrenceMonths, "Months")
+                            ),
+                            TrainingStatus: If(
+                                IsBlank(R.DateCompleted), "Not Started",
+                                C.RecurrenceMonths = 0, "Complete",
+                                DateAdd(R.DateCompleted, C.RecurrenceMonths, "Months") &lt; Today(), "Expired",
+                                DateAdd(R.DateCompleted, C.RecurrenceMonths, "Months") &lt;= DateAdd(Today(), 60, "Days"), "Expiring Soon",
+                                "In Date"
+                            )
+                        }
+                    );
+                    Set(varRecord, R);
+                    Navigate(scrCourseDetail, ScreenTransition.Cover)
+                )
+            )
+        )
+    )
+)</pre>
+      </div>
+
+      <h2>4. Build The Flow Safely</h2>
+      <p>Create a scheduled cloud flow called <code>TT - Course Expiry Reminders</code>. Set it to run daily, but set the first automatic start date far in the future while building, for example <code>2099-01-01 07:00</code>. This lets you use manual tests without any automatic scheduled run happening while the app is unfinished.</p>
+
+      <h3>4.1 First Actions: Safety Variables</h3>
+      <p>Add these actions immediately after the recurrence trigger, in this order.</p>
+      <table>
+        <thead><tr><th>Action</th><th>Name</th><th>Type</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Initialize variable</td><td><code>TestMode</code></td><td>Boolean</td><td><code>true</code></td></tr>
+          <tr><td>Initialize variable</td><td><code>LiveEmailsEnabled</code></td><td>Boolean</td><td><code>false</code></td></tr>
+          <tr><td>Initialize variable</td><td><code>TestModeRecipient</code></td><td>String</td><td>Your email address.</td></tr>
+          <tr><td>Initialize variable</td><td><code>AdminEscalationMailbox</code></td><td>String</td><td>Your shared/admin mailbox.</td></tr>
+          <tr><td>Initialize variable</td><td><code>AppDeepLinkBase</code></td><td>String</td><td>Your app play URL ending before the custom parameters.</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Example app base: <code>https://apps.powerapps.com/play/YOUR-APP-ID?tenantId=YOUR-TENANT-ID</code>. Your reminder link will append <code>&amp;target=course&amp;courseId=...</code>.</p>
+
+      <h3>4.2 Pull The Data</h3>
+      <p>Add these SharePoint <strong>Get items</strong> actions. Use the same SharePoint connection account that has permission to the locked reminder log.</p>
+      <table>
+        <thead><tr><th>Action name</th><th>List</th><th>Filter Query</th></tr></thead>
+        <tbody>
+          <tr><td><code>Get Active People</code></td><td><code>TT Personnel</code></td><td><code>Active eq true</code></td></tr>
+          <tr><td><code>Get Active Courses</code></td><td><code>TT Courses</code></td><td><code>Status/Value eq 'Active' and RecurrenceMonths gt 0</code></td></tr>
+          <tr><td><code>Get Training Records</code></td><td><code>TT TrainingRecords</code></td><td>Leave blank.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>4.3 Loop People And Applicable Courses</h3>
+      <ol class="step-list">
+        <li>Add <strong>Apply to each</strong> over <strong>value</strong> from <code>Get Active People</code>. Rename it <code>Apply to each Person</code>.</li>
+        <li>Inside it, add another <strong>Apply to each</strong>. Use this expression for its input. Rename it <code>Apply to each Course</code>.</li>
+      </ol>
+      <div class="code-card">
+        <div class="code-title">Power Automate expression - course loop input <button data-copy="course-loop-input">Copy</button></div>
+<pre id="course-loop-input">filter(
+    body('Get_Active_Courses')?['value'],
+    and(
+        equals(item()?['Status']?['Value'], 'Active'),
+        greater(item()?['RecurrenceMonths'], 0),
+        contains(string(item()?['ApplicableTo']), items('Apply_to_each_Person')?['StaffType']?['Value']),
+        not(
+            and(
+                equals(items('Apply_to_each_Person')?['RemoteWorker'], true),
+                equals(item()?['ExcludeRemoteWorkers'], true)
+            )
+        )
+    )
+)</pre>
+      </div>
+
+      <h3>4.4 Find The Matching Training Record</h3>
+      <p>Inside the course loop, add <strong>Filter array</strong>. Use <strong>value</strong> from <code>Get Training Records</code> as the source. Use advanced mode and paste this.</p>
+      <div class="code-card">
+        <div class="code-title">Power Automate expression - Filter array advanced mode <button data-copy="record-filter-expression">Copy</button></div>
+<pre id="record-filter-expression">@and(
+    equals(toLower(item()?['PersonEmail']), toLower(items('Apply_to_each_Person')?['Email'])),
+    equals(item()?['CourseID'], items('Apply_to_each_Course')?['ID'])
+)</pre>
+      </div>
+      <p>Add a Condition named <code>Record exists?</code>. Left side expression: <code>length(body('Filter_array'))</code>. Operator: is greater than. Right side: <code>0</code>. Everything below goes inside the <strong>If yes</strong> branch.</p>
+
+      <h3>4.5 Compose Dates And Reminder Type</h3>
+      <p>Inside <strong>Record exists? If yes</strong>, add these Compose actions in order.</p>
+      <table>
+        <thead><tr><th>Compose name</th><th>Expression</th></tr></thead>
+        <tbody>
+          <tr><td><code>Expiry Date</code></td><td><code>addToTime(first(body('Filter_array'))?['DateCompleted'], items('Apply_to_each_Course')?['RecurrenceMonths'], 'Month')</code></td></tr>
+          <tr><td><code>Expiry Date Short</code></td><td><code>formatDateTime(outputs('Expiry_Date'), 'yyyy-MM-dd')</code></td></tr>
+          <tr><td><code>Today Short</code></td><td><code>formatDateTime(utcNow(), 'yyyy-MM-dd')</code></td></tr>
+          <tr><td><code>Overdue Days</code></td><td><code>div(sub(ticks(formatDateTime(utcNow(), 'yyyy-MM-dd')), ticks(formatDateTime(outputs('Expiry_Date'), 'yyyy-MM-dd'))), 864000000000)</code></td></tr>
+        </tbody>
+      </table>
+      <p>Add a Compose named <code>Reminder Type</code> with this expression.</p>
+      <div class="code-card">
+        <div class="code-title">Power Automate expression - Reminder Type <button data-copy="reminder-type-expression">Copy</button></div>
+<pre id="reminder-type-expression">if(
+    equals(outputs('Expiry_Date_Short'), formatDateTime(addDays(utcNow(), 30), 'yyyy-MM-dd')),
+    'DUE_30',
+    if(
+        equals(outputs('Expiry_Date_Short'), formatDateTime(addDays(utcNow(), 7), 'yyyy-MM-dd')),
+        'DUE_7',
+        if(
+            equals(outputs('Expiry_Date_Short'), outputs('Today_Short')),
+            'EXPIRED_TODAY',
+            if(
+                equals(outputs('Overdue_Days'), 30),
+                'OVERDUE_30',
+                if(
+                    and(greater(outputs('Overdue_Days'), 0), equals(mod(outputs('Overdue_Days'), 7), 0)),
+                    if(greater(outputs('Overdue_Days'), 30), 'OVERDUE_ESCALATED', 'OVERDUE_WEEKLY'),
+                    ''
+                )
+            )
+        )
+    )
+)</pre>
+      </div>
+      <p>Add a Condition named <code>Reminder due?</code>. Left side: <code>outputs('Reminder_Type')</code>. Operator: is not equal to. Right side: leave blank. Everything below goes inside its <strong>If yes</strong> branch.</p>
+
+      <h3>4.6 Build Link, Recipients, Subject, And Duplicate Key</h3>
+      <p>Inside <code>Reminder due? If yes</code>, add these Compose actions.</p>
+      <table>
+        <thead><tr><th>Compose name</th><th>Expression</th></tr></thead>
+        <tbody>
+          <tr><td><code>Deep Link</code></td><td><code>concat(variables('AppDeepLinkBase'), '&amp;target=course&amp;courseId=', items('Apply_to_each_Course')?['ID'], '&amp;recordId=', first(body('Filter_array'))?['ID'], '&amp;personEmail=', uriComponent(items('Apply_to_each_Person')?['Email']))</code></td></tr>
+          <tr><td><code>Reminder Key</code></td><td><code>concat(toLower(items('Apply_to_each_Person')?['Email']), '|', items('Apply_to_each_Course')?['ID'], '|', outputs('Reminder_Type'), '|', outputs('Today_Short'))</code></td></tr>
+          <tr><td><code>Email To</code></td><td><code>if(or(equals(variables('TestMode'), true), not(equals(variables('LiveEmailsEnabled'), true))), variables('TestModeRecipient'), items('Apply_to_each_Person')?['Email'])</code></td></tr>
+          <tr><td><code>Email CC</code></td><td><code>if(or(equals(variables('TestMode'), true), not(equals(variables('LiveEmailsEnabled'), true))), '', if(greaterOrEquals(outputs('Overdue_Days'), 30), concat(items('Apply_to_each_Person')?['LineManagerEmail'], ';', variables('AdminEscalationMailbox')), if(greaterOrEquals(outputs('Overdue_Days'), 14), items('Apply_to_each_Person')?['LineManagerEmail'], '')))</code></td></tr>
+          <tr><td><code>Email Subject</code></td><td><code>concat(if(greater(outputs('Overdue_Days'), 0), 'Training overdue: ', 'Training reminder: '), items('Apply_to_each_Course')?['Title'])</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>4.7 Check The Locked Log Before Sending</h3>
+      <p>Add <strong>SharePoint - Get items</strong>, name it <code>Get Existing Reminder Log</code>, list <code>TT ReminderLog</code>. For Filter Query, use this expression.</p>
+      <div class="code-card">
+        <div class="code-title">Power Automate expression - Reminder log filter <button data-copy="log-filter-expression">Copy</button></div>
+<pre id="log-filter-expression">concat("ReminderKey eq '", outputs('Reminder_Key'), "'")</pre>
+      </div>
+      <p>Add a Condition named <code>Not already sent?</code>. Left side expression: <code>length(body('Get_Existing_Reminder_Log')?['value'])</code>. Operator: is equal to. Right side: <code>0</code>. Only send the email inside the <strong>If yes</strong> branch.</p>
+
+      <h3>4.8 Send The Email</h3>
+      <p>Inside <code>Not already sent? If yes</code>, add <strong>Office 365 Outlook - Send an email (V2)</strong>.</p>
+      <table>
+        <thead><tr><th>Field</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>To</td><td>Output from <code>Email To</code>.</td></tr>
+          <tr><td>Cc</td><td>Output from <code>Email CC</code>.</td></tr>
+          <tr><td>Subject</td><td>Output from <code>Email Subject</code>.</td></tr>
+          <tr><td>From / Send as</td><td>Your shared mailbox if you have permission, otherwise leave as the flow account.</td></tr>
+          <tr><td>Body</td><td>Use the HTML template below. If the designer shows a code view button, paste it there; otherwise build the same content in the rich text editor and insert the dynamic tokens where shown.</td></tr>
+        </tbody>
+      </table>
+      <div class="code-card">
+        <div class="code-title">HTML email body template <button data-copy="email-html-template">Copy</button></div>
+<pre id="email-html-template">&lt;div style="font-family:Segoe UI,Arial,sans-serif;background:#f6f8fb;padding:24px;color:#172033;"&gt;
+  &lt;div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #d9e1ec;border-radius:12px;overflow:hidden;"&gt;
+    &lt;div style="background:#004e42;color:#ffffff;padding:18px 22px;"&gt;
+      &lt;div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;"&gt;Training Tracker&lt;/div&gt;
+      &lt;div style="font-size:22px;font-weight:700;margin-top:4px;"&gt;Mandatory training reminder&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div style="padding:22px;"&gt;
+      &lt;p style="margin:0 0 14px;"&gt;Hello &lt;strong&gt;PERSON NAME&lt;/strong&gt;,&lt;/p&gt;
+      &lt;p style="margin:0 0 16px;"&gt;Your mandatory training record needs attention.&lt;/p&gt;
+      &lt;table style="border-collapse:collapse;width:100%;font-size:14px;margin:14px 0;"&gt;
+        &lt;tr&gt;&lt;td style="border:1px solid #d9e1ec;padding:8px;background:#eef3f8;font-weight:700;"&gt;Course&lt;/td&gt;&lt;td style="border:1px solid #d9e1ec;padding:8px;"&gt;COURSE NAME&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td style="border:1px solid #d9e1ec;padding:8px;background:#eef3f8;font-weight:700;"&gt;Expiry date&lt;/td&gt;&lt;td style="border:1px solid #d9e1ec;padding:8px;"&gt;EXPIRY DATE&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td style="border:1px solid #d9e1ec;padding:8px;background:#eef3f8;font-weight:700;"&gt;Status&lt;/td&gt;&lt;td style="border:1px solid #d9e1ec;padding:8px;"&gt;REMINDER TYPE&lt;/td&gt;&lt;/tr&gt;
+      &lt;/table&gt;
+      &lt;p style="margin:18px 0;"&gt;
+        &lt;a href="DEEP LINK" style="display:inline-block;background:#004e42;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:8px;"&gt;Open this course&lt;/a&gt;
+      &lt;/p&gt;
+      &lt;p style="font-size:13px;color:#637084;margin:18px 0 0;"&gt;If you have already completed this course, open Training Tracker and upload the certificate or update the completion date.&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+      </div>
+      <p class="small">Replace <code>PERSON NAME</code>, <code>COURSE NAME</code>, <code>EXPIRY DATE</code>, <code>REMINDER TYPE</code>, and <code>DEEP LINK</code> with dynamic content or Compose outputs. During TestMode, the body should still show the real person/course so you can verify exactly what would have been sent.</p>
+
+      <h3>4.9 Write The Reminder Log</h3>
+      <p>Immediately after the email action, still inside <code>Not already sent? If yes</code>, add <strong>SharePoint - Create item</strong> against <code>TT ReminderLog</code>.</p>
+      <table>
+        <thead><tr><th>Column</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td><code>Title</code></td><td>Output from <code>Reminder Key</code>.</td></tr>
+          <tr><td><code>ReminderKey</code></td><td>Output from <code>Reminder Key</code>.</td></tr>
+          <tr><td><code>PersonEmail</code></td><td><code>Email</code> from <code>Apply to each Person</code>.</td></tr>
+          <tr><td><code>PersonName</code></td><td><code>Title</code> from <code>Apply to each Person</code>.</td></tr>
+          <tr><td><code>CourseID</code></td><td><code>ID</code> from <code>Apply to each Course</code>.</td></tr>
+          <tr><td><code>CourseName</code></td><td><code>Title</code> from <code>Apply to each Course</code>.</td></tr>
+          <tr><td><code>TrainingRecordID</code></td><td><code>ID</code> from <code>first(body('Filter_array'))</code>.</td></tr>
+          <tr><td><code>ExpiryDate</code></td><td>Output from <code>Expiry Date Short</code>.</td></tr>
+          <tr><td><code>ReminderType</code></td><td>Output from <code>Reminder Type</code>.</td></tr>
+          <tr><td><code>OverdueDays</code></td><td>Output from <code>Overdue Days</code>.</td></tr>
+          <tr><td><code>SentOn</code></td><td><code>utcNow()</code>.</td></tr>
+          <tr><td><code>SentTo</code></td><td>Output from <code>Email To</code>.</td></tr>
+          <tr><td><code>WouldHaveSentTo</code></td><td><code>Email</code> from <code>Apply to each Person</code>.</td></tr>
+          <tr><td><code>CcTo</code></td><td>Output from <code>Email CC</code>.</td></tr>
+          <tr><td><code>TestMode</code></td><td>Variable <code>TestMode</code>.</td></tr>
+          <tr><td><code>LiveEmailsEnabled</code></td><td>Variable <code>LiveEmailsEnabled</code>.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>5. Testing Before Live</h2>
+      <ol class="step-list">
+        <li>Keep <code>TestMode = true</code> and <code>LiveEmailsEnabled = false</code>.</li>
+        <li>Run the flow manually. Confirm every email arrives only in your inbox.</li>
+        <li>Open <code>TT ReminderLog</code> as an admin. Confirm rows were created and <code>SentTo</code> is your address while <code>WouldHaveSentTo</code> shows the real staff address.</li>
+        <li>Run the flow manually a second time on the same day. Confirm no duplicate emails are sent for the same <code>ReminderKey</code>.</li>
+        <li>Click the button in a test email. As an admin, it should open the linked person's course. As a normal user, a link only opens that user's own record.</li>
+        <li>Only after those checks pass, change <code>TestMode</code> to <code>false</code>. Leave <code>LiveEmailsEnabled</code> as <code>false</code> and run one more manual test. Emails must still go only to your test inbox.</li>
+      </ol>
+
+      <h2>6. Go Live</h2>
+      <ol class="step-list">
+        <li>Confirm the training data is populated enough that reminder emails will not surprise everyone.</li>
+        <li>Confirm <code>TT ReminderLog</code> permissions are locked down and the flow connection account can still create log rows.</li>
+        <li>Change the recurrence trigger start time from the far-future date to the real daily start time, for example tomorrow at <code>07:00</code>.</li>
+        <li>Set <code>TestMode = false</code>.</li>
+        <li>Set <code>LiveEmailsEnabled = true</code>.</li>
+        <li>Save. Watch the first real run history and compare the number of sent emails with the number of rows created in <code>TT ReminderLog</code>.</li>
+      </ol>
+
+      <h2>7. Sources And Rules Used</h2>
+      <ul>
+        <li>Microsoft Learn: <a href="https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/how-to/deep-linking" target="_blank" rel="noopener">Power Apps deep linking with <code>Param()</code> and app play URLs</a>.</li>
+        <li>Microsoft Learn: <a href="https://learn.microsoft.com/en-us/power-automate/run-scheduled-tasks" target="_blank" rel="noopener">scheduled cloud flows</a>.</li>
+        <li>Microsoft Learn: <a href="https://learn.microsoft.com/en-us/power-automate/disable-flow" target="_blank" rel="noopener">turn cloud flows on or off</a>.</li>
+        <li>Microsoft Learn: <a href="https://learn.microsoft.com/en-us/power-automate/email-top-scenarios" target="_blank" rel="noopener">Send an email (V2), rich text, and send-as/on-behalf behaviour</a>.</li>
+        <li>Microsoft Learn: <a href="https://learn.microsoft.com/en-us/power-automate/add-manage-connections" target="_blank" rel="noopener">manage Power Automate connections used by flows</a>.</li>
+      </ul>
+
+      <a class="back-link" href="index.html#course-expiry-reminders">&larr; Back to the main Training Tracker guide</a>
+    </main>
+  </div>
+  <div id="toast" class="toast">Copied</div>
+  <script>
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      toast.textContent = text;
+      toast.classList.add('show');
+      window.setTimeout(() => toast.classList.remove('show'), 1400);
+    }
+    document.querySelectorAll('[data-copy]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const target = document.getElementById(button.getAttribute('data-copy'));
+        if (!target) return;
+        try {
+          await navigator.clipboard.writeText(target.innerText.replace(/\n/g, '\r\n'));
+          showToast('Copied');
+        } catch (err) {
+          showToast('Copy failed');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
