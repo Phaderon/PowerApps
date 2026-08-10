@@ -231,6 +231,32 @@
       color: var(--muted);
       font-size: .92rem;
     }
+    .tree-card {
+      border: 1px solid var(--line);
+      background: #fbfdff;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 18px 0 22px;
+    }
+    .tree-card h3 {
+      margin-top: 0;
+    }
+    .mini-tree {
+      margin: 10px 0 0;
+      border-radius: 10px;
+      background: #0f1724;
+      color: #f4f7fb;
+      white-space: pre;
+      overflow-x: auto;
+      font-size: .86rem;
+      line-height: 1.45;
+    }
+    .placement .mini-tree {
+      background: #ffffff;
+      color: #1d3b32;
+      border: 1px solid #cfe7db;
+      margin-top: 8px;
+    }
     .placement {
       border: 1px solid #cfe7db;
       border-left: 5px solid var(--primary);
@@ -253,7 +279,7 @@
       font-size: .9rem;
       color: #1d3b32;
       overflow-x: auto;
-      white-space: nowrap;
+      white-space: pre-wrap;
       padding-bottom: 2px;
     }
     .back-link { display: inline-block; margin-top: 24px; font-weight: 600; }
@@ -451,88 +477,51 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <h2>4. Build The Flow Safely</h2>
       <p>Create a scheduled cloud flow called <code>TT - Course Expiry Reminders</code>. Set it to run daily, but set the first automatic start date far in the future while building, for example <code>2099-01-01 07:00</code>. This lets you use manual tests without any automatic scheduled run happening while the app is unfinished.</p>
 
-      <div class="flow-map" id="flow-shape">
+      <div class="tree-card" id="flow-shape">
         <h3>Flow Shape - Build It In This Nesting Order</h3>
-        <p class="small">Keep this map open while building step 4. If Power Automate drops an action outside the wrong True branch, drag it back into the branch shown here before continuing.</p>
-        <ul class="flow-tree">
-          <li>
-            <div class="flow-node trigger"><span>Trigger</span> Recurrence - daily at 07:00</div>
-            <ul>
-              <li><div class="flow-node variable"><span>Variable</span> TestMode</div></li>
-              <li><div class="flow-node variable"><span>Variable</span> LiveEmailsEnabled</div></li>
-              <li><div class="flow-node variable"><span>Variable</span> TestModeRecipient</div></li>
-              <li><div class="flow-node variable"><span>Variable</span> AdminEscalationMailbox</div></li>
-              <li><div class="flow-node variable"><span>Variable</span> AppDeepLinkBase</div></li>
-              <li><div class="flow-node sharepoint"><span>Get items</span> Get Active People</div></li>
-              <li><div class="flow-node sharepoint"><span>Get items</span> Get Active Courses</div></li>
-              <li><div class="flow-node sharepoint"><span>Get items</span> Get Training Records</div></li>
-              <li>
-                <div class="flow-node loop"><span>Apply to each</span> Apply to each Person</div>
-                <ul>
-                  <li>
-                    <div class="flow-node loop"><span>Apply to each</span> Apply to each Course</div>
-                    <ul>
-                      <li><div class="flow-node filter"><span>Filter array</span> Filter array</div></li>
-                      <li>
-                        <div class="flow-node condition"><span>Condition</span> Record exists</div>
-                        <ul>
-                          <li>
-                            <div class="branch-label">True / If yes</div>
-                            <ul>
-                              <li><div class="flow-node compose"><span>Compose</span> Expiry Date</div></li>
-                              <li><div class="flow-node compose"><span>Compose</span> Expiry Date Short</div></li>
-                              <li><div class="flow-node compose"><span>Compose</span> Today Short</div></li>
-                              <li><div class="flow-node compose"><span>Compose</span> Overdue Days</div></li>
-                              <li><div class="flow-node compose"><span>Compose</span> Reminder Type</div></li>
-                              <li>
-                                <div class="flow-node condition"><span>Condition</span> Reminder due</div>
-                                <ul>
-                                  <li>
-                                    <div class="branch-label">True / If yes</div>
-                                    <ul>
-                                      <li><div class="flow-node compose"><span>Compose</span> Deep Link</div></li>
-                                      <li><div class="flow-node compose"><span>Compose</span> Reminder Key</div></li>
-                                      <li><div class="flow-node compose"><span>Compose</span> Email To</div></li>
-                                      <li><div class="flow-node compose"><span>Compose</span> Email CC</div></li>
-                                      <li><div class="flow-node compose"><span>Compose</span> Email Subject</div></li>
-                                      <li><div class="flow-node sharepoint"><span>Get items</span> Get Existing Reminder Log</div></li>
-                                      <li>
-                                        <div class="flow-node condition"><span>Condition</span> Not already sent</div>
-                                        <ul>
-                                          <li>
-                                            <div class="branch-label">True / If yes</div>
-                                            <ul>
-                                              <li><div class="flow-node email"><span>Email</span> Send an email (V2)</div></li>
-                                              <li><div class="flow-node sharepoint"><span>Create item</span> TT ReminderLog</div></li>
-                                            </ul>
-                                          </li>
-                                          <li><div class="branch-label">False / If no - leave empty</div></li>
-                                        </ul>
-                                      </li>
-                                    </ul>
-                                  </li>
-                                  <li><div class="branch-label">False / If no - leave empty</div></li>
-                                </ul>
-                              </li>
-                            </ul>
-                          </li>
-                          <li><div class="branch-label">False / If no - leave empty</div></li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </li>
-        </ul>
-        <p class="flow-note">Rule of thumb: only the first safety variables and the three Get items actions sit at the top level. Everything after that is inside Person, then Course, then the relevant True branch.</p>
+        <p class="small">Keep this map open while building step 4. The indentation is the important bit. If Power Automate drops an action outside the branch shown here, drag it back before continuing.</p>
+<pre class="mini-tree">Recurrence
+├── TestMode
+├── LiveEmailsEnabled
+├── TestModeRecipient
+├── AdminEscalationMailbox
+├── AppDeepLinkBase
+├── Get Active People
+├── Get Active Courses
+├── Get Training Records
+└── Apply to each Person
+    └── Apply to each Course
+        ├── Filter array
+        └── Record exists
+            ├── True / If yes
+            │   ├── Expiry Date
+            │   ├── Expiry Date Short
+            │   ├── Today Short
+            │   ├── Overdue Days
+            │   ├── Reminder Type
+            │   └── Reminder due
+            │       ├── True / If yes
+            │       │   ├── Deep Link
+            │       │   ├── Reminder Key
+            │       │   ├── Email To
+            │       │   ├── Email CC
+            │       │   ├── Email Subject
+            │       │   ├── Get Existing Reminder Log
+            │       │   └── Not already sent
+            │       │       ├── True / If yes
+            │       │       │   ├── Send an email (V2)
+            │       │       │   └── Create item in TT ReminderLog
+            │       │       └── False / If no - leave empty
+            │       └── False / If no - leave empty
+            └── False / If no - leave empty</pre>
+        <p class="flow-note">Rule of thumb: only the safety variables and the three Get items actions sit at the top level. Everything after that is inside Person, then Course, then the relevant True branch.</p>
       </div>
 
       <h3>4.1 First Actions: Safety Variables</h3>
       <div class="placement">
         <strong>Where these actions go</strong>
-        <div class="path">Top level, directly underneath Recurrence.</div>
+<pre class="mini-tree">Recurrence
+└── Safety variables go here</pre>
       </div>
       <p>Add these actions immediately after the recurrence trigger, in this order.</p>
       <table>
@@ -550,7 +539,9 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <h3>4.2 Pull The Data</h3>
       <div class="placement">
         <strong>Where these actions go</strong>
-        <div class="path">Top level, directly underneath AppDeepLinkBase.</div>
+<pre class="mini-tree">Recurrence
+├── Safety variables
+└── Get items actions go here</pre>
       </div>
       <p>Add these SharePoint <strong>Get items</strong> actions. Use the same SharePoint connection account that has permission to the locked reminder log.</p>
       <table>
@@ -565,7 +556,9 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <h3>4.3 Loop People And Applicable Courses</h3>
       <div class="placement">
         <strong>Where these actions go</strong>
-        <div class="path">Apply to each Person sits at top level. Apply to each Course sits inside Apply to each Person.</div>
+<pre class="mini-tree">Recurrence
+└── Apply to each Person
+    └── Apply to each Course</pre>
       </div>
       <ol class="step-list">
         <li>Add <strong>Apply to each</strong> over <strong>value</strong> from <code>Get Active People</code>. Rename it <code>Apply to each Person</code>.</li>
@@ -592,7 +585,10 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <h3>4.4 Find The Matching Training Record</h3>
       <div class="placement">
         <strong>Where these actions go</strong>
-        <div class="path">Apply to each Person &gt; Apply to each Course</div>
+<pre class="mini-tree">Apply to each Person
+└── Apply to each Course
+    ├── Filter array
+    └── Record exists</pre>
       </div>
       <p>Inside the course loop, add <strong>Filter array</strong>. Use <strong>value</strong> from <code>Get Training Records</code> as the source. Use advanced mode and paste this.</p>
       <div class="code-card">
@@ -624,7 +620,15 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <h3>4.5 Compose Dates And Reminder Type</h3>
       <div class="placement">
         <strong>Where these actions go</strong>
-        <div class="path">Apply to each Person &gt; Apply to each Course &gt; Record exists &gt; True / If yes</div>
+<pre class="mini-tree">Apply to each Person
+└── Apply to each Course
+    └── Record exists
+        └── True / If yes
+            ├── Expiry Date
+            ├── Expiry Date Short
+            ├── Today Short
+            ├── Overdue Days
+            └── Reminder Type</pre>
       </div>
       <p>Stay inside <strong>Record exists - True / If yes</strong>. Add these Compose actions in order. Do not put them underneath the whole condition and do not put them in the False branch.</p>
       <table>
@@ -667,7 +671,15 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <h3>4.6 Build Link, Recipients, Subject, And Duplicate Key</h3>
       <div class="placement">
         <strong>Where these actions go</strong>
-        <div class="path">Apply to each Person &gt; Apply to each Course &gt; Record exists &gt; True / If yes &gt; Reminder due &gt; True / If yes</div>
+<pre class="mini-tree">Record exists
+└── True / If yes
+    └── Reminder due
+        └── True / If yes
+            ├── Deep Link
+            ├── Reminder Key
+            ├── Email To
+            ├── Email CC
+            └── Email Subject</pre>
       </div>
       <p>Inside <code>Reminder due - True / If yes</code>, add these Compose actions.</p>
       <table>
@@ -684,7 +696,15 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <h3>4.7 Check The Locked Log Before Sending</h3>
       <div class="placement">
         <strong>Where this action goes</strong>
-        <div class="path">Apply to each Person &gt; Apply to each Course &gt; Record exists &gt; True / If yes &gt; Reminder due &gt; True / If yes</div>
+<pre class="mini-tree">Reminder due
+└── True / If yes
+    ├── Deep Link
+    ├── Reminder Key
+    ├── Email To
+    ├── Email CC
+    ├── Email Subject
+    ├── Get Existing Reminder Log
+    └── Not already sent</pre>
       </div>
       <p>Add <strong>SharePoint - Get items</strong> directly underneath <code>Email Subject</code>, still inside <code>Reminder due - True / If yes</code>. Name it <code>Get Existing Reminder Log</code>, list <code>TT ReminderLog</code>. For Filter Query, use this expression.</p>
       <div class="code-card">
@@ -696,7 +716,9 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <h3>4.8 Send The Email</h3>
       <div class="placement">
         <strong>Where this action goes</strong>
-        <div class="path">Apply to each Person &gt; Apply to each Course &gt; Record exists &gt; True / If yes &gt; Reminder due &gt; True / If yes &gt; Not already sent &gt; True / If yes</div>
+<pre class="mini-tree">Not already sent
+└── True / If yes
+    └── Send an email (V2)</pre>
       </div>
       <p>Inside <code>Not already sent - True / If yes</code>, add <strong>Office 365 Outlook - Send an email (V2)</strong>.</p>
       <table>
@@ -738,7 +760,10 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <h3>4.9 Write The Reminder Log</h3>
       <div class="placement">
         <strong>Where this action goes</strong>
-        <div class="path">Directly underneath Send an email (V2), inside Not already sent &gt; True / If yes.</div>
+<pre class="mini-tree">Not already sent
+└── True / If yes
+    ├── Send an email (V2)
+    └── Create item in TT ReminderLog</pre>
       </div>
       <p>Immediately after the email action, still inside <code>Not already sent - True / If yes</code>, add <strong>SharePoint - Create item</strong> against <code>TT ReminderLog</code>.</p>
       <table>
