@@ -134,6 +134,103 @@
     th { background: #eef3f8; }
     .step-list { padding-left: 22px; }
     .step-list li { margin-bottom: 10px; }
+    .flow-map {
+      border: 1px solid var(--line);
+      background: #fbfdff;
+      border-radius: 14px;
+      padding: 16px;
+      margin: 18px 0 22px;
+      overflow-x: auto;
+    }
+    .flow-map h3 {
+      margin-top: 0;
+    }
+    .flow-tree,
+    .flow-tree ul {
+      list-style: none;
+      margin: 0;
+      padding-left: 22px;
+      position: relative;
+    }
+    .flow-tree {
+      padding-left: 0;
+      min-width: 720px;
+    }
+    .flow-tree ul::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 12px;
+      left: 8px;
+      border-left: 2px solid #c7d4e3;
+    }
+    .flow-tree li {
+      position: relative;
+      margin: 8px 0;
+      padding-left: 18px;
+    }
+    .flow-tree > li {
+      padding-left: 0;
+    }
+    .flow-tree li::before {
+      content: "";
+      position: absolute;
+      top: 18px;
+      left: 8px;
+      width: 14px;
+      border-top: 2px solid #c7d4e3;
+    }
+    .flow-tree > li::before {
+      display: none;
+    }
+    .flow-node {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      border: 1px solid #d7e1ec;
+      border-radius: 8px;
+      background: #fff;
+      padding: 6px 10px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(20, 34, 56, .05);
+    }
+    .flow-node span {
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .flow-node.trigger { border-color: #c9d8ff; background: #f2f5ff; }
+    .flow-node.variable { border-color: #cfe7db; background: #f1faf5; }
+    .flow-node.sharepoint { border-color: #cce6df; background: #effaf7; }
+    .flow-node.loop { border-color: #d8d0ef; background: #f7f3ff; }
+    .flow-node.filter { border-color: #dde4eb; background: #f7f9fc; }
+    .flow-node.condition { border-color: #f0d1a4; background: #fff7e8; }
+    .flow-node.compose { border-color: #d8e3ef; background: #f6fbff; }
+    .flow-node.email { border-color: #cfe7db; background: #edf8f2; }
+    .branch-label {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 2px 9px;
+      border: 1px solid #c7d4e3;
+      border-radius: 999px;
+      background: #eef3f8;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      white-space: nowrap;
+    }
+    .flow-note {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: .92rem;
+    }
     .back-link { display: inline-block; margin-top: 24px; font-weight: 600; }
     .small { color: var(--muted); font-size: .92rem; }
     .toast {
@@ -156,6 +253,7 @@
       .shell { padding: 12px; }
       main { padding: 18px; }
       table { display: block; overflow-x: auto; }
+      .flow-tree { min-width: 680px; }
     }
   </style>
 </head>
@@ -327,6 +425,84 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
 
       <h2>4. Build The Flow Safely</h2>
       <p>Create a scheduled cloud flow called <code>TT - Course Expiry Reminders</code>. Set it to run daily, but set the first automatic start date far in the future while building, for example <code>2099-01-01 07:00</code>. This lets you use manual tests without any automatic scheduled run happening while the app is unfinished.</p>
+
+      <div class="flow-map" id="flow-shape">
+        <h3>Flow Shape - Build It In This Nesting Order</h3>
+        <p class="small">Keep this map open while building step 4. If Power Automate drops an action outside the wrong True branch, drag it back into the branch shown here before continuing.</p>
+        <ul class="flow-tree">
+          <li>
+            <div class="flow-node trigger"><span>Trigger</span> Recurrence - daily at 07:00</div>
+            <ul>
+              <li><div class="flow-node variable"><span>Variable</span> TestMode</div></li>
+              <li><div class="flow-node variable"><span>Variable</span> LiveEmailsEnabled</div></li>
+              <li><div class="flow-node variable"><span>Variable</span> TestModeRecipient</div></li>
+              <li><div class="flow-node variable"><span>Variable</span> AdminEscalationMailbox</div></li>
+              <li><div class="flow-node variable"><span>Variable</span> AppDeepLinkBase</div></li>
+              <li><div class="flow-node sharepoint"><span>Get items</span> Get Active People</div></li>
+              <li><div class="flow-node sharepoint"><span>Get items</span> Get Active Courses</div></li>
+              <li><div class="flow-node sharepoint"><span>Get items</span> Get Training Records</div></li>
+              <li>
+                <div class="flow-node loop"><span>Apply to each</span> Apply to each Person</div>
+                <ul>
+                  <li>
+                    <div class="flow-node loop"><span>Apply to each</span> Apply to each Course</div>
+                    <ul>
+                      <li><div class="flow-node filter"><span>Filter array</span> Filter array</div></li>
+                      <li>
+                        <div class="flow-node condition"><span>Condition</span> Record exists</div>
+                        <ul>
+                          <li>
+                            <div class="branch-label">True / If yes</div>
+                            <ul>
+                              <li><div class="flow-node compose"><span>Compose</span> Expiry Date</div></li>
+                              <li><div class="flow-node compose"><span>Compose</span> Expiry Date Short</div></li>
+                              <li><div class="flow-node compose"><span>Compose</span> Today Short</div></li>
+                              <li><div class="flow-node compose"><span>Compose</span> Overdue Days</div></li>
+                              <li><div class="flow-node compose"><span>Compose</span> Reminder Type</div></li>
+                              <li>
+                                <div class="flow-node condition"><span>Condition</span> Reminder due</div>
+                                <ul>
+                                  <li>
+                                    <div class="branch-label">True / If yes</div>
+                                    <ul>
+                                      <li><div class="flow-node compose"><span>Compose</span> Deep Link</div></li>
+                                      <li><div class="flow-node compose"><span>Compose</span> Reminder Key</div></li>
+                                      <li><div class="flow-node compose"><span>Compose</span> Email To</div></li>
+                                      <li><div class="flow-node compose"><span>Compose</span> Email CC</div></li>
+                                      <li><div class="flow-node compose"><span>Compose</span> Email Subject</div></li>
+                                      <li><div class="flow-node sharepoint"><span>Get items</span> Get Existing Reminder Log</div></li>
+                                      <li>
+                                        <div class="flow-node condition"><span>Condition</span> Not already sent</div>
+                                        <ul>
+                                          <li>
+                                            <div class="branch-label">True / If yes</div>
+                                            <ul>
+                                              <li><div class="flow-node email"><span>Email</span> Send an email (V2)</div></li>
+                                              <li><div class="flow-node sharepoint"><span>Create item</span> TT ReminderLog</div></li>
+                                            </ul>
+                                          </li>
+                                          <li><div class="branch-label">False / If no - leave empty</div></li>
+                                        </ul>
+                                      </li>
+                                    </ul>
+                                  </li>
+                                  <li><div class="branch-label">False / If no - leave empty</div></li>
+                                </ul>
+                              </li>
+                            </ul>
+                          </li>
+                          <li><div class="branch-label">False / If no - leave empty</div></li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <p class="flow-note">Rule of thumb: only the first safety variables and the three Get items actions sit at the top level. Everything after that is inside Person, then Course, then the relevant True branch.</p>
+      </div>
 
       <h3>4.1 First Actions: Safety Variables</h3>
       <p>Add these actions immediately after the recurrence trigger, in this order.</p>
