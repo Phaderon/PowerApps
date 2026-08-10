@@ -390,7 +390,7 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
         <li>Click the small <strong>+</strong> directly underneath the <strong>Filter array</strong> action.</li>
         <li>Choose <strong>Add an action</strong>.</li>
         <li>Search for <strong>Condition</strong>, then select the built-in <strong>Control - Condition</strong> action.</li>
-        <li>Open the condition's three-dot menu and rename it to <code>Record exists?</code>.</li>
+        <li>Open the condition's three-dot menu and rename it to <code>Record exists</code>. Do not use punctuation in Power Automate action names.</li>
         <li>Click the left value box, then choose the <strong>Expression</strong> tab in the dynamic-content panel.</li>
         <li>Paste this expression, then click <strong>Add</strong>.</li>
       </ol>
@@ -401,11 +401,11 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <ol class="step-list">
         <li>Set the middle operator dropdown to <strong>is greater than</strong>.</li>
         <li>Type <code>0</code> into the right value box.</li>
-        <li>Everything in the next section goes inside the <strong>True</strong> / <strong>If yes</strong> branch. Leave the <strong>False</strong> / <strong>If no</strong> branch empty.</li>
+        <li>Everything in the next section goes inside the <strong>True</strong> / <strong>If yes</strong> branch of <code>Record exists</code>. Leave the <strong>False</strong> / <strong>If no</strong> branch empty.</li>
       </ol>
 
       <h3>4.5 Compose Dates And Reminder Type</h3>
-      <p>Inside <strong>Record exists? If yes</strong>, add these Compose actions in order.</p>
+      <p>Stay inside <strong>Record exists - True / If yes</strong>. Add these Compose actions in order. Do not put them underneath the whole condition and do not put them in the False branch.</p>
       <table>
         <thead><tr><th>Compose name</th><th>Expression</th></tr></thead>
         <tbody>
@@ -413,9 +413,10 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
           <tr><td><code>Expiry Date Short</code></td><td><code>formatDateTime(outputs('Expiry_Date'), 'yyyy-MM-dd')</code></td></tr>
           <tr><td><code>Today Short</code></td><td><code>formatDateTime(utcNow(), 'yyyy-MM-dd')</code></td></tr>
           <tr><td><code>Overdue Days</code></td><td><code>div(sub(ticks(formatDateTime(utcNow(), 'yyyy-MM-dd')), ticks(formatDateTime(outputs('Expiry_Date'), 'yyyy-MM-dd'))), 864000000000)</code></td></tr>
+          <tr><td><code>Reminder Type</code></td><td>Use the copied expression below. Add this Compose directly underneath <code>Overdue Days</code>, still inside <code>Record exists - True / If yes</code>.</td></tr>
         </tbody>
       </table>
-      <p>Add a Compose named <code>Reminder Type</code> with this expression.</p>
+      <p>For the <code>Reminder Type</code> Compose action, paste this into the <strong>Expression</strong> tab.</p>
       <div class="code-card">
         <div class="code-title">Power Automate expression - Reminder Type <button data-copy="reminder-type-expression">Copy</button></div>
 <pre id="reminder-type-expression">if(
@@ -440,10 +441,10 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
     )
 )</pre>
       </div>
-      <p>Add a Condition named <code>Reminder due?</code>. Left side: <code>outputs('Reminder_Type')</code>. Operator: is not equal to. Right side: leave blank. Everything below goes inside its <strong>If yes</strong> branch.</p>
+      <p>Still inside <strong>Record exists - True / If yes</strong>, add a Condition named <code>Reminder due</code>. Left side: <code>outputs('Reminder_Type')</code>. Operator: is not equal to. Right side: leave blank. Everything below goes inside its <strong>True</strong> / <strong>If yes</strong> branch.</p>
 
       <h3>4.6 Build Link, Recipients, Subject, And Duplicate Key</h3>
-      <p>Inside <code>Reminder due? If yes</code>, add these Compose actions.</p>
+      <p>Inside <code>Reminder due - True / If yes</code>, add these Compose actions.</p>
       <table>
         <thead><tr><th>Compose name</th><th>Expression</th></tr></thead>
         <tbody>
@@ -461,10 +462,10 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
         <div class="code-title">Power Automate expression - Reminder log filter <button data-copy="log-filter-expression">Copy</button></div>
 <pre id="log-filter-expression">concat("ReminderKey eq '", outputs('Reminder_Key'), "'")</pre>
       </div>
-      <p>Add a Condition named <code>Not already sent?</code>. Left side expression: <code>length(body('Get_Existing_Reminder_Log')?['value'])</code>. Operator: is equal to. Right side: <code>0</code>. Only send the email inside the <strong>If yes</strong> branch.</p>
+      <p>Add a Condition named <code>Not already sent</code>. Left side expression: <code>length(body('Get_Existing_Reminder_Log')?['value'])</code>. Operator: is equal to. Right side: <code>0</code>. Only send the email inside the <strong>True</strong> / <strong>If yes</strong> branch.</p>
 
       <h3>4.8 Send The Email</h3>
-      <p>Inside <code>Not already sent? If yes</code>, add <strong>Office 365 Outlook - Send an email (V2)</strong>.</p>
+      <p>Inside <code>Not already sent - True / If yes</code>, add <strong>Office 365 Outlook - Send an email (V2)</strong>.</p>
       <table>
         <thead><tr><th>Field</th><th>Value</th></tr></thead>
         <tbody>
@@ -502,7 +503,7 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <p class="small">Replace <code>PERSON NAME</code>, <code>COURSE NAME</code>, <code>EXPIRY DATE</code>, <code>REMINDER TYPE</code>, and <code>DEEP LINK</code> with dynamic content or Compose outputs. During TestMode, the body should still show the real person/course so you can verify exactly what would have been sent.</p>
 
       <h3>4.9 Write The Reminder Log</h3>
-      <p>Immediately after the email action, still inside <code>Not already sent? If yes</code>, add <strong>SharePoint - Create item</strong> against <code>TT ReminderLog</code>.</p>
+      <p>Immediately after the email action, still inside <code>Not already sent - True / If yes</code>, add <strong>SharePoint - Create item</strong> against <code>TT ReminderLog</code>.</p>
       <table>
         <thead><tr><th>Column</th><th>Value</th></tr></thead>
         <tbody>
