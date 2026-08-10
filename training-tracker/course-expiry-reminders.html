@@ -906,26 +906,30 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
     ├── Send an email (V2)
     └── Create item in TT ReminderLog</pre>
       </div>
+      <div class="callout danger">
+        <strong>If Power Automate creates any extra <code>Apply to each</code> / <code>For each</code> boxes here, stop.</strong> Do not fill fields inside those boxes. Delete the auto-created loop and add the value again from the <strong>Expression</strong> tab instead. Inside <code>Ready to send - True / If yes</code>, there should only be two actions: <code>Send an email (V2)</code> and <code>Create item</code>.
+      </div>
       <p>Immediately after the email action, still inside <code>Ready to send - True / If yes</code>, add <strong>SharePoint - Create item</strong> against <code>TT ReminderLog</code>.</p>
+      <p>Use expressions for these fields. This avoids Power Automate wrapping the action in unwanted loops.</p>
       <table>
-        <thead><tr><th>Column</th><th>Value</th></tr></thead>
+        <thead><tr><th>Column</th><th>Use this expression or value</th></tr></thead>
         <tbody>
-          <tr><td><code>Title</code></td><td>Output from <code>Reminder Key</code>.</td></tr>
-          <tr><td><code>ReminderKey</code></td><td>Output from <code>Reminder Key</code>.</td></tr>
-          <tr><td><code>PersonEmail</code></td><td><code>Email</code> from <code>Apply to each Person</code>.</td></tr>
-          <tr><td><code>PersonName</code></td><td><code>Title</code> from <code>Apply to each Person</code>.</td></tr>
-          <tr><td><code>CourseID</code></td><td><code>ID</code> from <code>Apply to each Course</code>.</td></tr>
-          <tr><td><code>CourseName</code></td><td><code>Title</code> from <code>Apply to each Course</code>.</td></tr>
-          <tr><td><code>TrainingRecordID</code></td><td><code>ID</code> from <code>first(body('Filter_array'))</code>.</td></tr>
-          <tr><td><code>ExpiryDate</code></td><td>Output from <code>Expiry Date Short</code>.</td></tr>
-          <tr><td><code>ReminderType</code></td><td>Output from <code>Reminder Type</code>.</td></tr>
-          <tr><td><code>OverdueDays</code></td><td>Output from <code>Overdue Days</code>.</td></tr>
-          <tr><td><code>SentOn</code></td><td><code>utcNow()</code>.</td></tr>
-          <tr><td><code>SentTo</code></td><td>Output from <code>Email To</code>.</td></tr>
-          <tr><td><code>WouldHaveSentTo</code></td><td><code>Email</code> from <code>Apply to each Person</code>.</td></tr>
-          <tr><td><code>CcTo</code></td><td>Output from <code>Email CC</code>.</td></tr>
-          <tr><td><code>TestMode</code></td><td>Variable <code>TestMode</code>.</td></tr>
-          <tr><td><code>LiveEmailsEnabled</code></td><td>Variable <code>LiveEmailsEnabled</code>.</td></tr>
+          <tr><td><code>Title</code></td><td><code>outputs('Reminder_Key')</code></td></tr>
+          <tr><td><code>ReminderKey</code></td><td><code>outputs('Reminder_Key')</code></td></tr>
+          <tr><td><code>PersonEmail</code></td><td><code>items('Apply_to_each_Person')?['Email']</code></td></tr>
+          <tr><td><code>PersonName</code></td><td><code>items('Apply_to_each_Person')?['Title']</code></td></tr>
+          <tr><td><code>CourseID</code></td><td><code>items('Apply_to_each_Course')?['ID']</code></td></tr>
+          <tr><td><code>CourseName</code></td><td><code>items('Apply_to_each_Course')?['Title']</code></td></tr>
+          <tr><td><code>TrainingRecordID</code></td><td><code>first(body('Filter_array'))?['ID']</code></td></tr>
+          <tr><td><code>ExpiryDate</code></td><td><code>outputs('Expiry_Date_Short')</code></td></tr>
+          <tr><td><code>ReminderType</code></td><td><code>outputs('Reminder_Type')</code></td></tr>
+          <tr><td><code>OverdueDays</code></td><td><code>outputs('Overdue_Days')</code></td></tr>
+          <tr><td><code>SentOn</code></td><td><code>utcNow()</code></td></tr>
+          <tr><td><code>SentTo</code></td><td><code>outputs('Email_To')</code></td></tr>
+          <tr><td><code>WouldHaveSentTo</code></td><td><code>items('Apply_to_each_Person')?['Email']</code></td></tr>
+          <tr><td><code>CcTo</code></td><td><code>outputs('Email_CC')</code></td></tr>
+          <tr><td><code>TestMode</code></td><td><code>variables('TestMode')</code></td></tr>
+          <tr><td><code>LiveEmailsEnabled</code></td><td><code>variables('LiveEmailsEnabled')</code></td></tr>
         </tbody>
       </table>
 
