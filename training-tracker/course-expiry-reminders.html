@@ -257,6 +257,42 @@
       border: 1px solid #cfe7db;
       margin-top: 8px;
     }
+    .sticky-flow {
+      position: sticky;
+      top: 8px;
+      z-index: 20;
+      border: 1px solid #cfe7db;
+      background: rgba(241, 250, 245, .98);
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(20, 34, 56, .16);
+      padding: 10px 12px;
+      margin: 18px 0 22px;
+      max-height: 28vh;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+    .sticky-flow-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+      color: var(--primary);
+      font-weight: 800;
+      font-size: .92rem;
+    }
+    .sticky-flow-title span {
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 700;
+    }
+    .sticky-flow .mini-tree {
+      margin: 0;
+      max-height: calc(28vh - 52px);
+      overflow: auto;
+      background: #0f1724;
+      color: #f4f7fb;
+    }
     .placement {
       border: 1px solid #cfe7db;
       border-left: 5px solid var(--primary);
@@ -305,6 +341,14 @@
       main { padding: 18px; }
       table { display: block; overflow-x: auto; }
       .flow-tree { min-width: 680px; }
+      .sticky-flow {
+        top: 4px;
+        max-height: 34vh;
+      }
+      .sticky-flow .mini-tree {
+        max-height: calc(34vh - 52px);
+        font-size: .78rem;
+      }
     }
   </style>
 </head>
@@ -477,6 +521,47 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       <h2>4. Build The Flow Safely</h2>
       <p>Create a scheduled cloud flow called <code>TT - Course Expiry Reminders</code>. Set it to run daily, but set the first automatic start date far in the future while building, for example <code>2099-01-01 07:00</code>. This lets you use manual tests without any automatic scheduled run happening while the app is unfinished.</p>
 
+      <div class="sticky-flow" id="sticky-flow">
+        <div class="sticky-flow-title">
+          <strong>Current Flow Position</strong>
+          <span id="sticky-flow-label">Full map</span>
+        </div>
+<pre class="mini-tree" id="sticky-flow-tree">Recurrence
+├── TestMode
+├── LiveEmailsEnabled
+├── TestModeRecipient
+├── AdminEscalationMailbox
+├── AppDeepLinkBase
+├── Get Active People
+├── Get Active Courses
+├── Get Training Records
+└── Apply to each Person
+    └── Apply to each Course
+        ├── Filter array
+        └── Record exists
+            ├── True / If yes
+            │   ├── Expiry Date
+            │   ├── Expiry Date Short
+            │   ├── Today Short
+            │   ├── Overdue Days
+            │   ├── Reminder Type
+            │   └── Reminder due
+            │       ├── True / If yes
+            │       │   ├── Deep Link
+            │       │   ├── Reminder Key
+            │       │   ├── Email To
+            │       │   ├── Email CC
+            │       │   ├── Email Subject
+            │       │   ├── Get Existing Reminder Log
+            │       │   └── Not already sent
+            │       │       ├── True / If yes
+            │       │       │   ├── Send an email (V2)
+            │       │       │   └── Create item in TT ReminderLog
+            │       │       └── False / If no - leave empty
+            │       └── False / If no - leave empty
+            └── False / If no - leave empty</pre>
+      </div>
+
       <div class="tree-card" id="flow-shape">
         <h3>Flow Shape - Build It In This Nesting Order</h3>
         <p class="small">Keep this map open while building step 4. The indentation is the important bit. If Power Automate drops an action outside the branch shown here, drag it back before continuing.</p>
@@ -517,7 +602,7 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
         <p class="flow-note">Rule of thumb: only the safety variables and the three Get items actions sit at the top level. Everything after that is inside Person, then Course, then the relevant True branch.</p>
       </div>
 
-      <h3>4.1 First Actions: Safety Variables</h3>
+      <h3 id="flow-step-4-1" class="flow-step">4.1 First Actions: Safety Variables</h3>
       <div class="placement">
         <strong>Where these actions go</strong>
 <pre class="mini-tree">Recurrence
@@ -536,7 +621,7 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       </table>
       <p class="small">Example app base: <code>https://apps.powerapps.com/play/YOUR-APP-ID?tenantId=YOUR-TENANT-ID</code>. Your reminder link will append <code>&amp;target=course&amp;courseId=...</code>.</p>
 
-      <h3>4.2 Pull The Data</h3>
+      <h3 id="flow-step-4-2" class="flow-step">4.2 Pull The Data</h3>
       <div class="placement">
         <strong>Where these actions go</strong>
 <pre class="mini-tree">Recurrence
@@ -553,7 +638,7 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
         </tbody>
       </table>
 
-      <h3>4.3 Loop People And Applicable Courses</h3>
+      <h3 id="flow-step-4-3" class="flow-step">4.3 Loop People And Applicable Courses</h3>
       <div class="placement">
         <strong>Where these actions go</strong>
 <pre class="mini-tree">Recurrence
@@ -582,7 +667,7 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
 )</pre>
       </div>
 
-      <h3>4.4 Find The Matching Training Record</h3>
+      <h3 id="flow-step-4-4" class="flow-step">4.4 Find The Matching Training Record</h3>
       <div class="placement">
         <strong>Where these actions go</strong>
 <pre class="mini-tree">Apply to each Person
@@ -617,7 +702,7 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
         <li>Everything in the next section goes inside the <strong>True</strong> / <strong>If yes</strong> branch of <code>Record exists</code>. Leave the <strong>False</strong> / <strong>If no</strong> branch empty.</li>
       </ol>
 
-      <h3>4.5 Compose Dates And Reminder Type</h3>
+      <h3 id="flow-step-4-5" class="flow-step">4.5 Compose Dates And Reminder Type</h3>
       <div class="placement">
         <strong>Where these actions go</strong>
 <pre class="mini-tree">Apply to each Person
@@ -668,7 +753,7 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       </div>
       <p>Still inside <strong>Record exists - True / If yes</strong>, add a Condition named <code>Reminder due</code>. Left side: <code>outputs('Reminder_Type')</code>. Operator: is not equal to. Right side: leave blank. Everything below goes inside its <strong>True</strong> / <strong>If yes</strong> branch.</p>
 
-      <h3>4.6 Build Link, Recipients, Subject, And Duplicate Key</h3>
+      <h3 id="flow-step-4-6" class="flow-step">4.6 Build Link, Recipients, Subject, And Duplicate Key</h3>
       <div class="placement">
         <strong>Where these actions go</strong>
 <pre class="mini-tree">Record exists
@@ -693,7 +778,7 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
         </tbody>
       </table>
 
-      <h3>4.7 Check The Locked Log Before Sending</h3>
+      <h3 id="flow-step-4-7" class="flow-step">4.7 Check The Locked Log Before Sending</h3>
       <div class="placement">
         <strong>Where this action goes</strong>
 <pre class="mini-tree">Reminder due
@@ -713,7 +798,7 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       </div>
       <p>Add a Condition named <code>Not already sent</code>. Left side expression: <code>length(body('Get_Existing_Reminder_Log')?['value'])</code>. Operator: is equal to. Right side: <code>0</code>. Only send the email inside the <strong>True</strong> / <strong>If yes</strong> branch.</p>
 
-      <h3>4.8 Send The Email</h3>
+      <h3 id="flow-step-4-8" class="flow-step">4.8 Send The Email</h3>
       <div class="placement">
         <strong>Where this action goes</strong>
 <pre class="mini-tree">Not already sent
@@ -757,7 +842,7 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
       </div>
       <p class="small">Replace <code>PERSON NAME</code>, <code>COURSE NAME</code>, <code>EXPIRY DATE</code>, <code>REMINDER TYPE</code>, and <code>DEEP LINK</code> with dynamic content or Compose outputs. During TestMode, the body should still show the real person/course so you can verify exactly what would have been sent.</p>
 
-      <h3>4.9 Write The Reminder Log</h3>
+      <h3 id="flow-step-4-9" class="flow-step">4.9 Write The Reminder Log</h3>
       <div class="placement">
         <strong>Where this action goes</strong>
 <pre class="mini-tree">Not already sent
@@ -840,6 +925,114 @@ Set(varPendingCourseDeepLink, varDeepLinkTarget = "course" &amp;&amp; !IsBlank(v
         }
       });
     });
+
+    const flowTrees = {
+      'flow-step-4-1': {
+        label: '4.1 Safety variables',
+        tree: `Recurrence
+└── Safety variables go here
+    ├── TestMode
+    ├── LiveEmailsEnabled
+    ├── TestModeRecipient
+    ├── AdminEscalationMailbox
+    └── AppDeepLinkBase`
+      },
+      'flow-step-4-2': {
+        label: '4.2 Pull data',
+        tree: `Recurrence
+├── Safety variables
+├── Get Active People
+├── Get Active Courses
+└── Get Training Records`
+      },
+      'flow-step-4-3': {
+        label: '4.3 Loops',
+        tree: `Recurrence
+└── Apply to each Person
+    └── Apply to each Course`
+      },
+      'flow-step-4-4': {
+        label: '4.4 Matching record',
+        tree: `Apply to each Person
+└── Apply to each Course
+    ├── Filter array
+    └── Record exists`
+      },
+      'flow-step-4-5': {
+        label: '4.5 Dates and reminder type',
+        tree: `Record exists
+└── True / If yes
+    ├── Expiry Date
+    ├── Expiry Date Short
+    ├── Today Short
+    ├── Overdue Days
+    ├── Reminder Type
+    └── Reminder due`
+      },
+      'flow-step-4-6': {
+        label: '4.6 Link and recipients',
+        tree: `Reminder due
+└── True / If yes
+    ├── Deep Link
+    ├── Reminder Key
+    ├── Email To
+    ├── Email CC
+    └── Email Subject`
+      },
+      'flow-step-4-7': {
+        label: '4.7 Locked log check',
+        tree: `Reminder due
+└── True / If yes
+    ├── Deep Link
+    ├── Reminder Key
+    ├── Email To
+    ├── Email CC
+    ├── Email Subject
+    ├── Get Existing Reminder Log (here)
+    └── Not already sent`
+      },
+      'flow-step-4-8': {
+        label: '4.8 Send email',
+        tree: `Not already sent
+└── True / If yes
+    └── Send an email (V2) (here)`
+      },
+      'flow-step-4-9': {
+        label: '4.9 Write reminder log',
+        tree: `Not already sent
+└── True / If yes
+    ├── Send an email (V2)
+    └── Create item in TT ReminderLog (here)`
+      }
+    };
+
+    const flowLabel = document.getElementById('sticky-flow-label');
+    const flowTree = document.getElementById('sticky-flow-tree');
+    const flowSteps = Array.from(document.querySelectorAll('.flow-step'));
+
+    function setFlowStep(id) {
+      const item = flowTrees[id];
+      if (!item || !flowLabel || !flowTree) return;
+      flowLabel.textContent = item.label;
+      flowTree.textContent = item.tree;
+    }
+
+    function updateFlowStep() {
+      let active = flowSteps[0];
+      const triggerLine = Math.max(220, window.innerHeight * 0.55);
+      for (const step of flowSteps) {
+        if (step.getBoundingClientRect().top <= triggerLine) {
+          active = step;
+        }
+      }
+      if (active) setFlowStep(active.id);
+    }
+
+    if (flowSteps.length) {
+      updateFlowStep();
+      window.addEventListener('scroll', updateFlowStep, { passive: true });
+      window.addEventListener('resize', updateFlowStep);
+    }
   </script>
 </body>
 </html>
