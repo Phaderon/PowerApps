@@ -113,6 +113,33 @@ For each list, produce a table like this:
 
 Tell the user: exact column names (they must match in Power Fx), exact type to select in SharePoint, exact Choice option strings with their capitalisation, which columns to mark as Not Required (all of them — enforce required in the app).
 
+### Faster alternative: schema-preserving CSV import
+
+Instead of (or alongside) the manual column-by-column table above, SharePoint can create a list's entire column set in one step from a specially-formatted CSV: Site Contents → New List → **From CSV** (or Excel). This isn't a generic "guess types from data" CSV import — SharePoint's own list-export feature embeds the real column schema as XML inside the file, and honours it on import.
+
+**Format, confirmed against a real export from a live tenant list:**
+- Row 1, single cell: `ListSchema=` followed by a JSON object `{"schemaXmlList":[...]}` — the array holds one raw `<Field .../>` XML string per column (SharePoint's own internal schema-export format, same shape used for `Title`, `Choice`, `Number`, `Boolean`, `Text` fields).
+- Row 2: the plain column header row, names matching the `Name`/`StaticName` attributes in row 1's XML.
+- Row 3+: normal data rows (at minimum, one placeholder row — an all-header, zero-data CSV hasn't been confirmed to work with SharePoint's import wizard).
+
+Field XML shapes, one per SharePoint column type (each needs a fresh unique GUID in `ID="{...}"`):
+
+```
+Text:    <Field DisplayName="X" Format="Dropdown" IsModern="TRUE" MaxLength="255" Name="X" Title="X" Type="Text" ID="{guid}" StaticName="X" />
+Number:  <Field CommaSeparator="TRUE" CustomUnitOnRight="TRUE" DisplayName="X" Format="Dropdown" IsModern="TRUE" Name="X" Percentage="FALSE" Title="X" Type="Number" Unit="None" ID="{guid}" StaticName="X" />
+Boolean: <Field DisplayName="X" Format="Dropdown" IsModern="TRUE" Name="X" Title="X" Type="Boolean" ID="{guid}" StaticName="X"><Default>0</Default></Field>
+Choice:  <Field DisplayName="X" FillInChoice="FALSE|TRUE" Format="Dropdown" IsModern="TRUE" Name="X" Title="X" Type="Choice" ID="{guid}" StaticName="X"><CHOICES><CHOICE>A</CHOICE><CHOICE>B</CHOICE></CHOICES></Field>
+Title:   <Field ID="{fa564e0f-0c70-4ab9-b863-0177e6ddd247}" Type="Text" Name="Title" DisplayName="Title" Required="FALSE" SourceID="http://schemas.microsoft.com/sharepoint/v3" StaticName="Title" FromBaseType="TRUE" MaxLength="255" />
+```
+
+(Title's GUID above is SharePoint's own fixed system GUID for the built-in Title field — reuse it verbatim, don't generate a new one, since Title isn't really a new column.)
+
+**Build script pattern**: construct the field XML strings, `json.dumps({"schemaXmlList": [...]}, separators=(",", ":"))` (compact, no spaces — matches the real export byte-for-byte), prepend `ListSchema=`, then let Python's `csv.writer(..., quoting=csv.QUOTE_ALL)` handle the CSV-level quote-doubling automatically rather than hand-escaping — two layers of escaping (JSON's `\"` inside CSV's `""`) by hand is exactly the kind of thing that silently breaks if typed manually.
+
+Worked example (both list templates, plus the exact Python builder script) is in `PhadeDev/library-file-plan-manager`'s repo at `docs/lists/*.csv` — copy the script's structure for a new app rather than rebuilding from scratch.
+
+**Caveat**: this technique was built by reverse-engineering the format from a real tenant export, not independently round-tripped by testing a hand-built file through the import wizard from scratch. It's confirmed working for at least one real case (a hand-built file, `LibraryFilePlan`, successfully created the list with a Choice column's choices intact via **From CSV** on 2026-08-12) but flag it to the user as unverified-until-tried for a brand new list shape, and always give the manual column table as a fallback in the same delivery.
+
 ### List name rules
 - Prefix all related lists with the app abbreviation: `TT Personnel`, `TT Courses`, etc.
 - List names with spaces must be wrapped in single quotes in Power Fx: `'TT Personnel'`

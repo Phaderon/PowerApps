@@ -14,6 +14,8 @@ When delivering a completed app, present output in this exact sequence:
 
 A table per list showing every column the user needs to create. They copy this directly to SharePoint. See `builder-system.md` Phase 1 for the table format.
 
+Where practical, also offer the schema-preserving CSV import as the faster path (`builder-system.md` Phase 1, "Faster alternative") — one file, one upload, every column created with the right type in one step instead of manual column-by-column setup. Keep the manual table as the documented fallback either way.
+
 Present this first so the user can create all lists before opening Power Apps Studio.
 
 ### 2. Data Connections
