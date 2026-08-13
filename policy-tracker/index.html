@@ -297,6 +297,61 @@ Concat(
         <div class="callout">
           Read it this way: if <code>colNewsletterPack rows</code> is still <code>1</code>, the live <code>NewsletterPack.OnVisible</code> or <code>btnRefresh_1.OnSelect</code> formula is not building the same result as Stage 1. If <code>colNewsletterPack rows</code> is <code>3</code> but a gallery count is lower or the screen still shows one card, the bug is in gallery rendering/layout, not the SharePoint filter.
         </div>
+
+        <h3>Stage 3 - Print The Current Pack Gates Per Record</h3>
+        <p>If Stage 1 shows the three titles but Stage 2 shows <code>colNewsletterPack rows = 1</code>, use this label formula next. It prints the exact boolean gates used by the current NewsletterPack collection formula for every record in the Thursday date window.</p>
+
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Temporary debug label - Text, stage 3</span>
+              <span class="code-stamp">v1 &middot; 2026-08-13 13:05 BST</span>
+            </div>
+            <button data-copy="newsletter-pack-gates-debug-formula" type="button">Copy</button>
+          </div>
+<pre id="newsletter-pack-gates-debug-formula">With(
+    {_target: DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days")},
+    Concat(
+        AddColumns(
+            Filter(
+                'Policy Proof Tracker',
+                'Planned Publish Date' &gt;= _target &amp;&amp;
+                'Planned Publish Date' &lt; DateAdd(_target, 1, "Days")
+            ),
+            DebugLine,
+            Text(ID) &amp;
+            " | " &amp; Title &amp;
+            " | approval=" &amp; Coalesce('Approved For Release By'.Value, "&lt;blank&gt;") &amp;
+            " | finalApprovalOK=" &amp;
+            Text(
+                'Approved For Release By'.Value = "XO" ||
+                'Approved For Release By'.Value = "ACOS" ||
+                'Approved For Release By'.Value = "DCOMD" ||
+                'Approved For Release By'.Value = "D Commander"
+            ) &amp;
+            " | publishedOK=" &amp; Text(Published = false) &amp;
+            " | externalOK=" &amp; Text('External consultation required' = false) &amp;
+            " | currentPackRule=" &amp;
+            Text(
+                (
+                    'Approved For Release By'.Value = "XO" ||
+                    'Approved For Release By'.Value = "ACOS" ||
+                    'Approved For Release By'.Value = "DCOMD" ||
+                    'Approved For Release By'.Value = "D Commander"
+                ) &amp;&amp;
+                Published = false &amp;&amp;
+                'External consultation required' = false
+            )
+        ),
+        DebugLine,
+        Char(10)
+    )
+)</pre>
+        </div>
+
+        <div class="callout warn">
+          If the missing records say <code>finalApprovalOK=true</code> but <code>publishedOK=false</code> or <code>externalOK=false</code>, the collection is doing exactly what the current formula says. The fix is then a business-rule change to remove the unwanted gate from both <code>NewsletterPack.OnVisible</code> and <code>btnRefresh_1.OnSelect</code>, not a gallery fix.
+        </div>
       </section>
 
       <section id="publish-gate-removed">
