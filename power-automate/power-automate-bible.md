@@ -86,6 +86,21 @@ Use this wording pattern:
 
 Training Tracker confirmed this matters live: while filling `TT AuditLog.EventDescription`, the dynamic-content picker showed `CourseName` under `Update item`, `Update file properties`, `Get files (properties only)`, `Get item`, and `When Power Apps calls a flow (V2)`. The intended value for audit/log/library metadata in the certificate save flow is usually the trigger value from `When Power Apps calls a flow (V2)`, not the similarly named values from later SharePoint actions.
 
+## Avoid Unwanted Apply To Each Wrappers
+
+Confirmed live in Training Tracker reminder flow, 2026-08-13:
+
+- Picking dynamic content from a SharePoint `Get items`, `Get files (properties only)`, or `Filter array` result can cause Power Automate to silently wrap the current action in an `Apply to each` / `For each`.
+- This is especially dangerous inside an already-nested branch. The user pasted a `Ready_to_send` condition where `Send an email (V2)` and `Create item` had been pushed inside four generated loops: `For_each -> For_each_1 -> For_each_2 -> For_each_3`.
+- The resulting branch was structurally wrong and also close to Power Automate's nesting limit.
+
+Guide rule:
+
+- For values from a known parent loop, prefer expressions such as `items('Apply_to_each_Person')?['Email']`.
+- For Compose results, prefer expressions such as `outputs('Reminder_Key')`.
+- For the first item from a filtered array, prefer explicit expressions such as `first(body('Filter_array'))?['ID']`.
+- If Power Automate creates an unexpected loop around an email, log write, delete, or update action, stop and delete the loop. Re-add the value via the Expression tab rather than filling fields inside the accidental loop.
+
 ### Respond To A PowerApp Or Flow
 
 Avoid multiple `Respond to a PowerApp or flow` actions in separate Condition branches when the app depends on the response schema. Training Tracker hit a persistent Power Apps schema-recognition failure where only some outputs appeared. The robust pattern is:

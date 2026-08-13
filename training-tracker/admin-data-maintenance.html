@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Training Tracker Admin Data Maintenance</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --paper: #ffffff;
+      --ink: #172033;
+      --muted: #637084;
+      --line: #d9e1ec;
+      --primary: #004e42;
+      --primary-soft: #e8f4ef;
+      --green: #1f7a4d;
+      --amber: #a86500;
+      --red: #a33a3a;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --shadow: 0 12px 32px rgba(20, 34, 56, .10);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+    }
+    a { color: var(--primary); }
+    .shell {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    main {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+    }
+    h1 { margin: 0 0 8px; font-size: 2rem; }
+    h2 { margin: 34px 0 10px; font-size: 1.35rem; border-top: 1px solid var(--line); padding-top: 22px; }
+    h2:first-of-type { border-top: 0; padding-top: 0; }
+    h3 { margin: 24px 0 8px; font-size: 1.05rem; }
+    .lead { margin: 0 0 20px; color: var(--muted); font-size: 1.05rem; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: .8rem;
+      font-weight: 700;
+      margin: 0 8px 16px 0;
+    }
+    .callout {
+      border-left: 4px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 16px 0;
+    }
+    .warn { border-left-color: var(--amber); background: #fff7e8; }
+    .danger { border-left-color: var(--red); background: #fff0f0; }
+    .ok { border-left-color: var(--green); background: #edf8f2; }
+    code {
+      font-family: var(--mono);
+      background: #eef3f8;
+      border: 1px solid #dce5f0;
+      border-radius: 6px;
+      padding: 1px 5px;
+      font-size: .92em;
+    }
+    pre {
+      margin: 0;
+      overflow-x: auto;
+      background: #101827;
+      color: #f4f7fb;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: var(--mono);
+      font-size: .9rem;
+      line-height: 1.5;
+    }
+    .code-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 12px 0 18px;
+    }
+    .code-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: #eef3f8;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: 8px 14px;
+    }
+    .code-title button {
+      border: 1px solid var(--primary);
+      background: var(--primary);
+      color: #fff;
+      border-radius: 7px;
+      padding: 5px 9px;
+      cursor: pointer;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 18px;
+      font-size: .95rem;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #eef3f8; }
+    .step-list { padding-left: 22px; }
+    .step-list li { margin-bottom: 10px; }
+    .back-link { display: inline-block; margin-top: 24px; font-weight: 600; }
+    .small { color: var(--muted); font-size: .92rem; }
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 10px;
+      padding: 10px 14px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .18s ease, transform .18s ease;
+      pointer-events: none;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 860px) {
+      .shell { padding: 12px; }
+      main { padding: 18px; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <main>
+      <span class="pill">Training Tracker only</span>
+      <span class="pill">Admin maintenance</span>
+      <span class="pill">Data protection</span>
+      <h1>Admin Data Maintenance Build Pass</h1>
+      <p class="lead">This adds two maintenance features: certificate library metadata so PDFs are identifiable in SharePoint, and an admin-only permanent person removal route that deletes that person's training records and certificate files after a strong confirmation.</p>
+
+      <div class="callout danger">
+        <strong>Read this before building:</strong> permanent removal is destructive. Use it for genuine data-protection cleanup only. For ordinary leavers, the existing deactivate pattern is safer because it removes the person from compliance without destroying history.
+      </div>
+
+      <h2>0. Why The Reminder Flow Guide Changed</h2>
+      <p>You are currently building the email reminder flow. The guide was changed for two concrete reasons, not just tidying:</p>
+      <table>
+        <thead><tr><th>Problem found</th><th>What changed</th><th>Why it matters</th></tr></thead>
+        <tbody>
+          <tr><td><code>Send an email (V2)</code> was nested at level 9.</td><td>The separate <code>Reminder due</code> condition was removed. <code>Ready to send</code> now combines "Reminder Type is not blank" and "log row does not already exist".</td><td>Power Automate has a maximum nesting limit of 8. The old shape could not save.</td></tr>
+          <tr><td>Power Automate created unwanted <code>For each</code> wrappers.</td><td>The guide now says to use expressions for nested-loop values instead of picking vague dynamic tokens like <code>Current item</code>.</td><td>The email and log actions must sit directly inside <code>Ready to send - True / If yes</code>, not inside extra array loops.</td></tr>
+        </tbody>
+      </table>
+      <p>If you are halfway through that build, keep following <a href="course-expiry-reminders.html">Course Expiry Reminder Emails</a> from the corrected <code>Ready to send</code> section onward. The changes are there because the older branch shape was genuinely invalid.</p>
+
+      <h2>1. Certificate Library Metadata</h2>
+      <p>The locked certificate library should not be a pile of anonymous PDFs. Add these columns to <code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</p>
+      <table>
+        <thead><tr><th>Column internal name</th><th>Type</th><th>Required?</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>TrainingRecordID</code></td><td>Number</td><td>Yes</td><td>Links the file to <code>TT TrainingRecords.ID</code>.</td></tr>
+          <tr><td><code>PersonEmail</code></td><td>Single line text</td><td>Yes</td><td>The person the certificate belongs to.</td></tr>
+          <tr><td><code>PersonName</code></td><td>Single line text</td><td>No</td><td>Readable staff name for library maintenance.</td></tr>
+          <tr><td><code>CourseID</code></td><td>Number</td><td>Yes</td><td>Links the file to <code>TT Courses.ID</code>.</td></tr>
+          <tr><td><code>CourseName</code></td><td>Single line text</td><td>Yes</td><td>Readable course title.</td></tr>
+          <tr><td><code>DateCompleted</code></td><td>Date only</td><td>No</td><td>Completion date stored against the training record.</td></tr>
+          <tr><td><code>UploadedByEmail</code></td><td>Single line text</td><td>No</td><td>Who uploaded or replaced the certificate.</td></tr>
+          <tr><td><code>UploadedOn</code></td><td>Date and time</td><td>No</td><td>When the file was saved.</td></tr>
+          <tr><td><code>IsCurrent</code></td><td>Yes/No</td><td>Yes</td><td>Current certificate marker. Set to <code>true</code> for the live file.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>1.1 Update <code>TT - Save Certificate Library</code></h3>
+      <p>Open the save-certificate flow. Inside the authorised branch, inside the <code>HasNewFile - True / If yes</code> branch, the shape should be:</p>
+      <div class="code-card">
+        <div class="code-title">Expected save-file branch shape</div>
+<pre>HasNewFile
+└── True / If yes
+    ├── Get existing certificate files
+    ├── Apply to each existing certificate
+    │   └── Delete file
+    ├── Create file
+    └── Update file properties</pre>
+      </div>
+      <p>If you already have <strong>Update file properties</strong>, edit it. If not, add it directly under <strong>Create file</strong>. Do not put it inside the delete loop.</p>
+      <table>
+        <thead><tr><th>Update file properties field</th><th>Use this value</th></tr></thead>
+        <tbody>
+          <tr><td>Site Address</td><td>Your Training Tracker SharePoint site.</td></tr>
+          <tr><td>Library Name</td><td><code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</td></tr>
+          <tr><td>Id</td><td><code>ItemId</code> from <strong>Create file</strong>.</td></tr>
+          <tr><td><code>Title</code></td><td><code>CourseName</code> from <strong>When Power Apps calls a flow (V2)</strong>.</td></tr>
+          <tr><td><code>TrainingRecordID</code></td><td><code>RecordID</code> from the trigger.</td></tr>
+          <tr><td><code>PersonEmail</code></td><td><code>PersonEmail</code> from the trigger.</td></tr>
+          <tr><td><code>CourseID</code></td><td><code>CourseID</code> from the trigger.</td></tr>
+          <tr><td><code>CourseName</code></td><td><code>CourseName</code> from the trigger.</td></tr>
+          <tr><td><code>DateCompleted</code></td><td><code>DateCompleted</code> from the trigger.</td></tr>
+          <tr><td><code>UploadedByEmail</code></td><td><code>ActorEmail</code> from the trigger.</td></tr>
+          <tr><td><code>UploadedOn</code></td><td>Expression: <code>utcNow()</code></td></tr>
+          <tr><td><code>IsCurrent</code></td><td><code>true</code></td></tr>
+        </tbody>
+      </table>
+      <p class="small">For <code>PersonName</code>, use section 1.2. Do not guess a dynamic token called Title if there are several of them.</p>
+
+      <h3>1.2 Optional But Recommended: Fill <code>PersonName</code></h3>
+      <p>To fill the human-readable name, add this before <strong>Update file properties</strong>, still inside the same <code>HasNewFile - True / If yes</code> branch.</p>
+      <ol class="step-list">
+        <li>Add <strong>SharePoint - Get items</strong>. Name it <code>Get Person For Metadata</code>.</li>
+        <li>List: <code>TT Personnel</code>.</li>
+        <li>Filter Query: use the expression below.</li>
+        <li>Top Count: <code>1</code>.</li>
+      </ol>
+      <div class="code-card">
+        <div class="code-title">Power Automate expression pattern - person metadata filter</div>
+<pre>concat("Email eq '", PERSON_EMAIL_FROM_TRIGGER, "'")</pre>
+      </div>
+      <div class="callout warn">
+        <strong>Do not paste the pattern literally.</strong> In the expression editor, type <code>concat("Email eq '", </code>, then insert <code>PersonEmail</code> from <strong>When Power Apps calls a flow (V2)</strong>, then type <code>, "'")</code>. The exact internal trigger name can differ between flows, so the guide deliberately does not guess it here.
+      </div>
+      <p>Then set <code>PersonName</code> in <strong>Update file properties</strong> with this expression.</p>
+      <div class="code-card">
+        <div class="code-title">Power Automate expression - PersonName <button data-copy="person-name-expression">Copy</button></div>
+<pre id="person-name-expression">first(body('Get_Person_For_Metadata')?['value'])?['Title']</pre>
+      </div>
+
+      <h2>2. Build <code>TT - Remove Person</code></h2>
+      <p>This should be an instant cloud flow called from Power Apps. It performs the destructive cleanup under the flow connection, not by giving every admin direct delete formulas in the app.</p>
+
+      <h3>2.1 Trigger Inputs</h3>
+      <table>
+        <thead><tr><th>Order</th><th>Type</th><th>Name</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Number</td><td><code>PersonID</code></td><td><code>TT Personnel.ID</code>.</td></tr>
+          <tr><td>2</td><td>Text</td><td><code>PersonEmail</code></td><td>The selected person's email.</td></tr>
+          <tr><td>3</td><td>Text</td><td><code>ConfirmEmail</code></td><td>The email the admin typed into the confirmation box.</td></tr>
+          <tr><td>4</td><td>Text</td><td><code>ActorEmail</code></td><td>The signed-in admin.</td></tr>
+          <tr><td>5</td><td>Yes/No</td><td><code>IsAdmin</code></td><td>Must be true.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>2.2 Flow Shape</h3>
+      <div class="code-card">
+        <div class="code-title">Expected remove-person flow shape</div>
+<pre>Power Apps (V2)
+├── Initialize varSuccess = false
+├── Initialize varMessage = ""
+├── Get person
+├── Condition - Authorised and confirmed
+│   ├── True / If yes
+│   │   ├── Get certificate files
+│   │   ├── Apply to each certificate file
+│   │   │   └── Delete file
+│   │   ├── Get training records
+│   │   ├── Apply to each training record
+│   │   │   └── Delete item
+│   │   ├── Get people using this line manager
+│   │   ├── Apply to each managed person
+│   │   │   └── Update item - clear LineManagerEmail
+│   │   ├── Delete item - TT Personnel
+│   │   ├── Create item - TT AuditLog
+│   │   ├── Set varSuccess = true
+│   │   └── Set varMessage = "Person removed."
+│   └── False / If no
+│       └── Set varMessage = "Not authorised or confirmation did not match."
+└── Respond to a PowerApp or flow</pre>
+      </div>
+
+      <h3>2.3 Authorisation Condition</h3>
+      <p>The condition must check both admin status and typed confirmation. Use this as the left side expression, operator <strong>is equal to</strong>, right side <code>true</code>.</p>
+      <div class="code-card">
+        <div class="code-title">Power Automate expression - Authorised and confirmed <button data-copy="remove-auth-expression">Copy</button></div>
+<pre id="remove-auth-expression">and(
+    equals(triggerBody()?['boolean'], true),
+    equals(toLower(triggerBody()?['text']), toLower(triggerBody()?['text_1']))
+)</pre>
+      </div>
+      <div class="callout warn">
+        <strong>Check internal trigger names:</strong> with the input order above, <code>PersonEmail</code> is usually <code>text</code>, <code>ConfirmEmail</code> is usually <code>text_1</code>, and <code>IsAdmin</code> is usually <code>boolean</code>. If the expression red-lines, open trigger code view and swap in the real names. The logic is still: <code>IsAdmin = true</code> and <code>PersonEmail = ConfirmEmail</code>.
+      </div>
+
+      <h3>2.4 Delete Certificate Files</h3>
+      <p>Inside <strong>Authorised and confirmed - True / If yes</strong>, add <strong>SharePoint - Get files (properties only)</strong>.</p>
+      <table>
+        <thead><tr><th>Field</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Library Name</td><td><code>TT Certificates_LTD</code> / <code>TT Certificates (LTD)</code>.</td></tr>
+          <tr><td>Filter Query</td><td>Expression below.</td></tr>
+        </tbody>
+      </table>
+      <div class="code-card">
+        <div class="code-title">Power Automate expression - certificate delete filter <button data-copy="remove-cert-filter">Copy</button></div>
+<pre id="remove-cert-filter">concat("PersonEmail eq '", triggerBody()?['text'], "'")</pre>
+      </div>
+      <p>Add <strong>Apply to each</strong> over the files returned. Inside it add <strong>SharePoint - Delete file</strong>. Use <code>Identifier</code> from the current certificate file item.</p>
+
+      <h3>2.5 Delete Training Records</h3>
+      <p>Still inside the True branch, add <strong>SharePoint - Get items</strong> against <code>TT TrainingRecords</code>.</p>
+      <div class="code-card">
+        <div class="code-title">Power Automate expression - training record delete filter <button data-copy="remove-record-filter">Copy</button></div>
+<pre id="remove-record-filter">concat("PersonEmail eq '", triggerBody()?['text'], "'")</pre>
+      </div>
+      <p>Add <strong>Apply to each</strong> over the returned records. Inside it add <strong>SharePoint - Delete item</strong>, list <code>TT TrainingRecords</code>, Id from the current training record.</p>
+
+      <h3>2.6 Sever Line Manager Links</h3>
+      <p>Still inside the True branch, add <strong>SharePoint - Get items</strong> against <code>TT Personnel</code> to find anyone whose line manager is the removed person.</p>
+      <div class="code-card">
+        <div class="code-title">Power Automate expression - managed people filter <button data-copy="remove-manager-filter">Copy</button></div>
+<pre id="remove-manager-filter">concat("LineManagerEmail eq '", triggerBody()?['text'], "'")</pre>
+      </div>
+      <p>Add <strong>Apply to each</strong>. Inside it, <strong>Update item</strong> on <code>TT Personnel</code>, keep required fields unchanged, and set <code>LineManagerEmail</code> blank. Also set <code>LastStatus</code> to <code>Line manager removed</code>, <code>LastUpdatedByEmail</code> to <code>ActorEmail</code>, and <code>LastUpdatedOn</code> to <code>utcNow()</code>.</p>
+
+      <h3>2.7 Delete The Person And Respond</h3>
+      <ol class="step-list">
+        <li>Add <strong>SharePoint - Delete item</strong>, list <code>TT Personnel</code>, Id = <code>PersonID</code> from the trigger.</li>
+        <li>Add <strong>SharePoint - Create item</strong>, list <code>TT AuditLog</code>, event type <code>Person permanently removed</code>.</li>
+        <li>Set <code>varSuccess</code> to <code>true</code>.</li>
+        <li>Set <code>varMessage</code> to <code>Person removed.</code>.</li>
+        <li>Put one <strong>Respond to a PowerApp or flow</strong> after the whole condition, not inside either branch. Return <code>success</code> and <code>message</code>.</li>
+      </ol>
+
+      <h2>3. Add The Power Apps Remove Button</h2>
+      <p>This is a targeted edit to <code>scrAdminManage</code>. Do not replace the whole screen unless you want to discard your manual spacing tweaks.</p>
+
+      <h3>3.1 Add Confirmation Input</h3>
+      <p>Inside the edit-person area, add a modern text input named <code>txtRemovePersonConfirm</code>.</p>
+      <table>
+        <thead><tr><th>Property</th><th>Formula</th></tr></thead>
+        <tbody>
+          <tr><td><code>Default</code></td><td><code>""</code></td></tr>
+          <tr><td><code>Placeholder</code></td><td><code>"Type email to confirm permanent removal"</code></td></tr>
+          <tr><td><code>Visible</code></td><td><code>varTab = "People" &amp;&amp; !IsBlank(varEditPerson) &amp;&amp; varShowRemovePersonConfirm</code></td></tr>
+          <tr><td><code>X</code></td><td><code>32</code></td></tr>
+          <tr><td><code>Y</code></td><td><code>410</code></td></tr>
+          <tr><td><code>Width</code></td><td><code>590</code></td></tr>
+          <tr><td><code>Height</code></td><td><code>40</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>3.2 Add Remove Button</h3>
+      <p>Add a modern button named <code>btnRemovePersonPermanent</code>.</p>
+      <table>
+        <thead><tr><th>Property</th><th>Formula</th></tr></thead>
+        <tbody>
+          <tr><td><code>Text</code></td><td><code>If(varShowRemovePersonConfirm, "Confirm permanent removal", "Remove person")</code></td></tr>
+          <tr><td><code>BasePaletteColor</code></td><td><code>RGBA(226,75,74,1)</code></td></tr>
+          <tr><td><code>Visible</code></td><td><code>varTab = "People" &amp;&amp; !IsBlank(varEditPerson) &amp;&amp; varIsAdmin</code></td></tr>
+          <tr><td><code>X</code></td><td><code>32</code></td></tr>
+          <tr><td><code>Y</code></td><td><code>If(varShowRemovePersonConfirm, 462, 410)</code></td></tr>
+          <tr><td><code>Width</code></td><td><code>284</code></td></tr>
+          <tr><td><code>Height</code></td><td><code>44</code></td></tr>
+        </tbody>
+      </table>
+      <p>Set <code>btnRemovePersonPermanent.OnSelect</code> to this. Formula bar paste: no leading equals sign.</p>
+      <div class="code-card">
+        <div class="code-title">Power Fx - btnRemovePersonPermanent.OnSelect <button data-copy="remove-person-onselect">Copy</button></div>
+<pre id="remove-person-onselect">If(
+    !varShowRemovePersonConfirm,
+    Set(varShowRemovePersonConfirm, true);
+    Reset(txtRemovePersonConfirm);
+    Notify("Type the person's email address to confirm permanent removal.", NotificationType.Warning),
+    If(
+        Lower(Trim(txtRemovePersonConfirm.Text)) &lt;&gt; Lower(varEditPerson.Email),
+        Notify("Email confirmation does not match. Nothing was removed.", NotificationType.Error),
+        Set(varCertBusy, true);
+        Set(
+            varRemovePersonResult,
+            IfError(
+                'TT - Remove Person'.Run(
+                    varEditPerson.ID,
+                    Lower(varEditPerson.Email),
+                    Lower(Trim(txtRemovePersonConfirm.Text)),
+                    varMyEmail,
+                    varIsAdmin
+                ),
+                {success: false, message: "Remove flow could not be reached."}
+            )
+        );
+        Set(varCertBusy, false);
+        If(
+            varRemovePersonResult.success,
+            Refresh('TT Personnel');
+            Refresh('TT TrainingRecords');
+            Set(varEditPerson, Blank());
+            Set(varShowRemovePersonConfirm, false);
+            Notify(varRemovePersonResult.message, NotificationType.Success),
+            Notify(varRemovePersonResult.message, NotificationType.Error)
+        )
+    )
+)</pre>
+      </div>
+
+      <h3>3.3 Add Cancel Remove Button</h3>
+      <p>Add a modern button named <code>btnCancelRemovePerson</code>.</p>
+      <table>
+        <thead><tr><th>Property</th><th>Formula</th></tr></thead>
+        <tbody>
+          <tr><td><code>Text</code></td><td><code>"Cancel removal"</code></td></tr>
+          <tr><td><code>BasePaletteColor</code></td><td><code>RGBA(108,117,125,1)</code></td></tr>
+          <tr><td><code>Visible</code></td><td><code>varTab = "People" &amp;&amp; !IsBlank(varEditPerson) &amp;&amp; varShowRemovePersonConfirm</code></td></tr>
+          <tr><td><code>X</code></td><td><code>326</code></td></tr>
+          <tr><td><code>Y</code></td><td><code>462</code></td></tr>
+          <tr><td><code>Width</code></td><td><code>296</code></td></tr>
+          <tr><td><code>Height</code></td><td><code>44</code></td></tr>
+          <tr><td><code>OnSelect</code></td><td><code>Set(varShowRemovePersonConfirm, false); Reset(txtRemovePersonConfirm)</code></td></tr>
+        </tbody>
+      </table>
+
+      <h2>4. Test Checklist</h2>
+      <ol class="step-list">
+        <li>Upload or replace one certificate.</li>
+        <li>Open <code>TT Certificates_LTD</code> directly in SharePoint and confirm metadata columns show person email, course, date, uploader, and current marker.</li>
+        <li>Create a disposable test person with one test training record and one test certificate.</li>
+        <li>Run <code>TT - Remove Person</code> only against that test person first.</li>
+        <li>Confirm the person row is gone, training records are gone, certificate files are gone, and any LineManagerEmail links pointing at that email are blank.</li>
+        <li>Confirm <code>TT AuditLog</code> has a permanent-removal entry.</li>
+      </ol>
+
+      <h2>5. References</h2>
+      <ul>
+        <li>Microsoft Learn: <a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-remove-removeif" target="_blank" rel="noopener">Power Fx Remove and RemoveIf functions</a>. This build deliberately uses a flow instead of direct app-side removal because it also deletes library files and writes audit.</li>
+        <li>Microsoft Support: <a href="https://support.microsoft.com/en-us/sharepoint/documents-and-library/delete-a-file-folder-or-link-from-a-sharepoint-document-library" target="_blank" rel="noopener">delete files from a SharePoint document library</a>.</li>
+      </ul>
+
+      <a class="back-link" href="index.html">&larr; Back to the main Training Tracker guide</a>
+    </main>
+  </div>
+  <div id="toast" class="toast">Copied</div>
+  <script>
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      toast.textContent = text;
+      toast.classList.add('show');
+      window.setTimeout(() => toast.classList.remove('show'), 1400);
+    }
+    document.querySelectorAll('[data-copy]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const target = document.getElementById(button.getAttribute('data-copy'));
+        if (!target) return;
+        try {
+          await navigator.clipboard.writeText(target.innerText.replace(/\n/g, '\r\n'));
+          showToast('Copied');
+        } catch (err) {
+          showToast('Copy failed');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
