@@ -184,15 +184,15 @@
       <nav>
         <a href="../">Guide library</a>
         <a href="#what-this-page-is">What This Page Is</a>
-        <a href="#onedrive-link-fix">Fix 1 - Personal OneDrive Links</a>
-        <a href="#addressbar-url-fix">Fix 2 - Address-Bar Link Save Failure</a>
-        <a href="#addressbar-icon-hint">Fix 3 - Generic Icon Hint Text</a>
+        <a href="#publish-gate-removed">Fix 1 - Publish Buttons No Longer Gated On Consultation Flag</a>
+        <a href="#newsletter-approval-fix">Fix 2 - Newsletter Required Real Final Approval</a>
+        <a href="#close-banner-flash">Fix 3 - Deadline Banner Flash On Close</a>
       </nav>
     </aside>
 
     <main>
       <div class="topline">
-        <span class="pill">Updated 29 Jul 2026</span>
+        <span class="pill">Updated 13 Aug 2026</span>
         <span class="pill">Policy Tracker only</span>
         <span class="pill">3 fixes so far</span>
       </div>
@@ -201,130 +201,204 @@
 
       <section id="what-this-page-is">
         <h2>What This Page Is</h2>
-        <p>This is the working fix log for the Policy Tracker canvas app (repo <code>PhadeDev/policy-tracker</code>). It replaces the old single-fix-at-a-time guide that used to live at <code>phadedev.github.io/policy-tracker/guides/pre-release-scrub.html</code> &mdash; that page now just points here.</p>
+        <p>This is the working fix log for the Policy Tracker canvas app (repo <code>PhadeDev/policy-tracker</code>). Reset to empty on 2026-08-13 &mdash; the previous entries (personal OneDrive link blocking, address-bar link save crash, generic-icon hint) had already been applied in Studio for weeks and were no longer needed as a reference.</p>
         <div class="callout">
           Each fix below is a targeted property edit on the live app, applied by hand in Power Apps Studio. None of them require a full screen repaste unless stated otherwise.
         </div>
       </section>
 
-      <section id="onedrive-link-fix">
-        <h2>Fix 1 - Block Saving Personal OneDrive Links As Document Links</h2>
-        <p class="meta-line">ViewItem &middot; property edit &middot; no risk</p>
-        <p>The Open In App icon-scan already looks for the real SharePoint document-library domain (<code>modgovuk.sharepoint.com</code>) on <code>OpenDesktop_2.Visible</code>. A personal OneDrive share link (e.g. <code>https://modgovuk-my.sharepoint.com/:w:/r/personal/...</code>) uses a different domain &mdash; the <code>-my.sharepoint.com</code> "my site" domain, not the document library &mdash; so it was never going to be recognised, and worse, it's not something colleagues should be linking to from a tracked policy item anyway (personal OneDrive isn't shared storage). First attempt used a toast on Save, but toasts are easy to miss. Replaced it with a persistent inline text block under the URL field itself (reusing the existing error-label spot, so it shows live as soon as the link is typed/pasted, not just on Save). <strong>Save itself still re-checks the same condition independently as a fallback</strong> &mdash; it doesn't just rely on the label being visible, so even if the inline warning were somehow not showing, Save would still silently refuse to submit a personal OneDrive link.</p>
+      <section id="publish-gate-removed">
+        <h2>Fix 1 - Publish Buttons No Longer Gated On External Consultation Flag</h2>
+        <p class="meta-line">Main &middot; property edit &middot; no risk to formula syntax, changes real publish behaviour</p>
+        <p>Reported 2026-08-13: on a day with three items due, only one showed a per-item <strong>Publish</strong> button and <strong>Publish All</strong> read <code>(1)</code> instead of <code>(3)</code>. It looked like an approval-based bug, but it wasn't &mdash; <code>BossPublishBtn.Visible</code> and <code>PublishAllBtn</code> never checked approval status at all. The actual gate was <code>'External consultation required' = false</code>, present in four places (button visibility, the count shown in the button text, and both <code>Filter()</code> calls used when actually patching records). Two of the three items had that flag ticked. Decision: drop that condition everywhere so Publish/Publish All always show for boss users on unpublished, due items, regardless of the consultation flag.</p>
+        <div class="callout warn">
+          <strong>Behaviour change, not just a bug fix:</strong> a boss can now publish an item that still needs external consultation. That's intentional, per instruction &mdash; flagging it here so it's not a surprise later.
+        </div>
 
         <ol>
-          <li>Open <strong>ViewItem</strong>.</li>
-          <li>In the Tree view, find <strong>ErrorMessage29_2</strong> (the small text under the "Direct URL to document" field).</li>
-          <li>Select <code>Text</code> in the Properties dropdown, select all, and replace with this formula.</li>
+          <li>Open <strong>Main</strong>.</li>
+          <li>In the Tree view, find <strong>BossPublishBtn</strong> (the per-item "&#9889; Publish" button).</li>
+          <li>Select <code>Visible</code> in the Properties dropdown, select all, and replace with this formula.</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>ErrorMessage29_2.Text</span>
-            <button data-copy="onedrive-error-text" type="button">Copy</button>
+            <span>BossPublishBtn.Visible</span>
+            <button data-copy="boss-publish-visible" type="button">Copy</button>
           </div>
-<pre id="onedrive-error-text">If(
-    "modgovuk-my.sharepoint.com" in Lower(DataCardValue29_2.Text),
-    "This is a personal OneDrive link. Please save this document into SharePoint first, then paste the SharePoint link here.",
-    frmLink_2.Valid = false && !IsBlank(frmLink_2.Error),
-    "URL is required.",
-    ""
-)</pre>
+<pre id="boss-publish-visible">!IsEmpty(Filter(colBossButtonUsers, Lower(Email) = Lower(User().Email))) &&
+ThisItem.'Planned Publish Date' <= Today() &&
+ThisItem.Published = false</pre>
         </div>
 
         <ol start="4">
-          <li>Still on <strong>ErrorMessage29_2</strong>, select <code>Wrap</code> in the Properties dropdown and set it to <code>true</code> (the message is longer than the old "URL is required." text, so it needs to wrap onto a second line instead of being cut off).</li>
-          <li>Now find <strong>btnSaveLink_2</strong> (the Save button in the same modal). This is the fallback check &mdash; it runs the same domain test again independently, so Save still refuses to submit even if the inline warning above wasn't showing.</li>
+          <li>Find <strong>PublishAllBtn</strong> (the group-header "Publish All (n)" button).</li>
           <li>Select <code>OnSelect</code> in the Properties dropdown, select all, and replace with this formula.</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>btnSaveLink_2.OnSelect</span>
-            <button data-copy="onedrive-save-onselect" type="button">Copy</button>
+            <span>PublishAllBtn.OnSelect</span>
+            <button data-copy="publish-all-onselect" type="button">Copy</button>
           </div>
-<pre id="onedrive-save-onselect">If(
-    !varSubmitting && !("modgovuk-my.sharepoint.com" in Lower(DataCardValue29_2.Text)),
-    Set(varSubmitting, true);
-    SubmitForm(frmLink_2);
-    // Do NOT refresh here
-    Set(varSubmitting, false)
-)</pre>
-        </div>
-
-        <div class="callout ok">
-          <strong>Test:</strong> paste a <code>modgovuk-my.sharepoint.com/:w:/r/personal/...</code> link into the URL field &mdash; the warning text should appear straight away under the field, wrapped onto two lines, and hitting Save should do nothing while it's showing. A normal <code>modgovuk.sharepoint.com</code> document-library link should show no message and still save as before.
-        </div>
-      </section>
-
-      <section id="addressbar-url-fix">
-        <h2>Fix 2 - "Save Failed / Invalid URL Value" On Address-Bar Document Links</h2>
-        <p class="meta-line">ViewItem &middot; property edit &middot; no risk</p>
-        <p>Reported urgent 2026-07-29: adding a document link failed with a pink "Save failed" banner and a briefly-flashed SharePoint error, <code>PolicyLinks failed: Invalid URL value. A URL field contains invalid data.</code> Confirmed via issue #33 comparison: a link copied from the browser's address bar while viewing a Word doc in Office Online (323 characters, carrying Outlook tracking junk like <code>&amp;clickparams=...</code>, <code>&amp;CID=...</code>, <code>&amp;wdLOR=...</code>) failed every time, while the same file's proper Share &gt; Copy Link (169 characters) saved fine. The SharePoint <code>LinkUrl</code> column has its own length cap and rejects anything over it with exactly this error &mdash; it has nothing to do with the file type or which website the link points to (a bare domain like <code>google.com</code> with no <code>http://</code>/<code>https://</code> scheme will also be rejected by SharePoint, for a separate, unrelated reason). The existing <code>Update</code> formula on this field already trimmed one known junk parameter (<code>&amp;action</code>); extended it to also trim the three new ones seen in this report, so the link still saves with its real share token intact, just without the extra tracking noise pushing it over the length limit.</p>
-        <div class="callout warn">
-          <strong>Known limitation, not fixed by this:</strong> links copied from the address bar this way don't contain the filename anywhere in the URL (just an opaque ID token), so their document-link icon will still show generic rather than picking up the real file type. That's a limitation of what that link format contains, not something a formula can fix. Using Share &gt; Copy Link remains the better habit for a correct icon too.
-        </div>
-
-        <ol>
-          <li>Open <strong>ViewItem</strong>.</li>
-          <li>In the Tree view, find <strong>LinkUrl_DataCard2_2</strong> (the data card wrapping the "Direct URL to document" field).</li>
-          <li>Select <code>Update</code> in the Properties dropdown, select all, and replace with this formula.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <span>LinkUrl_DataCard2_2.Update</span>
-            <button data-copy="addressbar-update" type="button">Copy</button>
-          </div>
-<pre id="addressbar-update">With(
-    {
-        fullUrl: DataCardValue29_2.Text
-    },
-    If(
-        IsBlank(fullUrl),
-        Blank(),
-        Left(
-            fullUrl,
-            Min(
-                If(Find("&action", fullUrl) > 0, Find("&action", fullUrl) - 1, Len(fullUrl)),
-                If(Find("&clickparams", fullUrl) > 0, Find("&clickparams", fullUrl) - 1, Len(fullUrl)),
-                If(Find("&CID=", fullUrl) > 0, Find("&CID=", fullUrl) - 1, Len(fullUrl)),
-                If(Find("&wdLOR", fullUrl) > 0, Find("&wdLOR", fullUrl) - 1, Len(fullUrl))
-            )
-        )
+<pre id="publish-all-onselect">// PublishAllBtn.OnSelect
+Set(varPublishGroupDate, ThisItem.PlannedDate);
+Set(varPublishGroupCount, CountRows(Filter(ThisItem.GroupedItems, Published = false)));
+Clear(colPublishFailures);
+ForAll(
+    Filter(ThisItem.GroupedItems, Published = false) As PubItem,
+    IfError(
+        Patch(
+            'Policy Proof Tracker',
+            LookUp('Policy Proof Tracker', ID = PubItem.ID),
+            {
+                Published: true,
+                'Published Date': varPublishGroupDate
+            }
+        ); true,
+        Collect(colPublishFailures, {ID: PubItem.ID}); true
+    )
+);
+Set(varPublishFailCount, CountRows(colPublishFailures));
+Refresh('Policy Proof Tracker');
+RefreshActiveCache();
+If(
+    varPublishFailCount = 0,
+    Notify(
+        "Published all " & varPublishGroupCount & " items for " & Text(varPublishGroupDate, "d mmm yyyy"),
+        NotificationType.Success
+    ),
+    Notify(
+        varPublishFailCount & " of " & varPublishGroupCount & " items failed to publish for " & Text(varPublishGroupDate, "d mmm yyyy") & ". Please retry.",
+        NotificationType.Error
     )
 )</pre>
         </div>
 
-        <div class="callout ok">
-          <strong>Test:</strong> open a Word/Excel doc in Office Online from a link inside Outlook, copy the address bar URL, paste it into "Direct URL to document" and hit Save &mdash; it should save without error now. A normal Share &gt; Copy Link URL should still save exactly as before (nothing in this formula changes for URLs that don't contain those tracking parameters).
-        </div>
-      </section>
-
-      <section id="addressbar-icon-hint">
-        <h2>Fix 3 - Hint Text For The Generic-Icon Limitation</h2>
-        <p class="meta-line">ViewItem &middot; new label &middot; no risk</p>
-        <p>Follow-up to Fix 2: even after the save crash is fixed, links copied from the browser address bar still show a generic document icon instead of the real file type, because <code>GetFileExt()</code> (in <code>Formulas.txt</code>) can only detect a file type from a <code>file=</code> query parameter or a dotted extension right before a <code>?</code> in the URL path &mdash; and the compact address-bar link format contains neither, just an opaque ID token. There's no reliable way to recover the real filename from that token without an extra Microsoft Graph lookup (e.g. a Power Automate flow resolving the share link), which was judged not worth the extra infrastructure for a cosmetic icon. Decided instead to just tell people, clearly, right where they're about to paste the link.</p>
-
-        <ol>
-          <li>Open <strong>ViewItem</strong>.</li>
-          <li>In the Tree view, find <strong>Activator_1</strong> (the "No document links yet" empty-state group, containing <code>Label6_2</code>, <code>lblLinkFieldsHint1</code>, <code>btnAddLinkEmpty1</code>, and <code>SVG_13</code>).</li>
-          <li>Add a new <strong>Label</strong> control as the last child of <strong>Activator_1</strong>, named <code>lblLinkCopyHint1</code>, with the properties below.</li>
+        <ol start="6">
+          <li>Still on <strong>PublishAllBtn</strong>, select <code>Text</code> and replace with this formula.</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>lblLinkCopyHint1 (new Label@2.5.1)</span>
-            <button data-copy="copy-hint-label" type="button">Copy</button>
+            <span>PublishAllBtn.Text</span>
+            <button data-copy="publish-all-text" type="button">Copy</button>
           </div>
-<pre id="copy-hint-label">Align: Center
-AutoHeight: true
-Color: RGBA(91, 105, 97, 1)
-Font: Font.'Open Sans'
-Size: 9
-Text: ="Tip - use Share > Copy Link on the document, not the browser address bar. Address bar links still save, but the app can only show the correct file icon when copied this way."
-Width: 380
-Wrap: true</pre>
+<pre id="publish-all-text">"Publish All (" & CountRows(Filter(ThisItem.GroupedItems, Published = false)) & ")"</pre>
+        </div>
+
+        <ol start="7">
+          <li>Still on <strong>PublishAllBtn</strong>, select <code>Visible</code> and replace with this formula.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>PublishAllBtn.Visible</span>
+            <button data-copy="publish-all-visible" type="button">Copy</button>
+          </div>
+<pre id="publish-all-visible">!IsEmpty(Filter(colBossButtonUsers, Lower(Email) = Lower(User().Email))) &&
+ThisItem.PlannedDate <= Today() &&
+CountRows(Filter(ThisItem.GroupedItems, Published = false)) > 0</pre>
         </div>
 
         <div class="callout ok">
-          <strong>Test:</strong> open an item with no document links yet &mdash; the new tip text should appear under the "+ Add Document Link" button, wrapped onto multiple lines, without affecting anything else in that empty-state block.
+          <strong>Test:</strong> on a day with several unpublished items due, including at least one flagged "External consultation required" &mdash; every item should now show its own Publish button, and Publish All's count should match the total number of unpublished items in that group, not just the ones without the consultation flag.
+        </div>
+      </section>
+
+      <section id="newsletter-approval-fix">
+        <h2>Fix 2 - Newsletter Pack Required Real Final Approval, Not Just Pillar Lead</h2>
+        <p class="meta-line">NewsletterPack &middot; property edit &middot; changes which items appear in the pack</p>
+        <p>Reported 2026-08-13 alongside Fix 1: an item approved only by the Pillar Lead (not yet by ACOS or above) was still appearing in the newsletter pack. The <code>Filter()</code> that builds <code>colNewsletterPack</code> included <code>'Approved by Pillar Lead (Ready to Release)' = true</code> as one of several OR'd conditions, so Pillar Lead approval alone was enough to qualify &mdash; even though a separate <code>IsFinalApproved</code> column (used only for the amber "pending" styling on the card) already correctly checked just the four senior sign-off values. Fix: removed the Pillar Lead OR branch from the qualifying filter, so an item only enters the pack once <code>'Approved For Release By'</code> is XO, ACOS, DCOMD, or "D Commander" &mdash; DCOMD / D Commander is the Deputy Commander Cadets rank tier (Brigadier-equivalent), so that already covers "ACOS or above." There are two identical copies of this filter in the screen (initial load and a manual-refresh block further down) &mdash; both need the same edit.</p>
+
+        <ol>
+          <li>Open <strong>NewsletterPack</strong>.</li>
+          <li>Select the screen itself (root node), then <code>OnVisible</code> in the Properties dropdown.</li>
+          <li>Find the <code>ClearCollect(colNewsletterPack, ...)</code> block near the top and replace the whole formula with this.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>NewsletterPack.OnVisible (top ClearCollect block)</span>
+            <button data-copy="newsletter-onvisible" type="button">Copy</button>
+          </div>
+<pre id="newsletter-onvisible">Set(varNewsletterTargetDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));
+Refresh('Policy Proof Tracker');
+ClearCollect(
+    colNewsletterPack,
+    Sort(
+        AddColumns(
+            Filter(
+                'Policy Proof Tracker',
+                'Planned Publish Date' >= varNewsletterTargetDate &&
+                'Planned Publish Date' < DateAdd(varNewsletterTargetDate, 1, "Days") &&
+                (
+                    'Approved For Release By'.Value = "XO" ||
+                    'Approved For Release By'.Value = "ACOS" ||
+                    'Approved For Release By'.Value = "DCOMD" ||
+                    'Approved For Release By'.Value = "D Commander"
+                ) &&
+                Published = false &&
+                'External consultation required' = false
+            ),
+            SortKey,
+            If(
+                'Top Item',
+                -1000,
+                Coalesce(LookUp(colChoiceColors, ChoiceValue = 'Document Type'.Value, SortOrder), 99)
+            ),
+            IsFinalApproved,
+            Or(
+                'Approved For Release By'.Value = "XO",
+                'Approved For Release By'.Value = "ACOS",
+                'Approved For Release By'.Value = "DCOMD",
+                'Approved For Release By'.Value = "D Commander"
+            ),
+            PackTitle,
+            Coalesce('Title for Newsletter', Title),
+            PackAudience,
+            Coalesce(Audience, ""),
+            PackSummary,
+            Coalesce('Item summary', "")
+        ),
+        SortKey,
+        SortOrder.Ascending
+    )
+)</pre>
+        </div>
+
+        <ol start="4">
+          <li>Find the second, near-identical <code>ClearCollect(colNewsletterPack, ...)</code> block further down the screen (the manual-refresh one, likely on a Refresh button's <code>OnSelect</code>) and apply the exact same change &mdash; remove the <code>'Approved by Pillar Lead (Ready to Release)' = true ||</code> line from its qualifying filter too, leaving the XO/ACOS/DCOMD/D Commander checks as the only qualifying conditions. The rest of that block (<code>SortKey</code>, <code>IsFinalApproved</code>, etc.) is unchanged.</li>
+        </ol>
+
+        <div class="callout ok">
+          <strong>Test:</strong> tick Pillar Lead approval only on an item due this week, leave "Approved For Release By" as "Not Yet Approved" &mdash; it should NOT appear in the newsletter pack. Set "Approved For Release By" to ACOS &mdash; it should now appear, regardless of the Pillar Lead tick.
+        </div>
+      </section>
+
+      <section id="close-banner-flash">
+        <h2>Fix 3 - Deadline Warning Banner Flashing On Close</h2>
+        <p class="meta-line">ViewItem &middot; property edit &middot; visual only, no data risk</p>
+        <p>Reported 2026-08-13: clicking <strong>Close</strong> on an item with a release date inside 10 days (not High Priority, not External Consultation) briefly flashed the amber "Release date is within 10 days" banner before navigating away. Root cause: <code>conWarningBar1.Visible</code> depends on <code>varSelectPolicy &lt;&gt; "Filled"</code>, and <code>btnClose1.OnSelect</code> was setting <code>varSelectPolicy</code> to <code>"Empty"</code> (along with the other state resets) <em>before</em> calling <code>Navigate()</code>. For the instant between that Set and the screen actually leaving, the still-visible screen re-evaluated the banner's Visible formula, saw "not filled" plus the still-populated deadline fields, and lit up for a frame. Fix: just reorder the statements so <code>Navigate()</code> fires first and the state resets happen after &mdash; the resets themselves are unaffected by the reorder since none of them are read again on this screen once navigation starts.</p>
+
+        <ol>
+          <li>Open <strong>ViewItem</strong>.</li>
+          <li>In the Tree view, find <strong>btnClose1</strong> (the "Close" button, top right of the header).</li>
+          <li>Select <code>OnSelect</code> in the Properties dropdown, select all, and replace with this formula.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>btnClose1.OnSelect</span>
+            <button data-copy="close-onselect" type="button">Copy</button>
+          </div>
+<pre id="close-onselect">If(
+    varUnsavedChanges,
+    UpdateContext({locDisplayDiscardPopUp: true}),
+    If(varSourceScreen = "Historic", Navigate(Historic, ScreenTransition.Fade), Navigate(Main, ScreenTransition.Fade));
+    Set(varSelectPolicy, "Empty");
+    Set(varSelectedRelease, Blank());
+    Set(varUnsavedChanges, false);
+    Set(varShowLinkModal, false)
+)</pre>
+        </div>
+
+        <div class="callout ok">
+          <strong>Test:</strong> open an item with a Planned Publish Date inside 10 days, not marked High Priority or External Consultation (the amber banner should be showing), then click Close without making any changes &mdash; it should navigate away cleanly with no flash. Opening the same item and clicking Save &amp; Close should still show the warning normally, since that path is untouched.
         </div>
       </section>
     </main>
