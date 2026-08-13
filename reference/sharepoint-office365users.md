@@ -39,6 +39,22 @@ Multi-choice fields use a table of choice records:
 
 SharePoint-backed galleries usually expose `ThisItem.ID`. Collections only expose `ID` if the collection was built from data that includes it. Do not use `ThisItem.ID` in a collection-based gallery unless the collection schema is explicit.
 
+## SharePoint Yes/No Fields In Filters
+
+Confirmed live in Policy Tracker on 2026-08-13: a SharePoint Yes/No field can behave as blank rather than explicit `false` in a Power Apps filter. A strict false check can silently exclude unticked/blank rows:
+
+```powerfx
+'External consultation required' = false
+```
+
+Use `Coalesce` when the business rule is "include unticked, exclude ticked":
+
+```powerfx
+Coalesce('External consultation required', false) = false
+```
+
+This treats blank as unticked while still excluding real `true` values. Do not remove the gate unless the business rule genuinely changed. This was the root cause of Policy Tracker `NewsletterPack` showing only 1 of 3 valid Thursday items: the two missing items passed date, approval, and published gates but failed the strict consultation check.
+
 ## Office365Users
 
 The connector has inconsistent casing across operations in the Training Tracker build.
