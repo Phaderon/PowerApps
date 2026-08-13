@@ -190,6 +190,7 @@
         <a href="#publish-gate-removed">Fix 1 - Publish Buttons No Longer Gated On Consultation Flag</a>
         <a href="#newsletter-approval-fix">Fix 2 - Newsletter Required Real Final Approval</a>
         <a href="#close-banner-flash">Fix 3 - Deadline Banner Flash On Close</a>
+        <a href="#newsletter-external-consultation-fix">Fix 4 - Newsletter Includes External Consultation Items</a>
       </nav>
     </aside>
 
@@ -197,7 +198,7 @@
       <div class="topline">
         <span class="pill">Updated 13 Aug 2026</span>
         <span class="pill">Policy Tracker only</span>
-        <span class="pill">3 fixes + urgent diagnostic</span>
+        <span class="pill">4 fixes + urgent diagnostic</span>
       </div>
       <h1>Policy Tracker Fix Guide</h1>
       <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
@@ -351,6 +352,9 @@ Concat(
 
         <div class="callout warn">
           If the missing records say <code>finalApprovalOK=true</code> but <code>publishedOK=false</code> or <code>externalOK=false</code>, the collection is doing exactly what the current formula says. The fix is then a business-rule change to remove the unwanted gate from both <code>NewsletterPack.OnVisible</code> and <code>btnRefresh_1.OnSelect</code>, not a gallery fix.
+        </div>
+        <div class="callout ok">
+          <strong>Confirmed result:</strong> the missing newsletter rows showed <code>externalOK=false</code> while <code>finalApprovalOK=true</code> and <code>publishedOK=true</code>. Apply Fix 4 below.
         </div>
       </section>
 
@@ -617,6 +621,132 @@ ClearCollect(
 
         <div class="callout ok">
           <strong>Test:</strong> open an item with a Planned Publish Date inside 10 days, not marked High Priority or External Consultation (the amber banner should be showing), then click Close without making any changes &mdash; it should navigate away cleanly with no flash. Opening the same item and clicking Save &amp; Close should still show the warning normally, since that path is untouched.
+        </div>
+      </section>
+
+      <section id="newsletter-external-consultation-fix">
+        <h2>Fix 4 - Newsletter Pack No Longer Excludes External Consultation Items</h2>
+        <p class="meta-line">NewsletterPack &middot; property edit &middot; changes which items appear in the pack</p>
+        <p>Confirmed by the urgent diagnostic on 2026-08-13: three records matched the Thursday date window, but <code>colNewsletterPack</code> only contained one. The two missing records had <code>finalApprovalOK=true</code> and <code>publishedOK=true</code>, but <code>externalOK=false</code>. That means the gallery was not broken. The collection was excluding them because both NewsletterPack formulas still had <code>'External consultation required' = false</code>. This fix removes that gate from both places, matching the Publish/Publish All decision from Fix 1.</p>
+        <div class="callout warn">
+          <strong>Behaviour change:</strong> externally consulted items can now appear in the newsletter pack once they have final approval and are still unpublished. They are no longer blocked just because the external consultation flag is ticked.
+        </div>
+
+        <ol>
+          <li>Open <strong>NewsletterPack</strong>.</li>
+          <li>Select the screen itself (root node), then select <code>OnVisible</code> in the Properties dropdown.</li>
+          <li>Select all and replace with this full formula.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>NewsletterPack.OnVisible</span>
+              <span class="code-stamp">v2 &middot; 2026-08-13 13:20 BST</span>
+            </div>
+            <button data-copy="newsletter-onvisible-no-external-gate" type="button">Copy</button>
+          </div>
+<pre id="newsletter-onvisible-no-external-gate">Set(varNewsletterTargetDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));
+Refresh('Policy Proof Tracker');
+ClearCollect(
+    colNewsletterPack,
+    Sort(
+        AddColumns(
+            Filter(
+                'Policy Proof Tracker',
+                'Planned Publish Date' &gt;= varNewsletterTargetDate &amp;&amp;
+                'Planned Publish Date' &lt; DateAdd(varNewsletterTargetDate, 1, "Days") &amp;&amp;
+                (
+                    'Approved For Release By'.Value = "XO" ||
+                    'Approved For Release By'.Value = "ACOS" ||
+                    'Approved For Release By'.Value = "DCOMD" ||
+                    'Approved For Release By'.Value = "D Commander"
+                ) &amp;&amp;
+                Published = false
+            ),
+            SortKey,
+            If(
+                'Top Item',
+                -1000,
+                Coalesce(LookUp(colChoiceColors, ChoiceValue = 'Document Type'.Value, SortOrder), 99)
+            ),
+            IsFinalApproved,
+            Or(
+                'Approved For Release By'.Value = "XO",
+                'Approved For Release By'.Value = "ACOS",
+                'Approved For Release By'.Value = "DCOMD",
+                'Approved For Release By'.Value = "D Commander"
+            ),
+            PackTitle,
+            Coalesce('Title for Newsletter', Title),
+            PackAudience,
+            Coalesce(Audience, ""),
+            PackSummary,
+            Coalesce('Item summary', "")
+        ),
+        SortKey,
+        SortOrder.Ascending
+    )
+)</pre>
+        </div>
+
+        <ol start="4">
+          <li>Select <strong>btnRefresh_1</strong> on the same screen.</li>
+          <li>Select <code>OnSelect</code>, select all, and replace with this formula too.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnRefresh_1.OnSelect</span>
+              <span class="code-stamp">v2 &middot; 2026-08-13 13:20 BST</span>
+            </div>
+            <button data-copy="newsletter-refresh-no-external-gate" type="button">Copy</button>
+          </div>
+<pre id="newsletter-refresh-no-external-gate">Set(varNewsletterTargetDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));
+Refresh('Policy Proof Tracker');
+ClearCollect(
+    colNewsletterPack,
+    Sort(
+        AddColumns(
+            Filter(
+                'Policy Proof Tracker',
+                'Planned Publish Date' &gt;= varNewsletterTargetDate &amp;&amp;
+                'Planned Publish Date' &lt; DateAdd(varNewsletterTargetDate, 1, "Days") &amp;&amp;
+                (
+                    'Approved For Release By'.Value = "XO" ||
+                    'Approved For Release By'.Value = "ACOS" ||
+                    'Approved For Release By'.Value = "DCOMD" ||
+                    'Approved For Release By'.Value = "D Commander"
+                ) &amp;&amp;
+                Published = false
+            ),
+            SortKey,
+            If(
+                'Top Item',
+                -1000,
+                Coalesce(LookUp(colChoiceColors, ChoiceValue = 'Document Type'.Value, SortOrder), 99)
+            ),
+            IsFinalApproved,
+            Or(
+                'Approved For Release By'.Value = "XO",
+                'Approved For Release By'.Value = "ACOS",
+                'Approved For Release By'.Value = "DCOMD",
+                'Approved For Release By'.Value = "D Commander"
+            ),
+            PackTitle,
+            Coalesce('Title for Newsletter', Title),
+            PackAudience,
+            Coalesce(Audience, ""),
+            PackSummary,
+            Coalesce('Item summary', "")
+        ),
+        SortKey,
+        SortOrder.Ascending
+    )
+)</pre>
+        </div>
+
+        <div class="callout ok">
+          <strong>Test:</strong> click Refresh on NewsletterPack after pasting both formulas. The temporary Stage 2 label should change to <code>colNewsletterPack rows = 3</code>, and both visible galleries should show three rows.
         </div>
       </section>
     </main>
