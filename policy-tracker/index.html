@@ -186,6 +186,7 @@
       <nav>
         <a href="../">Guide library</a>
         <a href="#what-this-page-is">What This Page Is</a>
+        <a href="#newsletter-missing-item-debug">Urgent - Newsletter Missing Item Diagnostic</a>
         <a href="#publish-gate-removed">Fix 1 - Publish Buttons No Longer Gated On Consultation Flag</a>
         <a href="#newsletter-approval-fix">Fix 2 - Newsletter Required Real Final Approval</a>
         <a href="#close-banner-flash">Fix 3 - Deadline Banner Flash On Close</a>
@@ -196,7 +197,7 @@
       <div class="topline">
         <span class="pill">Updated 13 Aug 2026</span>
         <span class="pill">Policy Tracker only</span>
-        <span class="pill">3 fixes so far</span>
+        <span class="pill">3 fixes + urgent diagnostic</span>
       </div>
       <h1>Policy Tracker Fix Guide</h1>
       <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
@@ -206,6 +207,65 @@
         <p>This is the working fix log for the Policy Tracker canvas app (repo <code>PhadeDev/policy-tracker</code>). Reset to empty on 2026-08-13 &mdash; the previous entries (personal OneDrive link blocking, address-bar link save crash, generic-icon hint) had already been applied in Studio for weeks and were no longer needed as a reference.</p>
         <div class="callout">
           Each fix below is a targeted property edit on the live app, applied by hand in Power Apps Studio. None of them require a full screen repaste unless stated otherwise.
+        </div>
+      </section>
+
+      <section id="newsletter-missing-item-debug">
+        <h2>Urgent - Newsletter Missing Item Diagnostic</h2>
+        <p class="meta-line">NewsletterPack &middot; temporary label &middot; no data changes</p>
+        <p>Use this before changing the live formula again. The current NewsletterPack filter only includes records that match the target Thursday date, have final approval by XO/ACOS/DCOMD/D Commander, are not already published, and are not marked as requiring external consultation. Title and content do not affect inclusion. This diagnostic prints every SharePoint row matching the target Thursday date and shows exactly which gate is excluding it.</p>
+
+        <ol>
+          <li>Open <strong>NewsletterPack</strong> in Power Apps Studio.</li>
+          <li>Add a temporary <strong>Label</strong> anywhere on the screen.</li>
+          <li>Set the label's <code>Text</code> property to the formula below.</li>
+          <li>Set <code>AutoHeight</code> to <code>true</code>, make it wide, and set the text size small enough to read the lines.</li>
+          <li>Preview the screen. If the missing item is printed with <code>include=false</code>, the same line tells you which field is different. If the missing item is not printed at all, it is not matching the target Thursday date window.</li>
+        </ol>
+
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Temporary debug label - Text</span>
+              <span class="code-stamp">v1 &middot; 2026-08-13 12:35 BST</span>
+            </div>
+            <button data-copy="newsletter-missing-item-debug-formula" type="button">Copy</button>
+          </div>
+<pre id="newsletter-missing-item-debug-formula">With(
+    {_target: DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days")},
+    Concat(
+        AddColumns(
+            Filter(
+                'Policy Proof Tracker',
+                'Planned Publish Date' &gt;= _target &amp;&amp;
+                'Planned Publish Date' &lt; DateAdd(_target, 1, "Days")
+            ),
+            DebugLine,
+            Title &amp;
+            " | date=" &amp; Text('Planned Publish Date', "dd mmm yyyy") &amp;
+            " | approval=" &amp; Coalesce('Approved For Release By'.Value, "&lt;blank&gt;") &amp;
+            " | published=" &amp; Text(Published) &amp;
+            " | external=" &amp; Text('External consultation required') &amp;
+            " | include=" &amp;
+            Text(
+                (
+                    'Approved For Release By'.Value = "XO" ||
+                    'Approved For Release By'.Value = "ACOS" ||
+                    'Approved For Release By'.Value = "DCOMD" ||
+                    'Approved For Release By'.Value = "D Commander"
+                ) &amp;&amp;
+                Published = false &amp;&amp;
+                'External consultation required' = false
+            )
+        ),
+        DebugLine,
+        Char(10)
+    )
+)</pre>
+        </div>
+
+        <div class="callout warn">
+          If both records print with <code>include=true</code> but the gallery still only shows one card, the bug is after the filter: gallery Items, template visibility, or the pack collection build/rendering. If only one record prints, it is a SharePoint field/date/filter mismatch.
         </div>
       </section>
 
