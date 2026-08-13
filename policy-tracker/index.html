@@ -363,8 +363,58 @@ ClearCollect(
         </div>
 
         <ol start="4">
-          <li>Find the second, near-identical <code>ClearCollect(colNewsletterPack, ...)</code> block further down the screen (the manual-refresh one, likely on a Refresh button's <code>OnSelect</code>) and apply the exact same change &mdash; remove the <code>'Approved by Pillar Lead (Ready to Release)' = true ||</code> line from its qualifying filter too, leaving the XO/ACOS/DCOMD/D Commander checks as the only qualifying conditions. The rest of that block (<code>SortKey</code>, <code>IsFinalApproved</code>, etc.) is unchanged.</li>
+          <li>Find <strong>btnRefresh_1</strong> (the "Refresh" button on the same screen). It has an identical copy of the same formula.</li>
+          <li>Select <code>OnSelect</code> in the Properties dropdown, select all, and replace with this formula.</li>
         </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <span>btnRefresh_1.OnSelect</span>
+            <button data-copy="newsletter-refresh-onselect" type="button">Copy</button>
+          </div>
+<pre id="newsletter-refresh-onselect">Set(varNewsletterTargetDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));
+Refresh('Policy Proof Tracker');
+ClearCollect(
+    colNewsletterPack,
+    Sort(
+        AddColumns(
+            Filter(
+                'Policy Proof Tracker',
+                'Planned Publish Date' >= varNewsletterTargetDate &&
+                'Planned Publish Date' < DateAdd(varNewsletterTargetDate, 1, "Days") &&
+                (
+                    'Approved For Release By'.Value = "XO" ||
+                    'Approved For Release By'.Value = "ACOS" ||
+                    'Approved For Release By'.Value = "DCOMD" ||
+                    'Approved For Release By'.Value = "D Commander"
+                ) &&
+                Published = false &&
+                'External consultation required' = false
+            ),
+            SortKey,
+            If(
+                'Top Item',
+                -1000,
+                Coalesce(LookUp(colChoiceColors, ChoiceValue = 'Document Type'.Value, SortOrder), 99)
+            ),
+            IsFinalApproved,
+            Or(
+                'Approved For Release By'.Value = "XO",
+                'Approved For Release By'.Value = "ACOS",
+                'Approved For Release By'.Value = "DCOMD",
+                'Approved For Release By'.Value = "D Commander"
+            ),
+            PackTitle,
+            Coalesce('Title for Newsletter', Title),
+            PackAudience,
+            Coalesce(Audience, ""),
+            PackSummary,
+            Coalesce('Item summary', "")
+        ),
+        SortKey,
+        SortOrder.Ascending
+    )
+)</pre>
+        </div>
 
         <div class="callout ok">
           <strong>Test:</strong> tick Pillar Lead approval only on an item due this week, leave "Approved For Release By" as "Not Yet Approved" &mdash; it should NOT appear in the newsletter pack. Set "Approved For Release By" to ACOS &mdash; it should now appear, regardless of the Pillar Lead tick.
