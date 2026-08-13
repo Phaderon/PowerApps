@@ -594,24 +594,82 @@ ClearCollect(
       <section id="close-banner-flash">
         <h2>Fix 3 - Deadline Warning Banner Flashing On Close</h2>
         <p class="meta-line">ViewItem &middot; property edit &middot; visual only, no data risk</p>
-        <p>Reported 2026-08-13: clicking <strong>Close</strong> on an item with a release date inside 10 days (not High Priority, not External Consultation) briefly flashed the amber "Release date is within 10 days" banner before navigating away. Root cause: <code>conWarningBar1.Visible</code> depends on <code>varSelectPolicy &lt;&gt; "Filled"</code>, and <code>btnClose1.OnSelect</code> was setting <code>varSelectPolicy</code> to <code>"Empty"</code> (along with the other state resets) <em>before</em> calling <code>Navigate()</code>. For the instant between that Set and the screen actually leaving, the still-visible screen re-evaluated the banner's Visible formula, saw "not filled" plus the still-populated deadline fields, and lit up for a frame. Fix: just reorder the statements so <code>Navigate()</code> fires first and the state resets happen after &mdash; the resets themselves are unaffected by the reorder since none of them are read again on this screen once navigation starts.</p>
+        <p>Reported 2026-08-13: clicking <strong>Close</strong> on an item with a release date inside 10 days (not High Priority, not External Consultation) briefly flashed the amber "Release date is within 10 days" banner before navigating away. The first guide tried reordering <code>Navigate()</code> before the state resets, but that is not enough: Power Apps can still evaluate the old screen for a frame while statements after <code>Navigate()</code> run. Correct fix: add a close-in-progress guard, make the warning/top bar respect it, and set the guard on both close paths.</p>
 
         <ol>
           <li>Open <strong>ViewItem</strong>.</li>
-          <li>In the Tree view, find <strong>btnClose1</strong> (the "Close" button, top right of the header).</li>
-          <li>Select <code>OnSelect</code> in the Properties dropdown, select all, and replace with this formula.</li>
+          <li>Select the screen itself, then select <code>OnVisible</code>.</li>
+          <li>Add this line near the top, immediately after the existing first <code>Set(varLoadingLinks, ...)</code> line.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>ViewItem.OnVisible - add near top</span>
+              <span class="code-stamp">v2 &middot; 2026-08-13 14:05 BST</span>
+            </div>
+            <button data-copy="viewitem-onvisible-closing-guard" type="button">Copy</button>
+          </div>
+<pre id="viewitem-onvisible-closing-guard">Set(varClosingViewItem, false);</pre>
+        </div>
+
+        <ol start="4">
+          <li>Select <strong>conWarningBar1</strong>.</li>
+          <li>Select <code>Visible</code>, select all, and replace with this formula.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>conWarningBar1.Visible</span>
+              <span class="code-stamp">v2 &middot; 2026-08-13 14:05 BST</span>
+            </div>
+            <button data-copy="warning-bar-visible-closing-guard" type="button">Copy</button>
+          </div>
+<pre id="warning-bar-visible-closing-guard">!Coalesce(varClosingViewItem, false) &&
+varSelectPolicy &lt;&gt; "Filled" &&
+DateDiff(Today(), dpkPublishDate1.SelectedDate, "Days") &gt;= 0 &&
+DateDiff(Today(), dpkPublishDate1.SelectedDate, "Days") &lt; 10 &&
+!ckbHighPriority1.Value &&
+!ckbExtConsult1.Value</pre>
+        </div>
+
+        <ol start="6">
+          <li>Select <strong>conTopBar1</strong>.</li>
+          <li>Select <code>Visible</code>, select all, and replace with this formula.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>conTopBar1.Visible</span>
+              <span class="code-stamp">v2 &middot; 2026-08-13 14:05 BST</span>
+            </div>
+            <button data-copy="top-bar-visible-closing-guard" type="button">Copy</button>
+          </div>
+<pre id="top-bar-visible-closing-guard">!(
+    !Coalesce(varClosingViewItem, false) &&
+    varSelectPolicy &lt;&gt; "Filled" &&
+    DateDiff(Today(), dpkPublishDate1.SelectedDate, "Days") &gt;= 0 &&
+    DateDiff(Today(), dpkPublishDate1.SelectedDate, "Days") &lt; 10 &&
+    !ckbHighPriority1.Value &&
+    !ckbExtConsult1.Value
+)</pre>
+        </div>
+
+        <ol start="8">
+          <li>Select <strong>btnClose1</strong> (the top-right Close button).</li>
+          <li>Select <code>OnSelect</code>, select all, and replace with this formula.</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnClose1.OnSelect</span>
-              <span class="code-stamp">v1 &middot; 2026-08-13 11:10 BST</span>
+              <span class="code-stamp">v2 &middot; 2026-08-13 14:05 BST</span>
             </div>
             <button data-copy="close-onselect" type="button">Copy</button>
           </div>
 <pre id="close-onselect">If(
     varUnsavedChanges,
     UpdateContext({locDisplayDiscardPopUp: true}),
+    Set(varClosingViewItem, true);
     If(varSourceScreen = "Historic", Navigate(Historic, ScreenTransition.Fade), Navigate(Main, ScreenTransition.Fade));
     Set(varSelectPolicy, "Empty");
     Set(varSelectedRelease, Blank());
@@ -620,8 +678,29 @@ ClearCollect(
 )</pre>
         </div>
 
+        <ol start="10">
+          <li>Select <strong>btnModalAction1_2</strong> in the Unsaved Changes modal (the button that confirms closing without saving).</li>
+          <li>Select <code>OnSelect</code>, select all, and replace with this formula.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnModalAction1_2.OnSelect</span>
+              <span class="code-stamp">v2 &middot; 2026-08-13 14:05 BST</span>
+            </div>
+            <button data-copy="discard-close-onselect-closing-guard" type="button">Copy</button>
+          </div>
+<pre id="discard-close-onselect-closing-guard">UpdateContext({locDisplayDiscardPopUp: false});
+Set(varClosingViewItem, true);
+Set(varSelectPolicy, "Empty");
+Set(varSelectedRelease, Blank());
+Set(varUnsavedChanges, false);
+Set(varShowLinkModal, false);
+If(varSourceScreen = "Historic", Navigate(Historic, ScreenTransition.Fade), Navigate(Main, ScreenTransition.Fade))</pre>
+        </div>
+
         <div class="callout ok">
-          <strong>Test:</strong> open an item with a Planned Publish Date inside 10 days, not marked High Priority or External Consultation (the amber banner should be showing), then click Close without making any changes &mdash; it should navigate away cleanly with no flash. Opening the same item and clicking Save &amp; Close should still show the warning normally, since that path is untouched.
+          <strong>Test:</strong> open an item with a Planned Publish Date inside 10 days, not marked High Priority or External Consultation, then click Close without making changes. It should leave with no orange flash. Then make a small edit, click Close, confirm the unsaved-changes modal, and check that path also leaves with no flash.
         </div>
       </section>
 
