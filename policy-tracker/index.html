@@ -213,8 +213,9 @@
       <section id="newsletter-missing-item-debug">
         <h2>Urgent - Newsletter Missing Item Diagnostic</h2>
         <p class="meta-line">NewsletterPack &middot; temporary label &middot; no data changes</p>
-        <p>Use this before changing the live formula again. The current NewsletterPack filter only includes records that match the target Thursday date, have final approval by XO/ACOS/DCOMD/D Commander, are not already published, and are not marked as requiring external consultation. Title and content do not affect inclusion. This diagnostic prints every SharePoint row matching the target Thursday date and shows exactly which gate is excluding it.</p>
+        <p>Use this before changing the live formula again. The current NewsletterPack filter only includes records that match the target Thursday date, have final approval by XO/ACOS/DCOMD/D Commander, are not already published, and are not marked as requiring external consultation. Title and content do not affect inclusion. Stage 1 prints every SharePoint row matching the target Thursday date and shows exactly which gate is excluding it.</p>
 
+        <h3>Stage 1 - Prove The SharePoint Rows Qualify</h3>
         <ol>
           <li>Open <strong>NewsletterPack</strong> in Power Apps Studio.</li>
           <li>Add a temporary <strong>Label</strong> anywhere on the screen.</li>
@@ -265,7 +266,36 @@
         </div>
 
         <div class="callout warn">
-          If both records print with <code>include=true</code> but the gallery still only shows one card, the bug is after the filter: gallery Items, template visibility, or the pack collection build/rendering. If only one record prints, it is a SharePoint field/date/filter mismatch.
+          If the expected records print here, the raw SharePoint data is present. Continue to Stage 2 to check whether those same records are entering <code>colNewsletterPack</code> and the galleries.
+        </div>
+
+        <h3>Stage 2 - Check The Collection And Both Galleries</h3>
+        <p>Keep the temporary label and replace its <code>Text</code> with this formula. This does not change data. It prints the row count for <code>colNewsletterPack</code>, the two gallery counts, and the titles currently inside the collection.</p>
+
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Temporary debug label - Text, stage 2</span>
+              <span class="code-stamp">v1 &middot; 2026-08-13 12:50 BST</span>
+            </div>
+            <button data-copy="newsletter-collection-gallery-debug-formula" type="button">Copy</button>
+          </div>
+<pre id="newsletter-collection-gallery-debug-formula">"colNewsletterPack rows = " &amp; CountRows(colNewsletterPack) &amp; Char(10) &amp;
+"galPlainPack_1 visible rows = " &amp; CountRows(galPlainPack_1.AllItems) &amp; Char(10) &amp;
+"galEmailPreview_1 visible rows = " &amp; CountRows(galEmailPreview_1.AllItems) &amp; Char(10) &amp;
+Char(10) &amp;
+Concat(
+    colNewsletterPack,
+    Text(ID) &amp;
+    " | " &amp; PackTitle &amp;
+    " | audience=" &amp; PackAudience &amp;
+    " | final=" &amp; Text(IsFinalApproved),
+    Char(10)
+)</pre>
+        </div>
+
+        <div class="callout">
+          Read it this way: if <code>colNewsletterPack rows</code> is still <code>1</code>, the live <code>NewsletterPack.OnVisible</code> or <code>btnRefresh_1.OnSelect</code> formula is not building the same result as Stage 1. If <code>colNewsletterPack rows</code> is <code>3</code> but a gallery count is lower or the screen still shows one card, the bug is in gallery rendering/layout, not the SharePoint filter.
         </div>
       </section>
 
