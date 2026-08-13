@@ -148,6 +148,8 @@
       color: #cbd5e1;
       font-size: .85rem;
     }
+    .code-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .code-stamp { color: #7c8aa0; font-size: .72rem; font-weight: 500; }
     button {
       border: 0;
       border-radius: 8px;
@@ -222,7 +224,10 @@
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>BossPublishBtn.Visible</span>
+            <div class="code-meta">
+              <span>BossPublishBtn.Visible</span>
+              <span class="code-stamp">v1 &middot; 2026-08-13 11:10 BST</span>
+            </div>
             <button data-copy="boss-publish-visible" type="button">Copy</button>
           </div>
 <pre id="boss-publish-visible">!IsEmpty(Filter(colBossButtonUsers, Lower(Email) = Lower(User().Email))) &&
@@ -236,7 +241,10 @@ ThisItem.Published = false</pre>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>PublishAllBtn.OnSelect</span>
+            <div class="code-meta">
+              <span>PublishAllBtn.OnSelect</span>
+              <span class="code-stamp">v1 &middot; 2026-08-13 11:10 BST</span>
+            </div>
             <button data-copy="publish-all-onselect" type="button">Copy</button>
           </div>
 <pre id="publish-all-onselect">// PublishAllBtn.OnSelect
@@ -278,7 +286,10 @@ If(
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>PublishAllBtn.Text</span>
+            <div class="code-meta">
+              <span>PublishAllBtn.Text</span>
+              <span class="code-stamp">v1 &middot; 2026-08-13 11:10 BST</span>
+            </div>
             <button data-copy="publish-all-text" type="button">Copy</button>
           </div>
 <pre id="publish-all-text">"Publish All (" & CountRows(Filter(ThisItem.GroupedItems, Published = false)) & ")"</pre>
@@ -289,7 +300,10 @@ If(
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>PublishAllBtn.Visible</span>
+            <div class="code-meta">
+              <span>PublishAllBtn.Visible</span>
+              <span class="code-stamp">v1 &middot; 2026-08-13 11:10 BST</span>
+            </div>
             <button data-copy="publish-all-visible" type="button">Copy</button>
           </div>
 <pre id="publish-all-visible">!IsEmpty(Filter(colBossButtonUsers, Lower(Email) = Lower(User().Email))) &&
@@ -314,7 +328,10 @@ CountRows(Filter(ThisItem.GroupedItems, Published = false)) > 0</pre>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>NewsletterPack.OnVisible (top ClearCollect block)</span>
+            <div class="code-meta">
+              <span>NewsletterPack.OnVisible (top ClearCollect block)</span>
+              <span class="code-stamp">v1 &middot; 2026-08-13 11:10 BST</span>
+            </div>
             <button data-copy="newsletter-onvisible" type="button">Copy</button>
           </div>
 <pre id="newsletter-onvisible">Set(varNewsletterTargetDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));
@@ -368,7 +385,10 @@ ClearCollect(
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>btnRefresh_1.OnSelect</span>
+            <div class="code-meta">
+              <span>btnRefresh_1.OnSelect</span>
+              <span class="code-stamp">v1 &middot; 2026-08-13 11:10 BST</span>
+            </div>
             <button data-copy="newsletter-refresh-onselect" type="button">Copy</button>
           </div>
 <pre id="newsletter-refresh-onselect">Set(varNewsletterTargetDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));
@@ -433,7 +453,10 @@ ClearCollect(
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
-            <span>btnClose1.OnSelect</span>
+            <div class="code-meta">
+              <span>btnClose1.OnSelect</span>
+              <span class="code-stamp">v1 &middot; 2026-08-13 11:10 BST</span>
+            </div>
             <button data-copy="close-onselect" type="button">Copy</button>
           </div>
 <pre id="close-onselect">If(
