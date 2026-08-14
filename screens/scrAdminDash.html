@@ -23,7 +23,7 @@
 <body>
   <p class="kicker">Power Apps · Training Tracker · Screen 6 of 7</p>
   <h1>scrAdminDash</h1>
-  <p class="meta">v3.8 &mdash; Replaces PDF export with mandatory snapshot dashboard link · 29 Jul 2026</p>
+  <p class="meta">v3.9 &mdash; Adds admin certificate viewer and reminder-history pills · 14 Aug 2026</p>
   <div class="btn-row">
     <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
     <a href="../"><button class="btn-back" type="button">&larr; Guide library</button></a>
@@ -44,6 +44,11 @@ const yaml = `Screens:
         =Set(varAdminLoading, true);
         Set(varAdminFilter, "All");
         Set(varAdminStatusFilter, "All");
+        Set(varAdminCertViewerOpen, false);
+        Set(varAdminCertDataUri, "");
+        Set(varAdminCertError, "");
+        Set(varAdminCertStatusText, "");
+        Set(varAdminCertBusy, false);
         Set(varTTTheme,
             {
                 Primary: RGBA(0,78,66,1),
@@ -61,12 +66,21 @@ const yaml = `Screens:
         Refresh('TT TrainingRecords');
         Refresh('TT Courses');
         Refresh('TT AuditLog');
+        Refresh('TT ReminderLog');
 
         ClearCollect(colAllPersonnelRaw, 'TT Personnel');
         ClearCollect(colAllPeople, Filter(colAllPersonnelRaw, Coalesce(Active, true) = true));
         ClearCollect(colAllRecords, 'TT TrainingRecords');
         ClearCollect(colCourses, 'TT Courses');
         ClearCollect(colAuditLog, 'TT AuditLog');
+        ClearCollect(
+            colReminderLog,
+            Filter(
+                'TT ReminderLog',
+                Coalesce(TestMode, false) = false &&
+                Coalesce(LiveEmailsEnabled, false) = true
+            )
+        );
         ClearCollect(colPersonTimeline, Table({EventDateTime: Now(), EventDescription: "Select a person to view activity.", EventType: "Ready", ActorEmail: ""}));
 
         ClearCollect(
@@ -165,6 +179,37 @@ const yaml = `Screens:
                                                100,
                                                Round(100 * okCount / Max(CountRows(req), 1), 0)
                                            ),
+                            LastReminderText: With(
+                                {
+                                    lastRem: First(
+                                        SortByColumns(
+                                            Filter(colReminderLog, Lower(PersonEmail) = Lower(P.Email)),
+                                            "SentOn",
+                                            SortOrder.Descending
+                                        )
+                                    )
+                                },
+                                If(
+                                    IsBlank(lastRem.SentOn),
+                                    "",
+                                    Switch(
+                                        Text(lastRem.ReminderType.Value),
+                                        "DUE_30", "30-day email",
+                                        "DUE_7", "7-day email",
+                                        "EXPIRED_TODAY", "Expired email",
+                                        "OVERDUE_30", "30-day overdue",
+                                        "OVERDUE_WEEKLY", "Overdue email",
+                                        "OVERDUE_ESCALATED", "Escalated overdue",
+                                        "Reminder email"
+                                    ) &
+                                    " " & Char(183) & " " &
+                                    If(
+                                        DateDiff(DateValue(lastRem.SentOn), Today(), "Days") = 0,
+                                        "today",
+                                        Text(lastRem.SentOn, "dd mmm yyyy")
+                                    )
+                                )
+                            ),
                             AttentionState: If(
                                                 CountRows(req) - okCount = 0,
                                                 "Clear",
@@ -710,6 +755,19 @@ const yaml = `Screens:
             Width: =200
             X: =380
             Y: =284
+      - lblAdminTableHeadReminder:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(85,85,85,1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Semibold
+            Height: =22
+            Size: =9
+            Text: ="Last reminder"
+            Width: =146
+            X: =218
+            Y: =284
       - lblAdminTableHeadStatus:
           Control: Label@2.5.1
           Properties:
@@ -760,6 +818,7 @@ const yaml = `Screens:
                                     Lower(PersonEmail) = varDrillPerson.Email && CourseID = C.ID)},
                       {
                           CourseName: C.Title,
+                          CourseID: C.ID,
                           DateDone:   rec.DateCompleted,
                           UploadedBy: rec.UploadedByEmail,
                           ExpiresOn:  If(IsBlank(rec.DateCompleted)||C.RecurrenceMonths=0,Blank(),
@@ -938,6 +997,29 @@ const yaml = `Screens:
                   Width: =200
                   X: =16
                   Y: =32
+            - btnLastReminderPill:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =RGBA(0,78,66,0.35)
+                  BorderThickness: =1
+                  Color: =RGBA(0,78,66,1)
+                  Fill: =RGBA(232,244,239,1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  HoverFill: =Self.Fill
+                  OnSelect: =Select(Parent)
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =10
+                  RadiusBottomRight: =10
+                  RadiusTopLeft: =10
+                  RadiusTopRight: =10
+                  Size: =8
+                  Text: =ThisItem.LastReminderText
+                  Visible: =!IsBlank(ThisItem.LastReminderText)
+                  Width: =146
+                  X: =218
+                  Y: =31
             - lblCompName:
                 Control: Label@2.5.1
                 Properties:
@@ -1219,7 +1301,7 @@ const yaml = `Screens:
             BorderColor: =RGBA(0,78,66,1)
             Height: =210
             Items: =colPersonDetail
-            TemplateSize: =52
+            TemplateSize: =68
             Width: =434
             X: =916
             Y: =404
@@ -1255,7 +1337,68 @@ const yaml = `Screens:
                   Text: =ThisItem.TrainingStatus
                   Width: =110
                   X: =320
-                  Y: =12
+                  Y: =8
+            - btnAdminViewDetailCert:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =RGBA(0,78,66,1)
+                  BorderThickness: =1
+                  Color: =RGBA(0,78,66,1)
+                  DisplayMode: =If(varAdminCertBusy, DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: =RGBA(255,255,255,1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =22
+                  HoverFill: =RGBA(232,244,239,1)
+                  OnSelect: |-
+                    =Set(varAdminCertError, "");
+                    Set(varAdminCertStatusText, "Fetching certificate...");
+                    Set(varAdminCertBusy, true);
+                    Set(
+                        varAdminCertRaw,
+                        IfError(
+                            'TT - Email Certificate Library'.Run(ThisItem.RecordID, varMyEmail, varIsAdmin),
+                            Blank()
+                        )
+                    );
+                    Set(varAdminCertBusy, false);
+                    If(
+                        IsBlank(varAdminCertRaw),
+                        Set(varAdminCertError, "Flow could not be reached. Check your connection and try again.");
+                        Notify("Could not open certificate - see the error below.", NotificationType.Error),
+                        With(
+                            {parsed: ParseJSON(varAdminCertRaw.payload)},
+                            If(
+                                Boolean(parsed.success),
+                                Set(varAdminCertStatusText, "");
+                                Set(varAdminCertFileNameLower, Lower(Text(parsed.fileName)));
+                                Set(varAdminCertIsPdf, EndsWith(varAdminCertFileNameLower, ".pdf"));
+                                Set(
+                                    varAdminCertMimeType,
+                                    If(
+                                        varAdminCertIsPdf, "application/pdf",
+                                        EndsWith(varAdminCertFileNameLower, ".png"), "image/png",
+                                        "image/jpeg"
+                                    )
+                                );
+                                Set(varAdminCertDataUri, "data:" & varAdminCertMimeType & ";base64," & Trim(Text(parsed.fileContentBase64)));
+                                Set(varAdminCertViewerOpen, true),
+                                Set(varAdminCertError, Text(parsed.message));
+                                Notify("Could not open certificate - see the error below.", NotificationType.Error)
+                            )
+                        )
+                    )
+                  PressedFill: =RGBA(232,244,239,1)
+                  RadiusBottomLeft: =11
+                  RadiusBottomRight: =11
+                  RadiusTopLeft: =11
+                  RadiusTopRight: =11
+                  Size: =8
+                  Text: ="View cert"
+                  Visible: =!IsBlank(ThisItem.RecordID) && !IsBlank(ThisItem.DateDone)
+                  Width: =110
+                  X: =320
+                  Y: =40
             - lblDetailDate:
                 Control: Label@2.5.1
                 Properties:
@@ -1268,7 +1411,7 @@ const yaml = `Screens:
                   Text: =If(IsBlank(ThisItem.DateDone),"Not completed",Text(ThisItem.DateDone,"dd mmm yyyy") & If(!IsBlank(ThisItem.UploadedBy)," (via " & ThisItem.UploadedBy & ")",""))
                   Width: =300
                   X: =14
-                  Y: =30
+                  Y: =42
             - lblDetailCourse:
                 Control: Label@2.5.1
                 Properties:
@@ -1292,7 +1435,7 @@ const yaml = `Screens:
                   DisabledBorderColor: =RGBA(166, 166, 166, 1)
                   Fill: =Switch(ThisItem.TrainingStatus,"Expired",RGBA(226,75,74,1),"Expiring Soon",RGBA(239,159,39,1),"Not Started",RGBA(136,135,128,1),"Complete",RGBA(34,139,80,1),RGBA(99,153,34,1))
                   Font: =Font.'Open Sans'
-                  Height: =52
+                  Height: =68
                   HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
                   HoverColor: =RGBA(255, 255, 255, 1)
                   HoverFill: =Self.Fill
@@ -1461,6 +1604,66 @@ const yaml = `Screens:
             Width: =260
             X: =553
             Y: =398
+      - recAdminCertViewerBG:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderThickness: =0
+            Color: =RGBA(255,255,255,1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(0,0,0,0.75)
+            Height: =Parent.Height
+            HoverFill: =RGBA(0,0,0,0.75)
+            PressedFill: =RGBA(0,0,0,0.75)
+            Text: =""
+            Visible: =varAdminCertViewerOpen
+            Width: =Parent.Width
+            X: =0
+            Y: =0
+      - pdfAdminCertViewer:
+          Control: PDFViewer@2.5.0
+          Properties:
+            Document: =varAdminCertDataUri
+            Height: =Parent.Height * 0.74
+            Visible: =varAdminCertViewerOpen && varAdminCertIsPdf
+            Width: =Parent.Width * 0.78
+            X: =Parent.Width * 0.11
+            Y: =Parent.Height * 0.1
+      - imgAdminCertViewer:
+          Control: Image@2.2.3
+          Properties:
+            BorderColor: =RGBA(0,78,66,1)
+            Height: =Parent.Height * 0.74
+            Image: =varAdminCertDataUri
+            ImagePosition: =ImagePosition.Fit
+            Visible: =varAdminCertViewerOpen && !varAdminCertIsPdf
+            Width: =Parent.Width * 0.78
+            X: =Parent.Width * 0.11
+            Y: =Parent.Height * 0.1
+      - btnCloseAdminCertViewer:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =RGBA(108,117,125,1)
+            Color: =RGBA(255,255,255,1)
+            Height: =42
+            OnSelect: =Set(varAdminCertViewerOpen, false); Set(varAdminCertDataUri, "")
+            Text: ="Close"
+            Visible: =varAdminCertViewerOpen
+            Width: =130
+            X: =Parent.Width * 0.11
+            Y: =(Parent.Height * 0.84) + 12
+      - lblAdminCertError:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =RGBA(255,255,255,1)
+            Font: =Font.'Open Sans'
+            Height: =42
+            Size: =10
+            Text: =varAdminCertError
+            Visible: =!IsBlank(varAdminCertError)
+            Width: =Parent.Width * 0.6
+            X: =Parent.Width * 0.29
+            Y: =(Parent.Height * 0.84) + 12
 `;
 function copyYAML() {
   const crlf = yaml.replace(/\n/g, '\r\n');

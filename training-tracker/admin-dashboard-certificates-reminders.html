@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Training Tracker Admin Dashboard Certificate And Reminder Pass</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --paper: #ffffff;
+      --ink: #172033;
+      --muted: #637084;
+      --line: #d9e1ec;
+      --primary: #004e42;
+      --primary-soft: #e8f4ef;
+      --green: #1f7a4d;
+      --amber: #a86500;
+      --red: #a33a3a;
+      --code-bg: #101827;
+      --code-ink: #f4f7fb;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --shadow: 0 12px 32px rgba(20, 34, 56, .10);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+    }
+    a { color: var(--primary); }
+    .shell {
+      display: grid;
+      grid-template-columns: 278px minmax(0, 1fr);
+      gap: 24px;
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    aside {
+      position: sticky;
+      top: 18px;
+      align-self: start;
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    aside h2 { margin: 0 0 4px; font-size: 1.05rem; }
+    aside p { margin: 0 0 14px; color: var(--muted); font-size: .9rem; }
+    nav { display: grid; gap: 4px; }
+    nav a {
+      text-decoration: none;
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 7px 9px;
+      font-size: .9rem;
+    }
+    nav a:hover { background: var(--primary-soft); color: var(--primary); }
+    main {
+      min-width: 0;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+    }
+    h1 { margin: 0 0 8px; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.05; letter-spacing: 0; }
+    h2 { margin: 34px 0 10px; font-size: 1.35rem; border-top: 1px solid var(--line); padding-top: 22px; }
+    h2:first-of-type { border-top: 0; padding-top: 0; }
+    h3 { margin: 24px 0 8px; font-size: 1.05rem; }
+    .lead { margin: 0 0 20px; color: var(--muted); font-size: 1.05rem; max-width: 920px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: .8rem;
+      font-weight: 700;
+      margin: 0 8px 16px 0;
+    }
+    .callout {
+      border-left: 4px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 16px 0;
+    }
+    .warn { border-left-color: var(--amber); background: #fff7e8; }
+    .danger { border-left-color: var(--red); background: #fff0f0; }
+    .ok { border-left-color: var(--green); background: #edf8f2; }
+    code {
+      font-family: var(--mono);
+      background: #eef3f8;
+      border: 1px solid #dce5f0;
+      border-radius: 6px;
+      padding: 1px 5px;
+      font-size: .92em;
+    }
+    .code-card {
+      background: var(--code-bg);
+      color: var(--code-ink);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 14px 0 22px;
+    }
+    .code-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      color: #cbd5e1;
+      font-size: .85rem;
+    }
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-weight: 700;
+      background: var(--primary-soft);
+      color: var(--primary);
+      cursor: pointer;
+    }
+    pre {
+      margin: 0;
+      padding: 16px;
+      overflow: auto;
+      white-space: pre;
+      font-family: var(--mono);
+      font-size: .9rem;
+      line-height: 1.55;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 18px;
+      font-size: .95rem;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f8;
+      color: #26364d;
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    ul, ol { padding-left: 1.3rem; }
+    li { margin: 6px 0; }
+    .mini-map {
+      background: #0f172a;
+      color: #e5edf7;
+      border-radius: 12px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      margin: 14px 0 18px;
+    }
+    .small { color: var(--muted); font-size: .92rem; }
+    @media (max-width: 860px) {
+      .shell { display: block; padding: 12px; }
+      aside { position: static; margin-bottom: 14px; }
+      main { padding: 18px; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <h2>Training Tracker</h2>
+      <p>Admin dashboard certificate and reminder visibility pass.</p>
+      <nav>
+        <a href="../">Guide library</a>
+        <a href="index.html">Training Tracker guide</a>
+        <a href="#purpose">What This Adds</a>
+        <a href="#data-sources">Data Sources</a>
+        <a href="#onvisible">OnVisible Changes</a>
+        <a href="#row-pill">Last Reminder Pill</a>
+        <a href="#detail-gallery">Detail Gallery</a>
+        <a href="#viewer-controls">Viewer Controls</a>
+        <a href="#test">Test Script</a>
+        <a href="#checklist">Checklist</a>
+      </nav>
+    </aside>
+
+    <main>
+      <span class="pill">Training Tracker only</span>
+      <span class="pill">Admin dashboard pass</span>
+      <span class="pill">Updated 14 Aug 2026</span>
+      <h1>Admin Dashboard Certificate And Reminder Visibility</h1>
+      <p class="lead">This pass lets Jackie click a person on <code>scrAdminDash</code>, see each course's completion date, open the stored certificate from the right-side detail list, and see whether the automatic reminder system has already emailed that person.</p>
+
+      <section id="purpose">
+        <h2>1. What This Adds</h2>
+        <ul>
+          <li>A <strong>View cert</strong> button on each completed course row in the admin drill-down panel.</li>
+          <li>An admin-only certificate lightbox on <code>scrAdminDash</code> using the existing <code>TT - Email Certificate Library</code> flow.</li>
+          <li>A <strong>Last reminder</strong> pill on each person row, read from <code>TT ReminderLog</code>.</li>
+          <li>No email sending and no reminder-flow changes. This page only reads the reminder log and opens certificates.</li>
+        </ul>
+        <div class="callout ok">
+          <strong>Important safety point:</strong> the reminder pill ignores test-mode rows. It only shows rows where <code>TestMode</code> is false and <code>LiveEmailsEnabled</code> is true, so a dry-run email to your inbox does not appear as a real staff reminder.
+        </div>
+      </section>
+
+      <section id="data-sources">
+        <h2>2. Data Sources And Permissions</h2>
+        <ol>
+          <li>In Power Apps Studio, open the <strong>Data</strong> pane.</li>
+          <li>Add the SharePoint list <code>TT ReminderLog</code>.</li>
+          <li>Add or refresh the flow data source <code>TT - Email Certificate Library</code>.</li>
+          <li>Refresh <code>TT Personnel</code>, <code>TT Courses</code>, <code>TT TrainingRecords</code>, <code>TT AuditLog</code>, and <code>TT ReminderLog</code>.</li>
+        </ol>
+        <div class="callout warn">
+          <strong>Locked reminder log:</strong> this still works if <code>TT ReminderLog</code> is locked down, but Jackie must have read permission because <code>scrAdminDash</code> reads the list directly. Normal staff do not need access because they do not use the admin dashboard.
+        </div>
+        <div class="callout warn">
+          <strong>Flow refresh rule:</strong> if you edit <code>TT - Email Certificate Library</code> in Power Automate, refresh or remove-and-re-add that flow in the app's Data pane before testing the button. Power Apps can otherwise keep calling an older cached flow shape.
+        </div>
+      </section>
+
+      <section id="onvisible">
+        <h2>3. Update <code>scrAdminDash.OnVisible</code></h2>
+        <p>Open <code>scrAdminDash</code> and edit its <code>OnVisible</code>. These are targeted edits, not a full formula replacement.</p>
+
+        <h3>3.1 Add Viewer Variable Resets</h3>
+        <p>Near the top, just after the existing <code>Set(varAdminStatusFilter, "All");</code> line, add this block.</p>
+        <div class="code-card">
+          <div class="code-toolbar"><span>Power Fx - add after varAdminStatusFilter</span><button data-copy="viewer-vars" type="button">Copy</button></div>
+<pre id="viewer-vars">Set(varAdminCertViewerOpen, false);
+Set(varAdminCertDataUri, "");
+Set(varAdminCertError, "");
+Set(varAdminCertStatusText, "");
+Set(varAdminCertBusy, false);</pre>
+        </div>
+
+        <h3>3.2 Refresh And Cache <code>TT ReminderLog</code></h3>
+        <p>After the existing <code>Refresh('TT AuditLog');</code> line, add this.</p>
+        <div class="code-card">
+          <div class="code-toolbar"><span>Power Fx - reminder log refresh</span><button data-copy="reminder-refresh" type="button">Copy</button></div>
+<pre id="reminder-refresh">Refresh('TT ReminderLog');</pre>
+        </div>
+        <p>After the existing <code>ClearCollect(colAuditLog, 'TT AuditLog');</code> line, add this.</p>
+        <div class="code-card">
+          <div class="code-toolbar"><span>Power Fx - reminder log collection</span><button data-copy="reminder-collect" type="button">Copy</button></div>
+<pre id="reminder-collect">ClearCollect(
+    colReminderLog,
+    Filter(
+        'TT ReminderLog',
+        Coalesce(TestMode, false) = false &&
+        Coalesce(LiveEmailsEnabled, false) = true
+    )
+);</pre>
+        </div>
+
+        <h3>3.3 Add <code>LastReminderText</code> To <code>colCompliance</code></h3>
+        <p>Inside the record built by <code>ClearCollect(colCompliance, ForAll(...))</code>, add this new field just before <code>AttentionState:</code>.</p>
+        <div class="callout warn">
+          <strong>Pick the version that matches your SharePoint column.</strong> If <code>TT ReminderLog.ReminderType</code> is a Choice column, use the first block. If it is Single line text, use the second block. Do not paste both.
+        </div>
+        <div class="code-card">
+          <div class="code-toolbar"><span>Power Fx - LastReminderText if ReminderType is Choice</span><button data-copy="last-reminder-choice" type="button">Copy</button></div>
+<pre id="last-reminder-choice">LastReminderText: With(
+    {
+        lastRem: First(
+            SortByColumns(
+                Filter(colReminderLog, Lower(PersonEmail) = Lower(P.Email)),
+                "SentOn",
+                SortOrder.Descending
+            )
+        )
+    },
+    If(
+        IsBlank(lastRem.SentOn),
+        "",
+        Switch(
+            Text(lastRem.ReminderType.Value),
+            "DUE_30", "30-day email",
+            "DUE_7", "7-day email",
+            "EXPIRED_TODAY", "Expired email",
+            "OVERDUE_30", "30-day overdue",
+            "OVERDUE_WEEKLY", "Overdue email",
+            "OVERDUE_ESCALATED", "Escalated overdue",
+            "Reminder email"
+        ) &
+        " " & Char(183) & " " &
+        If(
+            DateDiff(DateValue(lastRem.SentOn), Today(), "Days") = 0,
+            "today",
+            Text(lastRem.SentOn, "dd mmm yyyy")
+        )
+    )
+),</pre>
+        </div>
+        <div class="code-card">
+          <div class="code-toolbar"><span>Power Fx - LastReminderText if ReminderType is Text</span><button data-copy="last-reminder-text" type="button">Copy</button></div>
+<pre id="last-reminder-text">LastReminderText: With(
+    {
+        lastRem: First(
+            SortByColumns(
+                Filter(colReminderLog, Lower(PersonEmail) = Lower(P.Email)),
+                "SentOn",
+                SortOrder.Descending
+            )
+        )
+    },
+    If(
+        IsBlank(lastRem.SentOn),
+        "",
+        Switch(
+            Text(lastRem.ReminderType),
+            "DUE_30", "30-day email",
+            "DUE_7", "7-day email",
+            "EXPIRED_TODAY", "Expired email",
+            "OVERDUE_30", "30-day overdue",
+            "OVERDUE_WEEKLY", "Overdue email",
+            "OVERDUE_ESCALATED", "Escalated overdue",
+            "Reminder email"
+        ) &
+        " " & Char(183) & " " &
+        If(
+            DateDiff(DateValue(lastRem.SentOn), Today(), "Days") = 0,
+            "today",
+            Text(lastRem.SentOn, "dd mmm yyyy")
+        )
+    )
+),</pre>
+        </div>
+        <p class="small">This deliberately stays blank if no live reminder row exists for that person.</p>
+      </section>
+
+      <section id="row-pill">
+        <h2>4. Add The Last Reminder Pill To <code>galCompliance</code></h2>
+        <p>Add a small header label outside the gallery, then a pill button inside the gallery template.</p>
+
+        <h3>4.1 Header Label</h3>
+        <p>Insert a Label directly on <code>scrAdminDash</code>, not inside the gallery. Rename it <code>lblAdminTableHeadReminder</code>.</p>
+        <table>
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td><code>Text</code></td><td><code>"Last reminder"</code></td></tr>
+          <tr><td><code>X</code></td><td><code>218</code></td></tr>
+          <tr><td><code>Y</code></td><td><code>284</code></td></tr>
+          <tr><td><code>Width</code></td><td><code>146</code></td></tr>
+          <tr><td><code>Height</code></td><td><code>22</code></td></tr>
+          <tr><td><code>Align</code></td><td><code>Align.Center</code></td></tr>
+          <tr><td><code>Size</code></td><td><code>9</code></td></tr>
+          <tr><td><code>FontWeight</code></td><td><code>FontWeight.Semibold</code></td></tr>
+        </table>
+
+        <h3>4.2 Pill In The Person Row</h3>
+        <p>Select <code>galCompliance</code>, add a classic Button inside the gallery template, and rename it <code>btnLastReminderPill</code>.</p>
+        <table>
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td><code>Text</code></td><td><code>ThisItem.LastReminderText</code></td></tr>
+          <tr><td><code>Visible</code></td><td><code>!IsBlank(ThisItem.LastReminderText)</code></td></tr>
+          <tr><td><code>OnSelect</code></td><td><code>Select(Parent)</code></td></tr>
+          <tr><td><code>X</code></td><td><code>218</code></td></tr>
+          <tr><td><code>Y</code></td><td><code>31</code></td></tr>
+          <tr><td><code>Width</code></td><td><code>146</code></td></tr>
+          <tr><td><code>Height</code></td><td><code>20</code></td></tr>
+          <tr><td><code>Fill</code></td><td><code>RGBA(232,244,239,1)</code></td></tr>
+          <tr><td><code>Color</code></td><td><code>RGBA(0,78,66,1)</code></td></tr>
+          <tr><td><code>BorderColor</code></td><td><code>RGBA(0,78,66,0.35)</code></td></tr>
+          <tr><td><code>BorderThickness</code></td><td><code>1</code></td></tr>
+          <tr><td><code>RadiusTopLeft</code>, <code>RadiusTopRight</code>, <code>RadiusBottomLeft</code>, <code>RadiusBottomRight</code></td><td><code>10</code></td></tr>
+          <tr><td><code>Size</code></td><td><code>8</code></td></tr>
+        </table>
+        <div class="callout warn">
+          <strong>Keep this pill clickable.</strong> Leave its display mode editable because the pill uses <code>Select(Parent)</code> to keep the whole row clickable. Setting it to View mode would block the tap.
+        </div>
+      </section>
+
+      <section id="detail-gallery">
+        <h2>5. Add Certificate Viewing To The Detail Gallery</h2>
+        <p>The existing right-side detail list already has <code>lblDetailDate</code>. This pass keeps that label and adds one button per completed training record.</p>
+
+        <h3>5.1 Make The Detail Rows Taller</h3>
+        <p>Select <code>galPersonDetail</code> and set this property.</p>
+        <table>
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td><code>TemplateSize</code></td><td><code>68</code></td></tr>
+        </table>
+        <p>Move <code>btnDetailPill.Y</code> to <code>8</code> and move <code>lblDetailDate.Y</code> to <code>42</code>.</p>
+
+        <h3>5.2 Confirm The Completed Date Label</h3>
+        <p>Select <code>lblDetailDate</code>. Its <code>Text</code> should be this.</p>
+        <div class="code-card">
+          <div class="code-toolbar"><span>Power Fx - lblDetailDate.Text</span><button data-copy="detail-date-text" type="button">Copy</button></div>
+<pre id="detail-date-text">If(
+    IsBlank(ThisItem.DateDone),
+    "Not completed",
+    Text(ThisItem.DateDone, "dd mmm yyyy") &
+    If(!IsBlank(ThisItem.UploadedBy), " (via " & ThisItem.UploadedBy & ")", "")
+)</pre>
+        </div>
+
+        <h3>5.3 Add The <code>View cert</code> Button</h3>
+        <p>Select <code>galPersonDetail</code>, add a classic Button inside the gallery template, and rename it <code>btnAdminViewDetailCert</code>.</p>
+        <table>
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td><code>Text</code></td><td><code>"View cert"</code></td></tr>
+          <tr><td><code>Visible</code></td><td><code>!IsBlank(ThisItem.RecordID) && !IsBlank(ThisItem.DateDone)</code></td></tr>
+          <tr><td><code>DisplayMode</code></td><td><code>If(varAdminCertBusy, DisplayMode.Disabled, DisplayMode.Edit)</code></td></tr>
+          <tr><td><code>X</code></td><td><code>320</code></td></tr>
+          <tr><td><code>Y</code></td><td><code>40</code></td></tr>
+          <tr><td><code>Width</code></td><td><code>110</code></td></tr>
+          <tr><td><code>Height</code></td><td><code>22</code></td></tr>
+          <tr><td><code>Fill</code></td><td><code>RGBA(255,255,255,1)</code></td></tr>
+          <tr><td><code>Color</code></td><td><code>RGBA(0,78,66,1)</code></td></tr>
+          <tr><td><code>BorderColor</code></td><td><code>RGBA(0,78,66,1)</code></td></tr>
+          <tr><td><code>BorderThickness</code></td><td><code>1</code></td></tr>
+          <tr><td><code>RadiusTopLeft</code>, <code>RadiusTopRight</code>, <code>RadiusBottomLeft</code>, <code>RadiusBottomRight</code></td><td><code>11</code></td></tr>
+          <tr><td><code>Size</code></td><td><code>8</code></td></tr>
+        </table>
+
+        <p>Set <code>btnAdminViewDetailCert.OnSelect</code> to this full formula.</p>
+        <div class="callout warn">
+          <strong>Temporary red-line note:</strong> this formula may complain until the <code>TT - Email Certificate Library</code> flow is added as a data source and the viewer controls in section 6 exist. Finish this page, then recheck it.
+        </div>
+        <div class="code-card">
+          <div class="code-toolbar"><span>Power Fx - btnAdminViewDetailCert.OnSelect</span><button data-copy="admin-cert-onselect" type="button">Copy</button></div>
+<pre id="admin-cert-onselect">Set(varAdminCertError, "");
+Set(varAdminCertStatusText, "Fetching certificate...");
+Set(varAdminCertBusy, true);
+Set(
+    varAdminCertRaw,
+    IfError(
+        'TT - Email Certificate Library'.Run(ThisItem.RecordID, varMyEmail, varIsAdmin),
+        Blank()
+    )
+);
+Set(varAdminCertBusy, false);
+If(
+    IsBlank(varAdminCertRaw),
+    Set(varAdminCertError, "Flow could not be reached. Check your connection and try again.");
+    Notify("Could not open certificate - see the error below.", NotificationType.Error),
+    With(
+        {parsed: ParseJSON(varAdminCertRaw.payload)},
+        If(
+            Boolean(parsed.success),
+            Set(varAdminCertStatusText, "");
+            Set(varAdminCertFileNameLower, Lower(Text(parsed.fileName)));
+            Set(varAdminCertIsPdf, EndsWith(varAdminCertFileNameLower, ".pdf"));
+            Set(
+                varAdminCertMimeType,
+                If(
+                    varAdminCertIsPdf, "application/pdf",
+                    EndsWith(varAdminCertFileNameLower, ".png"), "image/png",
+                    "image/jpeg"
+                )
+            );
+            Set(varAdminCertDataUri, "data:" & varAdminCertMimeType & ";base64," & Trim(Text(parsed.fileContentBase64)));
+            Set(varAdminCertViewerOpen, true),
+            Set(varAdminCertError, Text(parsed.message));
+            Notify("Could not open certificate - see the error below.", NotificationType.Error)
+        )
+    )
+)</pre>
+        </div>
+      </section>
+
+      <section id="viewer-controls">
+        <h2>6. Add The Admin Certificate Lightbox</h2>
+        <p>Add these controls directly on <code>scrAdminDash</code>, not inside any gallery or group. Put them at the end of the tree so they sit above the dashboard when visible.</p>
+
+        <div class="mini-map"><pre>scrAdminDash
+├── existing dashboard controls
+├── galCompliance
+├── galPersonDetail
+├── existing loading overlay
+├── recAdminCertViewerBG
+├── pdfAdminCertViewer
+├── imgAdminCertViewer
+├── btnCloseAdminCertViewer
+└── lblAdminCertError</pre></div>
+
+        <h3>6.1 Dimmed Background</h3>
+        <p>Insert a classic Button and rename it <code>recAdminCertViewerBG</code>.</p>
+        <table>
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td><code>Text</code></td><td><code>""</code></td></tr>
+          <tr><td><code>DisplayMode</code></td><td><code>DisplayMode.View</code></td></tr>
+          <tr><td><code>Visible</code></td><td><code>varAdminCertViewerOpen</code></td></tr>
+          <tr><td><code>Fill</code>, <code>HoverFill</code>, <code>PressedFill</code></td><td><code>RGBA(0,0,0,0.75)</code></td></tr>
+          <tr><td><code>X</code>, <code>Y</code></td><td><code>0</code></td></tr>
+          <tr><td><code>Width</code></td><td><code>Parent.Width</code></td></tr>
+          <tr><td><code>Height</code></td><td><code>Parent.Height</code></td></tr>
+        </table>
+
+        <h3>6.2 PDF Viewer</h3>
+        <p>Insert <strong>PDF viewer</strong> and rename it <code>pdfAdminCertViewer</code>.</p>
+        <table>
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td><code>Document</code></td><td><code>varAdminCertDataUri</code></td></tr>
+          <tr><td><code>Visible</code></td><td><code>varAdminCertViewerOpen && varAdminCertIsPdf</code></td></tr>
+          <tr><td><code>X</code></td><td><code>Parent.Width * 0.11</code></td></tr>
+          <tr><td><code>Y</code></td><td><code>Parent.Height * 0.1</code></td></tr>
+          <tr><td><code>Width</code></td><td><code>Parent.Width * 0.78</code></td></tr>
+          <tr><td><code>Height</code></td><td><code>Parent.Height * 0.74</code></td></tr>
+        </table>
+
+        <h3>6.3 Image Viewer</h3>
+        <p>Insert an Image control and rename it <code>imgAdminCertViewer</code>.</p>
+        <table>
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td><code>Image</code></td><td><code>varAdminCertDataUri</code></td></tr>
+          <tr><td><code>ImagePosition</code></td><td><code>ImagePosition.Fit</code></td></tr>
+          <tr><td><code>Visible</code></td><td><code>varAdminCertViewerOpen && !varAdminCertIsPdf</code></td></tr>
+          <tr><td><code>X</code></td><td><code>Parent.Width * 0.11</code></td></tr>
+          <tr><td><code>Y</code></td><td><code>Parent.Height * 0.1</code></td></tr>
+          <tr><td><code>Width</code></td><td><code>Parent.Width * 0.78</code></td></tr>
+          <tr><td><code>Height</code></td><td><code>Parent.Height * 0.74</code></td></tr>
+        </table>
+
+        <h3>6.4 Close Button</h3>
+        <p>Insert a Modern Button and rename it <code>btnCloseAdminCertViewer</code>.</p>
+        <table>
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td><code>Text</code></td><td><code>"Close"</code></td></tr>
+          <tr><td><code>Visible</code></td><td><code>varAdminCertViewerOpen</code></td></tr>
+          <tr><td><code>OnSelect</code></td><td><code>Set(varAdminCertViewerOpen, false); Set(varAdminCertDataUri, "")</code></td></tr>
+          <tr><td><code>BasePaletteColor</code></td><td><code>RGBA(108,117,125,1)</code></td></tr>
+          <tr><td><code>Color</code></td><td><code>RGBA(255,255,255,1)</code></td></tr>
+          <tr><td><code>X</code></td><td><code>Parent.Width * 0.11</code></td></tr>
+          <tr><td><code>Y</code></td><td><code>(Parent.Height * 0.84) + 12</code></td></tr>
+          <tr><td><code>Width</code></td><td><code>130</code></td></tr>
+          <tr><td><code>Height</code></td><td><code>42</code></td></tr>
+        </table>
+
+        <h3>6.5 Error Label</h3>
+        <p>Insert a Label and rename it <code>lblAdminCertError</code>.</p>
+        <table>
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td><code>Text</code></td><td><code>varAdminCertError</code></td></tr>
+          <tr><td><code>Visible</code></td><td><code>!IsBlank(varAdminCertError)</code></td></tr>
+          <tr><td><code>Color</code></td><td><code>RGBA(255,255,255,1)</code></td></tr>
+          <tr><td><code>Align</code></td><td><code>Align.Right</code></td></tr>
+          <tr><td><code>X</code></td><td><code>Parent.Width * 0.29</code></td></tr>
+          <tr><td><code>Y</code></td><td><code>(Parent.Height * 0.84) + 12</code></td></tr>
+          <tr><td><code>Width</code></td><td><code>Parent.Width * 0.6</code></td></tr>
+          <tr><td><code>Height</code></td><td><code>42</code></td></tr>
+        </table>
+      </section>
+
+      <section id="test">
+        <h2>7. Test Script</h2>
+        <ol>
+          <li>Run <strong>App.OnStart</strong>, then open <code>scrAdminDash</code> in Preview.</li>
+          <li>Click a person who has at least one completed course with a certificate in <code>TT Certificates_LTD</code>.</li>
+          <li>Confirm the right-side detail row shows the completed date.</li>
+          <li>Click <strong>View cert</strong>. Confirm the screen dims and the certificate opens inline.</li>
+          <li>Close the viewer and open the same certificate again to prove the state resets cleanly.</li>
+          <li>Check a person who has no reminder log rows. Their row should have no reminder pill.</li>
+          <li>Check a person with a real live reminder row. Their row should show a pill like <code>30-day email · 12 Aug 2026</code> or <code>Overdue email · today</code>.</li>
+          <li>Create or inspect a test-mode reminder row. Confirm it does not appear on the dashboard row.</li>
+        </ol>
+      </section>
+
+      <section id="checklist">
+        <h2>8. Checklist</h2>
+        <ul>
+          <li><code>TT ReminderLog</code> added as a data source.</li>
+          <li>Jackie has read permission to <code>TT ReminderLog</code> if the list is locked down.</li>
+          <li><code>TT - Email Certificate Library</code> added or refreshed as a flow data source.</li>
+          <li><code>scrAdminDash.OnVisible</code> refreshes and collects <code>colReminderLog</code>.</li>
+          <li><code>colCompliance</code> includes <code>LastReminderText</code>.</li>
+          <li><code>galCompliance</code> has <code>btnLastReminderPill</code>.</li>
+          <li><code>galPersonDetail</code> has <code>btnAdminViewDetailCert</code>.</li>
+          <li>Viewer controls are direct children of <code>scrAdminDash</code> and last in the tree.</li>
+          <li>PDF and image certificates both render inline.</li>
+          <li>No reminder emails are sent by anything on this page.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    document.querySelectorAll('button[data-copy]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const target = document.getElementById(button.dataset.copy);
+        if (!target) return;
+        const text = target.innerText;
+        const old = button.textContent;
+        function flash(label) {
+          button.textContent = label;
+          setTimeout(() => { button.textContent = old; }, 1300);
+        }
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        var copied = false;
+        try { copied = document.execCommand('copy'); } catch (e) { copied = false; }
+        document.body.removeChild(textarea);
+        if (copied) { flash('Copied'); return; }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => flash('Copied')).catch(() => flash('Select & Ctrl+C'));
+        } else {
+          flash('Select & Ctrl+C');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -297,6 +297,7 @@
         <a href="#admin-add-mode-buttons">Add Mode Buttons</a>
         <a href="#remote-worker-exclusions">Remote Worker Exclusions</a>
         <a href="course-expiry-reminders.html">Course Expiry Reminder Emails</a>
+        <a href="admin-dashboard-certificates-reminders.html">Admin Certificate/Reminder Pass</a>
         <a href="admin-data-maintenance.html">Admin Data Maintenance</a>
         <a href="#snapshot-dashboard-build">Snapshot Dashboard</a>
         <a href="#certificate-privacy-upgrade">Certificate Privacy Upgrade (Optional)</a>
@@ -309,7 +310,7 @@
     <main>
       <div class="topline">
         <span class="pill">Current step: Reminder emails + admin maintenance</span>
-        <span class="pill">Updated 13 Aug 2026</span>
+        <span class="pill">Updated 14 Aug 2026</span>
         <span class="pill">Training Tracker only</span>
       </div>
       <h1>Training Tracker v3 Fix Guide</h1>
@@ -322,6 +323,7 @@
           <li class="done-item">✅ Done &mdash; Add Mode Buttons build pass (collapsed below).</li>
           <li class="done-item">Done or nearly done &mdash; <a href="#remote-worker-exclusions">Remote Worker Exclusions</a>, rebuilt with complete verified formulas.</li>
           <li class="next-item">Current focus &mdash; <a href="course-expiry-reminders.html">Course Expiry Reminder Emails</a>, rebuilt as a separate start-to-finish guide with locked reminder log, double safety switch, duplicate-send protection, rich email, and deep links.</li>
+          <li class="next-item">New admin pass &mdash; <a href="admin-dashboard-certificates-reminders.html">Admin Dashboard Certificate And Reminder Visibility</a>, covering Jackie opening staff certificates from the dashboard and seeing the last live reminder email per person.</li>
           <li class="next-item">New build pass &mdash; <a href="admin-data-maintenance.html">Admin Data Maintenance</a>, covering certificate library metadata and an admin-only permanent remove-person flow.</li>
           <li>Then &mdash; <a href="#snapshot-dashboard-build">Snapshot Dashboard</a> (not started).</li>
           <li>Superseded, not part of the current build &mdash; <a href="#certificate-privacy-upgrade">Certificate Privacy Upgrade</a> below describes an earlier approach (collapsed). The certificate system that's actually live is a different, later design: <a href="certificate-library-migration.html"><strong>Certificate Library &amp; In-App Viewer &mdash; Full Guide</strong></a>.</li>
@@ -2135,8 +2137,8 @@ Clear(colNewCertificate)</pre>
         <p>Use these after the schema fix is complete. For big replacements, delete the controls on the target screen first, then paste the YAML fresh.</p>
         <div class="links">
           <div class="link-card">
-            <a href="../screens/scrAdminDash.html?v=3.8"><strong>scrAdminDash</strong><span>Admin dashboard, KPI cards, attention filters, risk bars and timeline.</span></a>
-            <div class="card-actions"><a href="../screens/scrAdminDash.html?v=3.8">Open</a><button type="button" data-yaml-url="../screens/scrAdminDash.html?v=3.8">Copy YAML</button></div>
+            <a href="../screens/scrAdminDash.html?v=3.9"><strong>scrAdminDash</strong><span>Admin dashboard, KPI cards, attention filters, risk bars, timeline, admin certificate viewer and reminder-history pills.</span></a>
+            <div class="card-actions"><a href="../screens/scrAdminDash.html?v=3.9">Open</a><button type="button" data-yaml-url="../screens/scrAdminDash.html?v=3.9">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="../screens/scrAdminManage.html?v=2.6"><strong>scrAdminManage</strong><span>People/course management with audit hooks.</span></a>
@@ -2183,8 +2185,9 @@ Clear(colNewCertificate)</pre>
           <li><code>TT ComplianceSnapshots</code> list exists with all ten snapshot columns.</li>
           <li><code>TT AuditLog</code> is added as a Power Apps data source.</li>
           <li><code>TT ComplianceSnapshots</code> is added as a Power Apps data source.</li>
+          <li><code>TT ReminderLog</code> is added as a Power Apps data source before applying the admin certificate/reminder pass.</li>
           <li><code>Office365Users</code> is still connected.</li>
-          <li>All five SharePoint data sources have been refreshed in Power Apps Studio.</li>
+          <li>All required SharePoint data sources have been refreshed in Power Apps Studio.</li>
           <li><code>App.OnStart</code> has been updated and run once.</li>
           <li>The App formulas dropdown has no required v3 named formula changes.</li>
         </ul>
