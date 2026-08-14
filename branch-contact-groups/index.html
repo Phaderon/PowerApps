@@ -262,12 +262,12 @@
 
     <main>
       <div class="topline">
-        <span class="pill">Current step: v2.37 - add existing people to a group</span>
-        <span class="pill">Updated 5 Aug 2026</span>
+        <span class="pill">Current step: v2.38 - quick contact cards</span>
+        <span class="pill">Updated 14 Aug 2026</span>
         <span class="pill">Branch Contact Groups</span>
       </div>
       <h1>Branch Contact Groups Fix Guide</h1>
-      <p class="lead">Quick working page for the Branch Contact Groups Power Apps build - the three screen YAMLs to paste, and the manual fixes needed for the current push only. The full generated app guide (SharePoint schema, data connections, historical changelog) lives at the Full App Guide link below.</p>
+      <p class="lead">Quick working page for the Branch Contact Groups Power Apps build - the screen YAMLs to paste, and the manual fixes needed for the current push only. The full generated app guide (SharePoint schema, data connections, historical changelog) lives at the Full App Guide link below.</p>
 
       <section id="what-this-page-is">
         <h2>What This Page Is</h2>
@@ -278,7 +278,7 @@
       </section>
 
       <section id="current-fix">
-        <h2>This Push - v2.37</h2>
+        <h2>This Push - v2.38</h2>
         <p><strong>Add three new columns to <code>BM Memberships</code> in SharePoint first</strong> (all Single line of text, Not Required):</p>
         <table>
           <thead><tr><th>Column</th><th>Purpose</th></tr></thead>
@@ -289,7 +289,7 @@
           </tbody>
         </table>
         <div class="callout warn">
-          <strong>For this push, replace <code>scrManageGroups</code> only.</strong> The new Manage Groups screen adds the <strong>Add existing</strong> tab when editing a group's personnel. <code>App.OnStart</code>, <code>scrSendEmail</code>, and <code>scrManagePeople</code> are unchanged this round.
+          <strong>For this push, add <code>scrQuickContacts</code> as a new screen.</strong> Existing <code>scrSendEmail</code>, <code>scrManageGroups</code>, and <code>scrManagePeople</code> are not replaced by this quick-card pass, because the local source is behind the latest Studio visual edits.
         </div>
         <div class="callout warn">
           <strong>Backfill existing membership rows before testing v2.34.</strong> After adding the new <code>Name</code> column, existing rows will still have their old display name in <code>Title</code> and a blank <code>Name</code>. Copy each existing <code>Title</code> value into <code>Name</code> once (for example in SharePoint grid edit) before relying on Manage People, member popups, search, or name sorting.
@@ -297,7 +297,11 @@
         <div class="callout">
           <strong>New saved selections list:</strong> create <code>BM Saved Selections</code> and add it as a data source before pasting <code>scrSendEmail v2.27</code>. Columns: <code>Title</code>, <code>SelectionName</code>, and <code>GroupName</code>, all Single line of text and Not Required.
         </div>
-        <p>This push adds <strong>Add existing</strong> to Manage Groups. Open a group, click the personnel icon, switch to Add existing, search the people already known to the app, tick multiple people, then click <strong>Add selected</strong>. People already in the current group are excluded from the list, and the add button has a duplicate guard as a second safety check.</p>
+        <p>This push adds <strong>scrQuickContacts</strong>, a cleaner card-based quick-copy screen. It loads the same SharePoint-backed groups and memberships, hides private groups from non-maintainers, lets you search/filter contact lists, and copies one group's resolved email addresses straight to the clipboard from the card.</p>
+        <p>The previous <strong>Add existing</strong> Manage Groups feature is still available in <code>scrManageGroups v2.24</code>. Open a group, click the personnel icon, switch to Add existing, search the people already known to the app, tick multiple people, then click <strong>Add selected</strong>.</p>
+        <div class="callout warn">
+          <strong>Full visual refresh note:</strong> the all-screen green-and-white visual pass should wait until the latest Studio/export YAML is available. The current local <code>scrSendEmail</code> source still has older UI details that you have already changed manually, so replacing all screens from it would undo those changes.
+        </div>
         <p>Also carried in the new <code>scrManageGroups v2.24</code> YAML: the defensive <code>drpEditThursdayBatch.Default</code> formula below, and the in-app version label has been removed so it does not come back if you replace the screen.</p>
         <div class="callout">
           <strong>Manual property fix:</strong> if <code>drpEditThursdayBatch</code> still opens blank instead of showing <code>None</code>, select <code>drpEditThursdayBatch</code> on <code>scrManageGroups</code> and replace its <strong>Default</strong> property with this formula.
@@ -318,6 +322,10 @@
         <h2>Screen Pages</h2>
         <p>These are the live generated copy pages from the Branch Contact Groups app repository.</p>
         <div class="links">
+          <div class="link-card">
+            <a href="screens/scrQuickContacts.html?v=2.38"><strong>scrQuickContacts <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.38</span></strong><span>New quick-copy contact list screen with two-column cards, search, filters, member counts, and clipboard copy per group.</span></a>
+            <div class="card-actions"><a href="screens/scrQuickContacts.html?v=2.38">Open</a><button type="button" data-yaml-url="screens/scrQuickContacts.html?v=2.38">Copy YAML</button></div>
+          </div>
           <div class="link-card">
             <a href="screens/scrSendEmail.html?v=2.27"><strong>scrSendEmail <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.27</span></strong><span>Landing page, selected groups, saved selections, recipient counts, compact Thursday tools, Outlook and clipboard actions.</span></a>
             <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.27">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.27">Copy YAML</button></div>
