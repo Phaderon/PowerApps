@@ -104,6 +104,10 @@
       font-size: .9rem;
     }
     nav a:hover { background: var(--primary-soft); color: var(--primary); }
+    nav a.active {
+      background: var(--primary-soft); color: var(--primary); font-weight: 700;
+      box-shadow: inset 3px 0 0 var(--primary);
+    }
     main {
       min-width: 0;
       background: var(--paper);
@@ -1142,6 +1146,32 @@ If(
           section.setAttribute('data-expanded', expanded ? 'false' : 'true');
         });
       });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var navLinks = Array.from(document.querySelectorAll('nav a[href^="#"]'));
+      var sections = navLinks.map(function (a) {
+        return document.getElementById(a.getAttribute('href').slice(1));
+      }).filter(Boolean);
+
+      if (!sections.length || !('IntersectionObserver' in window)) return;
+
+      function setActive(id) {
+        navLinks.forEach(function (a) {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+        });
+      }
+
+      var observer = new IntersectionObserver(function (entries) {
+        var visible = entries.filter(function (e) { return e.isIntersecting; });
+        if (visible.length === 0) return;
+        visible.sort(function (a, b) { return a.boundingClientRect.top - b.boundingClientRect.top; });
+        setActive(visible[0].target.id);
+      }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+
+      sections.forEach(function (s) { observer.observe(s); });
     })();
   </script>
 </body>
