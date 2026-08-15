@@ -41,6 +41,24 @@ Always deploy from a clean `git archive` export, never the raw working directory
 `.sources/`, `.cache/`, `.backups/`, `.wrangler/` are gitignored scratch content that
 must never go live.
 
+**MANDATORY, every code-card/code-block on any guide page, no exceptions, not even a
+one-liner — added 2026-08-15, explicit standing rule for every agent (Claude, Codex,
+whoever):** every code-card must carry a `data-updated="<ISO-8601 UTC timestamp>"`
+attribute on its stamp element, a real `HH:MM <TZ>` in the human-readable display text
+(not just a date), and the shared "auto-fading Updated pill" script must be present on
+that page. User's own words: "every single time there's a code block made on this
+site... that entire updated thing with the date and the time appears, every time. I
+don't have to keep asking for it." Root cause this was raised over: three code-cards
+got added without a time component, so when their content was silently fixed later
+that same day there was no visible signal anything had changed — after GitHub Pages'
+long history of "did this actually update," the user has zero tolerance left for that
+ambiguity. **How to apply, every time you touch a code-card:**
+1. Get the real current time: `date -u +%Y-%m-%dT%H:%M:%SZ` (UTC) and `date '+%Y-%m-%d %H:%M %Z'` (local display) — never guess or reuse an old timestamp.
+2. New code-card: `<span class="code-stamp" data-updated="<ISO>">v1 &middot; <local date HH:MM TZ></span>`.
+3. Editing an EXISTING code-card's content: bump the version number AND replace both the `data-updated` value and the display text with the real current time — never leave a stale stamp on changed content, that's the exact bug that triggered this rule.
+4. The CSS (`.update-pill` + `.code-stamp` styling) and the pill-computing `<script>` block (scans `[data-updated]`, shows "Updated Xh ago" for 48h then auto-hides) must exist somewhere on the page — copy it from `policy-tracker/index.html` (Fix Guide template) or `PhadeDev/policy-tracker`'s `docs/screens/NewsletterPack.html` (Screen YAML / clipboard-copy template) if the page doesn't have it yet, don't reinvent it.
+5. Applies to every guide family — Policy Tracker, Branch Contact Groups, Training Tracker, and any future app — both the Fix Guide code-card template and the Screen YAML clipboard-copy template. As of 2026-08-15 only Policy Tracker's two pages have been retrofitted with this on their EXISTING stamps; Branch Contact Groups and Training Tracker still need their old stamps converted — do that opportunistically the next time either is touched, don't wait to be asked.
+
 **Policy Tracker fix guide has a live completion-tracking system** (added 2026-08-15,
 `functions/api/fix-status.js` + a Cloudflare KV namespace bound to the `powerapps`
 Pages project as `FIX_STATUS`). Each Fix section has a "Mark complete" checkbox;
