@@ -63,6 +63,13 @@
     section[data-expanded="false"] > :not(h2):not(.meta-line):not(.fix-controls) { display: none; }
     section[data-expanded="false"] .fix-view-toggle { transform: rotate(-90deg); }
     nav a.fix-done::before { content: "✓ "; color: var(--green); font-weight: 800; }
+    .update-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+      background: var(--callout-ok-bg); color: var(--green);
+      font-size: .72rem; font-weight: 800; white-space: nowrap;
+    }
+    .update-pill::before { content: "●"; font-size: .6rem; }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
@@ -289,7 +296,7 @@
           <div class="code-toolbar">
             <div class="code-meta">
               <span>Temporary debug label - Text</span>
-              <span class="code-stamp">v1 &middot; 2026-08-13 12:35 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T11:35:00Z">v1 &middot; 2026-08-13 12:35 BST</span>
             </div>
             <button data-copy="newsletter-missing-item-debug-formula" type="button">Copy</button>
           </div>
@@ -337,7 +344,7 @@
           <div class="code-toolbar">
             <div class="code-meta">
               <span>Temporary debug label - Text, stage 2</span>
-              <span class="code-stamp">v1 &middot; 2026-08-13 12:50 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T11:50:00Z">v1 &middot; 2026-08-13 12:50 BST</span>
             </div>
             <button data-copy="newsletter-collection-gallery-debug-formula" type="button">Copy</button>
           </div>
@@ -366,7 +373,7 @@ Concat(
           <div class="code-toolbar">
             <div class="code-meta">
               <span>Temporary debug label - Text, stage 3</span>
-              <span class="code-stamp">v1 &middot; 2026-08-13 13:05 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T12:05:00Z">v1 &middot; 2026-08-13 13:05 BST</span>
             </div>
             <button data-copy="newsletter-pack-gates-debug-formula" type="button">Copy</button>
           </div>
@@ -440,7 +447,7 @@ Concat(
           <div class="code-toolbar">
             <div class="code-meta">
               <span>BossPublishBtn.Visible</span>
-              <span class="code-stamp">v1 &middot; 2026-08-13 11:10 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T10:10:00Z">v1 &middot; 2026-08-13 11:10 BST</span>
             </div>
             <button data-copy="boss-publish-visible" type="button">Copy</button>
           </div>
@@ -457,7 +464,7 @@ ThisItem.Published = false</pre>
           <div class="code-toolbar">
             <div class="code-meta">
               <span>PublishAllBtn.OnSelect</span>
-              <span class="code-stamp">v1 &middot; 2026-08-13 11:10 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T10:10:00Z">v1 &middot; 2026-08-13 11:10 BST</span>
             </div>
             <button data-copy="publish-all-onselect" type="button">Copy</button>
           </div>
@@ -502,7 +509,7 @@ If(
           <div class="code-toolbar">
             <div class="code-meta">
               <span>PublishAllBtn.Text</span>
-              <span class="code-stamp">v1 &middot; 2026-08-13 11:10 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T10:10:00Z">v1 &middot; 2026-08-13 11:10 BST</span>
             </div>
             <button data-copy="publish-all-text" type="button">Copy</button>
           </div>
@@ -516,7 +523,7 @@ If(
           <div class="code-toolbar">
             <div class="code-meta">
               <span>PublishAllBtn.Visible</span>
-              <span class="code-stamp">v1 &middot; 2026-08-13 11:10 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T10:10:00Z">v1 &middot; 2026-08-13 11:10 BST</span>
             </div>
             <button data-copy="publish-all-visible" type="button">Copy</button>
           </div>
@@ -548,7 +555,7 @@ CountRows(Filter(ThisItem.GroupedItems, Published = false)) > 0</pre>
           <div class="code-toolbar">
             <div class="code-meta">
               <span>NewsletterPack.OnVisible (top ClearCollect block)</span>
-              <span class="code-stamp">v1 &middot; 2026-08-13 11:10 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T10:10:00Z">v1 &middot; 2026-08-13 11:10 BST</span>
             </div>
             <button data-copy="newsletter-onvisible" type="button">Copy</button>
           </div>
@@ -605,7 +612,7 @@ ClearCollect(
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnRefresh_1.OnSelect</span>
-              <span class="code-stamp">v1 &middot; 2026-08-13 11:10 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T10:10:00Z">v1 &middot; 2026-08-13 11:10 BST</span>
             </div>
             <button data-copy="newsletter-refresh-onselect" type="button">Copy</button>
           </div>
@@ -677,7 +684,7 @@ ClearCollect(
           <div class="code-toolbar">
             <div class="code-meta">
               <span>ViewItem.OnVisible - add near top</span>
-              <span class="code-stamp">v2 &middot; 2026-08-13 14:05 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T13:05:00Z">v2 &middot; 2026-08-13 14:05 BST</span>
             </div>
             <button data-copy="viewitem-onvisible-closing-guard" type="button">Copy</button>
           </div>
@@ -692,7 +699,7 @@ ClearCollect(
           <div class="code-toolbar">
             <div class="code-meta">
               <span>conWarningBar1.Visible</span>
-              <span class="code-stamp">v2 &middot; 2026-08-13 14:05 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T13:05:00Z">v2 &middot; 2026-08-13 14:05 BST</span>
             </div>
             <button data-copy="warning-bar-visible-closing-guard" type="button">Copy</button>
           </div>
@@ -712,7 +719,7 @@ DateDiff(Today(), dpkPublishDate1.SelectedDate, "Days") &lt; 10 &&
           <div class="code-toolbar">
             <div class="code-meta">
               <span>conTopBar1.Visible</span>
-              <span class="code-stamp">v2 &middot; 2026-08-13 14:05 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T13:05:00Z">v2 &middot; 2026-08-13 14:05 BST</span>
             </div>
             <button data-copy="top-bar-visible-closing-guard" type="button">Copy</button>
           </div>
@@ -734,7 +741,7 @@ DateDiff(Today(), dpkPublishDate1.SelectedDate, "Days") &lt; 10 &&
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnClose1.OnSelect</span>
-              <span class="code-stamp">v2 &middot; 2026-08-13 14:05 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T13:05:00Z">v2 &middot; 2026-08-13 14:05 BST</span>
             </div>
             <button data-copy="close-onselect" type="button">Copy</button>
           </div>
@@ -758,7 +765,7 @@ DateDiff(Today(), dpkPublishDate1.SelectedDate, "Days") &lt; 10 &&
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnModalAction1_2.OnSelect</span>
-              <span class="code-stamp">v2 &middot; 2026-08-13 14:05 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T13:05:00Z">v2 &middot; 2026-08-13 14:05 BST</span>
             </div>
             <button data-copy="discard-close-onselect-closing-guard" type="button">Copy</button>
           </div>
@@ -797,7 +804,7 @@ If(varSourceScreen = "Historic", Navigate(Historic, ScreenTransition.Fade), Navi
           <div class="code-toolbar">
             <div class="code-meta">
               <span>NewsletterPack.OnVisible</span>
-              <span class="code-stamp">v2 &middot; 2026-08-13 13:32 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T12:32:00Z">v2 &middot; 2026-08-13 13:32 BST</span>
             </div>
             <button data-copy="newsletter-onvisible-blank-safe-consultation" type="button">Copy</button>
           </div>
@@ -854,7 +861,7 @@ ClearCollect(
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnRefresh_1.OnSelect</span>
-              <span class="code-stamp">v2 &middot; 2026-08-13 13:32 BST</span>
+              <span class="code-stamp" data-updated="2026-08-13T12:32:00Z">v2 &middot; 2026-08-13 13:32 BST</span>
             </div>
             <button data-copy="newsletter-refresh-blank-safe-consultation" type="button">Copy</button>
           </div>
@@ -932,7 +939,7 @@ ClearCollect(
           <div class="code-toolbar">
             <div class="code-meta">
               <span>NewsletterPack.OnVisible</span>
-              <span class="code-stamp">v3 &middot; 2026-08-15</span>
+              <span class="code-stamp" data-updated="2026-08-15T13:32:00Z">v4 &middot; 2026-08-15 14:32 BST</span>
             </div>
             <button data-copy="newsletter-onvisible-batch-drafts" type="button">Copy</button>
           </div>
@@ -1035,7 +1042,7 @@ Set(
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnDraftBatch1_1.OnSelect</span>
-              <span class="code-stamp">v1 &middot; 2026-08-15</span>
+              <span class="code-stamp" data-updated="2026-08-15T13:32:00Z">v2 &middot; 2026-08-15 14:32 BST</span>
             </div>
             <button data-copy="newsletter-batch1-onselect" type="button">Copy</button>
           </div>
@@ -1059,7 +1066,7 @@ If(
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnDraftBatch2_1.OnSelect</span>
-              <span class="code-stamp">v1 &middot; 2026-08-15</span>
+              <span class="code-stamp" data-updated="2026-08-15T13:32:00Z">v2 &middot; 2026-08-15 14:32 BST</span>
             </div>
             <button data-copy="newsletter-batch2-onselect" type="button">Copy</button>
           </div>
@@ -1172,6 +1179,34 @@ If(
       }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
 
       sections.forEach(function (s) { observer.observe(s); });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var RECENT_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours - past this, no pill, just the plain stamp
+      var now = Date.now();
+
+      function formatAge(ms) {
+        var mins = Math.round(ms / 60000);
+        if (mins < 1) return 'just now';
+        if (mins < 60) return mins + 'm ago';
+        var hours = Math.round(mins / 60);
+        if (hours < 24) return hours + 'h ago';
+        return Math.round(hours / 24) + 'd ago';
+      }
+
+      document.querySelectorAll('.code-stamp[data-updated]').forEach(function (stamp) {
+        var updated = new Date(stamp.getAttribute('data-updated')).getTime();
+        if (isNaN(updated)) return;
+        var age = now - updated;
+        if (age >= 0 && age < RECENT_WINDOW_MS) {
+          var pill = document.createElement('span');
+          pill.className = 'update-pill';
+          pill.textContent = 'Updated ' + formatAge(age);
+          stamp.after(pill);
+        }
+      });
     })();
   </script>
 </body>
