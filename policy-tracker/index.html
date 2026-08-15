@@ -191,14 +191,15 @@
         <a href="#newsletter-approval-fix">Fix 2 - Newsletter Required Real Final Approval</a>
         <a href="#close-banner-flash">Fix 3 - Deadline Banner Flash On Close</a>
         <a href="#newsletter-consultation-blank-fix">Fix 4 - Newsletter Treats Blank Consultation As Unticked</a>
+        <a href="#newsletter-thursday-batch-drafts">Fix 5 - Thursday Batch 1/2 Email Drafting (New Feature)</a>
       </nav>
     </aside>
 
     <main>
       <div class="topline">
-        <span class="pill">Updated 13 Aug 2026</span>
+        <span class="pill">Updated 15 Aug 2026</span>
         <span class="pill">Policy Tracker only</span>
-        <span class="pill">4 fixes + urgent diagnostic</span>
+        <span class="pill">5 fixes + urgent diagnostic</span>
       </div>
       <h1>Policy Tracker Fix Guide</h1>
       <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
@@ -829,6 +830,179 @@ ClearCollect(
 
         <div class="callout ok">
           <strong>Test:</strong> click Refresh on NewsletterPack after pasting both formulas. If the two missing rows are blank/unticked consultation values, the temporary Stage 2 label should change to <code>colNewsletterPack rows = 3</code>. If they are genuinely ticked for consultation, they should still stay out of the newsletter.
+        </div>
+      </section>
+
+      <section id="newsletter-thursday-batch-drafts">
+        <h2>Fix 5 - Thursday Batch 1/2 Email Drafting (New Feature)</h2>
+        <p class="meta-line">NewsletterPack &middot; new controls + property edit &middot; adds two buttons, does not remove anything</p>
+        <p>Added 2026-08-15. Two new buttons in the "Email-ready format" panel, <strong>Thursday Batch 1 Email</strong> and <strong>Thursday Batch 2 Email</strong>, that build an HTML draft via the Office 365 Outlook connector's <code>DraftEmail</code> action &mdash; subject auto-dated, body has this week's newsletter items as a real bold bullet list plus a fixed footer (Previous Newsletters / About / recipient list, copied verbatim from the real sent email and never changing), and BCC pulled from the <strong>same <code>BM Groups</code> / <code>BM Memberships</code> SharePoint lists Branch Contact Groups already uses</strong>, filtered to whichever Thursday batch the button is for. One manual step remains inside each drafted email: paste this week's real release link over the placeholder text, and set the OFFICIAL sensitivity label before sending &mdash; MOD's Purview label can't be set by this connector.</p>
+        <div class="callout ok">
+          <strong>This only ever creates a draft.</strong> <code>Office365Outlook.DraftEmail</code> is the connector's draft-creation action &mdash; nothing in this feature calls <code>SendEmailV2</code> or <code>SendDraftEmail</code>. Clicking either button puts an unsent draft in the clicking user's own Outlook Drafts folder (the connector connection is per-user, confirmed live with two different mailboxes) and stops there. You still have to open it and press Send yourself.
+        </div>
+        <div class="callout warn">
+          <strong>Before pasting anything below:</strong> add <code>BM Groups</code> and <code>BM Memberships</code> as data sources in this app (Data pane &rarr; Add data &rarr; SharePoint &rarr; same site Branch Contact Groups uses), and confirm <strong>Office 365 Outlook</strong> is added as a data source too (each user needs their own connection/sign-in the first time they use the buttons &mdash; that's what makes the draft land in the right mailbox).
+        </div>
+
+        <ol>
+          <li>Open <strong>NewsletterPack</strong>.</li>
+          <li>Select the screen itself (root node), then <code>OnVisible</code> in the Properties dropdown.</li>
+          <li>Select all and replace with this full formula &mdash; it's the existing formula with five new lines appended after the <code>colNewsletterPack</code> block.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>NewsletterPack.OnVisible</span>
+              <span class="code-stamp">v3 &middot; 2026-08-15</span>
+            </div>
+            <button data-copy="newsletter-onvisible-batch-drafts" type="button">Copy</button>
+          </div>
+<pre id="newsletter-onvisible-batch-drafts">Set(varNewsletterTargetDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));
+Refresh('Policy Proof Tracker');
+ClearCollect(
+    colNewsletterPack,
+    Sort(
+        AddColumns(
+            Filter(
+                'Policy Proof Tracker',
+                'Planned Publish Date' &gt;= varNewsletterTargetDate &amp;&amp;
+                'Planned Publish Date' &lt; DateAdd(varNewsletterTargetDate, 1, "Days") &amp;&amp;
+                (
+                    'Approved For Release By'.Value = "XO" ||
+                    'Approved For Release By'.Value = "ACOS" ||
+                    'Approved For Release By'.Value = "DCOMD" ||
+                    'Approved For Release By'.Value = "D Commander"
+                ) &amp;&amp;
+                Published = false &amp;&amp;
+                Coalesce('External consultation required', false) = false
+            ),
+            SortKey,
+            If(
+                'Top Item',
+                -1000,
+                Coalesce(LookUp(colChoiceColors, ChoiceValue = 'Document Type'.Value, SortOrder), 99)
+            ),
+            IsFinalApproved,
+            Or(
+                'Approved For Release By'.Value = "XO",
+                'Approved For Release By'.Value = "ACOS",
+                'Approved For Release By'.Value = "DCOMD",
+                'Approved For Release By'.Value = "D Commander"
+            ),
+            PackTitle,
+            Coalesce('Title for Newsletter', Title),
+            PackAudience,
+            Coalesce(Audience, ""),
+            PackSummary,
+            Coalesce('Item summary', "")
+        ),
+        SortKey,
+        SortOrder.Ascending
+    )
+);
+ClearCollect(colBatchGroups, AddColumns(Sort('BM Groups', SortOrder, SortOrder.Ascending), Ticked, false));
+ClearCollect(colBatchMemberships, Filter('BM Memberships', false));
+ForAll(colBatchGroups As grp, Collect(colBatchMemberships, Filter('BM Memberships', GroupName = grp.Title)));
+Set(varNewsletterSubject, Text(Today(), "yyyymmdd") &amp; " - Cadets Branch weekly policy updates");
+Set(
+    varNewsletterBodyLead,
+    "Good afternoon all,&lt;br&gt;&lt;br&gt;" &amp;
+    "Please find a link to this week's releases here - &lt;a href=""PASTE-THIS-WEEKS-LINK-HERE""&gt;PASTE THIS WEEK'S LINK TEXT HERE&lt;/a&gt;&lt;br&gt;" &amp;
+    "Below is a summary of this week's releases from Cadets Branch:&lt;br&gt;&lt;br&gt;"
+);
+Set(
+    varNewsletterBodyStatic,
+    "&lt;br&gt;&lt;b&gt;Previous Newsletters:&lt;/b&gt;&lt;br&gt;" &amp;
+    "All the previous weekly policy updates are available via the links below&lt;br&gt;" &amp;
+    "MODNet users: &lt;a href=""https://modgovuk.sharepoint.com/teams/1598/SitePages/Weekly-Policy-Updates---Archive.aspx""&gt;Weekly Policy Updates (sharepoint.com)&lt;/a&gt;&lt;br&gt;" &amp;
+    "Resource Centre users: Navigate to: Westminster " &amp; Char(8594) &amp; " Resource Centre " &amp; Char(8594) &amp; " Organisation " &amp; Char(8594) &amp; " Cadets Branch Weekly Policy Updates&lt;br&gt;&lt;br&gt;" &amp;
+    "&lt;b&gt;About the Newsletter:&lt;/b&gt;&lt;br&gt;" &amp;
+    "This newsletter works on both MODNet and personal systems, and all policies included will also be uploaded on to both MODNet and the Resource Centre for routine accessing.&lt;br&gt;" &amp;
+    "Each week we will send out a version of this email, to the usual recipients, providing a link to the latest policy newsletter and a summary of what items have been included.&lt;br&gt;" &amp;
+    "This email has been sent to the groups listed below but please feel free to forward on as you deem necessary, emailed recipients:&lt;br&gt;&lt;br&gt;" &amp;
+    "ACF CEOs (ex-HQ SE)&lt;br&gt;" &amp;
+    "JMC SO2's&lt;br&gt;" &amp;
+    "JMC OC CTT's&lt;br&gt;" &amp;
+    "---&lt;br&gt;" &amp;
+    "JMC Cadets Branch 0mailboxes&lt;br&gt;" &amp;
+    "JMC CTT 0mailboxes&lt;br&gt;" &amp;
+    "JMC Col Cadets (including Col Ashley Fulford)&lt;br&gt;" &amp;
+    "JMC RAL members&lt;br&gt;" &amp;
+    "JMC SCEOs&lt;br&gt;" &amp;
+    "Cadets Branch&lt;br&gt;" &amp;
+    "CTC Frimley&lt;br&gt;" &amp;
+    "CCAT&lt;br&gt;" &amp;
+    "CRFCA (Sam Plant and Simon Estick)&lt;br&gt;" &amp;
+    "ACCT UK (Murdo Urquhart and Richard Walton)&lt;br&gt;" &amp;
+    "CCRS (Shooting Manager - Daf Marston)&lt;br&gt;" &amp;
+    "CCF RAF &amp;amp; RN leads"
+)</pre>
+        </div>
+
+        <ol start="4">
+          <li>Select <strong>btnRefresh_1</strong> on the same screen (it has its own separate copy of the same formula &mdash; same trap as Fix 2/Fix 4 above).</li>
+          <li>Select <code>OnSelect</code>, select all, and replace with the exact same formula as above.</li>
+        </ol>
+
+        <ol start="6">
+          <li>Duplicate the existing <strong>btnCopyAll_1</strong> button twice (select it, Ctrl+C, Ctrl+V twice) &mdash; this gives you the right base styling (Classic/Button, rounded corners, bold text) without retyping every colour property.</li>
+          <li>Rename the two copies <strong>btnDraftBatch1_1</strong> and <strong>btnDraftBatch2_1</strong> (right-click &rarr; Rename, in the tree view).</li>
+          <li>Position them in a new row under Copy All: <code>Y = 56</code> for both, <code>X = 20</code> for Batch 1, <code>X = 32 + (Parent.Width - 52) / 2</code> for Batch 2, <code>Width = (Parent.Width - 52) / 2</code> for both.</li>
+          <li>Set <code>Text</code> to <code>"Thursday Batch 1 Email"</code> / <code>"Thursday Batch 2 Email"</code>.</li>
+          <li>Set <code>BorderColor</code>, <code>Fill</code> to <code>RGBA(46, 110, 145, 1)</code>, <code>HoverBorderColor</code>/<code>HoverFill</code>/<code>PressedBorderColor</code>/<code>PressedFill</code> to <code>RGBA(34, 88, 118, 1)</code> &mdash; this is the same blue already used for Thursday Batch controls in Branch Contact Groups, kept consistent across both apps.</li>
+          <li>Set each button's <code>OnSelect</code> to the matching formula below.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnDraftBatch1_1.OnSelect</span>
+              <span class="code-stamp">v1 &middot; 2026-08-15</span>
+            </div>
+            <button data-copy="newsletter-batch1-onselect" type="button">Copy</button>
+          </div>
+<pre id="newsletter-batch1-onselect">Set(varBatch1Recipients, Distinct(Filter(colBatchMemberships As mem, CountRows(Filter(colBatchGroups As grp, Lower(Trim(grp.ThursdayBatch.Value)) = "batch 1" &amp;&amp; Lower(Trim(grp.Title)) = Lower(Trim(mem.GroupName)))) &gt; 0), Email));
+Set(varBatch1Bcc, Concat(varBatch1Recipients, Value, "; "));
+If(
+    CountRows(colNewsletterPack) = 0,
+    Notify("No newsletter items for this Thursday - nothing to draft.", NotificationType.Warning),
+    CountRows(varBatch1Recipients) = 0,
+    Notify("No recipients found for Thursday Batch 1.", NotificationType.Warning),
+    Office365Outlook.DraftEmail(
+        "",
+        varNewsletterSubject,
+        varNewsletterBodyLead &amp; Concat(colNewsletterPack, Char(8226) &amp; " &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;" &amp; Char(9702) &amp; " Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;") &amp; varNewsletterBodyStatic,
+        {Bcc: varBatch1Bcc}
+    );
+    Notify("Thursday Batch 1 draft created - check Outlook Drafts.", NotificationType.Success)
+)</pre>
+        </div>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnDraftBatch2_1.OnSelect</span>
+              <span class="code-stamp">v1 &middot; 2026-08-15</span>
+            </div>
+            <button data-copy="newsletter-batch2-onselect" type="button">Copy</button>
+          </div>
+<pre id="newsletter-batch2-onselect">Set(varBatch2Recipients, Distinct(Filter(colBatchMemberships As mem, CountRows(Filter(colBatchGroups As grp, Lower(Trim(grp.ThursdayBatch.Value)) = "batch 2" &amp;&amp; Lower(Trim(grp.Title)) = Lower(Trim(mem.GroupName)))) &gt; 0), Email));
+Set(varBatch2Bcc, Concat(varBatch2Recipients, Value, "; "));
+If(
+    CountRows(colNewsletterPack) = 0,
+    Notify("No newsletter items for this Thursday - nothing to draft.", NotificationType.Warning),
+    CountRows(varBatch2Recipients) = 0,
+    Notify("No recipients found for Thursday Batch 2.", NotificationType.Warning),
+    Office365Outlook.DraftEmail(
+        "",
+        varNewsletterSubject,
+        varNewsletterBodyLead &amp; Concat(colNewsletterPack, Char(8226) &amp; " &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;" &amp; Char(9702) &amp; " Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;") &amp; varNewsletterBodyStatic,
+        {Bcc: varBatch2Bcc}
+    );
+    Notify("Thursday Batch 2 draft created - check Outlook Drafts.", NotificationType.Success)
+)</pre>
+        </div>
+
+        <div class="callout ok">
+          <strong>Test:</strong> click Thursday Batch 1 Email, check Outlook Drafts for a new draft with the right subject, a bold bullet per newsletter item, BCC populated from Batch 1's groups, and the placeholder link line intact. Repeat for Batch 2 and confirm the BCC list is different. Confirm nothing sends on its own either time.
         </div>
       </section>
     </main>
