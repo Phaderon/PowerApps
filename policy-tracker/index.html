@@ -47,6 +47,22 @@
       border: 1px solid var(--line); background: var(--paper); color: var(--ink);
       font-size: 1.1rem; cursor: pointer; box-shadow: var(--shadow);
     }
+    .fix-controls {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin: 4px 0 16px; padding: 8px 12px;
+      border: 1px solid var(--line); border-radius: 8px; background: var(--primary-soft);
+    }
+    .fix-check { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; font-size: .88rem; }
+    .fix-check input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--green); }
+    .fix-view-toggle {
+      background: transparent; border: 1px solid var(--line); border-radius: 6px;
+      width: 28px; height: 28px; color: var(--muted); cursor: pointer; font-size: .85rem;
+    }
+    section[data-done="true"] { border-left: 3px solid var(--green); padding-left: 13px; }
+    section[data-done="true"] .fix-check { color: var(--green); }
+    section[data-expanded="false"] > :not(h2):not(.meta-line):not(.fix-controls) { display: none; }
+    section[data-expanded="false"] .fix-view-toggle { transform: rotate(-90deg); }
+    nav a.fix-done::before { content: "✓ "; color: var(--green); font-weight: 800; }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
@@ -402,6 +418,10 @@ Concat(
       <section id="publish-gate-removed">
         <h2>Fix 1 - Publish Buttons No Longer Gated On External Consultation Flag</h2>
         <p class="meta-line">Main &middot; property edit &middot; no risk to formula syntax, changes real publish behaviour</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
+        </div>
         <p>Reported 2026-08-13: on a day with three items due, only one showed a per-item <strong>Publish</strong> button and <strong>Publish All</strong> read <code>(1)</code> instead of <code>(3)</code>. It looked like an approval-based bug, but it wasn't &mdash; <code>BossPublishBtn.Visible</code> and <code>PublishAllBtn</code> never checked approval status at all. The actual gate was <code>'External consultation required' = false</code>, present in four places (button visibility, the count shown in the button text, and both <code>Filter()</code> calls used when actually patching records). Two of the three items had that flag ticked. Decision: drop that condition everywhere so Publish/Publish All always show for boss users on unpublished, due items, regardless of the consultation flag.</p>
         <div class="callout warn">
           <strong>Behaviour change, not just a bug fix:</strong> a boss can now publish an item that still needs external consultation. That's intentional, per instruction &mdash; flagging it here so it's not a surprise later.
@@ -509,6 +529,10 @@ CountRows(Filter(ThisItem.GroupedItems, Published = false)) > 0</pre>
       <section id="newsletter-approval-fix">
         <h2>Fix 2 - Newsletter Pack Required Real Final Approval, Not Just Pillar Lead</h2>
         <p class="meta-line">NewsletterPack &middot; property edit &middot; changes which items appear in the pack</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
+        </div>
         <p>Reported 2026-08-13 alongside Fix 1: an item approved only by the Pillar Lead (not yet by ACOS or above) was still appearing in the newsletter pack. The <code>Filter()</code> that builds <code>colNewsletterPack</code> included <code>'Approved by Pillar Lead (Ready to Release)' = true</code> as one of several OR'd conditions, so Pillar Lead approval alone was enough to qualify &mdash; even though a separate <code>IsFinalApproved</code> column (used only for the amber "pending" styling on the card) already correctly checked just the four senior sign-off values. Fix: removed the Pillar Lead OR branch from the qualifying filter, so an item only enters the pack once <code>'Approved For Release By'</code> is XO, ACOS, DCOMD, or "D Commander" &mdash; DCOMD / D Commander is the Deputy Commander Cadets rank tier (Brigadier-equivalent), so that already covers "ACOS or above." There are two identical copies of this filter in the screen (initial load and the Refresh button) &mdash; both are given in full below.</p>
 
         <ol>
@@ -634,6 +658,10 @@ ClearCollect(
       <section id="close-banner-flash">
         <h2>Fix 3 - Deadline Warning Banner Flashing On Close</h2>
         <p class="meta-line">ViewItem &middot; property edit &middot; visual only, no data risk</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
+        </div>
         <p>Reported 2026-08-13: clicking <strong>Close</strong> on an item with a release date inside 10 days (not High Priority, not External Consultation) briefly flashed the amber "Release date is within 10 days" banner before navigating away. The first guide tried reordering <code>Navigate()</code> before the state resets, but that is not enough: Power Apps can still evaluate the old screen for a frame while statements after <code>Navigate()</code> run. Correct fix: add a close-in-progress guard, make the warning/top bar respect it, and set the guard on both close paths.</p>
 
         <ol>
@@ -747,6 +775,10 @@ If(varSourceScreen = "Historic", Navigate(Historic, ScreenTransition.Fade), Navi
       <section id="newsletter-consultation-blank-fix">
         <h2>Fix 4 - Newsletter Treats Blank Consultation As Unticked</h2>
         <p class="meta-line">NewsletterPack &middot; property edit &middot; changes which items appear in the pack</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
+        </div>
         <p>Confirmed by the urgent diagnostic on 2026-08-13: three records matched the Thursday date window, but <code>colNewsletterPack</code> only contained one. The two missing records had <code>finalApprovalOK=true</code> and <code>publishedOK=true</code>, but <code>externalOK=false</code>. The consultation gate must stay: consultation-ticked items should not appear in the newsletter. The safer fix is to keep that rule but make it blank-safe, because a SharePoint Yes/No field can come through as blank rather than explicit <code>false</code>. This uses <code>Coalesce('External consultation required', false) = false</code>, which includes blank/unticked records and still excludes real <code>true</code>.</p>
         <div class="callout warn">
           <strong>Do not remove the consultation gate:</strong> this fix keeps consultation-ticked records out of the newsletter. It only prevents blank/unticked records being treated as if they failed the gate.
@@ -875,6 +907,10 @@ ClearCollect(
       <section id="newsletter-thursday-batch-drafts">
         <h2>Fix 5 - Thursday Batch 1/2 Email Drafting (New Feature)</h2>
         <p class="meta-line">NewsletterPack &middot; new controls + property edit &middot; adds two buttons, does not remove anything</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
+        </div>
         <p>Added 2026-08-15. Two new buttons in the "Email-ready format" panel, <strong>Thursday Batch 1 Email</strong> and <strong>Thursday Batch 2 Email</strong>, that build an HTML draft via the Office 365 Outlook connector's <code>DraftEmail</code> action &mdash; subject auto-dated, body has this week's newsletter items as a real bold bullet list plus a fixed footer (Previous Newsletters / About / recipient list, copied verbatim from the real sent email and never changing), and BCC pulled from the <strong>same <code>BM Groups</code> / <code>BM Memberships</code> SharePoint lists Branch Contact Groups already uses</strong>, filtered to whichever Thursday batch the button is for. One manual step remains inside each drafted email: paste this week's real release link over the placeholder text, and set the OFFICIAL sensitivity label before sending &mdash; MOD's Purview label can't be set by this connector.</p>
         <div class="callout ok">
           <strong>This only ever creates a draft.</strong> <code>Office365Outlook.DraftEmail</code> is the connector's draft-creation action &mdash; nothing in this feature calls <code>SendEmailV2</code> or <code>SendDraftEmail</code>. Clicking either button puts an unsent draft in the clicking user's own Outlook Drafts folder (the connector connection is per-user, confirmed live with two different mailboxes) and stops there. You still have to open it and press Send yourself.
@@ -1058,6 +1094,55 @@ If(
         setTimeout(() => { button.textContent = old; }, 1300);
       });
     });
+  </script>
+
+  <script>
+    (function () {
+      var APP = 'policy-tracker';
+      var fixSections = Array.from(document.querySelectorAll('.fix-controls')).map(function (el) {
+        return el.closest('section');
+      }).filter(Boolean);
+
+      function setState(section, done) {
+        section.setAttribute('data-done', done ? 'true' : 'false');
+        section.setAttribute('data-expanded', done ? 'false' : 'true');
+        var checkbox = section.querySelector('.fix-done-checkbox');
+        if (checkbox) checkbox.checked = done;
+        var navLink = document.querySelector('nav a[href="#' + section.id + '"]');
+        if (navLink) navLink.classList.toggle('fix-done', done);
+      }
+
+      fetch('/api/fix-status?app=' + APP)
+        .then(function (r) { return r.ok ? r.json() : {}; })
+        .catch(function () { return {}; })
+        .then(function (data) {
+          fixSections.forEach(function (section) {
+            setState(section, !!data[section.id]);
+          });
+        });
+
+      fixSections.forEach(function (section) {
+        var checkbox = section.querySelector('.fix-done-checkbox');
+        var viewToggle = section.querySelector('.fix-view-toggle');
+
+        checkbox.addEventListener('change', function () {
+          var done = checkbox.checked;
+          setState(section, done);
+          fetch('/api/fix-status', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ app: APP, id: section.id, done: done }),
+          }).catch(function () {
+            /* offline or blocked - local UI state still applied, will re-sync on next load */
+          });
+        });
+
+        viewToggle.addEventListener('click', function () {
+          var expanded = section.getAttribute('data-expanded') === 'true';
+          section.setAttribute('data-expanded', expanded ? 'false' : 'true');
+        });
+      });
+    })();
   </script>
 </body>
 </html>
