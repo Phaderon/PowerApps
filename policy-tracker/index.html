@@ -994,7 +994,7 @@ Set(
     "&lt;br&gt;&lt;b&gt;Previous Newsletters:&lt;/b&gt;&lt;br&gt;" &amp;
     "All the previous weekly policy updates are available via the links below&lt;br&gt;" &amp;
     "MODNet users: &lt;a href=""https://modgovuk.sharepoint.com/teams/1598/SitePages/Weekly-Policy-Updates---Archive.aspx""&gt;Weekly Policy Updates (sharepoint.com)&lt;/a&gt;&lt;br&gt;" &amp;
-    "Resource Centre users: Navigate to: Westminster " &amp; Char(8594) &amp; " Resource Centre " &amp; Char(8594) &amp; " Organisation " &amp; Char(8594) &amp; " Cadets Branch Weekly Policy Updates&lt;br&gt;&lt;br&gt;" &amp;
+    "Resource Centre users: Navigate to: Westminster → Resource Centre → Organisation → Cadets Branch Weekly Policy Updates&lt;br&gt;&lt;br&gt;" &amp;
     "&lt;b&gt;About the Newsletter:&lt;/b&gt;&lt;br&gt;" &amp;
     "This newsletter works on both MODNet and personal systems, and all policies included will also be uploaded on to both MODNet and the Resource Centre for routine accessing.&lt;br&gt;" &amp;
     "Each week we will send out a version of this email, to the usual recipients, providing a link to the latest policy newsletter and a summary of what items have been included.&lt;br&gt;" &amp;
@@ -1049,7 +1049,7 @@ If(
     Office365Outlook.DraftEmail(
         "",
         varNewsletterSubject,
-        varNewsletterBodyLead &amp; Concat(colNewsletterPack, Char(8226) &amp; " &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;" &amp; Char(9702) &amp; " Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;") &amp; varNewsletterBodyStatic,
+        varNewsletterBodyLead &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;") &amp; varNewsletterBodyStatic,
         {Bcc: varBatch1Bcc}
     );
     Notify("Thursday Batch 1 draft created - check Outlook Drafts.", NotificationType.Success)
@@ -1073,7 +1073,7 @@ If(
     Office365Outlook.DraftEmail(
         "",
         varNewsletterSubject,
-        varNewsletterBodyLead &amp; Concat(colNewsletterPack, Char(8226) &amp; " &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;" &amp; Char(9702) &amp; " Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;") &amp; varNewsletterBodyStatic,
+        varNewsletterBodyLead &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;") &amp; varNewsletterBodyStatic,
         {Bcc: varBatch2Bcc}
     );
     Notify("Thursday Batch 2 draft created - check Outlook Drafts.", NotificationType.Success)
