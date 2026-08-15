@@ -1,5 +1,9 @@
 // Cloudflare Pages Function - GET/POST fix-completion state, backed by KV.
-// One KV key per "app" (?app=policy-tracker), value is a JSON object of {fixId: true}.
+// One KV key per "app" (?app=policy-tracker), value is a JSON object of
+// {fixId: "<ISO completion timestamp>"} - the timestamp (not a bare boolean)
+// is what lets a future session apply the 30-day retention rule: a fix
+// completed 30+ days ago should have its whole section deleted from the
+// guide, not just left collapsed. See AGENTS.md "Hosting" section.
 
 function json(data, status) {
   return new Response(JSON.stringify(data), {
@@ -32,7 +36,7 @@ export async function onRequestPost(context) {
   const raw = await context.env.FIX_STATUS.get(app);
   const data = raw ? JSON.parse(raw) : {};
   if (done) {
-    data[id] = true;
+    data[id] = new Date().toISOString();
   } else {
     delete data[id];
   }

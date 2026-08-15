@@ -53,20 +53,22 @@ ClearCollect(colPersonnel, 'XX Personnel')
 
 The user pastes this into the App object's OnStart property, not into any screen.
 
-### 4. GitHub Pages — Screen YAML
+### 4. Cloudflare Pages — Screen YAML
 
-After creating the GitHub Pages site for the project (see `project-repo-workflow.md`), report:
+Hosted on Cloudflare Pages, not GitHub Pages — see the "Hosting" section at the top of
+`AGENTS.md` before doing this for the first time. After creating the project (see
+`project-repo-workflow.md`) and deploying with `wrangler pages deploy`, report:
 
 ```
-Your app screens are ready at: https://phadedev.github.io/APP-NAME/
+Your app screens are ready at: https://APP-NAME.pages.dev/
 
 Paste order:
 1. Open Power Apps Studio → New screen (blank) for each screen below
 2. Open each link, click "Copy YAML", then paste into the new screen
 
-Screen 1 — scrHome:    https://phadedev.github.io/APP-NAME/screens/scrHome.html
-Screen 2 — scrDetail:  https://phadedev.github.io/APP-NAME/screens/scrDetail.html
-Screen 3 — scrAdmin:   https://phadedev.github.io/APP-NAME/screens/scrAdmin.html
+Screen 1 — scrHome:    https://APP-NAME.pages.dev/screens/scrHome.html
+Screen 2 — scrDetail:  https://APP-NAME.pages.dev/screens/scrDetail.html
+Screen 3 — scrAdmin:   https://APP-NAME.pages.dev/screens/scrAdmin.html
 ```
 
 Screens are pasted one at a time. Each screen replaces the blank screen content.
@@ -142,7 +144,7 @@ Before reporting "done" to the user, verify:
 - [ ] SharePoint checklist is complete (all lists, all columns, all types, all Choice options)
 - [ ] Data connections listed (every SharePoint list, any connectors)
 - [ ] App.OnStart is a separate code block, not in any screen YAML
-- [ ] Each screen YAML has a copy-button page on the project GitHub Pages
-- [ ] GitHub Pages index shows all screens in paste order
+- [ ] Each screen YAML has a copy-button page on the project's Cloudflare Pages site, and it's actually been deployed with `wrangler pages deploy` (not just committed to git)
+- [ ] Cloudflare Pages index shows all screens in paste order
 - [ ] Issues tracker URL reported
 - [ ] Library card added to `Phaderon/PowerApps` index.html (or confirm with user first)

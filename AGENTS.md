@@ -4,10 +4,64 @@ This repo is referred to as **the Power Apps Bible** in every project that uses 
 a user or another session says "consult the Power Apps Bible," this repo is what they
 mean.
 
+## Hosting: Cloudflare Pages, NOT GitHub Pages (read this before touching any guide)
+
+**As of 2026-08-15, every guide site in this app family is hosted on Cloudflare Pages,
+not GitHub Pages.** GitHub Pages (the legacy Jekyll builder) had repeated build
+failures on this repo — user's explicit words: "I am absolutely sick of GitHub... fuck
+this GitHub bullshit." GitHub repos are still real (code, version history, issues) —
+only static hosting moved. **When the user says "update the guide," it means: edit the
+file, `git commit && git push` as usual, THEN deploy to the Cloudflare Pages project
+below with `wrangler pages deploy` — both steps, every time, no exceptions.** Never
+tell the user to check a `phaderon.github.io` or `phadedev.github.io` URL — those are
+dead (Pages disabled on those repos on purpose). If you land in this repo and see a
+stale reference to `github.io` anywhere below, that instruction is out of date; trust
+this section instead and fix the stale reference while you're there.
+
+| Site | Repo (unchanged) | Live URL (Cloudflare) | Deploy source dir |
+|---|---|---|---|
+| Guide library hub (this repo) | `Phaderon/PowerApps` | `https://powerapps.pages.dev/` | repo root |
+| Policy Tracker fix guide | `Phaderon/PowerApps` (`policy-tracker/`) | `https://powerapps.pages.dev/policy-tracker/` | repo root (mirrored subfolder) |
+| Policy Tracker screen YAML | `PhadeDev/policy-tracker` | `https://policy-tracker.pages.dev/` | `docs/` |
+| Branch Contact Groups task guide | `Phaderon/PowerApps` (`branch-contact-groups/`) | `https://powerapps.pages.dev/branch-contact-groups/` | repo root (mirrored subfolder) |
+| Branch Contact Groups screen YAML | `PhadeDev/branch-contact-groups` | `https://branch-contact-groups.pages.dev/` | `docs/` |
+| Training Tracker (guide + all screens, one page) | `Phaderon/PowerApps` (`training-tracker/`) | `https://powerapps.pages.dev/training-tracker/` | repo root |
+| Library & File Plan Manager | `PhadeDev/library-file-plan-manager` | `https://phadedev.github.io/library-file-plan-manager/` | **not yet migrated** — still real GitHub Pages, don't "fix" this one |
+
+Deploy command (credentials already sourced from `~/.config/cloudflare/pages.env` via
+`~/.bashrc`, no login needed):
+```bash
+source ~/.config/cloudflare/pages.env   # usually redundant, harmless
+rm -rf <scratchpad>/cf-deploy-X && mkdir -p <scratchpad>/cf-deploy-X
+cd <repo> && git archive HEAD -- <docs-subdir-if-any> | tar -x -C <scratchpad>/cf-deploy-X
+cd <scratchpad>/cf-deploy-X[/docs]
+npx wrangler pages deploy . --project-name=<powerapps|policy-tracker|branch-contact-groups> --branch=main --commit-dirty=true
+```
+Always deploy from a clean `git archive` export, never the raw working directory —
+`.sources/`, `.cache/`, `.backups/`, `.wrangler/` are gitignored scratch content that
+must never go live.
+
+**Policy Tracker fix guide has a live completion-tracking system** (added 2026-08-15,
+`functions/api/fix-status.js` + a Cloudflare KV namespace bound to the `powerapps`
+Pages project as `FIX_STATUS`). Each Fix section has a "Mark complete" checkbox;
+checking it POSTs `{app, id, done}` to `/api/fix-status` and collapses that section.
+**You can and should read this state directly instead of asking the user what's
+already fixed:** `curl "https://powerapps.pages.dev/api/fix-status?app=policy-tracker"`
+returns JSON of every completed fix's section `id`. **Retention rule (user's explicit
+call, 2026-08-15): a fix marked complete for 30+ days should be deleted outright** —
+remove its whole `<section>`, its sidebar `<nav>` link, and its KV entry — not just
+left collapsed forever. The KV value is currently just `true`/absent; **before this
+rule can actually fire, the Pages Function needs to store a completion timestamp
+instead of a bare boolean** (check `functions/api/fix-status.js` — if it's still
+storing `true`, update it to store an ISO date string, migrate any existing `true`
+values to "today" once, and only then start actually deleting on future visits). Do
+this check every time you're asked to touch the Policy Tracker guide, not just when
+explicitly asked to clean up.
+
 **Always start here:** `reference/database.html` — every reference document in this
 repo consolidated onto one page, in reading order (known-bad-patterns first, since
 that's the highest-signal "here's exactly what broke and how to fix it" content).
-Live at `https://phaderon.github.io/PowerApps/reference/database.html`. Fetch that one
+Live at `https://powerapps.pages.dev/reference/database.html`. Fetch that one
 URL/file first for any Power Apps question — it replaces needing to guess which of the
 individual files below to check.
 
@@ -73,7 +127,7 @@ Guide library repo: `/var/home/Phaderon/PowerApps/`
 ## Per-Project Repo URLs
 
 - Repo: `https://github.com/PhadeDev/APP-SLUG`
-- Pages: `https://phadedev.github.io/APP-SLUG/`
+- Pages (Cloudflare, NOT GitHub Pages — see Hosting section above): `https://APP-SLUG.pages.dev/`
 - Issues: `https://github.com/PhadeDev/APP-SLUG/issues`
 
 ---

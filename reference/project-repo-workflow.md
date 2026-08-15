@@ -1,8 +1,8 @@
 # Per-Project GitHub Repo Workflow
 
-Last checked: 2026-06-23
+Last checked: 2026-08-15
 
-When a new app is agreed upon, create a dedicated GitHub repository under the `PhadeDev` organisation. This gives the project its own issues tracker, its own GitHub Pages for screen YAML copy pages, and keeps it cleanly separate from the guide library at `Phaderon/PowerApps`.
+When a new app is agreed upon, create a dedicated GitHub repository under the `PhadeDev` organisation. This gives the project its own issues tracker and keeps it cleanly separate from the guide library at `Phaderon/PowerApps`. **Hosting for the screen YAML copy pages is Cloudflare Pages, not GitHub Pages** — see the "Hosting" section at the top of `AGENTS.md` for why (GitHub Pages' legacy builder kept failing) and the exact deploy command. The `docs/` folder in the repo is still the source of truth and gets committed to git as normal; it's just served from Cloudflare instead of GitHub.
 
 ---
 
@@ -23,7 +23,7 @@ gh repo create PhadeDev/APP-SLUG \
   --add-readme
 ```
 
-Then enable Issues (on by default), and configure GitHub Pages:
+Issues are on by default, nothing to configure there. Then set up the `docs/` folder and push to git as normal (this is still real version history, just no longer what serves the live site):
 
 ```bash
 # Create the docs/ folder structure
@@ -41,15 +41,22 @@ git commit -m "Initial commit: Power Apps canvas app project"
 git push -u origin main
 ```
 
-Enable GitHub Pages from the repo Settings → Pages → Source: `main` branch, `/docs` folder.
+Then create and deploy the Cloudflare Pages project (credentials already sourced via `~/.config/cloudflare/pages.env` in `~/.bashrc` — no login needed):
 
-**Pages URL:** `https://phadedev.github.io/APP-SLUG/`
+```bash
+source ~/.config/cloudflare/pages.env
+npx wrangler pages project create APP-SLUG --production-branch=main
+cd /var/home/Phaderon/PowerApps-Apps/APP-SLUG/docs
+npx wrangler pages deploy . --project-name=APP-SLUG --branch=main --commit-dirty=true
+```
+
+**Pages URL:** `https://APP-SLUG.pages.dev/` — do NOT enable GitHub Pages for this repo.
 
 ---
 
 ## Step 3 — Create Screen HTML Pages
 
-For each screen YAML, write the YAML to a temp file, then wrap it with pa-yaml-wrap. **Always pass `--version`** — this stamps the version and local build time onto every page so the user can tell at a glance whether GitHub Pages has served the latest push.
+For each screen YAML, write the YAML to a temp file, then wrap it with pa-yaml-wrap. **Always pass `--version`** — this stamps the version and local build time onto every page so the user can tell at a glance whether the Cloudflare deploy has served the latest push.
 
 ```bash
 pa-yaml-wrap /tmp/scrHome.yaml /var/home/Phaderon/PowerApps-Apps/APP-SLUG/docs/screens/scrHome.html --version v1.0
@@ -91,7 +98,7 @@ Use `date '+%-d %b %Y  %H:%M %Z'` in the terminal to get the correct local times
 
 ## Step 4 — Create the Project Index Page
 
-The `docs/index.html` is the main GitHub Pages page for the app. It shows:
+The `docs/index.html` is the main page for the app, served from Cloudflare Pages. It shows:
 - App name and description
 - SharePoint setup checklist
 - App.OnStart copy block
@@ -185,7 +192,7 @@ Save as `docs/index.html` and replace all `APP_*` placeholders:
 </head>
 <body>
 
-<a class="back" href="https://phaderon.github.io/PowerApps/">← Guide Library</a>
+<a class="back" href="https://powerapps.pages.dev/">← Guide Library</a>
 <h1>APP_FULL_NAME</h1>
 <p class="subtitle">APP_DESCRIPTION</p>
 
@@ -273,7 +280,7 @@ async function copyBlock(btn, id) {
 Add a card to the main PowerApps guide library at `/var/home/Phaderon/PowerApps/index.html`. Confirm with the user before doing this if the app is still in progress.
 
 ```html
-<a class="guide-card" href="https://phadedev.github.io/APP-SLUG/">
+<a class="guide-card" href="https://APP-SLUG.pages.dev/">
   <div class="guide-top">
     <span class="guide-kicker">Canvas app</span>
     <h2>APP FULL NAME</h2>
@@ -301,7 +308,7 @@ git commit -m "Add all screens and index page"
 git push origin main
 ```
 
-Wait ~60 seconds for GitHub Pages to build. Then verify the live URL.
+Deploys are near-instant (`wrangler pages deploy`, no build step) — verify the live URL right after the command returns.
 
 ---
 
@@ -329,7 +336,7 @@ The `PowerApps-Apps/` directory is a sibling of `PowerApps/` (the guide library 
 | What | Where |
 |---|---|
 | Guide library repo | `Phaderon/PowerApps` at `/var/home/Phaderon/PowerApps/` |
-| Guide library Pages | `https://phaderon.github.io/PowerApps/` |
+| Guide library Pages | `https://powerapps.pages.dev/` |
 | New app repos | `PhadeDev/APP-SLUG` at `/var/home/Phaderon/PowerApps-Apps/APP-SLUG/` |
-| New app Pages | `https://phadedev.github.io/APP-SLUG/` |
+| New app Pages | `https://APP-SLUG.pages.dev/` |
 | Issues | `https://github.com/PhadeDev/APP-SLUG/issues` |
