@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Training Tracker Legacy Data Migration</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --paper: #ffffff;
+      --ink: #172033;
+      --muted: #637084;
+      --line: #d9e1ec;
+      --primary: #004e42;
+      --primary-soft: #e8f4ef;
+      --green: #1f7a4d;
+      --amber: #a86500;
+      --red: #a33a3a;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --shadow: 0 12px 32px rgba(20, 34, 56, .10);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+    }
+    a { color: var(--primary); }
+    .shell {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    main {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+    }
+    h1 { margin: 0 0 8px; font-size: 2rem; }
+    h2 { margin: 34px 0 10px; font-size: 1.35rem; border-top: 1px solid var(--line); padding-top: 22px; }
+    h2:first-of-type { border-top: 0; padding-top: 0; }
+    h3 { margin: 24px 0 8px; font-size: 1.05rem; }
+    h4 { margin: 18px 0 6px; font-size: .95rem; }
+    .lead { margin: 0 0 20px; color: var(--muted); font-size: 1.05rem; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: .8rem;
+      font-weight: 700;
+      margin: 0 8px 16px 0;
+    }
+    .callout {
+      border-left: 4px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 16px 0;
+    }
+    .warn { border-left-color: var(--amber); background: #fff7e8; }
+    .danger { border-left-color: var(--red); background: #fff0f0; }
+    .ok { border-left-color: var(--green); background: #edf8f2; }
+    code {
+      font-family: var(--mono);
+      background: #eef3f8;
+      border: 1px solid #dce5f0;
+      border-radius: 6px;
+      padding: 1px 5px;
+      font-size: .92em;
+    }
+    pre {
+      margin: 0;
+      overflow-x: auto;
+      background: #101827;
+      color: #f4f7fb;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: var(--mono);
+      font-size: .9rem;
+      line-height: 1.5;
+    }
+    .code-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 12px 0 18px;
+    }
+    .code-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: #eef3f8;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: 8px 14px;
+    }
+    .code-title button {
+      border: 1px solid var(--primary);
+      background: var(--primary);
+      color: #fff;
+      border-radius: 7px;
+      padding: 5px 9px;
+      cursor: pointer;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 18px;
+      font-size: .95rem;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #eef3f8; }
+    .step-list { padding-left: 22px; }
+    .step-list li { margin-bottom: 10px; }
+    .flow-map {
+      border: 1px solid var(--line);
+      background: #fbfdff;
+      border-radius: 14px;
+      padding: 16px;
+      margin: 18px 0 22px;
+      overflow-x: auto;
+    }
+    .flow-map h3 {
+      margin-top: 0;
+    }
+    .flow-tree,
+    .flow-tree ul {
+      list-style: none;
+      margin: 0;
+      padding-left: 22px;
+      position: relative;
+    }
+    .flow-tree {
+      padding-left: 0;
+      min-width: 720px;
+    }
+    .flow-tree ul::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 12px;
+      left: 8px;
+      border-left: 2px solid #c7d4e3;
+    }
+    .flow-tree li {
+      position: relative;
+      margin: 8px 0;
+      padding-left: 18px;
+    }
+    .flow-tree > li {
+      padding-left: 0;
+    }
+    .flow-tree li::before {
+      content: "";
+      position: absolute;
+      top: 18px;
+      left: 8px;
+      width: 14px;
+      border-top: 2px solid #c7d4e3;
+    }
+    .flow-tree > li::before {
+      display: none;
+    }
+    .flow-node {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      border: 1px solid #d7e1ec;
+      border-radius: 8px;
+      background: #fff;
+      padding: 6px 10px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(20, 34, 56, .05);
+    }
+    .flow-node span {
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .flow-node.trigger { border-color: #c9d8ff; background: #f2f5ff; }
+    .flow-node.variable { border-color: #cfe7db; background: #f1faf5; }
+    .flow-node.sharepoint { border-color: #cce6df; background: #effaf7; }
+    .flow-node.loop { border-color: #d8d0ef; background: #f7f3ff; }
+    .flow-node.filter { border-color: #dde4eb; background: #f7f9fc; }
+    .flow-node.condition { border-color: #f0d1a4; background: #fff7e8; }
+    .flow-node.compose { border-color: #d8e3ef; background: #f6fbff; }
+    .flow-node.email { border-color: #cfe7db; background: #edf8f2; }
+    .branch-label {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 2px 9px;
+      border: 1px solid #c7d4e3;
+      border-radius: 999px;
+      background: #eef3f8;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      white-space: nowrap;
+    }
+    .flow-note {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+    .tree-card {
+      border: 1px solid var(--line);
+      background: #fbfdff;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 18px 0 22px;
+    }
+    .tree-card h3 {
+      margin-top: 0;
+    }
+    .mini-tree {
+      margin: 10px 0 0;
+      border-radius: 10px;
+      background: #0f1724;
+      color: #f4f7fb;
+      white-space: pre;
+      overflow-x: auto;
+      font-size: .86rem;
+      line-height: 1.45;
+    }
+    .placement .mini-tree {
+      background: #ffffff;
+      color: #1d3b32;
+      border: 1px solid #cfe7db;
+      margin-top: 8px;
+    }
+    .sticky-flow {
+      position: sticky;
+      top: 8px;
+      z-index: 20;
+      border: 1px solid #cfe7db;
+      background: rgba(241, 250, 245, .98);
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(20, 34, 56, .16);
+      padding: 10px 12px;
+      margin: 18px 0 22px;
+      max-height: 28vh;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+    .sticky-flow-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+      color: var(--primary);
+      font-weight: 800;
+      font-size: .92rem;
+    }
+    .sticky-flow-title span {
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 700;
+    }
+    .sticky-flow .mini-tree {
+      margin: 0;
+      max-height: calc(28vh - 52px);
+      overflow: auto;
+      background: #0f1724;
+      color: #f4f7fb;
+    }
+    .placement {
+      border: 1px solid #cfe7db;
+      border-left: 5px solid var(--primary);
+      background: #f1faf5;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin: 12px 0 16px;
+    }
+    .placement strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--primary);
+    }
+    .placement code {
+      background: #ffffff;
+      border-color: #cfe7db;
+    }
+    .path {
+      font-family: var(--mono);
+      font-size: .9rem;
+      color: #1d3b32;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      padding-bottom: 2px;
+    }
+    .back-link { display: inline-block; margin-top: 24px; font-weight: 600; }
+    .small { color: var(--muted); font-size: .92rem; }
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 10px;
+      padding: 10px 14px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .18s ease, transform .18s ease;
+      pointer-events: none;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 860px) {
+      .shell { padding: 12px; }
+      main { padding: 18px; }
+      table { display: block; overflow-x: auto; }
+      .flow-tree { min-width: 680px; }
+      .sticky-flow {
+        top: 4px;
+        max-height: 34vh;
+      }
+      .sticky-flow .mini-tree {
+        max-height: calc(34vh - 52px);
+        font-size: .78rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <main>
+      <span class="pill">Training Tracker only</span>
+      <span class="pill">One-time migration</span>
+      <span class="pill">Real personnel data &mdash; go slowly</span>
+      <h1>Legacy Training Data Migration</h1>
+      <p class="lead">Bringing Jackie's existing "MANDATORY Training &ndash; ALL STAFF (Cadets)" SharePoint list (<code>CdtsTrainingMatrix</code>) into Training Tracker &mdash; 81 people, 13 courses, ~896 training records, plus certificate attachments &mdash; without hand-typing any of it. This is a multi-package build: each package is a small, independently-testable Power Automate flow you import as a <code>.zip</code>, not one giant flow.</p>
+
+      <div class="callout danger">
+        <strong>Why packages instead of one big flow:</strong> this touches real people's real training records. Each package below does one job, can be tested on its own, and nothing writes real data until you explicitly run the write-capable package with dry run off. If a package fails to import or misbehaves, the blast radius is just that one package.
+      </div>
+
+      <h2>Where This Stands</h2>
+      <table>
+        <thead><tr><th>Package</th><th>What it does</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><strong>1 &mdash; Discover Source Fields</strong></td><td>Read-only. Asks SharePoint for the real internal column names on <code>CdtsTrainingMatrix</code>, since the migration flow needs to query those columns directly and a CSV export only shows the display names.</td><td>Ready to run &mdash; download below.</td></tr>
+          <tr><td><strong>2 &mdash; Migrate Legacy Training</strong></td><td>The real migration: backfills <code>StaffType</code> on 77 people, creates the 6 missing <code>TT Personnel</code> rows, creates/updates ~896 <code>TT TrainingRecords</code> rows, and routes attachments into <code>TT Certificates_LTD</code>. Has a dry-run mode &mdash; reports counts without writing anything until you re-run with it off.</td><td>Waiting on Package 1's output before it can be built correctly.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Already Decided (so nothing here is guessed)</h2>
+      <ul class="step-list">
+        <li><strong>Name matching:</strong> 74 of 81 people matched automatically against <code>TT Personnel.Title</code> (48 exact, 26 after normalising rank/role suffixes like "CON" vs "Con" or "C1"/"C2"). The remaining 7: your own record ("Allan Hamilton") merges with the "Hamilton, Allan (RC-Cdts-IX-SO3)" row; the other 6 (Burns, Grant, Gray, Thompson, Thomson, Wall) get created fresh with the real emails you supplied.</li>
+        <li><strong>Course matching:</strong> 12 of 14 columns map one-to-one onto existing <code>TT Courses</code>. "Civil Service Expectations" resolves per person by <code>StaffType</code> (Civil Servant &rarr; plain version, Army &rarr; the "LMs Only" version). "Active Bystander" legacy data goes into <strong>Active Bystander V2</strong> (the older duplicate course gets archived separately, not part of this flow). "Safeguarding (Job specific)" is excluded from this migration entirely &mdash; no matching course exists and it's being deferred, not built as a one-off hack.</li>
+        <li><strong>StaffType backfill:</strong> 77 of 81 <code>TT Personnel</code> rows have no <code>StaffType</code> set at all, which affects compliance math app-wide, not just this migration. Jackie's <code>EmpStatus</code> column backfills it: Civil Servant&rarr;Civil Servant, Regular/FTRS&rarr;Army, ACCT UK Emp/Aspire/Ext Con&rarr;Contractor.</li>
+        <li><strong>Attachments:</strong> named well enough for keyword matching (confirmed from a live screenshot of the source list), but not guaranteed. Anything below a confidence threshold gets logged for manual review instead of guessed.</li>
+      </ul>
+
+      <h2>Package 1 &mdash; Discover Source Fields</h2>
+      <p>Read-only. Runs one SharePoint query (<code>/_api/web/lists/getbytitle('CdtsTrainingMatrix')/fields</code>), returns every column's real internal name, and writes nothing anywhere.</p>
+
+      <div class="code-card">
+        <div class="code-title">Download</div>
+        <p style="padding:14px 16px 18px;margin:0;"><a href="downloads/TT_Discover_Source_Fields.zip" download><strong>TT_Discover_Source_Fields.zip</strong></a> &mdash; import package, ~2.5KB.</p>
+      </div>
+
+      <h3>Steps</h3>
+      <ol class="step-list">
+        <li>Download the zip above.</li>
+        <li>Power Automate &rarr; <strong>My flows</strong> &rarr; <strong>Import</strong> &rarr; <strong>Import Package (Legacy)</strong> &rarr; upload the zip.</li>
+        <li>It will list one dependency: your SharePoint connection. It should already show your existing connection &mdash; if it says "Select during import," pick your normal SharePoint account. Click <strong>Import</strong>.</li>
+        <li>Once imported, open <strong>TT - Discover Source List Fields</strong> from My flows.</li>
+        <li>Click <strong>Test</strong> (top right) &rarr; <strong>Manually</strong> &rarr; <strong>Test</strong> again to confirm. It takes no inputs, so it runs immediately.</li>
+        <li>Once it finishes, click into the run, open the final <strong>Response</strong> step, and copy the full JSON output.</li>
+        <li>Send that JSON back &mdash; paste it in chat, or drop it as a <code>.json</code> or <code>.txt</code> file in the <a href="../index.html">homepage upload box</a>.</li>
+      </ol>
+
+      <div class="callout ok">
+        <strong>What happens next:</strong> once I have the real internal column names, Package 2 gets built against them specifically (not guessed), and this page gets updated with its download link and steps the same way.
+      </div>
+
+      <a class="back-link" href="index.html#remote-worker-exclusions">&larr; Back to the main Training Tracker guide</a>
+    </main>
+  </div>
+</body>
+</html>
