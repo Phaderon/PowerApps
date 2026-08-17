@@ -76,6 +76,25 @@ values to "today" once, and only then start actually deleting on future visits).
 this check every time you're asked to touch the Policy Tracker guide, not just when
 explicitly asked to clean up.
 
+**Homepage has a password-gated multi-file upload box into R2** (added 2026-08-17,
+`functions/api/upload.js` + `functions/api/upload/[key].js`, R2 bucket
+`powerapps-uploads` bound to the `powerapps` Pages project as `UPLOADS`, password
+stored as the Pages secret `UPLOAD_PASSWORD`, not in this repo). The user uses this to
+hand files (screenshots, exports, zips) to whichever agent is working, from any device.
+**Read what's there instead of asking the user to re-send:**
+`curl "https://powerapps.pages.dev/api/upload?password=<UPLOAD_PASSWORD>"` lists
+objects; fetch one with
+`curl "https://powerapps.pages.dev/api/upload/<key>?password=<UPLOAD_PASSWORD>" -o <file>`.
+Get the password value from the user directly if you don't already have it in this
+session — never print it into a file, guide page, or committed code. **Storage
+safeguards, all already in place, don't remove them:** an R2 bucket lifecycle rule
+auto-deletes every object after 14 days (set via the Cloudflare API directly on the
+bucket, not enforced in code); the upload Function also rejects any single file over
+25MB and refuses new uploads once the bucket's total size is within ~2GB of the R2 free
+tier's 10GB/month cap. If asked to raise these limits, remember the point of the caps is
+to make this feature unable to blow through the free tier unattended — don't just delete
+them, ask first if a genuinely bigger file needs to go through.
+
 **Always start here:** `reference/database.html` — every reference document in this
 repo consolidated onto one page, in reading order (known-bad-patterns first, since
 that's the highest-signal "here's exactly what broke and how to fix it" content).

@@ -294,8 +294,8 @@ h1 {
       <p class="intro">A tidy launch point for live app guides, paste-ready YAML, reference notes and GitHub issue handoff pages.</p>
     </div>
     <div class="stamp" aria-label="Page version and update time">
-      <span class="badge strong">Library v2.0</span>
-      <span class="badge">Updated 15 Aug 2026</span>
+      <span class="badge strong">Library v2.1</span>
+      <span class="badge">Updated 17 Aug 2026</span>
     </div>
   </header>
 
@@ -406,12 +406,114 @@ h1 {
           </div>
           <div class="actions"><span class="open">Open</span></div>
         </a>
+
+        <button class="strip" type="button" id="open-upload" style="cursor:pointer; font: inherit; text-align: left;">
+          <div class="strip-main">
+            <h3>Upload files for Claude</h3>
+            <p>Drop screenshots, exports or zips somewhere Claude can pull them from directly. Password required.</p>
+          </div>
+          <div class="meta">
+            <span class="type">Uploads</span>
+            <span class="pill">Multi-file</span>
+            <span class="pill">Auto-deletes after 14 days</span>
+          </div>
+          <div class="actions"><span class="open">Open</span></div>
+        </button>
       </div>
     </section>
 
   </div>
 
   <p class="footer">Hosted on Cloudflare Pages. No external scripts, fonts or tracking. Bookmark this page &mdash; every app's guide, fix log and paste-ready YAML is one click from here.</p>
+
+  <dialog id="upload-dialog">
+    <form method="dialog" class="upload-form" id="upload-form">
+      <div class="upload-head">
+        <h2>Upload files for Claude</h2>
+        <button type="button" id="upload-close" aria-label="Close" class="upload-x">&times;</button>
+      </div>
+      <p class="upload-note">Files land in a locked storage bucket only Claude can read via the API &mdash; not public. They auto-delete after 14 days. Max 25MB per file.</p>
+      <label class="upload-label" for="upload-password">Password <span class="upload-hint">(hint: Theta&hellip;)</span></label>
+      <input type="password" id="upload-password" autocomplete="off" required />
+      <label class="upload-label" for="upload-files">Files</label>
+      <input type="file" id="upload-files" multiple required />
+      <div class="upload-actions">
+        <button type="submit" class="btn-copy-card" id="upload-submit">Upload</button>
+        <span id="upload-status" class="upload-status"></span>
+      </div>
+      <ul id="upload-list" class="upload-list"></ul>
+    </form>
+  </dialog>
+  <style>
+  #upload-dialog {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0;
+    background: var(--panel);
+    color: var(--ink);
+    width: min(480px, 92vw);
+  }
+  #upload-dialog::backdrop { background: rgba(10,16,26,.5); }
+  .upload-form { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .upload-head { display: flex; align-items: center; justify-content: space-between; }
+  .upload-head h2 { margin: 0; font-size: 1.1rem; }
+  .upload-x { border: none; background: none; color: var(--muted); font-size: 1.4rem; line-height: 1; cursor: pointer; }
+  .upload-note { margin: 0; color: var(--muted); font-size: .82rem; }
+  .upload-label { font-size: .82rem; font-weight: 700; color: var(--muted); }
+  .upload-hint { font-weight: 400; color: var(--faint); }
+  #upload-password, #upload-files {
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--panel-2);
+    color: var(--ink);
+    font: inherit;
+  }
+  .upload-actions { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+  .upload-status { font-size: .82rem; color: var(--muted); }
+  .upload-list { margin: 0; padding: 0; list-style: none; font-size: .82rem; color: var(--muted); }
+  .upload-list li { padding: 2px 0; }
+  </style>
+  <script>
+  (function(){
+    var dialog = document.getElementById('upload-dialog');
+    document.getElementById('open-upload').addEventListener('click', function(){ dialog.showModal(); });
+    document.getElementById('upload-close').addEventListener('click', function(){ dialog.close(); });
+
+    document.getElementById('upload-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var status = document.getElementById('upload-status');
+      var list = document.getElementById('upload-list');
+      var password = document.getElementById('upload-password').value;
+      var files = document.getElementById('upload-files').files;
+      if (!files.length) return;
+
+      var fd = new FormData();
+      fd.append('password', password);
+      for (var i = 0; i < files.length; i++) fd.append('files', files[i]);
+
+      status.textContent = 'Uploading...';
+      list.innerHTML = '';
+      try {
+        var res = await fetch('/api/upload', { method: 'POST', body: fd });
+        var data = await res.json();
+        if (!res.ok) {
+          status.textContent = data.error || 'Upload failed';
+          return;
+        }
+        status.textContent = 'Done';
+        data.uploaded.forEach(function(f){
+          var li = document.createElement('li');
+          li.textContent = '✓ ' + f.name;
+          list.appendChild(li);
+        });
+        document.getElementById('upload-files').value = '';
+      } catch (err) {
+        status.textContent = 'Upload failed';
+      }
+    });
+  })();
+  </script>
 </main>
 </body>
 </html>
