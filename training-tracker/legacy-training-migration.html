@@ -365,12 +365,16 @@
         <strong>Why packages instead of one big flow:</strong> this touches real people's real training records. Each package below does one job, can be tested on its own, and nothing writes real data until you explicitly run the write-capable package with dry run off. If a package fails to import or misbehaves, the blast radius is just that one package.
       </div>
 
+      <div class="callout warn">
+        <strong>Both packages now run on Jackie's side, not yours.</strong> Her list lives on her own personal SharePoint subsite, which she can share item-by-item but not at the site level &mdash; so your account can never get API access to it, no matter how the flow is built. The fix: Jackie imports and runs these flows herself, using her own SharePoint connection, which already has full native access to her own list. You just need to grant her <strong>Contribute</strong> access to <code>TT Personnel</code>, <code>TT TrainingRecords</code>, and <code>TT Certificates_LTD</code> on your own site (your call, no IT ticket needed) so her flow can write into them. She does exactly what you've already done five times: import the zip, click Test, done &mdash; no configuration on her end.
+      </div>
+
       <h2>Where This Stands</h2>
       <table>
-        <thead><tr><th>Package</th><th>What it does</th><th>Status</th></tr></thead>
+        <thead><tr><th>Package</th><th>What it does</th><th>Runs on</th><th>Status</th></tr></thead>
         <tbody>
-          <tr><td><strong>1 &mdash; Discover Source Fields</strong></td><td>Read-only. Asks SharePoint for the real internal column names on <code>CdtsTrainingMatrix</code>, since the migration flow needs to query those columns directly and a CSV export only shows the display names.</td><td>Ready to run &mdash; download below.</td></tr>
-          <tr><td><strong>2 &mdash; Migrate Legacy Training</strong></td><td>The real migration: backfills <code>StaffType</code> on 77 people, creates the 6 missing <code>TT Personnel</code> rows, creates/updates ~896 <code>TT TrainingRecords</code> rows, and routes attachments into <code>TT Certificates_LTD</code>. Has a dry-run mode &mdash; reports counts without writing anything until you re-run with it off.</td><td>Waiting on Package 1's output before it can be built correctly.</td></tr>
+          <tr><td><strong>1 &mdash; Discover Source Fields</strong></td><td>Read-only. Asks SharePoint for the real internal column names on <code>CdtsTrainingMatrix</code>, since the migration flow needs to query those columns directly and a CSV export only shows the display names. Writes the result as a plain text file into Jackie's own Documents library &mdash; no flow-run digging required.</td><td>Jackie's Power Automate</td><td>Ready to run &mdash; download below.</td></tr>
+          <tr><td><strong>2 &mdash; Migrate Legacy Training</strong></td><td>The real migration: backfills <code>StaffType</code> on 77 people, creates the 6 missing <code>TT Personnel</code> rows, creates/updates ~896 <code>TT TrainingRecords</code> rows, and routes attachments into <code>TT Certificates_LTD</code>. Has a dry-run mode &mdash; reports counts without writing anything until re-run with it off.</td><td>Jackie's Power Automate</td><td>Waiting on Package 1's output, and on Jackie having Contribute access to the TT lists.</td></tr>
         </tbody>
       </table>
 
@@ -383,22 +387,23 @@
       </ul>
 
       <h2>Package 1 &mdash; Discover Source Fields</h2>
-      <p>Read-only. Runs one SharePoint query (<code>/_api/web/lists/getbytitle('CdtsTrainingMatrix')/fields</code>), returns every column's real internal name, and writes nothing anywhere.</p>
+      <p>Read-only. Runs one SharePoint query (<code>/_api/web/lists/getbytitle('CdtsTrainingMatrix')/fields</code>) and drops the answer straight into Jackie's own Documents library as a plain text file &mdash; nothing to dig through in flow run history, and it doesn't touch the Training Tracker lists at all.</p>
 
       <div class="code-card">
         <div class="code-title">Download</div>
-        <p style="padding:14px 16px 18px;margin:0;"><a href="downloads/TT_Discover_Source_Fields.zip" download><strong>TT_Discover_Source_Fields.zip</strong></a> &mdash; import package, ~2.5KB.</p>
+        <p style="padding:14px 16px 18px;margin:0;"><a href="downloads/TT_Discover_Source_Fields.zip" download><strong>TT_Discover_Source_Fields.zip</strong></a> &mdash; import package, ~3KB.</p>
       </div>
 
-      <h3>Steps</h3>
+      <h3>Steps (for Jackie)</h3>
       <ol class="step-list">
-        <li>Download the zip above.</li>
-        <li>Power Automate &rarr; <strong>My flows</strong> &rarr; <strong>Import</strong> &rarr; <strong>Import Package (Legacy)</strong> &rarr; upload the zip.</li>
-        <li>It will list one dependency: your SharePoint connection. It should already show your existing connection &mdash; if it says "Select during import," pick your normal SharePoint account. Click <strong>Import</strong>.</li>
+        <li>Send Jackie the zip above (email, Teams, however's easiest).</li>
+        <li>She goes to <strong>Power Automate</strong> &rarr; <strong>My flows</strong> &rarr; <strong>Import</strong> &rarr; <strong>Import Package (Legacy)</strong> &rarr; uploads the zip.</li>
+        <li>It lists one dependency: a SharePoint connection. It should already show her account &mdash; if it says "Select during import," she picks her own SharePoint login. Click <strong>Import</strong>.</li>
         <li>Once imported, open <strong>TT - Discover Source List Fields</strong> from My flows.</li>
         <li>Click <strong>Test</strong> (top right) &rarr; <strong>Manually</strong> &rarr; <strong>Test</strong> again to confirm. It takes no inputs, so it runs immediately.</li>
-        <li>Once it finishes, click into the run, open the final <strong>Response</strong> step, and copy the full JSON output.</li>
-        <li>Send that JSON back &mdash; paste it in chat, or drop it as a <code>.json</code> or <code>.txt</code> file in the <a href="../index.html">homepage upload box</a>.</li>
+        <li>Go to her site's <strong>Documents</strong> library (the same landing page the training list lives on) and look for a new file called <code>TT_Field_Names_Output.txt</code>.</li>
+        <li>She sends you that one file &mdash; that's it, no flow UI, no copying JSON.</li>
+        <li>You drop it in the <a href="../index.html">homepage upload box</a> and let me know.</li>
       </ol>
 
       <div class="callout ok">
