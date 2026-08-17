@@ -419,6 +419,19 @@ h1 {
           </div>
           <div class="actions"><span class="open">Open</span></div>
         </button>
+
+        <button class="strip" type="button" id="open-note" style="cursor:pointer; font: inherit; text-align: left;">
+          <div class="strip-main">
+            <h3>Leave a note for Claude</h3>
+            <p>Type or paste something &mdash; a thought, a spec, a paragraph you don't want to lose. Claude reads it back whenever you ask.</p>
+          </div>
+          <div class="meta">
+            <span class="type">Notes</span>
+            <span class="pill">Free text</span>
+            <span class="pill">Auto-deletes after 14 days</span>
+          </div>
+          <div class="actions"><span class="open">Open</span></div>
+        </button>
       </div>
     </section>
 
@@ -444,6 +457,25 @@ h1 {
       <ul id="upload-list" class="upload-list"></ul>
     </form>
   </dialog>
+
+  <dialog id="note-dialog">
+    <form method="dialog" class="upload-form" id="note-form">
+      <div class="upload-head">
+        <h2>Leave a note for Claude</h2>
+        <button type="button" id="note-close" aria-label="Close" class="upload-x">&times;</button>
+      </div>
+      <p class="upload-note">Saved into the same locked storage bucket only Claude can read &mdash; not public. Auto-deletes after 14 days.</p>
+      <label class="upload-label" for="note-password">Password <span class="upload-hint">(hint: Theta&hellip;)</span></label>
+      <input type="password" id="note-password" autocomplete="off" required />
+      <label class="upload-label" for="note-text">Note</label>
+      <textarea id="note-text" rows="8" required placeholder="Type or paste anything..."></textarea>
+      <div class="upload-actions">
+        <button type="submit" class="btn-copy-card" id="note-submit">Save note</button>
+        <span id="note-status" class="upload-status"></span>
+      </div>
+    </form>
+  </dialog>
+
   <style>
   #upload-dialog {
     border: 1px solid var(--line);
@@ -461,7 +493,7 @@ h1 {
   .upload-note { margin: 0; color: var(--muted); font-size: .82rem; }
   .upload-label { font-size: .82rem; font-weight: 700; color: var(--muted); }
   .upload-hint { font-weight: 400; color: var(--faint); }
-  #upload-password, #upload-files {
+  #upload-password, #upload-files, #note-password, #note-text {
     padding: 8px 10px;
     border: 1px solid var(--line);
     border-radius: 7px;
@@ -469,6 +501,9 @@ h1 {
     color: var(--ink);
     font: inherit;
   }
+  #note-text { resize: vertical; font-family: inherit; line-height: 1.4; }
+  #note-dialog { border: 1px solid var(--line); border-radius: 12px; padding: 0; background: var(--panel); color: var(--ink); width: min(560px, 92vw); }
+  #note-dialog::backdrop { background: rgba(10,16,26,.5); }
   .upload-actions { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
   .upload-status { font-size: .82rem; color: var(--muted); }
   .upload-list { margin: 0; padding: 0; list-style: none; font-size: .82rem; color: var(--muted); }
@@ -510,6 +545,40 @@ h1 {
         document.getElementById('upload-files').value = '';
       } catch (err) {
         status.textContent = 'Upload failed';
+      }
+    });
+  })();
+  (function(){
+    var dialog = document.getElementById('note-dialog');
+    document.getElementById('open-note').addEventListener('click', function(){ dialog.showModal(); });
+    document.getElementById('note-close').addEventListener('click', function(){ dialog.close(); });
+
+    document.getElementById('note-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var status = document.getElementById('note-status');
+      var password = document.getElementById('note-password').value;
+      var text = document.getElementById('note-text').value;
+      if (!text.trim()) return;
+
+      var stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      var file = new File([text], 'note-' + stamp + '.txt', { type: 'text/plain' });
+      var fd = new FormData();
+      fd.append('password', password);
+      fd.append('files', file);
+
+      status.textContent = 'Saving...';
+      try {
+        var res = await fetch('/api/upload', { method: 'POST', body: fd });
+        var data = await res.json();
+        if (!res.ok) {
+          status.textContent = data.error || 'Save failed';
+          return;
+        }
+        status.textContent = 'Saved.';
+        document.getElementById('note-text').value = '';
+        setTimeout(function(){ dialog.close(); status.textContent = ''; }, 900);
+      } catch (err) {
+        status.textContent = 'Save failed';
       }
     });
   })();
