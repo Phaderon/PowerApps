@@ -248,6 +248,7 @@
       <p>Running fix guide. Every confirmed fix stays here in the order it landed.</p>
       <nav>
         <a href="../">Guide library</a>
+        <a href="#" id="open-note">Leave a note for Claude</a>
         <a href="#what-this-page-is">What This Page Is</a>
         <a href="#newsletter-missing-item-debug">Urgent - Newsletter Missing Item Diagnostic</a>
         <a href="#publish-gate-removed">Fix 1 - Publish Buttons No Longer Gated On Consultation Flag</a>
@@ -1208,6 +1209,74 @@ If(
         }
       });
     })();
+  </script>
+
+  <dialog id="note-dialog">
+    <form method="dialog" class="note-form" id="note-form">
+      <div class="note-head">
+        <h2>Leave a note for Claude &mdash; Policy Tracker</h2>
+        <button type="button" id="note-close" aria-label="Close" class="note-x">&times;</button>
+      </div>
+      <p class="note-hint-text">Saved into the shared locked storage bucket only Claude can read &mdash; not public. Auto-deletes after 14 days.</p>
+      <label class="note-label" for="note-password">Password <span class="note-hint">(hint: Theta&hellip;)</span></label>
+      <input type="password" id="note-password" autocomplete="off" required />
+      <label class="note-label" for="note-text">Note</label>
+      <textarea id="note-text" rows="8" required placeholder="Type or paste anything..."></textarea>
+      <div class="note-actions">
+        <button type="submit" id="note-submit">Save note</button>
+        <span id="note-status" class="note-status"></span>
+      </div>
+    </form>
+  </dialog>
+  <style>
+  #note-dialog { border: 1px solid var(--line); border-radius: 12px; padding: 0; background: var(--paper); color: var(--ink); width: min(560px, 92vw); }
+  #note-dialog::backdrop { background: rgba(10,16,26,.5); }
+  .note-form { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .note-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .note-head h2 { margin: 0; font-size: 1.05rem; color: var(--ink); }
+  .note-x { border: none; background: none; color: var(--muted); font-size: 1.4rem; line-height: 1; cursor: pointer; }
+  .note-hint-text { margin: 0; color: var(--muted); font-size: .82rem; }
+  .note-label { font-size: .82rem; font-weight: 700; color: var(--muted); }
+  .note-hint { font-weight: 400; color: var(--muted); }
+  #note-password, #note-text {
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 7px;
+    background: var(--bg); color: var(--ink); font: inherit;
+  }
+  #note-text { resize: vertical; font-family: inherit; line-height: 1.4; }
+  #note-submit {
+    border: none; border-radius: 7px; padding: 9px 16px; font: inherit; font-weight: 700;
+    background: var(--primary); color: #fff; cursor: pointer;
+  }
+  .note-actions { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+  .note-status { font-size: .82rem; color: var(--muted); }
+  </style>
+  <script>
+  (function(){
+    var dialog = document.getElementById('note-dialog');
+    document.getElementById('open-note').addEventListener('click', function(e){ e.preventDefault(); dialog.showModal(); });
+    document.getElementById('note-close').addEventListener('click', function(){ dialog.close(); });
+    document.getElementById('note-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var status = document.getElementById('note-status');
+      var password = document.getElementById('note-password').value;
+      var text = document.getElementById('note-text').value;
+      if (!text.trim()) return;
+      var stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      var file = new File([text], 'note-policy-tracker-' + stamp + '.txt', { type: 'text/plain' });
+      var fd = new FormData();
+      fd.append('password', password);
+      fd.append('files', file);
+      status.textContent = 'Saving...';
+      try {
+        var res = await fetch('https://powerapps.pages.dev/api/upload', { method: 'POST', body: fd });
+        var data = await res.json();
+        if (!res.ok) { status.textContent = data.error || 'Save failed'; return; }
+        status.textContent = 'Saved.';
+        document.getElementById('note-text').value = '';
+        setTimeout(function(){ dialog.close(); status.textContent = ''; }, 900);
+      } catch (err) { status.textContent = 'Save failed'; }
+    });
+  })();
   </script>
 </body>
 </html>

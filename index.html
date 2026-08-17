@@ -561,7 +561,7 @@ h1 {
       if (!text.trim()) return;
 
       var stamp = new Date().toISOString().replace(/[:.]/g, '-');
-      var file = new File([text], 'note-' + stamp + '.txt', { type: 'text/plain' });
+      var file = new File([text], 'note-hub-' + stamp + '.txt', { type: 'text/plain' });
       var fd = new FormData();
       fd.append('password', password);
       fd.append('files', file);

@@ -8,11 +8,26 @@
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25MB per file
 const MAX_BUCKET_BYTES = 8 * 1024 * 1024 * 1024; // 8GB soft cap (R2 free tier is 10GB)
 
+// CORS is opened up so the "leave a note" widget can be embedded on other
+// app guide sites that live on a different origin (e.g. the Staff Movements
+// guide on phadedev.github.io). This is safe to open widely because every
+// route below is still password-gated — CORS only controls which origins a
+// browser lets read the response, not who can authenticate.
+const CORS_HEADERS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
+  "access-control-allow-headers": "content-type",
+};
+
 function json(data, status) {
   return new Response(JSON.stringify(data), {
     status: status || 200,
-    headers: { "content-type": "application/json", "cache-control": "no-store" },
+    headers: { "content-type": "application/json", "cache-control": "no-store", ...CORS_HEADERS },
   });
+}
+
+export async function onRequestOptions() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
 }
 
 function sanitizeName(name) {
