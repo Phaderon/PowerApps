@@ -26,6 +26,7 @@ this section instead and fix the stale reference while you're there.
 | Branch Contact Groups task guide | `Phaderon/PowerApps` (`branch-contact-groups/`) | `https://powerapps.pages.dev/branch-contact-groups/` | repo root (mirrored subfolder) |
 | Branch Contact Groups screen YAML | `PhadeDev/branch-contact-groups` | `https://branch-contact-groups.pages.dev/` | `docs/` |
 | Training Tracker (guide + all screens, one page) | `Phaderon/PowerApps` (`training-tracker/`) | `https://powerapps.pages.dev/training-tracker/` | repo root |
+| Staff Movements (guide + all screens, one page) | `PhadeDev/staff-movements` | `https://staff-movements.pages.dev/` | `docs/` |
 | Library & File Plan Manager | `PhadeDev/library-file-plan-manager` | `https://phadedev.github.io/library-file-plan-manager/` | **not yet migrated** — still real GitHub Pages, don't "fix" this one |
 
 Deploy command (credentials already sourced from `~/.config/cloudflare/pages.env` via
