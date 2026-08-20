@@ -256,6 +256,7 @@
         <a href="#close-banner-flash">Fix 3 - Deadline Banner Flash On Close</a>
         <a href="#newsletter-consultation-blank-fix">Fix 4 - Newsletter Treats Blank Consultation As Unticked</a>
         <a href="#newsletter-thursday-batch-drafts">Fix 5 - Thursday Batch 1/2 Email Drafting (New Feature)</a>
+        <a href="#newsletter-zero-release-week">Fix 6 - Thursday Batch Emails Now Handle Zero-Release Weeks</a>
       </nav>
     </aside>
 
@@ -263,7 +264,7 @@
       <div class="topline">
         <span class="pill">Updated 15 Aug 2026</span>
         <span class="pill">Policy Tracker only</span>
-        <span class="pill">5 fixes + urgent diagnostic</span>
+        <span class="pill">6 fixes + urgent diagnostic</span>
       </div>
       <h1>Policy Tracker Fix Guide</h1>
       <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
@@ -1090,6 +1091,105 @@ If(
 
         <div class="callout ok">
           <strong>Test:</strong> click Thursday Batch 1 Email, check Outlook Drafts for a new draft with the right subject, a bold bullet per newsletter item, BCC populated from Batch 1's groups, and the placeholder link line intact. Repeat for Batch 2 and confirm the BCC list is different. Confirm nothing sends on its own either time.
+        </div>
+      </section>
+
+      <section id="newsletter-zero-release-week">
+        <h2>Fix 6 - Thursday Batch Emails Now Handle Zero-Release Weeks</h2>
+        <p class="meta-line">NewsletterPack &middot; property edit &middot; updates Fix 5's buttons, adds one new variable</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
+        </div>
+        <p>Added 2026-08-20. Every Thursday the app needs to send this newsletter regardless of whether anything is actually releasing that week &mdash; but the Fix 5 buttons were both hard-disabled whenever <code>colNewsletterPack</code> was empty, and even a forced click just showed a warning and drafted nothing. Fix: both buttons are now always enabled, and the drafted email body swaps to a short "nothing this week" message in place of the usual link paragraph + item list, then continues straight into the unchanged Previous Newsletters / About / recipient-list footer.</p>
+        <div class="callout ok">
+          <strong>Nothing else changes.</strong> Weeks with real releases behave exactly as Fix 5 left them &mdash; this only changes what happens when <code>colNewsletterPack</code> is empty.
+        </div>
+
+        <ol>
+          <li>Open <strong>NewsletterPack</strong>, select the screen itself (root node), then <code>OnVisible</code>.</li>
+          <li>Find the existing <code>Set(varNewsletterBodyLead, ...)</code> block (added in Fix 5) and add this new block directly after it, before <code>Set(varNewsletterBodyStatic, ...)</code>.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>NewsletterPack.OnVisible &mdash; new block only</span>
+              <span class="code-stamp" data-updated="2026-08-20T10:13:00Z">v1 &middot; 2026-08-20 11:13 BST</span>
+            </div>
+            <button data-copy="newsletter-onvisible-empty-block" type="button">Copy</button>
+          </div>
+<pre id="newsletter-onvisible-empty-block">Set(
+    varNewsletterBodyEmpty,
+    "Good afternoon all,&lt;br&gt;&lt;br&gt;" &amp;
+    "There are no policy releases this week.&lt;br&gt;&lt;br&gt;"
+);</pre>
+        </div>
+
+        <ol start="3">
+          <li>Select <strong>btnRefresh_1</strong> on the same screen, <code>OnSelect</code>, and add the exact same block in the same spot (its own separate copy of this formula &mdash; same trap as every earlier fix on this screen).</li>
+          <li>Select <strong>btnDraftBatch1_1</strong>. Set <code>DisplayMode</code> to <code>=DisplayMode.Edit</code> (removes the old always-disabled-when-empty behaviour).</li>
+          <li>Select all of its <code>OnSelect</code> and replace with the full formula below.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnDraftBatch1_1.OnSelect</span>
+              <span class="code-stamp" data-updated="2026-08-20T10:13:00Z">v3 &middot; 2026-08-20 11:13 BST</span>
+            </div>
+            <button data-copy="newsletter-batch1-onselect-v3" type="button">Copy</button>
+          </div>
+<pre id="newsletter-batch1-onselect-v3">Set(varBatch1Recipients, Distinct(Filter(colBatchMemberships As mem, CountRows(Filter(colBatchGroups As grp, Lower(Trim(grp.ThursdayBatch.Value)) = "batch 1" &amp;&amp; Lower(Trim(grp.Title)) = Lower(Trim(mem.GroupName)))) &gt; 0), Email));
+Set(varBatch1Bcc, Concat(varBatch1Recipients, Value, "; "));
+If(
+    CountRows(varBatch1Recipients) = 0,
+    Notify("No recipients found for Thursday Batch 1.", NotificationType.Warning),
+    Office365Outlook.DraftEmail(
+        "",
+        varNewsletterSubject,
+        If(
+            CountRows(colNewsletterPack) = 0,
+            varNewsletterBodyEmpty,
+            varNewsletterBodyLead &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;")
+        ) &amp; varNewsletterBodyStatic,
+        {Bcc: varBatch1Bcc}
+    );
+    Notify("Thursday Batch 1 draft created - check Outlook Drafts.", NotificationType.Success)
+)</pre>
+        </div>
+
+        <ol start="6">
+          <li>Select <strong>btnDraftBatch2_1</strong>. Set <code>DisplayMode</code> to <code>=DisplayMode.Edit</code>.</li>
+          <li>Select all of its <code>OnSelect</code> and replace with the matching formula below.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnDraftBatch2_1.OnSelect</span>
+              <span class="code-stamp" data-updated="2026-08-20T10:13:00Z">v3 &middot; 2026-08-20 11:13 BST</span>
+            </div>
+            <button data-copy="newsletter-batch2-onselect-v3" type="button">Copy</button>
+          </div>
+<pre id="newsletter-batch2-onselect-v3">Set(varBatch2Recipients, Distinct(Filter(colBatchMemberships As mem, CountRows(Filter(colBatchGroups As grp, Lower(Trim(grp.ThursdayBatch.Value)) = "batch 2" &amp;&amp; Lower(Trim(grp.Title)) = Lower(Trim(mem.GroupName)))) &gt; 0), Email));
+Set(varBatch2Bcc, Concat(varBatch2Recipients, Value, "; "));
+If(
+    CountRows(varBatch2Recipients) = 0,
+    Notify("No recipients found for Thursday Batch 2.", NotificationType.Warning),
+    Office365Outlook.DraftEmail(
+        "",
+        varNewsletterSubject,
+        If(
+            CountRows(colNewsletterPack) = 0,
+            varNewsletterBodyEmpty,
+            varNewsletterBodyLead &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;")
+        ) &amp; varNewsletterBodyStatic,
+        {Bcc: varBatch2Bcc}
+    );
+    Notify("Thursday Batch 2 draft created - check Outlook Drafts.", NotificationType.Success)
+)</pre>
+        </div>
+
+        <div class="callout ok">
+          <strong>Test:</strong> on a week with zero newsletter items, click both buttons and confirm each still creates a draft (no more "nothing to draft" warning), the body reads "Good afternoon all," straight into "There are no policy releases this week." then the unchanged Previous Newsletters footer &mdash; no link placeholder, no item bullets. Then confirm a normal week with real items still drafts exactly as before.
         </div>
       </section>
     </main>
