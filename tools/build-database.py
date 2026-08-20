@@ -50,7 +50,7 @@ def build() -> str:
         if not p.exists():
             print("MISSING:", fname)
             continue
-        text = p.read_text()
+        text = p.read_text(encoding="utf-8")
         md.reset()
         body_html = md.convert(text)
         anchor = slugify(fname)
@@ -152,5 +152,5 @@ hr {{ border: none; }}
 if __name__ == "__main__":
     out = build()
     dest = REF / "database.html"
-    dest.write_text(out)
+    dest.write_text(out, encoding="utf-8")
     print(f"Written {dest} — {len(out)} bytes")

@@ -1191,6 +1191,13 @@ If(
         <div class="callout ok">
           <strong>Test:</strong> on a week with zero newsletter items, click both buttons and confirm each still creates a draft (no more "nothing to draft" warning), the body reads "Good afternoon all," straight into "There are no policy releases this week." then the unchanged Previous Newsletters footer &mdash; no link placeholder, no item bullets. Then confirm a normal week with real items still drafts exactly as before.
         </div>
+        <div class="callout warn">
+          <strong>Two real traps hit live applying this fix (2026-08-20):</strong>
+          <ol style="margin:8px 0 0;">
+            <li>After pasting the new block into <code>OnVisible</code>, the first draft click came out missing the whole "Good afternoon all... There are no policy releases" lead &mdash; editing <code>OnVisible</code> in code view does not re-run it, so <code>varNewsletterBodyEmpty</code> was still blank. Do a full Preview close/reopen (or app reload) once after applying this fix, before relying on it &mdash; don't just click Refresh.</li>
+            <li>After that, both draft buttons showed <strong>"The first argument to the 'Char' function must be between 1 and 255"</strong> even though neither formula calls <code>Char()</code> &mdash; a stale/phantom Studio validation error. Fixed by clicking to the end of the formula, deleting the final <code>)</code>, and retyping it to force a re-parse. See <a href="/reference/database.html#known-bad-patterns">Known Bad Patterns &rarr; Studio Editor Quirks</a> for the general version of this one.</li>
+          </ol>
+        </div>
       </section>
     </main>
   </div>
