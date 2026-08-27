@@ -307,11 +307,11 @@
 
     <main>
       <div class="topline">
-        <span class="pill">Current step: v2.38 - quick contact cards</span>
-        <span class="pill">Updated 14 Aug 2026</span>
+        <span class="pill">Current step: v2.39 - bug fix and simplification pass</span>
+        <span class="pill">Updated 27 Aug 2026</span>
       </div>
       <h1>Branch Contact Groups - Current Task</h1>
-      <p class="lead">You have pasted <code>scrQuickContacts</code>. The only thing to work on now is testing that new quick-copy screen and, if you like it, making it the screen the app opens on.</p>
+      <p class="lead">A full review found and fixed real bugs across all four screens, removed the "Saved selections" feature, and trimmed a few things down. <strong>All four screens changed this round</strong> &mdash; please delete and re-paste all of them, not just one.</p>
       <div class="callout" style="margin-bottom: 18px;">
         Need to paste a whole screen instead of the current task above? That lives on a separate site: <a href="https://branch-contact-groups.pages.dev/" style="font-weight:700;">Branch Contact Groups &mdash; Screen YAML &rarr;</a>
       </div>
@@ -319,31 +319,35 @@
       <section id="do-now">
         <h2>Do Now</h2>
         <div class="callout warn">
-          <strong>Do not replace the other screens right now.</strong> Leave <code>scrSendEmail</code>, <code>scrManageGroups</code>, and <code>scrManagePeople</code> as they are.
+          <strong>Full delete-and-repaste this round, not a partial fix.</strong> Every screen changed &mdash; <code>scrQuickContacts</code>, <code>scrSendEmail</code>, <code>scrManageGroups</code>, and <code>scrManagePeople</code>. If you've already created the app, delete each screen's contents and paste the v2.39 version below.
         </div>
         <ol style="padding-left:22px;line-height:1.9;color:var(--muted);">
-          <li>Open <code>scrQuickContacts</code> in Studio.</li>
-          <li>Preview the app.</li>
-          <li>Search for a few contact lists.</li>
-          <li>Click a card or its <strong>Copy addresses</strong> button.</li>
-          <li>Paste into Notepad or an email draft and check the addresses look right.</li>
+          <li>Replace <strong>App &rarr; OnStart</strong> with the current block on the <a href="https://branch-contact-groups.pages.dev/">Screen YAML site</a> (two variables changed from <code>Blank()</code> to <code>0</code>).</li>
+          <li>Re-paste all four screens below, in order.</li>
+          <li>If you'd created a <code>BM Saved Selections</code> SharePoint list for the old "Saved selections" feature, it's no longer used &mdash; safe to delete once you've confirmed the app works without it.</li>
+          <li>Preview the app and work through the Test checklist below.</li>
         </ol>
-        <div class="callout">
-          <strong>Optional:</strong> if you want the app to open on the new card screen, set the app's <strong>StartScreen</strong> property to this:
-        </div>
-        <div class="code-card">
-          <div class="code-toolbar"><span>App.StartScreen</span><button type="button" data-copy="appStartScreen">Copy</button></div>
-          <pre id="appStartScreen">scrQuickContacts</pre>
-        </div>
       </section>
 
       <section id="copy">
         <h2>Copy Screen</h2>
-        <p>Only use this if you need to paste <code>scrQuickContacts</code> again.</p>
+        <p>All four changed this round &mdash; re-paste each one.</p>
         <div class="links">
           <div class="link-card">
-            <a href="screens/scrQuickContacts.html?v=2.38"><strong>scrQuickContacts <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.38</span></strong><span>New quick-copy contact list screen with two-column cards, search, filters, member counts, and clipboard copy per group.</span></a>
-            <div class="card-actions"><a href="screens/scrQuickContacts.html?v=2.38">Open</a><button type="button" data-yaml-url="screens/scrQuickContacts.html?v=2.38">Copy YAML</button></div>
+            <a href="screens/scrQuickContacts.html?v=2.39"><strong>scrQuickContacts <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.39</span></strong><span>Fixed: "Last modified" now respects a group's manually-overridden date, matching Manage Groups.</span></a>
+            <div class="card-actions"><a href="screens/scrQuickContacts.html?v=2.39">Open</a><button type="button" data-yaml-url="screens/scrQuickContacts.html?v=2.39">Copy YAML</button></div>
+          </div>
+          <div class="link-card">
+            <a href="screens/scrSendEmail.html?v=2.39"><strong>scrSendEmail <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.39</span></strong><span>Removed Saved selections. Two Thursday Batch buttons collapsed into one selector. Non-maintainers now get a Back button instead of getting stuck.</span></a>
+            <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.39">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.39">Copy YAML</button></div>
+          </div>
+          <div class="link-card">
+            <a href="screens/scrManageGroups.html?v=2.39"><strong>scrManageGroups <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.39</span></strong><span>Fixed renaming a group showing "0 members" until refresh. Fixed stale Add-manually fields leaking between groups. Removed a debug line. Health Check trimmed to 3 checks.</span></a>
+            <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.39">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.39">Copy YAML</button></div>
+          </div>
+          <div class="link-card">
+            <a href="screens/scrManagePeople.html?v=2.39"><strong>scrManagePeople <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.39</span></strong><span>Fixed part of each row not responding to taps when JMC and County/Contingent both show. Fixed a blank-name edge case and a missed "Last modified" update on rename.</span></a>
+            <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.39">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.39">Copy YAML</button></div>
           </div>
         </div>
       </section>
@@ -353,19 +357,22 @@
         <table>
           <thead><tr><th>Check</th><th>Expected result</th></tr></thead>
           <tbody>
-            <tr><td>Screen opens</td><td>Cards appear without errors.</td></tr>
-            <tr><td>Search</td><td>Typing part of a group name filters the cards.</td></tr>
-            <tr><td>Copy</td><td>A copied group pastes as semicolon-separated email addresses.</td></tr>
-            <tr><td>Zero-member group</td><td>Shows a warning instead of copying blank text.</td></tr>
-            <tr><td>Compose Email</td><td>Opens the existing <code>scrSendEmail</code> screen.</td></tr>
-            <tr><td>Manage Groups</td><td>Only maintainers see it, and it opens <code>scrManageGroups</code>.</td></tr>
+            <tr><td>Quick Contacts &rarr; Send Email as a non-maintainer</td><td>A "Back" button is there &mdash; you're never stuck.</td></tr>
+            <tr><td>Send Email &rarr; Thursday tools</td><td>One Batch 1 / Batch 2 selector, one Apply button, one preview icon &mdash; not two of each.</td></tr>
+            <tr><td>Manage Groups &rarr; rename a group</td><td>Member count stays correct immediately, no "0 members" flash.</td></tr>
+            <tr><td>Manage Groups &rarr; open Manage Members, start an Add-manually entry, close without saving, reopen for a different group</td><td>The manual-add form is blank, not showing the previous group's entry.</td></tr>
+            <tr><td>Manage Groups &rarr; edit a group</td><td>No "Raw stored value: [...]" line visible anywhere.</td></tr>
+            <tr><td>Manage Groups &rarr; Health Check</td><td>Shows 3 checks (blank name, invalid email, orphaned membership), not 7.</td></tr>
+            <tr><td>Manage People &rarr; a person with both JMC and County/Contingent shown</td><td>Tapping anywhere on their row, including the bottom email line, opens Edit Person.</td></tr>
+            <tr><td>Manage People &rarr; rename someone</td><td>The group's "Last modified" date updates, same as adding/removing a member.</td></tr>
+            <tr><td>Quick Contacts &rarr; a group with an overridden last-modified date</td><td>Shows the same date as Manage Groups, not the raw SharePoint date.</td></tr>
           </tbody>
         </table>
       </section>
 
       <section id="later">
         <h2>Later</h2>
-        <p>The full green-and-white visual pass across all screens is paused until the latest Studio YAML is available. Replacing the older screens from the current repo source would undo your newer manual UI edits.</p>
+        <p>Not done this round, worth considering next: merging the Manage Members lightbox's "Add existing" and "Add from GAL" tabs into one search box, and consolidating the four separate "tap again to confirm" delete/replace patterns in Manage Groups into one reusable pattern. Both are quality-of-life, not bugs &mdash; deferred so this round could ship without a bigger UX redesign.</p>
       </section>
     </main>
   </div>
