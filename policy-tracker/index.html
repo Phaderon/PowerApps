@@ -257,14 +257,15 @@
         <a href="#newsletter-consultation-blank-fix">Fix 4 - Newsletter Treats Blank Consultation As Unticked</a>
         <a href="#newsletter-thursday-batch-drafts">Fix 5 - Thursday Batch 1/2 Email Drafting (New Feature)</a>
         <a href="#newsletter-zero-release-week">Fix 6 - Thursday Batch Emails Now Handle Zero-Release Weeks</a>
+        <a href="#newsletter-link-dummy-href">Fix 7 - Newsletter Link Is Now A Real Clickable Placeholder</a>
       </nav>
     </aside>
 
     <main>
       <div class="topline">
-        <span class="pill">Updated 15 Aug 2026</span>
+        <span class="pill">Updated 27 Aug 2026</span>
         <span class="pill">Policy Tracker only</span>
-        <span class="pill">6 fixes + urgent diagnostic</span>
+        <span class="pill">7 fixes + urgent diagnostic</span>
       </div>
       <h1>Policy Tracker Fix Guide</h1>
       <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
@@ -941,7 +942,7 @@ ClearCollect(
           <div class="code-toolbar">
             <div class="code-meta">
               <span>NewsletterPack.OnVisible</span>
-              <span class="code-stamp" data-updated="2026-08-15T13:32:00Z">v4 &middot; 2026-08-15 14:32 BST</span>
+              <span class="code-stamp" data-updated="2026-08-27T00:00:00Z">v5 &middot; 2026-08-27 BST</span>
             </div>
             <button data-copy="newsletter-onvisible-batch-drafts" type="button">Copy</button>
           </div>
@@ -995,7 +996,7 @@ Set(varNewsletterSubject, Text(Today(), "yyyymmdd") &amp; " - Cadets Branch week
 Set(
     varNewsletterBodyLead,
     "Good afternoon all,&lt;br&gt;&lt;br&gt;" &amp;
-    "Please find a link to this week's releases here - &lt;a href=""PASTE-THIS-WEEKS-LINK-HERE""&gt;PASTE THIS WEEK'S LINK TEXT HERE&lt;/a&gt;&lt;br&gt;" &amp;
+    "Please find a link to this week's releases here - &lt;a href=""https://www.google.com""&gt;Cadets Branch Weekly Policy Updates - " &amp; Text(varNewsletterTargetDate, "dd mmm yyyy") &amp; "&lt;/a&gt;&lt;br&gt;" &amp;
     "Below is a summary of this week's releases from Cadets Branch:&lt;br&gt;&lt;br&gt;"
 );
 Set(
@@ -1197,6 +1198,44 @@ If(
             <li>After pasting the new block into <code>OnVisible</code>, the first draft click came out missing the whole "Good afternoon all... There are no policy releases" lead &mdash; editing <code>OnVisible</code> in code view does not re-run it, so <code>varNewsletterBodyEmpty</code> was still blank. Do a full Preview close/reopen (or app reload) once after applying this fix, before relying on it &mdash; don't just click Refresh.</li>
             <li>After that, both draft buttons showed <strong>"The first argument to the 'Char' function must be between 1 and 255"</strong> even though neither formula calls <code>Char()</code> &mdash; a stale/phantom Studio validation error. Fixed by clicking to the end of the formula, deleting the final <code>)</code>, and retyping it to force a re-parse. See <a href="/reference/database.html#known-bad-patterns">Known Bad Patterns &rarr; Studio Editor Quirks</a> for the general version of this one.</li>
           </ol>
+        </div>
+      </section>
+
+      <section id="newsletter-link-dummy-href">
+        <h2>Fix 7 - Newsletter Link Is Now A Real Clickable Placeholder</h2>
+        <p class="meta-line">NewsletterPack &middot; property edit &middot; changes one line inside <code>varNewsletterBodyLead</code>, nothing else</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
+        </div>
+        <p>Added 2026-08-27. The Fix 5 link line used a bare placeholder string (<code>PASTE-THIS-WEEKS-LINK-HERE</code>) as the <code>href</code>, which most mail clients will not render as a real clickable link, and generic link text (<code>PASTE THIS WEEK'S LINK TEXT HERE</code>) that had to be manually retyped every week. Both are replaced: the <code>href</code> is now a real, valid, clickable dummy URL (<code>https://www.google.com</code>) so the link works and is easy to spot-and-swap in Outlook before sending, and the visible link text now auto-generates as <strong>"Cadets Branch Weekly Policy Updates - &lt;date&gt;"</strong>, using the same <code>varNewsletterTargetDate</code> the subject line already targets, formatted <code>dd mmm yyyy</code> to match the date style used elsewhere in this guide.</p>
+        <div class="callout warn">
+          <strong>Still a manual step:</strong> this is a dummy link, not the real one. You still need to paste this week's actual release link over <code>https://www.google.com</code> in the drafted email before sending &mdash; this fix only makes the placeholder clickable and self-describing, it doesn't remove the manual paste step.
+        </div>
+        <ol>
+          <li>Open <strong>NewsletterPack</strong>, select the screen itself (root node), then <code>OnVisible</code>.</li>
+          <li>Find the existing <code>Set(varNewsletterBodyLead, ...)</code> block and replace just that block with the version below &mdash; everything else in <code>OnVisible</code> is unchanged.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>NewsletterPack.OnVisible &mdash; varNewsletterBodyLead block only</span>
+              <span class="code-stamp" data-updated="2026-08-27T00:00:00Z">v1 &middot; 2026-08-27 BST</span>
+            </div>
+            <button data-copy="newsletter-link-dummy-href-onvisible" type="button">Copy</button>
+          </div>
+<pre id="newsletter-link-dummy-href-onvisible">Set(
+    varNewsletterBodyLead,
+    "Good afternoon all,&lt;br&gt;&lt;br&gt;" &amp;
+    "Please find a link to this week's releases here - &lt;a href=""https://www.google.com""&gt;Cadets Branch Weekly Policy Updates - " &amp; Text(varNewsletterTargetDate, "dd mmm yyyy") &amp; "&lt;/a&gt;&lt;br&gt;" &amp;
+    "Below is a summary of this week's releases from Cadets Branch:&lt;br&gt;&lt;br&gt;"
+);</pre>
+        </div>
+        <div class="callout warn">
+          <strong>Same trap as every earlier fix on this screen:</strong> <code>btnRefresh_1.OnSelect</code> has its own separate copy of this exact block &mdash; select <code>btnRefresh_1</code>, find its own <code>Set(varNewsletterBodyLead, ...)</code>, and replace it with the identical formula above. Both must match or the link only updates on first load, not after a manual Refresh.
+        </div>
+        <div class="callout ok">
+          <strong>Test:</strong> click Refresh, then click either Thursday Batch button. In the resulting Outlook draft, the link text should read "Cadets Branch Weekly Policy Updates - " followed by this week's target Thursday date (not today's date if you're building the draft on a different day), and clicking it should open Google &mdash; confirming it's a real clickable link before you swap it for the real one.
         </div>
       </section>
     </main>
