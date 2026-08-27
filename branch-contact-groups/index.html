@@ -307,11 +307,11 @@
 
     <main>
       <div class="topline">
-        <span class="pill">Current step: v2.40 - fixed the spinning-dots slowdown</span>
+        <span class="pill">Current step: v2.41 - fixed the GAL search hang</span>
         <span class="pill">Updated 27 Aug 2026</span>
       </div>
       <h1>Branch Contact Groups - Current Task</h1>
-      <p class="lead"><strong>v2.40 fixes the constantly-spinning loading dots and sluggish clicking.</strong> Every screen was redundantly re-running the full ~50-call group/membership fetch on its own <code>OnVisible</code> on top of App.OnStart already doing it once at launch, so navigating between screens re-triggered the whole slow load every time. That's now removed &mdash; it loads once at app start, plus on demand via each screen's Refresh button. Still carries every v2.39 bug fix too (see below). <strong>All four screens changed</strong> &mdash; please delete and re-paste all of them, not just one.</p>
+      <p class="lead"><strong>v2.41 fixes the GAL search hang.</strong> Every "search the GAL" box (Add from GAL, Manage Maintainers, Add Person) searched live on every keystroke &mdash; each letter fired its own real network call with no cancellation, so typing a full name could queue up several slow calls that came back out of order. That's the "typed a name, nothing happened for almost a minute" behaviour. Fixed: type a surname, then press the new <strong>Search</strong> button, which shows "Searching..." while it works. Still carries the v2.40 loading-spinner fix and every v2.39 bug fix too (see below). <strong>All four screens changed</strong> &mdash; please delete and re-paste all of them, not just one.</p>
       <div class="callout" style="margin-bottom: 18px;">
         Need to paste a whole screen instead of the current task above? That lives on a separate site: <a href="https://branch-contact-groups.pages.dev/" style="font-weight:700;">Branch Contact Groups &mdash; Screen YAML &rarr;</a>
       </div>
@@ -322,7 +322,7 @@
       <section id="do-now">
         <h2>Do Now</h2>
         <div class="callout warn">
-          <strong>Full delete-and-repaste this round, not a partial fix.</strong> Every screen changed &mdash; <code>scrQuickContacts</code>, <code>scrSendEmail</code>, <code>scrManageGroups</code>, and <code>scrManagePeople</code>. If you've already created the app, delete each screen's contents and paste the v2.40 version below.
+          <strong>Full delete-and-repaste this round, not a partial fix.</strong> Every screen changed &mdash; <code>scrQuickContacts</code>, <code>scrSendEmail</code>, <code>scrManageGroups</code>, and <code>scrManagePeople</code>. If you've already created the app, delete each screen's contents and paste the v2.41 version below.
         </div>
         <ol style="padding-left:22px;line-height:1.9;color:var(--muted);">
           <li>Replace <strong>App &rarr; OnStart</strong> with the current block on the <a href="https://branch-contact-groups.pages.dev/">Screen YAML site</a> (two variables changed from <code>Blank()</code> to <code>0</code>).</li>
@@ -337,20 +337,20 @@
         <p>All four changed this round &mdash; re-paste each one.</p>
         <div class="links">
           <div class="link-card">
-            <a href="screens/scrQuickContacts.html?v=2.40"><strong>scrQuickContacts <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.40</span></strong><span>Fixed: "Last modified" now respects a group's manually-overridden date, matching Manage Groups.</span></a>
-            <div class="card-actions"><a href="screens/scrQuickContacts.html?v=2.40">Open</a><button type="button" data-yaml-url="screens/scrQuickContacts.html?v=2.40">Copy YAML</button></div>
+            <a href="screens/scrQuickContacts.html?v=2.41"><strong>scrQuickContacts <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.41</span></strong><span>Fixed: "Last modified" now respects a group's manually-overridden date, matching Manage Groups.</span></a>
+            <div class="card-actions"><a href="screens/scrQuickContacts.html?v=2.41">Open</a><button type="button" data-yaml-url="screens/scrQuickContacts.html?v=2.41">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrSendEmail.html?v=2.40"><strong>scrSendEmail <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.40</span></strong><span>Removed Saved selections. Two Thursday Batch buttons collapsed into one selector. Non-maintainers now get a Back button instead of getting stuck.</span></a>
-            <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.40">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.40">Copy YAML</button></div>
+            <a href="screens/scrSendEmail.html?v=2.41"><strong>scrSendEmail <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.41</span></strong><span>Removed Saved selections. Two Thursday Batch buttons collapsed into one selector. Non-maintainers now get a Back button instead of getting stuck.</span></a>
+            <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.41">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.41">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManageGroups.html?v=2.40"><strong>scrManageGroups <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.40</span></strong><span>Fixed renaming a group showing "0 members" until refresh. Fixed stale Add-manually fields leaking between groups. Removed a debug line. Health Check trimmed to 3 checks.</span></a>
-            <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.40">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.40">Copy YAML</button></div>
+            <a href="screens/scrManageGroups.html?v=2.41"><strong>scrManageGroups <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.41</span></strong><span>Fixed the GAL search hang &mdash; type + press Search instead of searching every keystroke. Fixed renaming a group showing "0 members" until refresh. Fixed stale Add-manually fields leaking between groups. Removed a debug line. Health Check trimmed to 3 checks.</span></a>
+            <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.41">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.41">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManagePeople.html?v=2.40"><strong>scrManagePeople <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.40</span></strong><span>Fixed part of each row not responding to taps when JMC and County/Contingent both show. Fixed a blank-name edge case and a missed "Last modified" update on rename.</span></a>
-            <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.40">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.40">Copy YAML</button></div>
+            <a href="screens/scrManagePeople.html?v=2.41"><strong>scrManagePeople <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.41</span></strong><span>Fixed the GAL search hang on Add Person, same as Manage Groups. Fixed part of each row not responding to taps when JMC and County/Contingent both show. Fixed a blank-name edge case and a missed "Last modified" update on rename.</span></a>
+            <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.41">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.41">Copy YAML</button></div>
           </div>
         </div>
       </section>
@@ -369,7 +369,9 @@
             <tr><td>Manage People &rarr; a person with both JMC and County/Contingent shown</td><td>Tapping anywhere on their row, including the bottom email line, opens Edit Person.</td></tr>
             <tr><td>Manage People &rarr; rename someone</td><td>The group's "Last modified" date updates, same as adding/removing a member.</td></tr>
             <tr><td>Quick Contacts &rarr; a group with an overridden last-modified date</td><td>Shows the same date as Manage Groups, not the raw SharePoint date.</td></tr>
-            <tr><td><strong>Navigate between all 4 screens a few times in a row</strong> (this is the priority fix)</td><td>No more constant spinning-dots loading indicator on every navigation, and clicking things feels responsive. Data still updates correctly after using a screen's Refresh button.</td></tr>
+            <tr><td><strong>Manage Groups &rarr; Manage Members &rarr; Add from GAL, type a surname</strong> (this is the priority fix)</td><td>Nothing searches until you press <strong>Search</strong>; button shows "Searching..." then the result list appears &mdash; no long silent wait, no typing-triggered lag.</td></tr>
+            <tr><td>Manage Maintainers &amp; Manage People &rarr; Add Person, same GAL search</td><td>Same Search-button behaviour in both places.</td></tr>
+            <tr><td>Navigate between all 4 screens a few times in a row</td><td>No more constant spinning-dots loading indicator on every navigation, and clicking things feels responsive. Data still updates correctly after using a screen's Refresh button.</td></tr>
           </tbody>
         </table>
       </section>
