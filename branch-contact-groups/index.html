@@ -307,11 +307,11 @@
 
     <main>
       <div class="topline">
-        <span class="pill">Current step: v2.43 - fixes from a fresh review pass</span>
+        <span class="pill">Current step: v2.44 - fixed a real bug from watching the app run</span>
         <span class="pill">Updated 27 Aug 2026</span>
       </div>
       <h1>Branch Contact Groups - Current Task</h1>
-      <p class="lead"><strong>v2.43 fixes two real issues a fresh review pass found in the v2.42 redesign</strong> before you'd even pasted it: the To/CC/BCC and Thursday Batch selectors would have shown every option looking "selected" at once, and the "Loaded HH:MM" timestamp on all four screens was resetting itself just from navigating between screens with no real data reload. Both fixed below. This is a big one to paste &mdash; it carries every change since v2.39, so budget time for the full Do Now.</p>
+      <p class="lead"><strong>v2.44 fixes a real bug spotted from a screen-recording of the live app:</strong> in Manage Groups &rarr; Manage Members &rarr; Add existing, anyone with a longer name/role wrapped onto a second line and overlapped the row below it. Pre-existing, not from the redesign &mdash; Manage People's list already handled long names correctly, this one list was just missed. Fixed with the same truncate-plus-tooltip pattern used everywhere else (hover to see the full name). <strong>Only <code>scrManageGroups</code> changed this round</strong> &mdash; no need to touch the other three screens or App.OnStart.</p>
       <div class="callout warn" style="margin-bottom: 18px;">
         <strong>Still open, not yet diagnosed:</strong> a popup/lightbox (e.g. Manage Members) disappearing while scrolling. Need more detail before this can be fixed properly &mdash; which screen, and whether it happens scrolling the page behind the popup or a list inside the popup itself.
       </div>
@@ -319,16 +319,14 @@
       <section id="do-now">
         <h2>Do Now</h2>
         <div class="callout warn">
-          <strong>Full delete-and-repaste, not a partial fix.</strong> Every screen changed &mdash; <code>scrQuickContacts</code>, <code>scrSendEmail</code>, <code>scrManageGroups</code>, <code>scrManagePeople</code> &mdash; and so did App &rarr; OnStart.
+          <strong>Just one screen this round.</strong> Only <code>scrManageGroups</code> changed &mdash; delete its contents and re-paste. The other three screens and App &rarr; OnStart are untouched (kept below for reference only).
         </div>
         <ol style="padding-left:22px;line-height:1.9;color:var(--muted);">
-          <li>Replace <strong>App &rarr; OnStart</strong> with the block right below.</li>
-          <li>Re-paste all four screens under Copy Screen, in order.</li>
-          <li>If you'd created a <code>BM Saved Selections</code> SharePoint list for the old "Saved selections" feature, it's no longer used &mdash; safe to delete once the app works without it.</li>
-          <li>Preview the app and work through the Test checklist below.</li>
+          <li>Delete <strong>scrManageGroups</strong> and re-paste it from Copy Screen below.</li>
+          <li>Preview the app and check the priority row in the Test checklist below.</li>
         </ol>
         <div class="code-card">
-          <div class="code-toolbar"><span>App.OnStart</span><button type="button" data-copy="onStartBlock">Copy</button></div>
+          <div class="code-toolbar"><span>App.OnStart (unchanged &mdash; reference only)</span><button type="button" data-copy="onStartBlock">Copy</button></div>
           <pre id="onStartBlock">Set(varModDomain, "mod.gov.uk");
 Set(varMyEmail, Lower(User().Email));
 ClearCollect(colMaintainers, 'BM Maintainers');
@@ -345,28 +343,27 @@ Set(varLightboxMode, "");
 Set(varLightboxGroupID, 0);
 Set(varLastMembershipRefresh, Now())</pre>
         </div>
-        <p style="font-size:.82rem; color:var(--muted); margin-top:-8px;">Check <code>varModDomain</code> matches your real domain first &mdash; it's set to <code>mod.gov.uk</code> above.</p>
       </section>
 
       <section id="copy">
         <h2>Copy Screen</h2>
-        <p>All four changed this round &mdash; re-paste each one, in this order.</p>
+        <p>Only <strong>scrManageGroups</strong> changed this round &mdash; the other three are unchanged from what you already have live, kept here for reference.</p>
         <div class="links">
           <div class="link-card">
-            <a href="screens/scrQuickContacts.html?v=2.43"><strong>scrQuickContacts <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Off-white background so cards read as elevated. "Last modified" respects a manually-overridden date.</span></a>
-            <div class="card-actions"><a href="screens/scrQuickContacts.html?v=2.43">Open</a><button type="button" data-yaml-url="screens/scrQuickContacts.html?v=2.43">Copy YAML</button></div>
+            <a href="screens/scrQuickContacts.html?v=2.44"><strong>scrQuickContacts <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.44</span></strong><span>Off-white background so cards read as elevated. "Last modified" respects a manually-overridden date.</span></a>
+            <div class="card-actions"><a href="screens/scrQuickContacts.html?v=2.44">Open</a><button type="button" data-yaml-url="screens/scrQuickContacts.html?v=2.44">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrSendEmail.html?v=2.43"><strong>scrSendEmail <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>To/CC/BCC and Batch selectors fixed and unified. Icon-chips on View/History. Back button for non-maintainers.</span></a>
-            <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.43">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.43">Copy YAML</button></div>
+            <a href="screens/scrSendEmail.html?v=2.44"><strong>scrSendEmail <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.44</span></strong><span>To/CC/BCC and Batch selectors fixed and unified. Icon-chips on View/History. Back button for non-maintainers.</span></a>
+            <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.44">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.44">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManageGroups.html?v=2.43"><strong>scrManageGroups <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Edit-member pencil opens a proper popup, no tab-jump. Icon-chips on row actions. GAL search needs a Search press.</span></a>
-            <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.43">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.43">Copy YAML</button></div>
+            <a href="screens/scrManageGroups.html?v=2.44"><strong>scrManageGroups <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.44</span></strong><span>Fixed: long names in "Add existing people" no longer overlap the row below. Edit-member pencil opens a proper popup, no tab-jump. GAL search needs a Search press.</span></a>
+            <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.44">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.44">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManagePeople.html?v=2.43"><strong>scrManagePeople <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Coloured initials avatar on every row. GAL search needs a Search press.</span></a>
-            <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.43">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.43">Copy YAML</button></div>
+            <a href="screens/scrManagePeople.html?v=2.44"><strong>scrManagePeople <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.44</span></strong><span>Coloured initials avatar on every row. GAL search needs a Search press.</span></a>
+            <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.44">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.44">Copy YAML</button></div>
           </div>
         </div>
       </section>
@@ -376,8 +373,9 @@ Set(varLastMembershipRefresh, Now())</pre>
         <table>
           <thead><tr><th>Check</th><th>Expected result</th></tr></thead>
           <tbody>
-            <tr><td><strong>Send Email &rarr; tap To/CC/BCC and the Thursday Batch buttons</strong> (priority)</td><td>Only the one you tapped goes dark/selected &mdash; not all of them at once.</td></tr>
-            <tr><td><strong>Any screen &rarr; check "Loaded HH:MM", navigate away and back</strong> (priority)</td><td>Time does NOT change just from navigating &mdash; only on Refresh or first launch.</td></tr>
+            <tr><td><strong>Manage Groups &rarr; Manage Members &rarr; Add existing, find someone with a long name/role</strong> (priority)</td><td>Name truncates with "..." and stays on one line &mdash; no overlap with the row below. Hover to see the full name.</td></tr>
+            <tr><td>Send Email &rarr; tap To/CC/BCC and the Thursday Batch buttons</td><td>Only the one you tapped goes dark/selected &mdash; not all of them at once.</td></tr>
+            <tr><td>Any screen &rarr; check "Loaded HH:MM", navigate away and back</td><td>Time does NOT change just from navigating &mdash; only on Refresh or first launch.</td></tr>
             <tr><td>Manage Groups &rarr; Manage Members &rarr; click the pencil on a member</td><td>A small popup opens right there on the Members tab &mdash; no tab-jump.</td></tr>
             <tr><td>Manage Groups &rarr; Manage Members &rarr; Add from GAL, type a surname</td><td>Nothing searches until you press <strong>Search</strong>; shows "Searching..." then results &mdash; no long silent wait.</td></tr>
             <tr><td>Navigate between all 4 screens a few times in a row</td><td>No constant spinning-dots loading indicator; clicking feels responsive.</td></tr>
