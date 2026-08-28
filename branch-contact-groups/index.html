@@ -309,11 +309,11 @@
 
     <main>
       <div class="topline">
-        <span class="pill">Current step: v2.44 - fixed a real bug from watching the app run</span>
+        <span class="pill">Current step: v2.45 - fixed the click-and-wait delay</span>
         <span class="pill">Updated 27 Aug 2026</span>
       </div>
       <h1>Branch Contact Groups - Current Task</h1>
-      <p class="lead"><strong>v2.44 fixes a real bug spotted from a screen-recording of the live app:</strong> in Manage Groups &rarr; Manage Members &rarr; Add existing, anyone with a longer name/role wrapped onto a second line and overlapped the row below it. Pre-existing, not from the redesign &mdash; Manage People's list already handled long names correctly, this one list was just missed. Fixed with the same truncate-plus-tooltip pattern used everywhere else (hover to see the full name). <strong>Only <code>scrManageGroups</code> changed this round</strong> &mdash; no need to touch the other three screens or App.OnStart.</p>
+      <p class="lead"><strong>v2.45 fixes the noticeable delay when saving a group edit, adding someone, or clicking most action buttons on Manage Groups and Manage People.</strong> Every one of those actions ended by silently re-fetching every membership for every group from SharePoint, one group at a time &mdash; the same slow pattern behind the old loading-dots bug, just triggered by buttons this time instead of navigation. Every one of those actions now updates the already-loaded local copy directly, using the exact data just written, so nothing gets re-fetched. The explicit <strong>Refresh</strong> button is untouched &mdash; it's supposed to do a full reload. <strong>Only <code>scrManageGroups</code> and <code>scrManagePeople</code> changed this round</strong> &mdash; Quick Contacts, Send Email, and App.OnStart are untouched.</p>
       <div class="callout warn" style="margin-bottom: 18px;">
         <strong>Still open, not yet diagnosed:</strong> a popup/lightbox (e.g. Manage Members) disappearing while scrolling. Need more detail before this can be fixed properly &mdash; which screen, and whether it happens scrolling the page behind the popup or a list inside the popup itself.
       </div>
@@ -321,10 +321,10 @@
       <section id="do-now">
         <h2>Do Now</h2>
         <div class="callout warn">
-          <strong>Just one screen this round.</strong> Only <code>scrManageGroups</code> changed &mdash; delete its contents and re-paste. The other three screens and App &rarr; OnStart are untouched (kept below for reference only).
+          <strong>Two screens this round.</strong> <code>scrManageGroups</code> and <code>scrManagePeople</code> changed &mdash; delete and re-paste both. Quick Contacts, Send Email, and App &rarr; OnStart are untouched (kept below for reference only).
         </div>
         <ol style="padding-left:22px;line-height:1.9;color:var(--muted);">
-          <li>Delete <strong>scrManageGroups</strong> and re-paste it from Copy Screen below.</li>
+          <li>Delete <strong>scrManageGroups</strong> and <strong>scrManagePeople</strong> and re-paste both from Copy Screen below.</li>
           <li>Preview the app and check the priority row in the Test checklist below.</li>
         </ol>
         <div class="code-card">
@@ -349,27 +349,27 @@ Set(varLastMembershipRefresh, Now())</pre>
 
       <section id="copy">
         <h2>Copy Screen</h2>
-        <p>Only <strong>scrManageGroups</strong> changed this round &mdash; the other three are unchanged from what you already have live, kept here for reference.</p>
+        <p><strong>scrManageGroups</strong> and <strong>scrManagePeople</strong> changed this round &mdash; the other two are unchanged from what you already have live, kept here for reference.</p>
         <div class="links">
           <div class="link-card">
-            <a href="screens/scrQuickContacts.html?v=2.44"><strong>scrQuickContacts <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Off-white background so cards read as elevated. "Last modified" respects a manually-overridden date.</span></a>
+            <a href="screens/scrQuickContacts.html?v=2.43"><strong>scrQuickContacts <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Off-white background so cards read as elevated. "Last modified" respects a manually-overridden date.</span></a>
             <div class="last-updated" data-updated="2026-08-28T02:34:43Z">Updated &hellip;</div>
-            <div class="card-actions"><a href="screens/scrQuickContacts.html?v=2.44">Open</a><button type="button" data-yaml-url="screens/scrQuickContacts.html?v=2.44">Copy YAML</button></div>
+            <div class="card-actions"><a href="screens/scrQuickContacts.html?v=2.43">Open</a><button type="button" data-yaml-url="screens/scrQuickContacts.html?v=2.43">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrSendEmail.html?v=2.44"><strong>scrSendEmail <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>To/CC/BCC and Batch selectors fixed and unified. Icon-chips on View/History. Back button for non-maintainers.</span></a>
+            <a href="screens/scrSendEmail.html?v=2.43"><strong>scrSendEmail <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>To/CC/BCC and Batch selectors fixed and unified. Icon-chips on View/History. Back button for non-maintainers.</span></a>
             <div class="last-updated" data-updated="2026-08-28T02:34:43Z">Updated &hellip;</div>
-            <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.44">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.44">Copy YAML</button></div>
+            <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.43">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.43">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManageGroups.html?v=2.44"><strong>scrManageGroups <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.44</span></strong><span>Fixed: long names in "Add existing people" no longer overlap the row below. Edit-member pencil opens a proper popup, no tab-jump. GAL search needs a Search press.</span></a>
-            <div class="last-updated newest" data-updated="2026-08-28T17:17:40Z">Updated &hellip;</div>
-            <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.44">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.44">Copy YAML</button></div>
+            <a href="screens/scrManageGroups.html?v=2.45"><strong>scrManageGroups <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.45</span></strong><span>Save/Delete group, Add/Edit member, paste-replace roster now update the local list directly instead of re-fetching everything &mdash; fixes the click-and-wait delay.</span></a>
+            <div class="last-updated newest" data-updated="2026-08-28T22:58:00Z">Updated &hellip;</div>
+            <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.45">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.45">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManagePeople.html?v=2.44"><strong>scrManagePeople <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Coloured initials avatar on every row. GAL search needs a Search press.</span></a>
-            <div class="last-updated" data-updated="2026-08-28T02:34:43Z">Updated &hellip;</div>
-            <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.44">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.44">Copy YAML</button></div>
+            <a href="screens/scrManagePeople.html?v=2.45"><strong>scrManagePeople <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.45</span></strong><span>Add Person, Save changes, Remove Leaver now update the local list directly instead of re-fetching everything &mdash; fixes the click-and-wait delay.</span></a>
+            <div class="last-updated newest" data-updated="2026-08-28T22:58:00Z">Updated &hellip;</div>
+            <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.45">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.45">Copy YAML</button></div>
           </div>
         </div>
       </section>
@@ -379,7 +379,10 @@ Set(varLastMembershipRefresh, Now())</pre>
         <table>
           <thead><tr><th>Check</th><th>Expected result</th></tr></thead>
           <tbody>
-            <tr><td><strong>Manage Groups &rarr; Manage Members &rarr; Add existing, find someone with a long name/role</strong> (priority)</td><td>Name truncates with "..." and stays on one line &mdash; no overlap with the row below. Hover to see the full name.</td></tr>
+            <tr><td><strong>Manage Groups &rarr; edit a group, add/edit/remove a member, or paste-replace a roster</strong> (priority)</td><td>Save/Add/Remove feels instant &mdash; no more pause after clicking before the list updates.</td></tr>
+            <tr><td><strong>Manage People &rarr; Add Person, Save changes, or Remove Leaver</strong> (priority)</td><td>Same &mdash; instant, no click-and-wait delay.</td></tr>
+            <tr><td>After any of the above, check the group/person's data</td><td>Everything saved correctly &mdash; counts, names, group membership all accurate. (This is the important one: fast AND correct.)</td></tr>
+            <tr><td>Manage Groups &rarr; Manage Members &rarr; Add existing, find someone with a long name/role</td><td>Name truncates with "..." and stays on one line &mdash; no overlap with the row below. Hover to see the full name.</td></tr>
             <tr><td>Send Email &rarr; tap To/CC/BCC and the Thursday Batch buttons</td><td>Only the one you tapped goes dark/selected &mdash; not all of them at once.</td></tr>
             <tr><td>Any screen &rarr; check "Loaded HH:MM", navigate away and back</td><td>Time does NOT change just from navigating &mdash; only on Refresh or first launch.</td></tr>
             <tr><td>Manage Groups &rarr; Manage Members &rarr; click the pencil on a member</td><td>A small popup opens right there on the Members tab &mdash; no tab-jump.</td></tr>
