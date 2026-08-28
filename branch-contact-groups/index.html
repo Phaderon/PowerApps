@@ -243,6 +243,8 @@
     .link-card a { text-decoration: none; }
     .link-card strong { color: var(--ink); display: block; }
     .link-card span { color: var(--muted); font-size: .9rem; }
+    .last-updated { font-size: .74rem; color: var(--muted); margin: 8px 0 2px; font-weight: 700; }
+    .last-updated.newest { color: var(--primary); }
     .card-actions {
       display: flex;
       gap: 8px;
@@ -350,19 +352,23 @@ Set(varLastMembershipRefresh, Now())</pre>
         <p>Only <strong>scrManageGroups</strong> changed this round &mdash; the other three are unchanged from what you already have live, kept here for reference.</p>
         <div class="links">
           <div class="link-card">
-            <a href="screens/scrQuickContacts.html?v=2.44"><strong>scrQuickContacts <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.44</span></strong><span>Off-white background so cards read as elevated. "Last modified" respects a manually-overridden date.</span></a>
+            <a href="screens/scrQuickContacts.html?v=2.44"><strong>scrQuickContacts <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Off-white background so cards read as elevated. "Last modified" respects a manually-overridden date.</span></a>
+            <div class="last-updated" data-updated="2026-08-28T02:34:43Z">Updated &hellip;</div>
             <div class="card-actions"><a href="screens/scrQuickContacts.html?v=2.44">Open</a><button type="button" data-yaml-url="screens/scrQuickContacts.html?v=2.44">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrSendEmail.html?v=2.44"><strong>scrSendEmail <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.44</span></strong><span>To/CC/BCC and Batch selectors fixed and unified. Icon-chips on View/History. Back button for non-maintainers.</span></a>
+            <a href="screens/scrSendEmail.html?v=2.44"><strong>scrSendEmail <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>To/CC/BCC and Batch selectors fixed and unified. Icon-chips on View/History. Back button for non-maintainers.</span></a>
+            <div class="last-updated" data-updated="2026-08-28T02:34:43Z">Updated &hellip;</div>
             <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.44">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.44">Copy YAML</button></div>
           </div>
           <div class="link-card">
             <a href="screens/scrManageGroups.html?v=2.44"><strong>scrManageGroups <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.44</span></strong><span>Fixed: long names in "Add existing people" no longer overlap the row below. Edit-member pencil opens a proper popup, no tab-jump. GAL search needs a Search press.</span></a>
+            <div class="last-updated newest" data-updated="2026-08-28T17:17:40Z">Updated &hellip;</div>
             <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.44">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.44">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManagePeople.html?v=2.44"><strong>scrManagePeople <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.44</span></strong><span>Coloured initials avatar on every row. GAL search needs a Search press.</span></a>
+            <a href="screens/scrManagePeople.html?v=2.44"><strong>scrManagePeople <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Coloured initials avatar on every row. GAL search needs a Search press.</span></a>
+            <div class="last-updated" data-updated="2026-08-28T02:34:43Z">Updated &hellip;</div>
             <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.44">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.44">Copy YAML</button></div>
           </div>
         </div>
@@ -394,6 +400,18 @@ Set(varLastMembershipRefresh, Now())</pre>
   </div>
 
   <script>
+    document.querySelectorAll('.last-updated[data-updated]').forEach((el) => {
+      const then = new Date(el.dataset.updated);
+      if (isNaN(then)) { el.textContent = ''; return; }
+      const mins = Math.round((Date.now() - then.getTime()) / 60000);
+      let text;
+      if (mins < 60) text = 'Updated ' + Math.max(mins, 1) + ' min' + (mins === 1 ? '' : 's') + ' ago';
+      else if (mins < 1440) { const h = Math.round(mins / 60); text = 'Updated ' + h + ' hour' + (h === 1 ? '' : 's') + ' ago'; }
+      else { const d = Math.round(mins / 1440); text = 'Updated ' + d + ' day' + (d === 1 ? '' : 's') + ' ago'; }
+      el.textContent = text;
+      el.title = then.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+    });
+
     document.querySelectorAll('button[data-copy]').forEach((button) => {
       button.addEventListener('click', async () => {
         const target = document.getElementById(button.dataset.copy);
