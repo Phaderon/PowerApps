@@ -311,10 +311,7 @@
         <span class="pill">Updated 27 Aug 2026</span>
       </div>
       <h1>Branch Contact Groups - Current Task</h1>
-      <p class="lead"><strong>v2.43 fixes two real issues a fresh review pass found in the v2.42 redesign</strong> before you'd even pasted it: the To/CC/BCC and Thursday Batch selectors would have shown every option looking "selected" at once (a Power Apps platform limitation with coloured toggle buttons, now worked around), and the "Loaded HH:MM" timestamp on all four screens was resetting itself just from navigating between screens, even with no real data reload. Both fixed. <strong>App.OnStart changed this round</strong> (one line added) &mdash; re-paste that too, not just the four screens.</p>
-      <div class="callout" style="margin-bottom: 18px;">
-        Need to paste a whole screen instead of the current task above? That lives on a separate site: <a href="https://branch-contact-groups.pages.dev/" style="font-weight:700;">Branch Contact Groups &mdash; Screen YAML &rarr;</a>
-      </div>
+      <p class="lead"><strong>v2.43 fixes two real issues a fresh review pass found in the v2.42 redesign</strong> before you'd even pasted it: the To/CC/BCC and Thursday Batch selectors would have shown every option looking "selected" at once, and the "Loaded HH:MM" timestamp on all four screens was resetting itself just from navigating between screens with no real data reload. Both fixed below. This is a big one to paste &mdash; it carries every change since v2.39, so budget time for the full Do Now.</p>
       <div class="callout warn" style="margin-bottom: 18px;">
         <strong>Still open, not yet diagnosed:</strong> a popup/lightbox (e.g. Manage Members) disappearing while scrolling. Need more detail before this can be fixed properly &mdash; which screen, and whether it happens scrolling the page behind the popup or a list inside the popup itself.
       </div>
@@ -322,34 +319,53 @@
       <section id="do-now">
         <h2>Do Now</h2>
         <div class="callout warn">
-          <strong>Full delete-and-repaste this round, not a partial fix — and this time App.OnStart changed too.</strong> Every screen changed &mdash; <code>scrQuickContacts</code>, <code>scrSendEmail</code>, <code>scrManageGroups</code>, and <code>scrManagePeople</code>. If you've already created the app, delete each screen's contents and paste the v2.43 version below, and replace App &rarr; OnStart with the current block on the <a href="https://branch-contact-groups.pages.dev/">Screen YAML site</a> (one new line: <code>Set(varLastMembershipRefresh, Now())</code>).
+          <strong>Full delete-and-repaste, not a partial fix.</strong> Every screen changed &mdash; <code>scrQuickContacts</code>, <code>scrSendEmail</code>, <code>scrManageGroups</code>, <code>scrManagePeople</code> &mdash; and so did App &rarr; OnStart.
         </div>
         <ol style="padding-left:22px;line-height:1.9;color:var(--muted);">
-          <li>Replace <strong>App &rarr; OnStart</strong> with the current block on the <a href="https://branch-contact-groups.pages.dev/">Screen YAML site</a> (two variables changed from <code>Blank()</code> to <code>0</code>).</li>
-          <li>Re-paste all four screens below, in order.</li>
-          <li>If you'd created a <code>BM Saved Selections</code> SharePoint list for the old "Saved selections" feature, it's no longer used &mdash; safe to delete once you've confirmed the app works without it.</li>
+          <li>Replace <strong>App &rarr; OnStart</strong> with the block right below.</li>
+          <li>Re-paste all four screens under Copy Screen, in order.</li>
+          <li>If you'd created a <code>BM Saved Selections</code> SharePoint list for the old "Saved selections" feature, it's no longer used &mdash; safe to delete once the app works without it.</li>
           <li>Preview the app and work through the Test checklist below.</li>
         </ol>
+        <div class="code-card">
+          <div class="code-toolbar"><span>App.OnStart</span><button type="button" data-copy="onStartBlock">Copy</button></div>
+          <pre id="onStartBlock">Set(varModDomain, "mod.gov.uk");
+Set(varMyEmail, Lower(User().Email));
+ClearCollect(colMaintainers, 'BM Maintainers');
+Set(varIsMaintainer, CountRows(Filter(colMaintainers, Lower(Email) = varMyEmail)) > 0);
+ClearCollect(colGroups, AddColumns(Sort('BM Groups', SortOrder, SortOrder.Ascending), Ticked, false));
+ClearCollect(colMemberships, Filter('BM Memberships', false)); ForAll(colGroups As grp, Collect(colMemberships, Filter('BM Memberships', GroupName = grp.Title)));
+ClearCollect(colThursdayBatchOptions, ["None", "Batch 1", "Batch 2"]);
+Set(varRecipientField, "bcc");
+Set(varBccForcedByBatch, false);
+Set(varBccForced, false);
+Set(varPreviewGroupID, 0);
+Set(varShowLightbox, false);
+Set(varLightboxMode, "");
+Set(varLightboxGroupID, 0);
+Set(varLastMembershipRefresh, Now())</pre>
+        </div>
+        <p style="font-size:.82rem; color:var(--muted); margin-top:-8px;">Check <code>varModDomain</code> matches your real domain first &mdash; it's set to <code>mod.gov.uk</code> above.</p>
       </section>
 
       <section id="copy">
         <h2>Copy Screen</h2>
-        <p>All four changed this round &mdash; re-paste each one.</p>
+        <p>All four changed this round &mdash; re-paste each one, in this order.</p>
         <div class="links">
           <div class="link-card">
-            <a href="screens/scrQuickContacts.html?v=2.43"><strong>scrQuickContacts <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Off-white background so cards read as elevated. Fixed: "Last modified" now respects a group's manually-overridden date, matching Manage Groups.</span></a>
+            <a href="screens/scrQuickContacts.html?v=2.43"><strong>scrQuickContacts <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Off-white background so cards read as elevated. "Last modified" respects a manually-overridden date.</span></a>
             <div class="card-actions"><a href="screens/scrQuickContacts.html?v=2.43">Open</a><button type="button" data-yaml-url="screens/scrQuickContacts.html?v=2.43">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrSendEmail.html?v=2.43"><strong>scrSendEmail <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Fixed the To/CC/BCC and Batch selectors showing every option as "selected" at once. Icon-chips on View/History icons. Removed Saved selections. Non-maintainers now get a Back button instead of getting stuck.</span></a>
+            <a href="screens/scrSendEmail.html?v=2.43"><strong>scrSendEmail <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>To/CC/BCC and Batch selectors fixed and unified. Icon-chips on View/History. Back button for non-maintainers.</span></a>
             <div class="card-actions"><a href="screens/scrSendEmail.html?v=2.43">Open</a><button type="button" data-yaml-url="screens/scrSendEmail.html?v=2.43">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManageGroups.html?v=2.43"><strong>scrManageGroups <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Edit-member pencil now opens a proper popup instead of jumping tabs. Icon-chips on row actions. Fixed the GAL search hang. Fixed renaming a group showing "0 members" until refresh. Health Check trimmed to 3 checks.</span></a>
+            <a href="screens/scrManageGroups.html?v=2.43"><strong>scrManageGroups <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Edit-member pencil opens a proper popup, no tab-jump. Icon-chips on row actions. GAL search needs a Search press.</span></a>
             <div class="card-actions"><a href="screens/scrManageGroups.html?v=2.43">Open</a><button type="button" data-yaml-url="screens/scrManageGroups.html?v=2.43">Copy YAML</button></div>
           </div>
           <div class="link-card">
-            <a href="screens/scrManagePeople.html?v=2.43"><strong>scrManagePeople <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Coloured initials avatar on every row. Fixed the GAL search hang on Add Person. Fixed part of each row not responding to taps when JMC and County/Contingent both show.</span></a>
+            <a href="screens/scrManagePeople.html?v=2.43"><strong>scrManagePeople <span class="pill" style="font-size:.7rem;padding:2px 8px;min-height:auto;">v2.43</span></strong><span>Coloured initials avatar on every row. GAL search needs a Search press.</span></a>
             <div class="card-actions"><a href="screens/scrManagePeople.html?v=2.43">Open</a><button type="button" data-yaml-url="screens/scrManagePeople.html?v=2.43">Copy YAML</button></div>
           </div>
         </div>
@@ -360,24 +376,14 @@
         <table>
           <thead><tr><th>Check</th><th>Expected result</th></tr></thead>
           <tbody>
-            <tr><td>Quick Contacts &rarr; Send Email as a non-maintainer</td><td>A "Back" button is there &mdash; you're never stuck.</td></tr>
-            <tr><td>Send Email &rarr; Thursday tools</td><td>One Batch 1 / Batch 2 selector, one Apply button, one preview icon &mdash; not two of each.</td></tr>
+            <tr><td><strong>Send Email &rarr; tap To/CC/BCC and the Thursday Batch buttons</strong> (priority)</td><td>Only the one you tapped goes dark/selected &mdash; not all of them at once.</td></tr>
+            <tr><td><strong>Any screen &rarr; check "Loaded HH:MM", navigate away and back</strong> (priority)</td><td>Time does NOT change just from navigating &mdash; only on Refresh or first launch.</td></tr>
+            <tr><td>Manage Groups &rarr; Manage Members &rarr; click the pencil on a member</td><td>A small popup opens right there on the Members tab &mdash; no tab-jump.</td></tr>
+            <tr><td>Manage Groups &rarr; Manage Members &rarr; Add from GAL, type a surname</td><td>Nothing searches until you press <strong>Search</strong>; shows "Searching..." then results &mdash; no long silent wait.</td></tr>
+            <tr><td>Navigate between all 4 screens a few times in a row</td><td>No constant spinning-dots loading indicator; clicking feels responsive.</td></tr>
             <tr><td>Manage Groups &rarr; rename a group</td><td>Member count stays correct immediately, no "0 members" flash.</td></tr>
-            <tr><td>Manage Groups &rarr; open Manage Members, start an Add-manually entry, close without saving, reopen for a different group</td><td>The manual-add form is blank, not showing the previous group's entry.</td></tr>
-            <tr><td>Manage Groups &rarr; edit a group</td><td>No "Raw stored value: [...]" line visible anywhere.</td></tr>
-            <tr><td>Manage Groups &rarr; Health Check</td><td>Shows 3 checks (blank name, invalid email, orphaned membership), not 7.</td></tr>
-            <tr><td>Manage People &rarr; a person with both JMC and County/Contingent shown</td><td>Tapping anywhere on their row, including the bottom email line, opens Edit Person.</td></tr>
-            <tr><td>Manage People &rarr; rename someone</td><td>The group's "Last modified" date updates, same as adding/removing a member.</td></tr>
-            <tr><td>Quick Contacts &rarr; a group with an overridden last-modified date</td><td>Shows the same date as Manage Groups, not the raw SharePoint date.</td></tr>
-            <tr><td><strong>Send Email &rarr; tap To/CC/BCC and the Thursday Batch buttons</strong> (this is the priority fix)</td><td>Only the one you tapped goes dark/selected &mdash; the others stay on the light grey track. Not all three lit up at once.</td></tr>
-            <tr><td>Any screen &rarr; look at "Loaded HH:MM" &rarr; navigate to another screen and back without pressing Refresh</td><td>The time does NOT change just from navigating. It only updates when you actually press that screen's Refresh button (or on first app launch).</td></tr>
-            <tr><td>Manage Groups &rarr; Manage Members &rarr; click the pencil on any member</td><td>A small popup opens right there on the Members tab &mdash; you never get moved to a different tab. Editing and saving works exactly as before; Cancel or the backdrop closes it cleanly.</td></tr>
-            <tr><td>Manage Groups row icons, Send Email's View/History icons</td><td>Each sits on a soft tinted circle, not bare.</td></tr>
-            <tr><td>Manage People &rarr; look down the list</td><td>Every row has a coloured initials avatar; same person always gets the same colour.</td></tr>
-            <tr><td>Send Email &rarr; To/CC/BCC and Thursday Batch selectors</td><td>Each reads as one rounded control, not three separate buttons.</td></tr>
-            <tr><td>Manage Groups &rarr; Manage Members &rarr; Add from GAL, type a surname</td><td>Nothing searches until you press <strong>Search</strong>; button shows "Searching..." then the result list appears &mdash; no long silent wait, no typing-triggered lag.</td></tr>
-            <tr><td>Manage Maintainers &amp; Manage People &rarr; Add Person, same GAL search</td><td>Same Search-button behaviour in both places.</td></tr>
-            <tr><td>Navigate between all 4 screens a few times in a row</td><td>No more constant spinning-dots loading indicator on every navigation, and clicking things feels responsive. Data still updates correctly after using a screen's Refresh button.</td></tr>
+            <tr><td>Quick Contacts &rarr; Send Email as a non-maintainer</td><td>A "Back" button is there &mdash; you're never stuck.</td></tr>
+            <tr><td>General click-around on all 4 screens</td><td>Search, ticking groups, sending, adding/removing/editing people and groups, paste-roster &mdash; all still work as expected.</td></tr>
           </tbody>
         </table>
       </section>
