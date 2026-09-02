@@ -250,23 +250,16 @@
         <a href="../">Guide library</a>
         <a href="#" id="open-note">Leave a note for Claude</a>
         <a href="#what-this-page-is">What This Page Is</a>
-        <a href="#newsletter-missing-item-debug">Urgent - Newsletter Missing Item Diagnostic</a>
-        <a href="#publish-gate-removed">Fix 1 - Publish Buttons No Longer Gated On Consultation Flag</a>
-        <a href="#newsletter-approval-fix">Fix 2 - Newsletter Required Real Final Approval</a>
-        <a href="#close-banner-flash">Fix 3 - Deadline Banner Flash On Close</a>
-        <a href="#newsletter-consultation-blank-fix">Fix 4 - Newsletter Treats Blank Consultation As Unticked</a>
-        <a href="#newsletter-thursday-batch-drafts">Fix 5 - Thursday Batch 1/2 Email Drafting (New Feature)</a>
-        <a href="#newsletter-zero-release-week">Fix 6 - Thursday Batch Emails Now Handle Zero-Release Weeks</a>
-        <a href="#newsletter-link-dummy-href">Fix 7 - Newsletter Link Is Now A Real Clickable Placeholder</a>
-        <a href="#newsletter-udf-refactor">Fix 8 - NewsletterPack Refresh Logic Moved Into One UDF</a>
+        <a href="#next-thursday-udf">Fix 1 - Next-Thursday Date Calc Consolidated Into One UDF</a>
+        <a href="#newsletter-udf-refactor">Fix 2 - NewsletterPack Refresh Logic Moved Into One UDF</a>
       </nav>
     </aside>
 
     <main>
       <div class="topline">
-        <span class="pill">Updated 27 Aug 2026</span>
+        <span class="pill">Updated 2 Sep 2026</span>
         <span class="pill">Policy Tracker only</span>
-        <span class="pill">8 fixes + urgent diagnostic</span>
+        <span class="pill">2 fixes</span>
       </div>
       <h1>Policy Tracker Fix Guide</h1>
       <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
@@ -276,980 +269,111 @@
 
       <section id="what-this-page-is">
         <h2>What This Page Is</h2>
-        <p>This is the working fix log for the Policy Tracker canvas app (repo <code>PhadeDev/policy-tracker</code>). Reset to empty on 2026-08-13 &mdash; the previous entries (personal OneDrive link blocking, address-bar link save crash, generic-icon hint) had already been applied in Studio for weeks and were no longer needed as a reference.</p>
+        <p>This is the working fix log for the Policy Tracker canvas app (repo <code>PhadeDev/policy-tracker</code>). Reset to empty on 2026-09-02 &mdash; the previous entries (publish/consultation gate fixes, the deadline-banner flash fix, and the Thursday Batch email-drafting feature with its zero-release-week and link fixes) had all been confirmed applied in Studio and were no longer needed as a reference. Same pattern as the previous reset on 2026-08-13.</p>
         <div class="callout">
           Each fix below is a targeted property edit on the live app, applied by hand in Power Apps Studio. None of them require a full screen repaste unless stated otherwise.
         </div>
       </section>
 
-      <section id="newsletter-missing-item-debug">
-        <h2>Urgent - Newsletter Missing Item Diagnostic</h2>
-        <p class="meta-line">NewsletterPack &middot; temporary label &middot; no data changes</p>
-        <p>Use this before changing the live formula again. The current NewsletterPack filter only includes records that match the target Thursday date, have final approval by XO/ACOS/DCOMD/D Commander, are not already published, and are not marked as requiring external consultation. Title and content do not affect inclusion. Stage 1 prints every SharePoint row matching the target Thursday date and shows exactly which gate is excluding it.</p>
-
-        <h3>Stage 1 - Prove The SharePoint Rows Qualify</h3>
-        <ol>
-          <li>Open <strong>NewsletterPack</strong> in Power Apps Studio.</li>
-          <li>Add a temporary <strong>Label</strong> anywhere on the screen.</li>
-          <li>Set the label's <code>Text</code> property to the formula below.</li>
-          <li>Set <code>AutoHeight</code> to <code>true</code>, make it wide, and set the text size small enough to read the lines.</li>
-          <li>Preview the screen. If the missing item is printed with <code>include=false</code>, the same line tells you which field is different. If the missing item is not printed at all, it is not matching the target Thursday date window.</li>
-        </ol>
-
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>Temporary debug label - Text</span>
-              <span class="code-stamp" data-updated="2026-08-13T11:35:00Z">v1 &middot; 2026-08-13 12:35 BST</span>
-            </div>
-            <button data-copy="newsletter-missing-item-debug-formula" type="button">Copy</button>
-          </div>
-<pre id="newsletter-missing-item-debug-formula">With(
-    {_target: DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days")},
-    Concat(
-        AddColumns(
-            Filter(
-                'Policy Proof Tracker',
-                'Planned Publish Date' &gt;= _target &amp;&amp;
-                'Planned Publish Date' &lt; DateAdd(_target, 1, "Days")
-            ),
-            DebugLine,
-            Title &amp;
-            " | date=" &amp; Text('Planned Publish Date', "dd mmm yyyy") &amp;
-            " | approval=" &amp; Coalesce('Approved For Release By'.Value, "&lt;blank&gt;") &amp;
-            " | published=" &amp; Text(Published) &amp;
-            " | external=" &amp; Text('External consultation required') &amp;
-            " | include=" &amp;
-            Text(
-                (
-                    'Approved For Release By'.Value = "XO" ||
-                    'Approved For Release By'.Value = "ACOS" ||
-                    'Approved For Release By'.Value = "DCOMD" ||
-                    'Approved For Release By'.Value = "D Commander"
-                ) &amp;&amp;
-                Published = false &amp;&amp;
-                Coalesce('External consultation required', false) = false
-            )
-        ),
-        DebugLine,
-        Char(10)
-    )
-)</pre>
+      <section id="next-thursday-udf">
+        <h2>Fix 1 - Next-Thursday Date Calc Consolidated Into One UDF</h2>
+        <p class="meta-line">App Formulas + Main + ViewItem + Overview &middot; structural refactor &middot; no behaviour change on the 5 consolidated spots</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
         </div>
-
+        <p>Added 2026-09-02. The exact same "which future Thursday" formula, <code>DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7) [+ (Value - 1) * 7], "Days")</code>, is hand-typed <strong>five separate times across three screens</strong>: once in <code>Main</code> (the "+ New Entry" button), once in <code>Main</code>'s dashboard gallery (the "Current" tab case), twice in <code>ViewItem</code> (the default publish date, and the 104-week Thursday-picker list), and once in <code>Overview</code>'s 4-week gallery. Same duplication problem as Fix 2, different formula. Consolidated into one App Formulas function, <code>NextThursday(WeeksAhead: Number): Date</code> &mdash; call it with <code>1</code> for "the next Thursday" or a gallery's <code>Value</code> (1, 2, 3&hellip;) for "the Nth future Thursday."</p>
         <div class="callout warn">
-          If the expected records print here, the raw SharePoint data is present. Continue to Stage 2 to check whether those same records are entering <code>colNewsletterPack</code> and the galleries.
+          <strong>Two similar-looking formulas found and deliberately left untouched</strong> &mdash; these are not duplicates of this one, they do genuinely different things: <code>Main</code>'s Historic tab case calculates days <em>since the previous</em> Thursday (past-facing, for grouping already-released items) using a different sign convention entirely. <code>ViewItem</code>'s <code>varDaysToNextThursday</code> (used for the screen's 52-week forward Thursday list) explicitly forces today to count as "7 days away" instead of "0" when today is a Thursday &mdash; i.e. it always skips today, where <code>NextThursday(1)</code> below does not. If you want <code>NextThursday</code> to also cover that case, it needs a second parameter or function; not built here since that would be a real behaviour change, not just a refactor, and wasn't asked for.
         </div>
-
-        <h3>Stage 2 - Check The Collection And Both Galleries</h3>
-        <p>Keep the temporary label and replace its <code>Text</code> with this formula. This does not change data. It prints the row count for <code>colNewsletterPack</code>, the two gallery counts, and the titles currently inside the collection.</p>
-
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>Temporary debug label - Text, stage 2</span>
-              <span class="code-stamp" data-updated="2026-08-13T11:50:00Z">v1 &middot; 2026-08-13 12:50 BST</span>
-            </div>
-            <button data-copy="newsletter-collection-gallery-debug-formula" type="button">Copy</button>
-          </div>
-<pre id="newsletter-collection-gallery-debug-formula">"colNewsletterPack rows = " &amp; CountRows(colNewsletterPack) &amp; Char(10) &amp;
-"galPlainPack_1 visible rows = " &amp; CountRows(galPlainPack_1.AllItems) &amp; Char(10) &amp;
-"galEmailPreview_1 visible rows = " &amp; CountRows(galEmailPreview_1.AllItems) &amp; Char(10) &amp;
-Char(10) &amp;
-Concat(
-    colNewsletterPack,
-    Text(ID) &amp;
-    " | " &amp; PackTitle &amp;
-    " | audience=" &amp; PackAudience &amp;
-    " | final=" &amp; Text(IsFinalApproved),
-    Char(10)
-)</pre>
-        </div>
-
-        <div class="callout">
-          Read it this way: if <code>colNewsletterPack rows</code> is still <code>1</code>, the live <code>NewsletterPack.OnVisible</code> or <code>btnRefresh_1.OnSelect</code> formula is not building the same result as Stage 1. If <code>colNewsletterPack rows</code> is <code>3</code> but a gallery count is lower or the screen still shows one card, the bug is in gallery rendering/layout, not the SharePoint filter.
-        </div>
-
-        <h3>Stage 3 - Print The Current Pack Gates Per Record</h3>
-        <p>If Stage 1 shows the three titles but Stage 2 shows <code>colNewsletterPack rows = 1</code>, use this label formula next. It prints the strict consultation check and the blank-safe consultation check for every record in the Thursday date window.</p>
-
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>Temporary debug label - Text, stage 3</span>
-              <span class="code-stamp" data-updated="2026-08-13T12:05:00Z">v1 &middot; 2026-08-13 13:05 BST</span>
-            </div>
-            <button data-copy="newsletter-pack-gates-debug-formula" type="button">Copy</button>
-          </div>
-<pre id="newsletter-pack-gates-debug-formula">With(
-    {_target: DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days")},
-    Concat(
-        AddColumns(
-            Filter(
-                'Policy Proof Tracker',
-                'Planned Publish Date' &gt;= _target &amp;&amp;
-                'Planned Publish Date' &lt; DateAdd(_target, 1, "Days")
-            ),
-            DebugLine,
-            Text(ID) &amp;
-            " | " &amp; Title &amp;
-            " | approval=" &amp; Coalesce('Approved For Release By'.Value, "&lt;blank&gt;") &amp;
-            " | finalApprovalOK=" &amp;
-            Text(
-                'Approved For Release By'.Value = "XO" ||
-                'Approved For Release By'.Value = "ACOS" ||
-                'Approved For Release By'.Value = "DCOMD" ||
-                'Approved For Release By'.Value = "D Commander"
-            ) &amp;
-            " | publishedOK=" &amp; Text(Published = false) &amp;
-            " | consultationStrictOK=" &amp; Text('External consultation required' = false) &amp;
-            " | consultationBlankSafeOK=" &amp; Text(Coalesce('External consultation required', false) = false) &amp;
-            " | fixedPackRule=" &amp;
-            Text(
-                (
-                    'Approved For Release By'.Value = "XO" ||
-                    'Approved For Release By'.Value = "ACOS" ||
-                    'Approved For Release By'.Value = "DCOMD" ||
-                    'Approved For Release By'.Value = "D Commander"
-                ) &amp;&amp;
-                Published = false &amp;&amp;
-                Coalesce('External consultation required', false) = false
-            )
-        ),
-        DebugLine,
-        Char(10)
-    )
-)</pre>
-        </div>
-
-        <div class="callout warn">
-          If the missing records say <code>consultationStrictOK=false</code> but <code>consultationBlankSafeOK=true</code>, apply Fix 4. If <code>consultationBlankSafeOK=false</code>, the record is genuinely consultation-ticked and should stay out of the newsletter.
-        </div>
-        <div class="callout ok">
-          <strong>Confirmed result:</strong> the missing newsletter rows showed the old strict consultation check failing while <code>finalApprovalOK=true</code> and <code>publishedOK=true</code>. Apply Fix 4 below if those rows are not actually consultation-ticked.
-        </div>
-      </section>
-
-      <section id="publish-gate-removed">
-        <h2>Fix 1 - Publish Buttons No Longer Gated On External Consultation Flag</h2>
-        <p class="meta-line">Main &middot; property edit &middot; no risk to formula syntax, changes real publish behaviour</p>
-        <div class="fix-controls">
-          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
-          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
-        </div>
-        <p>Reported 2026-08-13: on a day with three items due, only one showed a per-item <strong>Publish</strong> button and <strong>Publish All</strong> read <code>(1)</code> instead of <code>(3)</code>. It looked like an approval-based bug, but it wasn't &mdash; <code>BossPublishBtn.Visible</code> and <code>PublishAllBtn</code> never checked approval status at all. The actual gate was <code>'External consultation required' = false</code>, present in four places (button visibility, the count shown in the button text, and both <code>Filter()</code> calls used when actually patching records). Two of the three items had that flag ticked. Decision: drop that condition everywhere so Publish/Publish All always show for boss users on unpublished, due items, regardless of the consultation flag.</p>
-        <div class="callout warn">
-          <strong>Behaviour change, not just a bug fix:</strong> a boss can now publish an item that still needs external consultation. That's intentional, per instruction &mdash; flagging it here so it's not a surprise later.
-        </div>
-
         <ol>
-          <li>Open <strong>Main</strong>.</li>
-          <li>In the Tree view, find <strong>BossPublishBtn</strong> (the per-item "&#9889; Publish" button).</li>
-          <li>Select <code>Visible</code> in the Properties dropdown, select all, and replace with this formula.</li>
+          <li>Open the <strong>App</strong> object (root of the tree view) &rarr; <code>Formulas</code> property (Advanced pane).</li>
+          <li>Add the function below to the end of the existing Formulas block.</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
-              <span>BossPublishBtn.Visible</span>
-              <span class="code-stamp" data-updated="2026-08-13T10:10:00Z">v1 &middot; 2026-08-13 11:10 BST</span>
+              <span>App &middot; Formulas &mdash; new function</span>
+              <span class="code-stamp" data-updated="2026-09-02T00:00:00Z">v1 &middot; 2026-09-02 BST</span>
             </div>
-            <button data-copy="boss-publish-visible" type="button">Copy</button>
+            <button data-copy="next-thursday-formula" type="button">Copy</button>
           </div>
-<pre id="boss-publish-visible">!IsEmpty(Filter(colBossButtonUsers, Lower(Email) = Lower(User().Email))) &&
-ThisItem.'Planned Publish Date' <= Today() &&
-ThisItem.Published = false</pre>
+<pre id="next-thursday-formula">NextThursday(WeeksAhead: Number): Date = DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7) + (WeeksAhead - 1) * 7, "Days")</pre>
         </div>
-
-        <ol start="4">
-          <li>Find <strong>PublishAllBtn</strong> (the group-header "Publish All (n)" button).</li>
-          <li>Select <code>OnSelect</code> in the Properties dropdown, select all, and replace with this formula.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>PublishAllBtn.OnSelect</span>
-              <span class="code-stamp" data-updated="2026-08-13T10:10:00Z">v1 &middot; 2026-08-13 11:10 BST</span>
-            </div>
-            <button data-copy="publish-all-onselect" type="button">Copy</button>
-          </div>
-<pre id="publish-all-onselect">// PublishAllBtn.OnSelect
-Set(varPublishGroupDate, ThisItem.PlannedDate);
-Set(varPublishGroupCount, CountRows(Filter(ThisItem.GroupedItems, Published = false)));
-Clear(colPublishFailures);
-ForAll(
-    Filter(ThisItem.GroupedItems, Published = false) As PubItem,
-    IfError(
-        Patch(
-            'Policy Proof Tracker',
-            LookUp('Policy Proof Tracker', ID = PubItem.ID),
-            {
-                Published: true,
-                'Published Date': varPublishGroupDate
-            }
-        ); true,
-        Collect(colPublishFailures, {ID: PubItem.ID}); true
-    )
-);
-Set(varPublishFailCount, CountRows(colPublishFailures));
-Refresh('Policy Proof Tracker');
-RefreshActiveCache();
-If(
-    varPublishFailCount = 0,
-    Notify(
-        "Published all " & varPublishGroupCount & " items for " & Text(varPublishGroupDate, "d mmm yyyy"),
-        NotificationType.Success
-    ),
-    Notify(
-        varPublishFailCount & " of " & varPublishGroupCount & " items failed to publish for " & Text(varPublishGroupDate, "d mmm yyyy") & ". Please retry.",
-        NotificationType.Error
-    )
-)</pre>
-        </div>
-
-        <ol start="6">
-          <li>Still on <strong>PublishAllBtn</strong>, select <code>Text</code> and replace with this formula.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>PublishAllBtn.Text</span>
-              <span class="code-stamp" data-updated="2026-08-13T10:10:00Z">v1 &middot; 2026-08-13 11:10 BST</span>
-            </div>
-            <button data-copy="publish-all-text" type="button">Copy</button>
-          </div>
-<pre id="publish-all-text">"Publish All (" & CountRows(Filter(ThisItem.GroupedItems, Published = false)) & ")"</pre>
-        </div>
-
-        <ol start="7">
-          <li>Still on <strong>PublishAllBtn</strong>, select <code>Visible</code> and replace with this formula.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>PublishAllBtn.Visible</span>
-              <span class="code-stamp" data-updated="2026-08-13T10:10:00Z">v1 &middot; 2026-08-13 11:10 BST</span>
-            </div>
-            <button data-copy="publish-all-visible" type="button">Copy</button>
-          </div>
-<pre id="publish-all-visible">!IsEmpty(Filter(colBossButtonUsers, Lower(Email) = Lower(User().Email))) &&
-ThisItem.PlannedDate <= Today() &&
-CountRows(Filter(ThisItem.GroupedItems, Published = false)) > 0</pre>
-        </div>
-
-        <div class="callout ok">
-          <strong>Test:</strong> on a day with several unpublished items due, including at least one flagged "External consultation required" &mdash; every item should now show its own Publish button, and Publish All's count should match the total number of unpublished items in that group, not just the ones without the consultation flag.
-        </div>
-      </section>
-
-      <section id="newsletter-approval-fix">
-        <h2>Fix 2 - Newsletter Pack Required Real Final Approval, Not Just Pillar Lead</h2>
-        <p class="meta-line">NewsletterPack &middot; property edit &middot; changes which items appear in the pack</p>
-        <div class="fix-controls">
-          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
-          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
-        </div>
-        <p>Reported 2026-08-13 alongside Fix 1: an item approved only by the Pillar Lead (not yet by ACOS or above) was still appearing in the newsletter pack. The <code>Filter()</code> that builds <code>colNewsletterPack</code> included <code>'Approved by Pillar Lead (Ready to Release)' = true</code> as one of several OR'd conditions, so Pillar Lead approval alone was enough to qualify &mdash; even though a separate <code>IsFinalApproved</code> column (used only for the amber "pending" styling on the card) already correctly checked just the four senior sign-off values. Fix: removed the Pillar Lead OR branch from the qualifying filter, so an item only enters the pack once <code>'Approved For Release By'</code> is XO, ACOS, DCOMD, or "D Commander" &mdash; DCOMD / D Commander is the Deputy Commander Cadets rank tier (Brigadier-equivalent), so that already covers "ACOS or above." There are two identical copies of this filter in the screen (initial load and the Refresh button) &mdash; both are given in full below.</p>
-
-        <ol>
-          <li>Open <strong>NewsletterPack</strong>.</li>
-          <li>Select the screen itself (root node), then <code>OnVisible</code> in the Properties dropdown.</li>
-          <li>Find the <code>ClearCollect(colNewsletterPack, ...)</code> block near the top and replace the whole formula with this.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>NewsletterPack.OnVisible (top ClearCollect block)</span>
-              <span class="code-stamp" data-updated="2026-08-13T10:10:00Z">v1 &middot; 2026-08-13 11:10 BST</span>
-            </div>
-            <button data-copy="newsletter-onvisible" type="button">Copy</button>
-          </div>
-<pre id="newsletter-onvisible">Set(varNewsletterTargetDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));
-Refresh('Policy Proof Tracker');
-ClearCollect(
-    colNewsletterPack,
-    Sort(
-        AddColumns(
-            Filter(
-                'Policy Proof Tracker',
-                'Planned Publish Date' >= varNewsletterTargetDate &&
-                'Planned Publish Date' < DateAdd(varNewsletterTargetDate, 1, "Days") &&
-                (
-                    'Approved For Release By'.Value = "XO" ||
-                    'Approved For Release By'.Value = "ACOS" ||
-                    'Approved For Release By'.Value = "DCOMD" ||
-                    'Approved For Release By'.Value = "D Commander"
-                ) &&
-                Published = false &&
-                'External consultation required' = false
-            ),
-            SortKey,
-            If(
-                'Top Item',
-                -1000,
-                Coalesce(LookUp(colChoiceColors, ChoiceValue = 'Document Type'.Value, SortOrder), 99)
-            ),
-            IsFinalApproved,
-            Or(
-                'Approved For Release By'.Value = "XO",
-                'Approved For Release By'.Value = "ACOS",
-                'Approved For Release By'.Value = "DCOMD",
-                'Approved For Release By'.Value = "D Commander"
-            ),
-            PackTitle,
-            Coalesce('Title for Newsletter', Title),
-            PackAudience,
-            Coalesce(Audience, ""),
-            PackSummary,
-            Coalesce('Item summary', "")
-        ),
-        SortKey,
-        SortOrder.Ascending
-    )
-)</pre>
-        </div>
-
-        <ol start="4">
-          <li>Find <strong>btnRefresh_1</strong> (the "Refresh" button on the same screen). It has an identical copy of the same formula.</li>
-          <li>Select <code>OnSelect</code> in the Properties dropdown, select all, and replace with this formula.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>btnRefresh_1.OnSelect</span>
-              <span class="code-stamp" data-updated="2026-08-13T10:10:00Z">v1 &middot; 2026-08-13 11:10 BST</span>
-            </div>
-            <button data-copy="newsletter-refresh-onselect" type="button">Copy</button>
-          </div>
-<pre id="newsletter-refresh-onselect">Set(varNewsletterTargetDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));
-Refresh('Policy Proof Tracker');
-ClearCollect(
-    colNewsletterPack,
-    Sort(
-        AddColumns(
-            Filter(
-                'Policy Proof Tracker',
-                'Planned Publish Date' >= varNewsletterTargetDate &&
-                'Planned Publish Date' < DateAdd(varNewsletterTargetDate, 1, "Days") &&
-                (
-                    'Approved For Release By'.Value = "XO" ||
-                    'Approved For Release By'.Value = "ACOS" ||
-                    'Approved For Release By'.Value = "DCOMD" ||
-                    'Approved For Release By'.Value = "D Commander"
-                ) &&
-                Published = false &&
-                'External consultation required' = false
-            ),
-            SortKey,
-            If(
-                'Top Item',
-                -1000,
-                Coalesce(LookUp(colChoiceColors, ChoiceValue = 'Document Type'.Value, SortOrder), 99)
-            ),
-            IsFinalApproved,
-            Or(
-                'Approved For Release By'.Value = "XO",
-                'Approved For Release By'.Value = "ACOS",
-                'Approved For Release By'.Value = "DCOMD",
-                'Approved For Release By'.Value = "D Commander"
-            ),
-            PackTitle,
-            Coalesce('Title for Newsletter', Title),
-            PackAudience,
-            Coalesce(Audience, ""),
-            PackSummary,
-            Coalesce('Item summary', "")
-        ),
-        SortKey,
-        SortOrder.Ascending
-    )
-)</pre>
-        </div>
-
-        <div class="callout ok">
-          <strong>Test:</strong> tick Pillar Lead approval only on an item due this week, leave "Approved For Release By" as "Not Yet Approved" &mdash; it should NOT appear in the newsletter pack. Set "Approved For Release By" to ACOS &mdash; it should now appear, regardless of the Pillar Lead tick.
-        </div>
-      </section>
-
-      <section id="close-banner-flash">
-        <h2>Fix 3 - Deadline Warning Banner Flashing On Close</h2>
-        <p class="meta-line">ViewItem &middot; property edit &middot; visual only, no data risk</p>
-        <div class="fix-controls">
-          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
-          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
-        </div>
-        <p>Reported 2026-08-13: clicking <strong>Close</strong> on an item with a release date inside 10 days (not High Priority, not External Consultation) briefly flashed the amber "Release date is within 10 days" banner before navigating away. The first guide tried reordering <code>Navigate()</code> before the state resets, but that is not enough: Power Apps can still evaluate the old screen for a frame while statements after <code>Navigate()</code> run. Correct fix: add a close-in-progress guard, make the warning/top bar respect it, and set the guard on both close paths.</p>
-
-        <ol>
-          <li>Open <strong>ViewItem</strong>.</li>
-          <li>Select the screen itself, then select <code>OnVisible</code>.</li>
-          <li>Add this line near the top, immediately after the existing first <code>Set(varLoadingLinks, ...)</code> line.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>ViewItem.OnVisible - add near top</span>
-              <span class="code-stamp" data-updated="2026-08-13T13:05:00Z">v2 &middot; 2026-08-13 14:05 BST</span>
-            </div>
-            <button data-copy="viewitem-onvisible-closing-guard" type="button">Copy</button>
-          </div>
-<pre id="viewitem-onvisible-closing-guard">Set(varClosingViewItem, false);</pre>
-        </div>
-
-        <ol start="4">
-          <li>Select <strong>conWarningBar1</strong>.</li>
-          <li>Select <code>Visible</code>, select all, and replace with this formula.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>conWarningBar1.Visible</span>
-              <span class="code-stamp" data-updated="2026-08-13T13:05:00Z">v2 &middot; 2026-08-13 14:05 BST</span>
-            </div>
-            <button data-copy="warning-bar-visible-closing-guard" type="button">Copy</button>
-          </div>
-<pre id="warning-bar-visible-closing-guard">!Coalesce(varClosingViewItem, false) &&
-varSelectPolicy &lt;&gt; "Filled" &&
-DateDiff(Today(), dpkPublishDate1.SelectedDate, "Days") &gt;= 0 &&
-DateDiff(Today(), dpkPublishDate1.SelectedDate, "Days") &lt; 10 &&
-!ckbHighPriority1.Value &&
-!ckbExtConsult1.Value</pre>
-        </div>
-
-        <ol start="6">
-          <li>Select <strong>conTopBar1</strong>.</li>
-          <li>Select <code>Visible</code>, select all, and replace with this formula.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>conTopBar1.Visible</span>
-              <span class="code-stamp" data-updated="2026-08-13T13:05:00Z">v2 &middot; 2026-08-13 14:05 BST</span>
-            </div>
-            <button data-copy="top-bar-visible-closing-guard" type="button">Copy</button>
-          </div>
-<pre id="top-bar-visible-closing-guard">!(
-    !Coalesce(varClosingViewItem, false) &&
-    varSelectPolicy &lt;&gt; "Filled" &&
-    DateDiff(Today(), dpkPublishDate1.SelectedDate, "Days") &gt;= 0 &&
-    DateDiff(Today(), dpkPublishDate1.SelectedDate, "Days") &lt; 10 &&
-    !ckbHighPriority1.Value &&
-    !ckbExtConsult1.Value
-)</pre>
-        </div>
-
-        <ol start="8">
-          <li>Select <strong>btnClose1</strong> (the top-right Close button).</li>
-          <li>Select <code>OnSelect</code>, select all, and replace with this formula.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>btnClose1.OnSelect</span>
-              <span class="code-stamp" data-updated="2026-08-13T13:05:00Z">v2 &middot; 2026-08-13 14:05 BST</span>
-            </div>
-            <button data-copy="close-onselect" type="button">Copy</button>
-          </div>
-<pre id="close-onselect">If(
-    varUnsavedChanges,
-    UpdateContext({locDisplayDiscardPopUp: true}),
-    Set(varClosingViewItem, true);
-    If(varSourceScreen = "Historic", Navigate(Historic, ScreenTransition.Fade), Navigate(Main, ScreenTransition.Fade));
-    Set(varSelectPolicy, "Empty");
-    Set(varSelectedRelease, Blank());
-    Set(varUnsavedChanges, false);
-    Set(varShowLinkModal, false)
-)</pre>
-        </div>
-
-        <ol start="10">
-          <li>Select <strong>btnModalAction1_2</strong> in the Unsaved Changes modal (the button that confirms closing without saving).</li>
-          <li>Select <code>OnSelect</code>, select all, and replace with this formula.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>btnModalAction1_2.OnSelect</span>
-              <span class="code-stamp" data-updated="2026-08-13T13:05:00Z">v2 &middot; 2026-08-13 14:05 BST</span>
-            </div>
-            <button data-copy="discard-close-onselect-closing-guard" type="button">Copy</button>
-          </div>
-<pre id="discard-close-onselect-closing-guard">UpdateContext({locDisplayDiscardPopUp: false});
-Set(varClosingViewItem, true);
-Set(varSelectPolicy, "Empty");
-Set(varSelectedRelease, Blank());
-Set(varUnsavedChanges, false);
-Set(varShowLinkModal, false);
-If(varSourceScreen = "Historic", Navigate(Historic, ScreenTransition.Fade), Navigate(Main, ScreenTransition.Fade))</pre>
-        </div>
-
-        <div class="callout ok">
-          <strong>Test:</strong> open an item with a Planned Publish Date inside 10 days, not marked High Priority or External Consultation, then click Close without making changes. It should leave with no orange flash. Then make a small edit, click Close, confirm the unsaved-changes modal, and check that path also leaves with no flash.
-        </div>
-      </section>
-
-      <section id="newsletter-consultation-blank-fix">
-        <h2>Fix 4 - Newsletter Treats Blank Consultation As Unticked</h2>
-        <p class="meta-line">NewsletterPack &middot; property edit &middot; changes which items appear in the pack</p>
-        <div class="fix-controls">
-          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
-          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
-        </div>
-        <p>Confirmed by the urgent diagnostic on 2026-08-13: three records matched the Thursday date window, but <code>colNewsletterPack</code> only contained one. The two missing records had <code>finalApprovalOK=true</code> and <code>publishedOK=true</code>, but <code>externalOK=false</code>. The consultation gate must stay: consultation-ticked items should not appear in the newsletter. The safer fix is to keep that rule but make it blank-safe, because a SharePoint Yes/No field can come through as blank rather than explicit <code>false</code>. This uses <code>Coalesce('External consultation required', false) = false</code>, which includes blank/unticked records and still excludes real <code>true</code>.</p>
-        <div class="callout warn">
-          <strong>Do not remove the consultation gate:</strong> this fix keeps consultation-ticked records out of the newsletter. It only prevents blank/unticked records being treated as if they failed the gate.
-        </div>
-
-        <ol>
-          <li>Open <strong>NewsletterPack</strong>.</li>
-          <li>Select the screen itself (root node), then select <code>OnVisible</code> in the Properties dropdown.</li>
-          <li>Select all and replace with this full formula.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>NewsletterPack.OnVisible</span>
-              <span class="code-stamp" data-updated="2026-08-13T12:32:00Z">v2 &middot; 2026-08-13 13:32 BST</span>
-            </div>
-            <button data-copy="newsletter-onvisible-blank-safe-consultation" type="button">Copy</button>
-          </div>
-<pre id="newsletter-onvisible-blank-safe-consultation">Set(varNewsletterTargetDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));
-Refresh('Policy Proof Tracker');
-ClearCollect(
-    colNewsletterPack,
-    Sort(
-        AddColumns(
-            Filter(
-                'Policy Proof Tracker',
-                'Planned Publish Date' &gt;= varNewsletterTargetDate &amp;&amp;
-                'Planned Publish Date' &lt; DateAdd(varNewsletterTargetDate, 1, "Days") &amp;&amp;
-                (
-                    'Approved For Release By'.Value = "XO" ||
-                    'Approved For Release By'.Value = "ACOS" ||
-                    'Approved For Release By'.Value = "DCOMD" ||
-                    'Approved For Release By'.Value = "D Commander"
-                ) &amp;&amp;
-                Published = false &amp;&amp;
-                Coalesce('External consultation required', false) = false
-            ),
-            SortKey,
-            If(
-                'Top Item',
-                -1000,
-                Coalesce(LookUp(colChoiceColors, ChoiceValue = 'Document Type'.Value, SortOrder), 99)
-            ),
-            IsFinalApproved,
-            Or(
-                'Approved For Release By'.Value = "XO",
-                'Approved For Release By'.Value = "ACOS",
-                'Approved For Release By'.Value = "DCOMD",
-                'Approved For Release By'.Value = "D Commander"
-            ),
-            PackTitle,
-            Coalesce('Title for Newsletter', Title),
-            PackAudience,
-            Coalesce(Audience, ""),
-            PackSummary,
-            Coalesce('Item summary', "")
-        ),
-        SortKey,
-        SortOrder.Ascending
-    )
-)</pre>
-        </div>
-
-        <ol start="4">
-          <li>Select <strong>btnRefresh_1</strong> on the same screen.</li>
-          <li>Select <code>OnSelect</code>, select all, and replace with this formula too.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>btnRefresh_1.OnSelect</span>
-              <span class="code-stamp" data-updated="2026-08-13T12:32:00Z">v2 &middot; 2026-08-13 13:32 BST</span>
-            </div>
-            <button data-copy="newsletter-refresh-blank-safe-consultation" type="button">Copy</button>
-          </div>
-<pre id="newsletter-refresh-blank-safe-consultation">Set(varNewsletterTargetDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));
-Refresh('Policy Proof Tracker');
-ClearCollect(
-    colNewsletterPack,
-    Sort(
-        AddColumns(
-            Filter(
-                'Policy Proof Tracker',
-                'Planned Publish Date' &gt;= varNewsletterTargetDate &amp;&amp;
-                'Planned Publish Date' &lt; DateAdd(varNewsletterTargetDate, 1, "Days") &amp;&amp;
-                (
-                    'Approved For Release By'.Value = "XO" ||
-                    'Approved For Release By'.Value = "ACOS" ||
-                    'Approved For Release By'.Value = "DCOMD" ||
-                    'Approved For Release By'.Value = "D Commander"
-                ) &amp;&amp;
-                Published = false &amp;&amp;
-                Coalesce('External consultation required', false) = false
-            ),
-            SortKey,
-            If(
-                'Top Item',
-                -1000,
-                Coalesce(LookUp(colChoiceColors, ChoiceValue = 'Document Type'.Value, SortOrder), 99)
-            ),
-            IsFinalApproved,
-            Or(
-                'Approved For Release By'.Value = "XO",
-                'Approved For Release By'.Value = "ACOS",
-                'Approved For Release By'.Value = "DCOMD",
-                'Approved For Release By'.Value = "D Commander"
-            ),
-            PackTitle,
-            Coalesce('Title for Newsletter', Title),
-            PackAudience,
-            Coalesce(Audience, ""),
-            PackSummary,
-            Coalesce('Item summary', "")
-        ),
-        SortKey,
-        SortOrder.Ascending
-    )
-)</pre>
-        </div>
-
-        <div class="callout ok">
-          <strong>Test:</strong> click Refresh on NewsletterPack after pasting both formulas. If the two missing rows are blank/unticked consultation values, the temporary Stage 2 label should change to <code>colNewsletterPack rows = 3</code>. If they are genuinely ticked for consultation, they should still stay out of the newsletter.
-        </div>
-      </section>
-
-      <section id="newsletter-thursday-batch-drafts">
-        <h2>Fix 5 - Thursday Batch 1/2 Email Drafting (New Feature)</h2>
-        <p class="meta-line">NewsletterPack &middot; new controls + property edit &middot; adds two buttons, does not remove anything</p>
-        <div class="fix-controls">
-          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
-          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
-        </div>
-        <p>Added 2026-08-15. Two new buttons in the "Email-ready format" panel, <strong>Thursday Batch 1 Email</strong> and <strong>Thursday Batch 2 Email</strong>, that build an HTML draft via the Office 365 Outlook connector's <code>DraftEmail</code> action &mdash; subject auto-dated, body has this week's newsletter items as a real bold bullet list plus a fixed footer (Previous Newsletters / About / recipient list, copied verbatim from the real sent email and never changing), and BCC pulled from the <strong>same <code>BM Groups</code> / <code>BM Memberships</code> SharePoint lists Branch Contact Groups already uses</strong>, filtered to whichever Thursday batch the button is for. One manual step remains inside each drafted email: paste this week's real release link over the placeholder text, and set the OFFICIAL sensitivity label before sending &mdash; MOD's Purview label can't be set by this connector.</p>
-        <div class="callout ok">
-          <strong>This only ever creates a draft.</strong> <code>Office365Outlook.DraftEmail</code> is the connector's draft-creation action &mdash; nothing in this feature calls <code>SendEmailV2</code> or <code>SendDraftEmail</code>. Clicking either button puts an unsent draft in the clicking user's own Outlook Drafts folder (the connector connection is per-user, confirmed live with two different mailboxes) and stops there. You still have to open it and press Send yourself.
-        </div>
-        <div class="callout warn">
-          <strong>Before pasting anything below:</strong> add <code>BM Groups</code> and <code>BM Memberships</code> as data sources in this app (Data pane &rarr; Add data &rarr; SharePoint &rarr; same site Branch Contact Groups uses), and confirm <strong>Office 365 Outlook</strong> is added as a data source too (each user needs their own connection/sign-in the first time they use the buttons &mdash; that's what makes the draft land in the right mailbox).
-        </div>
-
-        <ol>
-          <li>Open <strong>NewsletterPack</strong>.</li>
-          <li>Select the screen itself (root node), then <code>OnVisible</code> in the Properties dropdown.</li>
-          <li>Select all and replace with this full formula &mdash; it's the existing formula with five new lines appended after the <code>colNewsletterPack</code> block.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>NewsletterPack.OnVisible</span>
-              <span class="code-stamp" data-updated="2026-08-27T00:00:00Z">v5 &middot; 2026-08-27 BST</span>
-            </div>
-            <button data-copy="newsletter-onvisible-batch-drafts" type="button">Copy</button>
-          </div>
-<pre id="newsletter-onvisible-batch-drafts">Set(varNewsletterTargetDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));
-Refresh('Policy Proof Tracker');
-ClearCollect(
-    colNewsletterPack,
-    Sort(
-        AddColumns(
-            Filter(
-                'Policy Proof Tracker',
-                'Planned Publish Date' &gt;= varNewsletterTargetDate &amp;&amp;
-                'Planned Publish Date' &lt; DateAdd(varNewsletterTargetDate, 1, "Days") &amp;&amp;
-                (
-                    'Approved For Release By'.Value = "XO" ||
-                    'Approved For Release By'.Value = "ACOS" ||
-                    'Approved For Release By'.Value = "DCOMD" ||
-                    'Approved For Release By'.Value = "D Commander"
-                ) &amp;&amp;
-                Published = false &amp;&amp;
-                Coalesce('External consultation required', false) = false
-            ),
-            SortKey,
-            If(
-                'Top Item',
-                -1000,
-                Coalesce(LookUp(colChoiceColors, ChoiceValue = 'Document Type'.Value, SortOrder), 99)
-            ),
-            IsFinalApproved,
-            Or(
-                'Approved For Release By'.Value = "XO",
-                'Approved For Release By'.Value = "ACOS",
-                'Approved For Release By'.Value = "DCOMD",
-                'Approved For Release By'.Value = "D Commander"
-            ),
-            PackTitle,
-            Coalesce('Title for Newsletter', Title),
-            PackAudience,
-            Coalesce(Audience, ""),
-            PackSummary,
-            Coalesce('Item summary', "")
-        ),
-        SortKey,
-        SortOrder.Ascending
-    )
-);
-ClearCollect(colBatchGroups, AddColumns(Sort('BM Groups', SortOrder, SortOrder.Ascending), Ticked, false));
-ClearCollect(colBatchMemberships, Filter('BM Memberships', false));
-ForAll(colBatchGroups As grp, Collect(colBatchMemberships, Filter('BM Memberships', GroupName = grp.Title)));
-Set(varNewsletterSubject, Text(Today(), "yyyymmdd") &amp; " - Cadets Branch weekly policy updates");
-Set(
-    varNewsletterBodyLead,
-    "Good afternoon all,&lt;br&gt;&lt;br&gt;" &amp;
-    "Please find a link to this week's releases here - &lt;a href=""https://www.google.com""&gt;Cadets Branch Weekly Policy Updates - " &amp; Text(varNewsletterTargetDate, "dd mmm yyyy") &amp; "&lt;/a&gt;&lt;br&gt;" &amp;
-    "Below is a summary of this week's releases from Cadets Branch:&lt;br&gt;&lt;br&gt;"
-);
-Set(
-    varNewsletterBodyStatic,
-    "&lt;br&gt;&lt;b&gt;Previous Newsletters:&lt;/b&gt;&lt;br&gt;" &amp;
-    "All the previous weekly policy updates are available via the links below&lt;br&gt;" &amp;
-    "MODNet users: &lt;a href=""https://modgovuk.sharepoint.com/teams/1598/SitePages/Weekly-Policy-Updates---Archive.aspx""&gt;Weekly Policy Updates (sharepoint.com)&lt;/a&gt;&lt;br&gt;" &amp;
-    "Resource Centre users: Navigate to: Westminster → Resource Centre → Organisation → Cadets Branch Weekly Policy Updates&lt;br&gt;&lt;br&gt;" &amp;
-    "&lt;b&gt;About the Newsletter:&lt;/b&gt;&lt;br&gt;" &amp;
-    "This newsletter works on both MODNet and personal systems, and all policies included will also be uploaded on to both MODNet and the Resource Centre for routine accessing.&lt;br&gt;" &amp;
-    "Each week we will send out a version of this email, to the usual recipients, providing a link to the latest policy newsletter and a summary of what items have been included.&lt;br&gt;" &amp;
-    "This email has been sent to the groups listed below but please feel free to forward on as you deem necessary, emailed recipients:&lt;br&gt;&lt;br&gt;" &amp;
-    "ACF CEOs (ex-HQ SE)&lt;br&gt;" &amp;
-    "JMC SO2's&lt;br&gt;" &amp;
-    "JMC OC CTT's&lt;br&gt;" &amp;
-    "---&lt;br&gt;" &amp;
-    "JMC Cadets Branch 0mailboxes&lt;br&gt;" &amp;
-    "JMC CTT 0mailboxes&lt;br&gt;" &amp;
-    "JMC Col Cadets (including Col Ashley Fulford)&lt;br&gt;" &amp;
-    "JMC RAL members&lt;br&gt;" &amp;
-    "JMC SCEOs&lt;br&gt;" &amp;
-    "Cadets Branch&lt;br&gt;" &amp;
-    "CTC Frimley&lt;br&gt;" &amp;
-    "CCAT&lt;br&gt;" &amp;
-    "CRFCA (Sam Plant and Simon Estick)&lt;br&gt;" &amp;
-    "ACCT UK (Murdo Urquhart and Richard Walton)&lt;br&gt;" &amp;
-    "CCRS (Shooting Manager - Daf Marston)&lt;br&gt;" &amp;
-    "CCF RAF &amp;amp; RN leads"
-)</pre>
-        </div>
-
-        <ol start="4">
-          <li>Select <strong>btnRefresh_1</strong> on the same screen (it has its own separate copy of the same formula &mdash; same trap as Fix 2/Fix 4 above).</li>
-          <li>Select <code>OnSelect</code>, select all, and replace with the exact same formula as above.</li>
-        </ol>
-
-        <ol start="6">
-          <li>Duplicate the existing <strong>btnCopyAll_1</strong> button twice (select it, Ctrl+C, Ctrl+V twice) &mdash; this gives you the right base styling (Classic/Button, rounded corners, bold text) without retyping every colour property.</li>
-          <li>Rename the two copies <strong>btnDraftBatch1_1</strong> and <strong>btnDraftBatch2_1</strong> (right-click &rarr; Rename, in the tree view).</li>
-          <li>Position them in a new row under Copy All: <code>Y = 56</code> for both, <code>X = 20</code> for Batch 1, <code>X = 32 + (Parent.Width - 52) / 2</code> for Batch 2, <code>Width = (Parent.Width - 52) / 2</code> for both.</li>
-          <li>Set <code>Text</code> to <code>"Thursday Batch 1 Email"</code> / <code>"Thursday Batch 2 Email"</code>.</li>
-          <li>Set <code>BorderColor</code>, <code>Fill</code> to <code>RGBA(46, 110, 145, 1)</code>, <code>HoverBorderColor</code>/<code>HoverFill</code>/<code>PressedBorderColor</code>/<code>PressedFill</code> to <code>RGBA(34, 88, 118, 1)</code> &mdash; this is the same blue already used for Thursday Batch controls in Branch Contact Groups, kept consistent across both apps.</li>
-          <li>Set each button's <code>OnSelect</code> to the matching formula below.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>btnDraftBatch1_1.OnSelect</span>
-              <span class="code-stamp" data-updated="2026-08-15T13:32:00Z">v2 &middot; 2026-08-15 14:32 BST</span>
-            </div>
-            <button data-copy="newsletter-batch1-onselect" type="button">Copy</button>
-          </div>
-<pre id="newsletter-batch1-onselect">Set(varBatch1Recipients, Distinct(Filter(colBatchMemberships As mem, CountRows(Filter(colBatchGroups As grp, Lower(Trim(grp.ThursdayBatch.Value)) = "batch 1" &amp;&amp; Lower(Trim(grp.Title)) = Lower(Trim(mem.GroupName)))) &gt; 0), Email));
-Set(varBatch1Bcc, Concat(varBatch1Recipients, Value, "; "));
-If(
-    CountRows(colNewsletterPack) = 0,
-    Notify("No newsletter items for this Thursday - nothing to draft.", NotificationType.Warning),
-    CountRows(varBatch1Recipients) = 0,
-    Notify("No recipients found for Thursday Batch 1.", NotificationType.Warning),
-    Office365Outlook.DraftEmail(
-        "",
-        varNewsletterSubject,
-        varNewsletterBodyLead &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;") &amp; varNewsletterBodyStatic,
-        {Bcc: varBatch1Bcc}
-    );
-    Notify("Thursday Batch 1 draft created - check Outlook Drafts.", NotificationType.Success)
-)</pre>
-        </div>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>btnDraftBatch2_1.OnSelect</span>
-              <span class="code-stamp" data-updated="2026-08-15T13:32:00Z">v2 &middot; 2026-08-15 14:32 BST</span>
-            </div>
-            <button data-copy="newsletter-batch2-onselect" type="button">Copy</button>
-          </div>
-<pre id="newsletter-batch2-onselect">Set(varBatch2Recipients, Distinct(Filter(colBatchMemberships As mem, CountRows(Filter(colBatchGroups As grp, Lower(Trim(grp.ThursdayBatch.Value)) = "batch 2" &amp;&amp; Lower(Trim(grp.Title)) = Lower(Trim(mem.GroupName)))) &gt; 0), Email));
-Set(varBatch2Bcc, Concat(varBatch2Recipients, Value, "; "));
-If(
-    CountRows(colNewsletterPack) = 0,
-    Notify("No newsletter items for this Thursday - nothing to draft.", NotificationType.Warning),
-    CountRows(varBatch2Recipients) = 0,
-    Notify("No recipients found for Thursday Batch 2.", NotificationType.Warning),
-    Office365Outlook.DraftEmail(
-        "",
-        varNewsletterSubject,
-        varNewsletterBodyLead &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;") &amp; varNewsletterBodyStatic,
-        {Bcc: varBatch2Bcc}
-    );
-    Notify("Thursday Batch 2 draft created - check Outlook Drafts.", NotificationType.Success)
-)</pre>
-        </div>
-
-        <div class="callout ok">
-          <strong>Test:</strong> click Thursday Batch 1 Email, check Outlook Drafts for a new draft with the right subject, a bold bullet per newsletter item, BCC populated from Batch 1's groups, and the placeholder link line intact. Repeat for Batch 2 and confirm the BCC list is different. Confirm nothing sends on its own either time.
-        </div>
-      </section>
-
-      <section id="newsletter-zero-release-week">
-        <h2>Fix 6 - Thursday Batch Emails Now Handle Zero-Release Weeks</h2>
-        <p class="meta-line">NewsletterPack &middot; property edit &middot; updates Fix 5's buttons, adds one new variable</p>
-        <div class="fix-controls">
-          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
-          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
-        </div>
-        <p>Added 2026-08-20. Every Thursday the app needs to send this newsletter regardless of whether anything is actually releasing that week &mdash; but the Fix 5 buttons were both hard-disabled whenever <code>colNewsletterPack</code> was empty, and even a forced click just showed a warning and drafted nothing. Fix: both buttons are now always enabled, and the drafted email body swaps to a short "nothing this week" message in place of the usual link paragraph + item list, then continues straight into the unchanged Previous Newsletters / About / recipient-list footer.</p>
-        <div class="callout ok">
-          <strong>Nothing else changes.</strong> Weeks with real releases behave exactly as Fix 5 left them &mdash; this only changes what happens when <code>colNewsletterPack</code> is empty.
-        </div>
-
-        <ol>
-          <li>Open <strong>NewsletterPack</strong>, select the screen itself (root node), then <code>OnVisible</code>.</li>
-          <li>Find the existing <code>Set(varNewsletterBodyLead, ...)</code> block (added in Fix 5) and add this new block directly after it, before <code>Set(varNewsletterBodyStatic, ...)</code>.</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>NewsletterPack.OnVisible &mdash; new block only</span>
-              <span class="code-stamp" data-updated="2026-08-20T10:13:00Z">v1 &middot; 2026-08-20 11:13 BST</span>
-            </div>
-            <button data-copy="newsletter-onvisible-empty-block" type="button">Copy</button>
-          </div>
-<pre id="newsletter-onvisible-empty-block">Set(
-    varNewsletterBodyEmpty,
-    "Good afternoon all,&lt;br&gt;&lt;br&gt;" &amp;
-    "There are no policy releases this week.&lt;br&gt;&lt;br&gt;"
-);</pre>
-        </div>
-
         <ol start="3">
-          <li>Select <strong>btnRefresh_1</strong> on the same screen, <code>OnSelect</code>, and add the exact same block in the same spot (its own separate copy of this formula &mdash; same trap as every earlier fix on this screen).</li>
-          <li>Select <strong>btnDraftBatch1_1</strong>. Set <code>DisplayMode</code> to <code>=DisplayMode.Edit</code> (removes the old always-disabled-when-empty behaviour).</li>
-          <li>Select all of its <code>OnSelect</code> and replace with the full formula below.</li>
+          <li>Open <strong>Main</strong>. Find <strong>Button1_9</strong> (the "+ New Entry" button, top-left header). Select <code>OnSelect</code>, find the line <code>Set(varPlannedPublishDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));</code> and replace it with:</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
-              <span>btnDraftBatch1_1.OnSelect</span>
-              <span class="code-stamp" data-updated="2026-08-20T10:13:00Z">v3 &middot; 2026-08-20 11:13 BST</span>
+              <span>Button1_9.OnSelect &mdash; one line only</span>
+              <span class="code-stamp" data-updated="2026-09-02T00:00:00Z">v1 &middot; 2026-09-02 BST</span>
             </div>
-            <button data-copy="newsletter-batch1-onselect-v3" type="button">Copy</button>
+            <button data-copy="next-thursday-button1-9" type="button">Copy</button>
           </div>
-<pre id="newsletter-batch1-onselect-v3">Set(varBatch1Recipients, Distinct(Filter(colBatchMemberships As mem, CountRows(Filter(colBatchGroups As grp, Lower(Trim(grp.ThursdayBatch.Value)) = "batch 1" &amp;&amp; Lower(Trim(grp.Title)) = Lower(Trim(mem.GroupName)))) &gt; 0), Email));
-Set(varBatch1Bcc, Concat(varBatch1Recipients, Value, "; "));
-If(
-    CountRows(varBatch1Recipients) = 0,
-    Notify("No recipients found for Thursday Batch 1.", NotificationType.Warning),
-    Office365Outlook.DraftEmail(
-        "",
-        varNewsletterSubject,
-        If(
-            CountRows(colNewsletterPack) = 0,
-            varNewsletterBodyEmpty,
-            varNewsletterBodyLead &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;")
-        ) &amp; varNewsletterBodyStatic,
-        {Bcc: varBatch1Bcc}
-    );
-    Notify("Thursday Batch 1 draft created - check Outlook Drafts.", NotificationType.Success)
-)</pre>
+<pre id="next-thursday-button1-9">Set(varPlannedPublishDate, NextThursday(1));</pre>
         </div>
-
+        <ol start="4">
+          <li>Still in <strong>Main</strong>, find <strong>HeaderGallery</strong> (the dashboard's date-grouped release list). Select <code>Items</code>, find the <code>"Current"</code> case's <code>{PlannedDate: DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7) + (Value - 1) * 7, "Days")}</code> and replace just that record with:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>HeaderGallery.Items &mdash; "Current" case, one record only</span>
+              <span class="code-stamp" data-updated="2026-09-02T00:00:00Z">v1 &middot; 2026-09-02 BST</span>
+            </div>
+            <button data-copy="next-thursday-headergallery" type="button">Copy</button>
+          </div>
+<pre id="next-thursday-headergallery">{PlannedDate: NextThursday(Value)}</pre>
+        </div>
+        <div class="callout warn">
+          <strong>Do not touch the "Historic" case above it</strong> &mdash; that's the different, past-facing formula described in the warning above, not a duplicate.
+        </div>
         <ol start="6">
-          <li>Select <strong>btnDraftBatch2_1</strong>. Set <code>DisplayMode</code> to <code>=DisplayMode.Edit</code>.</li>
-          <li>Select all of its <code>OnSelect</code> and replace with the matching formula below.</li>
+          <li>Open <strong>ViewItem</strong>, select the screen itself, then <code>OnVisible</code>. Find <code>DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days")</code> inside the <code>varPlannedPublishDate</code> default (the <code>If(IsBlank(varSelectedRelease) || IsBlank(...'Planned Publish Date'), &lt;this&gt;, ...)</code> branch) and replace just that expression with <code>NextThursday(1)</code>.</li>
+          <li>Further down the same <code>OnVisible</code>, find <code>{_thu: DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7) + (Value - 1) * 7, "Days")}</code> (inside the <code>colThursdayOptions</code> <code>ClearCollect</code>, 104-week sequence) and replace it with:</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
-              <span>btnDraftBatch2_1.OnSelect</span>
-              <span class="code-stamp" data-updated="2026-08-20T10:13:00Z">v3 &middot; 2026-08-20 11:13 BST</span>
+              <span>ViewItem.OnVisible &mdash; colThursdayOptions, one record only</span>
+              <span class="code-stamp" data-updated="2026-09-02T00:00:00Z">v1 &middot; 2026-09-02 BST</span>
             </div>
-            <button data-copy="newsletter-batch2-onselect-v3" type="button">Copy</button>
+            <button data-copy="next-thursday-viewitem" type="button">Copy</button>
           </div>
-<pre id="newsletter-batch2-onselect-v3">Set(varBatch2Recipients, Distinct(Filter(colBatchMemberships As mem, CountRows(Filter(colBatchGroups As grp, Lower(Trim(grp.ThursdayBatch.Value)) = "batch 2" &amp;&amp; Lower(Trim(grp.Title)) = Lower(Trim(mem.GroupName)))) &gt; 0), Email));
-Set(varBatch2Bcc, Concat(varBatch2Recipients, Value, "; "));
-If(
-    CountRows(varBatch2Recipients) = 0,
-    Notify("No recipients found for Thursday Batch 2.", NotificationType.Warning),
-    Office365Outlook.DraftEmail(
-        "",
-        varNewsletterSubject,
-        If(
-            CountRows(colNewsletterPack) = 0,
-            varNewsletterBodyEmpty,
-            varNewsletterBodyLead &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;")
-        ) &amp; varNewsletterBodyStatic,
-        {Bcc: varBatch2Bcc}
-    );
-    Notify("Thursday Batch 2 draft created - check Outlook Drafts.", NotificationType.Success)
-)</pre>
+<pre id="next-thursday-viewitem">{_thu: NextThursday(Value)}</pre>
         </div>
-
-        <div class="callout ok">
-          <strong>Test:</strong> on a week with zero newsletter items, click both buttons and confirm each still creates a draft (no more "nothing to draft" warning), the body reads "Good afternoon all," straight into "There are no policy releases this week." then the unchanged Previous Newsletters footer &mdash; no link placeholder, no item bullets. Then confirm a normal week with real items still drafts exactly as before.
-        </div>
-        <div class="callout warn">
-          <strong>Two real traps hit live applying this fix (2026-08-20):</strong>
-          <ol style="margin:8px 0 0;">
-            <li>After pasting the new block into <code>OnVisible</code>, the first draft click came out missing the whole "Good afternoon all... There are no policy releases" lead &mdash; editing <code>OnVisible</code> in code view does not re-run it, so <code>varNewsletterBodyEmpty</code> was still blank. Do a full Preview close/reopen (or app reload) once after applying this fix, before relying on it &mdash; don't just click Refresh.</li>
-            <li>After that, both draft buttons showed <strong>"The first argument to the 'Char' function must be between 1 and 255"</strong> even though neither formula calls <code>Char()</code> &mdash; a stale/phantom Studio validation error. Fixed by clicking to the end of the formula, deleting the final <code>)</code>, and retyping it to force a re-parse. See <a href="/reference/database.html#known-bad-patterns">Known Bad Patterns &rarr; Studio Editor Quirks</a> for the general version of this one.</li>
-          </ol>
-        </div>
-      </section>
-
-      <section id="newsletter-link-dummy-href">
-        <h2>Fix 7 - Newsletter Link Is Now A Real Clickable Placeholder</h2>
-        <p class="meta-line">NewsletterPack &middot; property edit &middot; changes one line inside <code>varNewsletterBodyLead</code>, nothing else</p>
-        <div class="fix-controls">
-          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
-          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
-        </div>
-        <p>Added 2026-08-27. The Fix 5 link line used a bare placeholder string (<code>PASTE-THIS-WEEKS-LINK-HERE</code>) as the <code>href</code>, which most mail clients will not render as a real clickable link, and generic link text (<code>PASTE THIS WEEK'S LINK TEXT HERE</code>) that had to be manually retyped every week. Both are replaced: the <code>href</code> is now a real, valid, clickable dummy URL (<code>https://www.google.com</code>) so the link works and is easy to spot-and-swap in Outlook before sending, and the visible link text now auto-generates as <strong>"Cadets Branch Weekly Policy Updates - &lt;date&gt;"</strong>, using the same <code>varNewsletterTargetDate</code> the subject line already targets, formatted <code>dd mmm yyyy</code> to match the date style used elsewhere in this guide.</p>
-        <div class="callout warn">
-          <strong>Still a manual step:</strong> this is a dummy link, not the real one. You still need to paste this week's actual release link over <code>https://www.google.com</code> in the drafted email before sending &mdash; this fix only makes the placeholder clickable and self-describing, it doesn't remove the manual paste step.
-        </div>
-        <ol>
-          <li>Open <strong>NewsletterPack</strong>, select the screen itself (root node), then <code>OnVisible</code>.</li>
-          <li>Find the existing <code>Set(varNewsletterBodyLead, ...)</code> block and replace just that block with the version below &mdash; everything else in <code>OnVisible</code> is unchanged.</li>
+        <ol start="8">
+          <li>Open <strong>Overview</strong>, find <strong>galOverviewColumns1</strong>. Select <code>Items</code>, find <code>{PublishDate: DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7) + (Value - 1) * 7, "Days")}</code> and replace it with:</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
-              <span>NewsletterPack.OnVisible &mdash; varNewsletterBodyLead block only</span>
-              <span class="code-stamp" data-updated="2026-08-27T00:00:00Z">v1 &middot; 2026-08-27 BST</span>
+              <span>galOverviewColumns1.Items &mdash; one record only</span>
+              <span class="code-stamp" data-updated="2026-09-02T00:00:00Z">v1 &middot; 2026-09-02 BST</span>
             </div>
-            <button data-copy="newsletter-link-dummy-href-onvisible" type="button">Copy</button>
+            <button data-copy="next-thursday-overview" type="button">Copy</button>
           </div>
-<pre id="newsletter-link-dummy-href-onvisible">Set(
-    varNewsletterBodyLead,
-    "Good afternoon all,&lt;br&gt;&lt;br&gt;" &amp;
-    "Please find a link to this week's releases here - &lt;a href=""https://www.google.com""&gt;Cadets Branch Weekly Policy Updates - " &amp; Text(varNewsletterTargetDate, "dd mmm yyyy") &amp; "&lt;/a&gt;&lt;br&gt;" &amp;
-    "Below is a summary of this week's releases from Cadets Branch:&lt;br&gt;&lt;br&gt;"
-);</pre>
-        </div>
-        <div class="callout warn">
-          <strong>Same trap as every earlier fix on this screen:</strong> <code>btnRefresh_1.OnSelect</code> has its own separate copy of this exact block &mdash; select <code>btnRefresh_1</code>, find its own <code>Set(varNewsletterBodyLead, ...)</code>, and replace it with the identical formula above. Both must match or the link only updates on first load, not after a manual Refresh.
+<pre id="next-thursday-overview">{PublishDate: NextThursday(Value)}</pre>
         </div>
         <div class="callout ok">
-          <strong>Test:</strong> click Refresh, then click either Thursday Batch button. In the resulting Outlook draft, the link text should read "Cadets Branch Weekly Policy Updates - " followed by this week's target Thursday date (not today's date if you're building the draft on a different day), and clicking it should open Google &mdash; confirming it's a real clickable link before you swap it for the real one.
+          <strong>Test:</strong> full Preview close/reopen after adding the App Formula (same rule as always for Formulas/OnStart changes). Then check each of the four spots does what it always did &mdash; "+ New Entry" still defaults to the same date it used to, Main's dashboard and Overview's 4-week grid still show the same weeks in the same order, ViewItem's Thursday picker still lists 104 weeks starting from the same date. Nothing should look different; only the formula source changed.
         </div>
       </section>
 
       <section id="newsletter-udf-refactor">
-        <h2>Fix 8 - NewsletterPack Refresh Logic Moved Into One UDF</h2>
+        <h2>Fix 2 - NewsletterPack Refresh Logic Moved Into One UDF</h2>
         <p class="meta-line">App Formulas + NewsletterPack + btnRefresh_1 &middot; structural refactor &middot; no behaviour change, removes a recurring bug class</p>
         <div class="fix-controls">
           <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
           <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
         </div>
-        <p>Added 2026-08-27. Every single fix from Fix 2 onward on this screen has carried the same warning: <code>NewsletterPack.OnVisible</code> and <code>btnRefresh_1.OnSelect</code> hold two separate, hand-copied pastes of the exact same formula, and forgetting to update both is what caused the Fix 2/Fix 4 bugs in the first place. This fix removes the duplication at the source instead of continuing to patch both copies every time: the whole block (target-date calc, <code>colNewsletterPack</code> build, batch-group/membership collections, subject and body variables) moves into one new function, <code>RefreshNewsletterPack()</code>, added to <strong>App &rarr; Formulas</strong> &mdash; the same place <code>GetFileExt</code>/<code>BuildLinksForSource</code>/<code>RefreshActiveCache</code> already live, so this is the established pattern for this app, not a new one. Both triggers become a single-line call. Nothing about what the app does changes &mdash; this only changes where the logic lives.</p>
         <div class="callout warn">
-          <strong>Bigger than the usual one-line fix:</strong> this touches App Formulas, which (like OnStart) only takes effect after a full Preview close/reopen, not a Refresh click &mdash; same trap called out in Fix 6. Apply this in a quiet moment, not mid-Thursday-send, and do a full close/reopen before testing.
+          <strong>Apply Fix 1 first</strong> &mdash; this fix's <code>RefreshNewsletterPack()</code> calls <code>NextThursday(1)</code>, which only exists once Fix 1's App Formula has been added.
+        </div>
+        <p>Added 2026-09-02. Before this reset, every single newsletter-related fix on this screen carried the same warning: <code>NewsletterPack.OnVisible</code> and <code>btnRefresh_1.OnSelect</code> held two separate, hand-copied pastes of the exact same formula, and forgetting to update both is what caused two real bugs before this reset (a fix applied to one copy but not the other). This fix removes the duplication at the source instead of continuing to patch both copies every time: the whole block (target-date calc, <code>colNewsletterPack</code> build, batch-group/membership collections, subject and body variables) moves into one new function, <code>RefreshNewsletterPack()</code>, added to <strong>App &rarr; Formulas</strong> &mdash; the same place <code>GetFileExt</code>/<code>BuildLinksForSource</code>/<code>RefreshActiveCache</code> already live, so this is the established pattern for this app, not a new one. Both triggers become a single-line call. Nothing about what the app does changes &mdash; this only changes where the logic lives.</p>
+        <div class="callout warn">
+          <strong>Bigger than the usual one-line fix:</strong> this touches App Formulas, which (like OnStart) only takes effect after a full Preview close/reopen, not a Refresh click. Apply this in a quiet moment, not mid-Thursday-send, and do a full close/reopen before testing.
         </div>
         <ol>
           <li>Open the <strong>App</strong> object (root of the tree view) &rarr; <code>Formulas</code> property (Advanced pane).</li>
@@ -1259,12 +383,12 @@ If(
           <div class="code-toolbar">
             <div class="code-meta">
               <span>App &middot; Formulas &mdash; new function</span>
-              <span class="code-stamp" data-updated="2026-08-27T00:00:00Z">v1 &middot; 2026-08-27 BST</span>
+              <span class="code-stamp" data-updated="2026-09-02T00:00:00Z">v1 &middot; 2026-09-02 BST</span>
             </div>
             <button data-copy="newsletter-udf-formula" type="button">Copy</button>
           </div>
 <pre id="newsletter-udf-formula">RefreshNewsletterPack(): Boolean = {
-    Set(varNewsletterTargetDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));
+    Set(varNewsletterTargetDate, NextThursday(1));
     Refresh('Policy Proof Tracker');
     ClearCollect(
         colNewsletterPack,
