@@ -258,6 +258,7 @@
         <a href="#newsletter-thursday-batch-drafts">Fix 5 - Thursday Batch 1/2 Email Drafting (New Feature)</a>
         <a href="#newsletter-zero-release-week">Fix 6 - Thursday Batch Emails Now Handle Zero-Release Weeks</a>
         <a href="#newsletter-link-dummy-href">Fix 7 - Newsletter Link Is Now A Real Clickable Placeholder</a>
+        <a href="#newsletter-udf-refactor">Fix 8 - NewsletterPack Refresh Logic Moved Into One UDF</a>
       </nav>
     </aside>
 
@@ -265,7 +266,7 @@
       <div class="topline">
         <span class="pill">Updated 27 Aug 2026</span>
         <span class="pill">Policy Tracker only</span>
-        <span class="pill">7 fixes + urgent diagnostic</span>
+        <span class="pill">8 fixes + urgent diagnostic</span>
       </div>
       <h1>Policy Tracker Fix Guide</h1>
       <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
@@ -1236,6 +1237,131 @@ If(
         </div>
         <div class="callout ok">
           <strong>Test:</strong> click Refresh, then click either Thursday Batch button. In the resulting Outlook draft, the link text should read "Cadets Branch Weekly Policy Updates - " followed by this week's target Thursday date (not today's date if you're building the draft on a different day), and clicking it should open Google &mdash; confirming it's a real clickable link before you swap it for the real one.
+        </div>
+      </section>
+
+      <section id="newsletter-udf-refactor">
+        <h2>Fix 8 - NewsletterPack Refresh Logic Moved Into One UDF</h2>
+        <p class="meta-line">App Formulas + NewsletterPack + btnRefresh_1 &middot; structural refactor &middot; no behaviour change, removes a recurring bug class</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
+        </div>
+        <p>Added 2026-08-27. Every single fix from Fix 2 onward on this screen has carried the same warning: <code>NewsletterPack.OnVisible</code> and <code>btnRefresh_1.OnSelect</code> hold two separate, hand-copied pastes of the exact same formula, and forgetting to update both is what caused the Fix 2/Fix 4 bugs in the first place. This fix removes the duplication at the source instead of continuing to patch both copies every time: the whole block (target-date calc, <code>colNewsletterPack</code> build, batch-group/membership collections, subject and body variables) moves into one new function, <code>RefreshNewsletterPack()</code>, added to <strong>App &rarr; Formulas</strong> &mdash; the same place <code>GetFileExt</code>/<code>BuildLinksForSource</code>/<code>RefreshActiveCache</code> already live, so this is the established pattern for this app, not a new one. Both triggers become a single-line call. Nothing about what the app does changes &mdash; this only changes where the logic lives.</p>
+        <div class="callout warn">
+          <strong>Bigger than the usual one-line fix:</strong> this touches App Formulas, which (like OnStart) only takes effect after a full Preview close/reopen, not a Refresh click &mdash; same trap called out in Fix 6. Apply this in a quiet moment, not mid-Thursday-send, and do a full close/reopen before testing.
+        </div>
+        <ol>
+          <li>Open the <strong>App</strong> object (root of the tree view) &rarr; <code>Formulas</code> property (Advanced pane).</li>
+          <li>Add the function below to the end of the existing Formulas block &mdash; don't remove <code>GetFileExt</code>, <code>BuildLinksForSource</code>, or <code>RefreshActiveCache</code>.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>App &middot; Formulas &mdash; new function</span>
+              <span class="code-stamp" data-updated="2026-08-27T00:00:00Z">v1 &middot; 2026-08-27 BST</span>
+            </div>
+            <button data-copy="newsletter-udf-formula" type="button">Copy</button>
+          </div>
+<pre id="newsletter-udf-formula">RefreshNewsletterPack(): Boolean = {
+    Set(varNewsletterTargetDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));
+    Refresh('Policy Proof Tracker');
+    ClearCollect(
+        colNewsletterPack,
+        Sort(
+            AddColumns(
+                Filter(
+                    'Policy Proof Tracker',
+                    'Planned Publish Date' &gt;= varNewsletterTargetDate &amp;&amp;
+                    'Planned Publish Date' &lt; DateAdd(varNewsletterTargetDate, 1, "Days") &amp;&amp;
+                    (
+                        'Approved For Release By'.Value = "XO" ||
+                        'Approved For Release By'.Value = "ACOS" ||
+                        'Approved For Release By'.Value = "DCOMD" ||
+                        'Approved For Release By'.Value = "D Commander"
+                    ) &amp;&amp;
+                    Published = false &amp;&amp;
+                    Coalesce('External consultation required', false) = false
+                ),
+                SortKey,
+                If(
+                    'Top Item',
+                    -1000,
+                    Coalesce(LookUp(colChoiceColors, ChoiceValue = 'Document Type'.Value, SortOrder), 99)
+                ),
+                IsFinalApproved,
+                Or(
+                    'Approved For Release By'.Value = "XO",
+                    'Approved For Release By'.Value = "ACOS",
+                    'Approved For Release By'.Value = "DCOMD",
+                    'Approved For Release By'.Value = "D Commander"
+                ),
+                PackTitle,
+                Coalesce('Title for Newsletter', Title),
+                PackAudience,
+                Coalesce(Audience, ""),
+                PackSummary,
+                Coalesce('Item summary', "")
+            ),
+            SortKey,
+            SortOrder.Ascending
+        )
+    );
+    ClearCollect(colBatchGroups, AddColumns(Sort('BM Groups', SortOrder, SortOrder.Ascending), Ticked, false));
+    ClearCollect(colBatchMemberships, Filter('BM Memberships', false));
+    ForAll(colBatchGroups As grp, Collect(colBatchMemberships, Filter('BM Memberships', GroupName = grp.Title)));
+    Set(varNewsletterSubject, Text(Today(), "yyyymmdd") &amp; " - Cadets Branch weekly policy updates");
+    Set(
+        varNewsletterBodyLead,
+        "Good afternoon all,&lt;br&gt;&lt;br&gt;" &amp;
+        "Please find a link to this week's releases here - &lt;a href=""https://www.google.com""&gt;Cadets Branch Weekly Policy Updates - " &amp; Text(varNewsletterTargetDate, "dd mmm yyyy") &amp; "&lt;/a&gt;&lt;br&gt;" &amp;
+        "Below is a summary of this week's releases from Cadets Branch:&lt;br&gt;&lt;br&gt;"
+    );
+    Set(
+        varNewsletterBodyEmpty,
+        "Good afternoon all,&lt;br&gt;&lt;br&gt;" &amp;
+        "There are no policy releases this week.&lt;br&gt;&lt;br&gt;"
+    );
+    Set(
+        varNewsletterBodyStatic,
+        "&lt;br&gt;&lt;b&gt;Previous Newsletters:&lt;/b&gt;&lt;br&gt;" &amp;
+        "All the previous weekly policy updates are available via the links below&lt;br&gt;" &amp;
+        "MODNet users: &lt;a href=""https://modgovuk.sharepoint.com/teams/1598/SitePages/Weekly-Policy-Updates---Archive.aspx""&gt;Weekly Policy Updates (sharepoint.com)&lt;/a&gt;&lt;br&gt;" &amp;
+        "Resource Centre users: Navigate to: Westminster &rarr; Resource Centre &rarr; Organisation &rarr; Cadets Branch Weekly Policy Updates&lt;br&gt;&lt;br&gt;" &amp;
+        "&lt;b&gt;About the Newsletter:&lt;/b&gt;&lt;br&gt;" &amp;
+        "This newsletter works on both MODNet and personal systems, and all policies included will also be uploaded on to both MODNet and the Resource Centre for routine accessing.&lt;br&gt;" &amp;
+        "Each week we will send out a version of this email, to the usual recipients, providing a link to the latest policy newsletter and a summary of what items have been included.&lt;br&gt;" &amp;
+        "This email has been sent to the groups listed below but please feel free to forward on as you deem necessary, emailed recipients:&lt;br&gt;&lt;br&gt;" &amp;
+        "ACF CEOs (ex-HQ SE)&lt;br&gt;" &amp;
+        "JMC SO2's&lt;br&gt;" &amp;
+        "JMC OC CTT's&lt;br&gt;" &amp;
+        "---&lt;br&gt;" &amp;
+        "JMC Cadets Branch 0mailboxes&lt;br&gt;" &amp;
+        "JMC CTT 0mailboxes&lt;br&gt;" &amp;
+        "JMC Col Cadets (including Col Ashley Fulford)&lt;br&gt;" &amp;
+        "JMC RAL members&lt;br&gt;" &amp;
+        "JMC SCEOs&lt;br&gt;" &amp;
+        "Cadets Branch&lt;br&gt;" &amp;
+        "CTC Frimley&lt;br&gt;" &amp;
+        "CCAT&lt;br&gt;" &amp;
+        "CRFCA (Sam Plant and Simon Estick)&lt;br&gt;" &amp;
+        "ACCT UK (Murdo Urquhart and Richard Walton)&lt;br&gt;" &amp;
+        "CCRS (Shooting Manager - Daf Marston)&lt;br&gt;" &amp;
+        "CCF RAF &amp;amp; RN leads"
+    );
+    true
+}</pre>
+        </div>
+        <ol start="3">
+          <li>Open <strong>NewsletterPack</strong>, select the screen itself (root node), then <code>OnVisible</code>. Select all, delete, and replace with just <code>RefreshNewsletterPack();</code></li>
+          <li>Select <strong>btnRefresh_1</strong>, <code>OnSelect</code>. Select all, delete, and replace with the identical single line, <code>RefreshNewsletterPack();</code></li>
+          <li>Leave <code>btnDraftBatch1_1</code>/<code>btnDraftBatch2_1</code> exactly as they are &mdash; they already just read <code>varNewsletterSubject</code>/<code>varNewsletterBodyLead</code>/<code>varNewsletterBodyEmpty</code>/<code>varNewsletterBodyStatic</code>, which the UDF still sets, so nothing there needs to change.</li>
+        </ol>
+        <div class="callout ok">
+          <strong>Test:</strong> full Preview close/reopen first. Then confirm NewsletterPack loads exactly as before (same items, same count), click Refresh and confirm it still works, then click both Thursday Batch buttons on a normal week and (if you can fake it) a zero-release week and confirm both draft correctly &mdash; behaviour should be identical to before this fix, only the plumbing changed.
+        </div>
+        <div class="callout warn">
+          <strong>Going forward:</strong> if NewsletterPack's rules ever need to change again (a new approval role, a different date window, a new footer line), there is now exactly one place to edit &mdash; <code>RefreshNewsletterPack()</code> in App Formulas &mdash; instead of two screens to remember. This is the pattern worth reusing for Main/ViewItem/Overview's own duplicated "next Thursday" calculations too, offered as a separate follow-on fix rather than bundled into this one.
         </div>
       </section>
     </main>
