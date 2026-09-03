@@ -252,14 +252,15 @@
         <a href="#what-this-page-is">What This Page Is</a>
         <a href="#next-thursday-udf">Fix 1 - Next-Thursday Date Calc Consolidated Into One UDF</a>
         <a href="#newsletter-udf-refactor">Fix 2 - NewsletterPack Refresh Logic Moved Into One UDF</a>
+        <a href="#newsletter-ready-race-condition">Fix 3 - Thursday Batch Buttons Fail If Clicked Before NewsletterPack Finishes Loading</a>
       </nav>
     </aside>
 
     <main>
       <div class="topline">
-        <span class="pill">Updated 2 Sep 2026</span>
+        <span class="pill">Updated 3 Sep 2026</span>
         <span class="pill">Policy Tracker only</span>
-        <span class="pill">2 fixes</span>
+        <span class="pill">3 fixes</span>
       </div>
       <h1>Policy Tracker Fix Guide</h1>
       <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
@@ -913,6 +914,208 @@ Switch(
         </div>
         <div class="callout warn">
           <strong>Going forward:</strong> if NewsletterPack's rules ever need to change again (a new approval role, a different date window, a new footer line), there is now exactly one place to edit &mdash; <code>RefreshNewsletterPack()</code> in App Formulas &mdash; instead of two screens to remember. This is the pattern worth reusing for Main/ViewItem/Overview's own duplicated "next Thursday" calculations too, offered as a separate follow-on fix rather than bundled into this one.
+        </div>
+      </section>
+
+      <section id="newsletter-ready-race-condition">
+        <h2>Fix 3 - Thursday Batch Buttons Fail If Clicked Before NewsletterPack Finishes Loading</h2>
+        <p class="meta-line">App Formulas + NewsletterPack &middot; adds a readiness flag &middot; fixes a real intermittent failure, no other behaviour change</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
+        </div>
+        <p>Reported 2026-09-03: a user clicked "Thursday Batch 1 Email" on landing on the screen and got <code>Office365Outlook.DraftEmail failed: ... invalid value for parameter 'Subject' - a blank value was passed to it</code>. Clicking again a short while later worked fine, both batches. Root cause: <code>RefreshNewsletterPack()</code> does several <code>ClearCollect</code>/<code>ForAll</code> steps <strong>before</strong> it reaches <code>Set(varNewsletterSubject, ...)</code>. If either Thursday Batch button is clicked while <code>OnVisible</code> is still partway through that sequence, <code>varNewsletterSubject</code> (and the body variables) are still blank &mdash; a genuine race condition, not bad luck, and worse on a slower connection or a data source with more rows to refresh. Same pattern this app already uses on StartScreen (<code>varActiveCacheReady</code>): add a readiness flag, set it false at the start of the refresh and true at the end, and gate both buttons on it.</p>
+
+        <ol>
+          <li>Open <strong>App &rarr; Formulas</strong>. Select all of <code>RefreshNewsletterPack</code> only (leave <code>GetFileExt</code>/<code>BuildLinksForSource</code>/<code>RefreshActiveCache</code>/<code>NextThursday</code> untouched) and replace it with this complete version &mdash; two new lines added, everything else unchanged:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>App &middot; Formulas &mdash; RefreshNewsletterPack, complete replacement</span>
+              <span class="code-stamp" data-updated="2026-09-03T00:00:00Z">v3 &middot; 2026-09-03 BST</span>
+            </div>
+            <button data-copy="newsletter-ready-refresh" type="button">Copy</button>
+          </div>
+<pre id="newsletter-ready-refresh">RefreshNewsletterPack(): Boolean = {
+    Set(varNewsletterReady, false);
+    Set(varNewsletterTargetDate, NextThursday(1));
+    Refresh('Policy Proof Tracker');
+    ClearCollect(
+        colNewsletterPack,
+        Sort(
+            AddColumns(
+                Filter(
+                    'Policy Proof Tracker',
+                    'Planned Publish Date' &gt;= varNewsletterTargetDate &amp;&amp;
+                    'Planned Publish Date' &lt; DateAdd(varNewsletterTargetDate, 1, "Days") &amp;&amp;
+                    (
+                        'Approved For Release By'.Value = "XO" ||
+                        'Approved For Release By'.Value = "ACOS" ||
+                        'Approved For Release By'.Value = "DCOMD" ||
+                        'Approved For Release By'.Value = "D Commander"
+                    ) &amp;&amp;
+                    Published = false &amp;&amp;
+                    Coalesce('External consultation required', false) = false
+                ),
+                SortKey,
+                If(
+                    'Top Item',
+                    -1000,
+                    Coalesce(LookUp(colChoiceColors, ChoiceValue = 'Document Type'.Value, SortOrder), 99)
+                ),
+                IsFinalApproved,
+                Or(
+                    'Approved For Release By'.Value = "XO",
+                    'Approved For Release By'.Value = "ACOS",
+                    'Approved For Release By'.Value = "DCOMD",
+                    'Approved For Release By'.Value = "D Commander"
+                ),
+                PackTitle,
+                Coalesce('Title for Newsletter', Title),
+                PackAudience,
+                Coalesce(Audience, ""),
+                PackSummary,
+                Coalesce('Item summary', "")
+            ),
+            SortKey,
+            SortOrder.Ascending
+        )
+    );
+    ClearCollect(colBatchGroups, AddColumns(Sort('BM Groups', SortOrder, SortOrder.Ascending), Ticked, false));
+    ClearCollect(colBatchMemberships, Filter('BM Memberships', false));
+    ForAll(colBatchGroups As grp, Collect(colBatchMemberships, Filter('BM Memberships', GroupName = grp.Title)));
+    Set(varNewsletterSubject, Text(Today(), "yyyymmdd") &amp; " - Cadets Branch weekly policy updates");
+    Set(
+        varNewsletterBodyLead,
+        "Good afternoon all,&lt;br&gt;&lt;br&gt;" &amp;
+        "Please find a link to this week's releases here - &lt;a href=""https://www.google.com""&gt;Cadets Branch Weekly Policy Updates - " &amp; Text(varNewsletterTargetDate, "dd mmm yyyy") &amp; "&lt;/a&gt;&lt;br&gt;" &amp;
+        "Below is a summary of this week's releases from Cadets Branch:&lt;br&gt;&lt;br&gt;"
+    );
+    Set(
+        varNewsletterBodyEmpty,
+        "Good afternoon all,&lt;br&gt;&lt;br&gt;" &amp;
+        "There are no policy releases this week.&lt;br&gt;&lt;br&gt;"
+    );
+    Set(
+        varNewsletterBodyStatic,
+        "&lt;br&gt;&lt;b&gt;Previous Newsletters:&lt;/b&gt;&lt;br&gt;" &amp;
+        "All the previous weekly policy updates are available via the links below&lt;br&gt;" &amp;
+        "MODNet users: &lt;a href=""https://modgovuk.sharepoint.com/teams/1598/SitePages/Weekly-Policy-Updates---Archive.aspx""&gt;Weekly Policy Updates (sharepoint.com)&lt;/a&gt;&lt;br&gt;" &amp;
+        "Resource Centre users: Navigate to: Westminster &rarr; Resource Centre &rarr; Organisation &rarr; Cadets Branch Weekly Policy Updates&lt;br&gt;&lt;br&gt;" &amp;
+        "&lt;b&gt;About the Newsletter:&lt;/b&gt;&lt;br&gt;" &amp;
+        "This newsletter works on both MODNet and personal systems, and all policies included will also be uploaded on to both MODNet and the Resource Centre for routine accessing.&lt;br&gt;" &amp;
+        "Each week we will send out a version of this email, to the usual recipients, providing a link to the latest policy newsletter and a summary of what items have been included.&lt;br&gt;" &amp;
+        "This email has been sent to the groups listed below but please feel free to forward on as you deem necessary, emailed recipients:&lt;br&gt;&lt;br&gt;" &amp;
+        "ACF CEOs (ex-HQ SE)&lt;br&gt;" &amp;
+        "JMC SO2's&lt;br&gt;" &amp;
+        "JMC OC CTT's&lt;br&gt;" &amp;
+        "---&lt;br&gt;" &amp;
+        "JMC Cadets Branch 0mailboxes&lt;br&gt;" &amp;
+        "JMC CTT 0mailboxes&lt;br&gt;" &amp;
+        "JMC Col Cadets (including Col Ashley Fulford)&lt;br&gt;" &amp;
+        "JMC RAL members&lt;br&gt;" &amp;
+        "JMC SCEOs&lt;br&gt;" &amp;
+        "Cadets Branch&lt;br&gt;" &amp;
+        "CTC Frimley&lt;br&gt;" &amp;
+        "CCAT&lt;br&gt;" &amp;
+        "CRFCA (Sam Plant and Simon Estick)&lt;br&gt;" &amp;
+        "ACCT UK (Murdo Urquhart and Richard Walton)&lt;br&gt;" &amp;
+        "CCRS (Shooting Manager - Daf Marston)&lt;br&gt;" &amp;
+        "CCF RAF &amp;amp; RN leads"
+    );
+    Set(varNewsletterReady, true);
+    true
+}</pre>
+        </div>
+
+        <ol start="2">
+          <li>Select <strong>btnDraftBatch1_1</strong>. Select <code>DisplayMode</code>, select all, and replace with:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnDraftBatch1_1.DisplayMode &mdash; complete property</span>
+              <span class="code-stamp" data-updated="2026-09-03T00:00:00Z">v1 &middot; 2026-09-03 BST</span>
+            </div>
+            <button data-copy="newsletter-ready-displaymode1" type="button">Copy</button>
+          </div>
+<pre id="newsletter-ready-displaymode1">If(Coalesce(varNewsletterReady, false), DisplayMode.Edit, DisplayMode.Disabled)</pre>
+        </div>
+        <ol start="3">
+          <li>Still on <strong>btnDraftBatch1_1</strong>, select <code>OnSelect</code>, select all, and replace with this complete version &mdash; one new guard added at the top, the rest is unchanged:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnDraftBatch1_1.OnSelect &mdash; complete property</span>
+              <span class="code-stamp" data-updated="2026-09-03T00:00:00Z">v4 &middot; 2026-09-03 BST</span>
+            </div>
+            <button data-copy="newsletter-ready-batch1" type="button">Copy</button>
+          </div>
+<pre id="newsletter-ready-batch1">If(
+    !Coalesce(varNewsletterReady, false) || IsBlank(varNewsletterSubject),
+    Notify("Newsletter data is still loading - wait a moment and try again.", NotificationType.Warning),
+    Set(varBatch1Recipients, Distinct(Filter(colBatchMemberships As mem, CountRows(Filter(colBatchGroups As grp, Lower(Trim(grp.ThursdayBatch.Value)) = "batch 1" &amp;&amp; Lower(Trim(grp.Title)) = Lower(Trim(mem.GroupName)))) > 0), Email));
+    Set(varBatch1Bcc, Concat(varBatch1Recipients, Value, "; "));
+    If(
+        CountRows(varBatch1Recipients) = 0,
+        Notify("No recipients found for Thursday Batch 1.", NotificationType.Warning),
+        Office365Outlook.DraftEmail(
+            "",
+            varNewsletterSubject,
+            If(
+                CountRows(colNewsletterPack) = 0,
+                varNewsletterBodyEmpty,
+                varNewsletterBodyLead &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;")
+            ) &amp; varNewsletterBodyStatic,
+            {Bcc: varBatch1Bcc}
+        );
+        Notify("Thursday Batch 1 draft created - check Outlook Drafts.", NotificationType.Success)
+    )
+)</pre>
+        </div>
+
+        <ol start="4">
+          <li>Select <strong>btnDraftBatch2_1</strong>. Select <code>DisplayMode</code>, select all, and replace with the identical formula as step 2 above (<code>If(Coalesce(varNewsletterReady, false), DisplayMode.Edit, DisplayMode.Disabled)</code>).</li>
+          <li>Still on <strong>btnDraftBatch2_1</strong>, select <code>OnSelect</code>, select all, and replace with this complete version:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnDraftBatch2_1.OnSelect &mdash; complete property</span>
+              <span class="code-stamp" data-updated="2026-09-03T00:00:00Z">v4 &middot; 2026-09-03 BST</span>
+            </div>
+            <button data-copy="newsletter-ready-batch2" type="button">Copy</button>
+          </div>
+<pre id="newsletter-ready-batch2">If(
+    !Coalesce(varNewsletterReady, false) || IsBlank(varNewsletterSubject),
+    Notify("Newsletter data is still loading - wait a moment and try again.", NotificationType.Warning),
+    Set(varBatch2Recipients, Distinct(Filter(colBatchMemberships As mem, CountRows(Filter(colBatchGroups As grp, Lower(Trim(grp.ThursdayBatch.Value)) = "batch 2" &amp;&amp; Lower(Trim(grp.Title)) = Lower(Trim(mem.GroupName)))) > 0), Email));
+    Set(varBatch2Bcc, Concat(varBatch2Recipients, Value, "; "));
+    If(
+        CountRows(varBatch2Recipients) = 0,
+        Notify("No recipients found for Thursday Batch 2.", NotificationType.Warning),
+        Office365Outlook.DraftEmail(
+            "",
+            varNewsletterSubject,
+            If(
+                CountRows(colNewsletterPack) = 0,
+                varNewsletterBodyEmpty,
+                varNewsletterBodyLead &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;")
+            ) &amp; varNewsletterBodyStatic,
+            {Bcc: varBatch2Bcc}
+        );
+        Notify("Thursday Batch 2 draft created - check Outlook Drafts.", NotificationType.Success)
+    )
+)</pre>
+        </div>
+
+        <div class="callout warn">
+          <strong>Note for the "invalid value" error message itself:</strong> Studio may still show a red "1 of 1 problem" mark on the formula bar referencing the old error after you paste the fix &mdash; if so, this app has a known stale-validation quirk (see Known Bad Patterns &rarr; Studio Editor Quirks): click to the end of the formula, delete the last character, retype it, and the phantom error clears.
+        </div>
+        <div class="callout ok">
+          <strong>Test:</strong> full Preview close/reopen after the App Formulas change. Open NewsletterPack and try clicking a Thursday Batch button as fast as possible right after the screen appears &mdash; it should now either be visibly disabled (greyed out) for a moment, or show the "still loading" warning if clicked in that split second, never the raw Office365Outlook error. Once loaded, both buttons should work exactly as before.
         </div>
       </section>
     </main>
