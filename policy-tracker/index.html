@@ -297,11 +297,17 @@
           <div class="code-toolbar">
             <div class="code-meta">
               <span>App &middot; Formulas &mdash; new function</span>
-              <span class="code-stamp" data-updated="2026-09-02T00:00:00Z">v1 &middot; 2026-09-02 BST</span>
+              <span class="code-stamp" data-updated="2026-09-02T00:00:00Z">v2 &middot; 2026-09-02 BST &mdash; corrected, see Open Issue below</span>
             </div>
             <button data-copy="next-thursday-formula" type="button">Copy</button>
           </div>
-<pre id="next-thursday-formula">NextThursday(WeeksAhead: Number): Date = DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7) + (WeeksAhead - 1) * 7, "Days")</pre>
+<pre id="next-thursday-formula">NextThursday(WeeksAhead: Number): Date = With(
+    {_d: DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7) + (WeeksAhead - 1) * 7, "Days")},
+    Date(Year(_d), Month(_d), Day(_d))
+)</pre>
+        </div>
+        <div class="callout warn">
+          <strong>If you already added the v1 version</strong> (a single-line <code>DateAdd(...)</code> with no <code>With</code>/<code>Date()</code> wrapper), replace it with this v2 version now &mdash; see the confirmed root cause in the Open Issue section at the bottom of this fix before doing anything else with <code>NextThursday</code>.
         </div>
         <ol start="3">
           <li>Open <strong>Main</strong>. Select <strong>Button1_9</strong> (the "+ New Entry" button, top-left header). Select <code>OnSelect</code>, select all, delete, and paste this complete replacement:</li>
@@ -618,8 +624,8 @@ If(
           <strong>Test:</strong> full Preview close/reopen after adding the App Formula (same rule as always for Formulas/OnStart changes). Then check each of the four spots does what it always did &mdash; "+ New Entry" still defaults to the same date it used to, Main's dashboard and Overview's 4-week grid still show the same weeks in the same order, ViewItem's Thursday picker still lists 104 weeks starting from the same date. Nothing should look different; only the formula source changed.
         </div>
 
-        <h3 id="headergallery-open-issue">Open Issue &mdash; HeaderGallery "Current" Case Broke Main (reported 2026-09-02)</h3>
-        <p>After pasting the <code>HeaderGallery.Items</code> block above, all 4 rows on Main's "Due Next 4 Weeks" dashboard showed <strong>0 items</strong>, "No releases went out that week," and blank/truncated date labels &mdash; even though the top pill still correctly showed 13 due items, meaning the underlying data (<code>colActiveItems</code>) was fine and the break is specific to this gallery's date matching. Leading theory, not yet confirmed: <code>NextThursday(Value)</code>'s explicit <code>: Date</code> return type coerces the value differently than the original bare <code>DateAdd(...)</code> expression did, so the equality check against <code>colActiveItems</code>'s <code>'Planned Publish Date'</code> silently matches nothing. Not fixed yet &mdash; roll back first, then run the diagnostic label to confirm or rule this out.</p>
+        <h3 id="headergallery-open-issue">Open Issue &mdash; ROOT CAUSE CONFIRMED, fix above, re-verify before reapplying (2026-09-02)</h3>
+        <p>After pasting the original <code>HeaderGallery.Items</code> block, all 4 rows on Main's "Due Next 4 Weeks" dashboard showed <strong>0 items</strong> and blank date labels, even though the top pill still correctly showed 13 due items (the underlying data was fine). Diagnosed via the debug label below: <code>NextThursday(1)</code> and the equivalent inline <code>DateAdd(...)</code> formula printed <strong>identical text</strong> ("03 Sep 2026 00:00:00") but <code>NextThursday(1) = DateAdd(...)</code> returned <strong>false</strong>. That rules out a calculation error &mdash; the two values are numerically/visually the same but not the same underlying Power Fx type, so every <code>= _targetDate</code> equality check against <code>'Planned Publish Date'</code> silently matched nothing. A UDF's explicit <code>: Date</code> return type can hand back a value that isn't type-identical to a bare inline expression even when it displays the same. <strong>Fixed</strong> by rebuilding the value through <code>Date(Year(_d), Month(_d), Day(_d))</code> inside the function (the v2 App Formula above) &mdash; this is a standard way to force a clean, canonical <code>Date</code> value in Power Fx regardless of what produced the input.</p>
 
         <h4>Step 1 &mdash; roll back to restore Main immediately</h4>
         <p>Select <strong>HeaderGallery</strong>, <code>Items</code>, select all, delete, paste this &mdash; identical to the block above except the <code>"Current"</code> case's <code>PlannedDate</code> is back to the original inline formula:</p>
@@ -768,9 +774,18 @@ Switch(
 "Inline formula = " &amp; Text(DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"), "dd mmm yyyy hh:mm:ss") &amp; Char(10) &amp;
 "Are they equal? = " &amp; Text(NextThursday(1) = DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"))</pre>
         </div>
-        <div class="callout warn">
-          Report back what the last line says ("Are they equal?"). If <code>false</code>, that confirms the return-type theory above and the fix is to change <code>NextThursday</code> to not force a <code>Date</code>-typed return. If <code>true</code>, the bug is somewhere else in the pipeline and this section will be updated with the real cause once found. Delete the temporary label once done either way.
+        <div class="callout ok">
+          <strong>Confirmed 2026-09-02:</strong> "Today" and "Inline formula" both printed <code>03 Sep 2026 00:00:00</code>, <code>NextThursday(1)</code> also printed the identical text, but "Are they equal?" was <code>false</code> &mdash; confirming the type-mismatch root cause above, not a calculation error.
         </div>
+
+        <h4>Step 3 &mdash; apply the corrected function, then re-verify with the SAME label before touching any screen</h4>
+        <ol>
+          <li>Go to <strong>App &rarr; Formulas</strong> and replace <code>NextThursday</code> with the v2 version at the top of this fix (the one using <code>With</code>/<code>Date(Year, Month, Day)</code>).</li>
+          <li>Leave the temporary debug label from Step 2 in place and don't change it &mdash; just look at it again.</li>
+          <li><strong>"Are they equal?" must now say <code>true</code></strong> before doing anything else. If it still says <code>false</code>, stop and report back exactly what all four lines say &mdash; don't reapply to HeaderGallery/ViewItem/Overview yet.</li>
+          <li>Once it says <code>true</code>: reapply the corrected <code>HeaderGallery.Items</code> block from Step 4 above (the one using <code>NextThursday(Value)</code>, not the rollback), then continue with the remaining ViewItem/Overview steps in this fix as originally written.</li>
+          <li>Delete the temporary debug label once everything is confirmed working.</li>
+        </ol>
       </section>
 
       <section id="newsletter-udf-refactor">
