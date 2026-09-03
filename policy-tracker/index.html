@@ -286,6 +286,9 @@
         <div class="callout warn">
           <strong>Two similar-looking formulas found and deliberately left untouched</strong> &mdash; these are not duplicates of this one, they do genuinely different things: <code>Main</code>'s Historic tab case calculates days <em>since the previous</em> Thursday (past-facing, for grouping already-released items) using a different sign convention entirely. <code>ViewItem</code>'s <code>varDaysToNextThursday</code> (used for the screen's 52-week forward Thursday list) explicitly forces today to count as "7 days away" instead of "0" when today is a Thursday &mdash; i.e. it always skips today, where <code>NextThursday(1)</code> below does not. If you want <code>NextThursday</code> to also cover that case, it needs a second parameter or function; not built here since that would be a real behaviour change, not just a refactor, and wasn't asked for.
         </div>
+        <div class="callout warn">
+          <strong>Every code block below is the COMPLETE property</strong> &mdash; select all in Studio's formula box, delete, paste. No hunting for a specific line. These are built from the last synced <code>yaml/</code> mirror (2026-09-02) rather than a fresh Studio export; if you've changed any of these four properties directly in Studio since then without it reaching the mirror, a full paste-over will lose that change &mdash; skim each block once before pasting if you're not sure.
+        </div>
         <ol>
           <li>Open the <strong>App</strong> object (root of the tree view) &rarr; <code>Formulas</code> property (Advanced pane).</li>
           <li>Add the function below to the end of the existing Formulas block.</li>
@@ -301,60 +304,312 @@
 <pre id="next-thursday-formula">NextThursday(WeeksAhead: Number): Date = DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7) + (WeeksAhead - 1) * 7, "Days")</pre>
         </div>
         <ol start="3">
-          <li>Open <strong>Main</strong>. Find <strong>Button1_9</strong> (the "+ New Entry" button, top-left header). Select <code>OnSelect</code>, find the line <code>Set(varPlannedPublishDate, DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"));</code> and replace it with:</li>
+          <li>Open <strong>Main</strong>. Select <strong>Button1_9</strong> (the "+ New Entry" button, top-left header). Select <code>OnSelect</code>, select all, delete, and paste this complete replacement:</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
-              <span>Button1_9.OnSelect &mdash; one line only</span>
+              <span>Button1_9.OnSelect &mdash; complete property, select all &amp; replace</span>
               <span class="code-stamp" data-updated="2026-09-02T00:00:00Z">v1 &middot; 2026-09-02 BST</span>
             </div>
             <button data-copy="next-thursday-button1-9" type="button">Copy</button>
           </div>
-<pre id="next-thursday-button1-9">Set(varPlannedPublishDate, NextThursday(1));</pre>
+<pre id="next-thursday-button1-9">Set(varSelectedItem, Blank());
+Set(varSelectedRelease, Blank());
+Set(varSelectPolicy, "Empty");
+Set(varOwnerDefault, Table({DisplayName: Office365Users.MyProfileV2().displayName, Mail: User().Email}));
+Set(varPlannedPublishDate, NextThursday(1));
+Clear(colLinks);
+Navigate(ViewItem, ScreenTransition.Fade);
+Set(varParentSaved, false);</pre>
         </div>
         <ol start="4">
-          <li>Still in <strong>Main</strong>, find <strong>HeaderGallery</strong> (the dashboard's date-grouped release list). Select <code>Items</code>, find the <code>"Current"</code> case's <code>{PlannedDate: DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7) + (Value - 1) * 7, "Days")}</code> and replace just that record with:</li>
+          <li>Still in <strong>Main</strong>, select <strong>HeaderGallery</strong> (the dashboard's date-grouped release list). Select <code>Items</code>, select all, delete, and paste this complete replacement &mdash; only the <code>"Current"</code> case changed, the <code>"Historic"</code>/<code>"Future"</code>/<code>"UnapprovedHistoric"</code> cases are copied through byte-for-byte:</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
-              <span>HeaderGallery.Items &mdash; "Current" case, one record only</span>
+              <span>HeaderGallery.Items &mdash; complete property, select all &amp; replace</span>
               <span class="code-stamp" data-updated="2026-09-02T00:00:00Z">v1 &middot; 2026-09-02 BST</span>
             </div>
             <button data-copy="next-thursday-headergallery" type="button">Copy</button>
           </div>
-<pre id="next-thursday-headergallery">{PlannedDate: NextThursday(Value)}</pre>
-        </div>
-        <div class="callout warn">
-          <strong>Do not touch the "Historic" case above it</strong> &mdash; that's the different, past-facing formula described in the warning above, not a duplicate.
+<pre id="next-thursday-headergallery">// HeaderGallery.Items — full replacement
+Switch(
+    varSelectedState,
+
+    "Historic",
+    Sort(
+        AddColumns(
+            AddColumns(
+                ForAll(
+                    Sequence(4),
+                    With(
+                        {
+                            _daysSincePreviousThursday:
+                                If(
+                                    Mod(Weekday(Today()) - 5 + 7, 7) = 0,
+                                    7,
+                                    Mod(Weekday(Today()) - 5 + 7, 7)
+                                )
+                        },
+                        {PlannedDate: DateAdd(Today(), -_daysSincePreviousThursday - ((Value - 1) * 7), "Days")}
+                    )
+                ),
+                ReleaseDateText,
+                Text(PlannedDate, "dddd, dd mmmm yyyy"),
+                GroupedItems,
+                With(
+                    {_targetDate: PlannedDate},
+                    Filter(
+                        'Policy Proof Tracker',
+                        'Planned Publish Date' = _targetDate &&
+                        (Published = true || 'External consultation required' = true) &&
+                        (varFilterOwner = false || Owner.Email = User().Email) &&
+                        (IsBlank(varTypeFilter) || varTypeFilter = "" || 'Document Type'.Value = varTypeFilter)
+                    )
+                )
+            ),
+            ItemCount, CountRows(GroupedItems)
+        ),
+        PlannedDate,
+        SortOrder.Descending
+    ),
+
+    "Future",
+    Sort(
+        AddColumns(
+            GroupBy(
+                AddColumns(
+                    Filter(
+                        'Policy Proof Tracker',
+                        'Planned Publish Date' > DateAdd(Today(), 28, "Days") &&
+                        (varFilterOwner = false || Owner.Email = User().Email) &&
+                        (IsBlank(varTypeFilter) || varTypeFilter = "" || 'Document Type'.Value = varTypeFilter)
+                    ),
+                    PlannedDate, 'Planned Publish Date',
+                    ReleaseDateText, Text('Planned Publish Date', "dddd, dd mmmm yyyy")
+                ),
+                PlannedDate,
+                GroupedItems
+            ),
+            ItemCount, CountRows(GroupedItems)
+        ),
+        PlannedDate,
+        SortOrder.Ascending
+    ),
+
+    "Current",
+    Sort(
+        AddColumns(
+            AddColumns(
+                ForAll(
+                    Sequence(4),
+                    {PlannedDate: NextThursday(Value)}
+                ),
+                ReleaseDateText,
+                Text(PlannedDate, "dddd, dd mmmm yyyy"),
+                GroupedItems,
+                With(
+                    {_targetDate: PlannedDate},
+                    Filter(
+                        colActiveItems,
+                        'Planned Publish Date' = _targetDate &&
+                        (varFilterOwner = false || Owner.Email = User().Email) &&
+                        (IsBlank(varTypeFilter) || varTypeFilter = "" || 'Document Type'.Value = varTypeFilter)
+                    )
+                )
+            ),
+            ItemCount, CountRows(GroupedItems)
+        ),
+        PlannedDate,
+        SortOrder.Ascending
+    ),
+
+    "UnapprovedHistoric",
+    Sort(
+        AddColumns(
+            GroupBy(
+                AddColumns(
+                    Filter(
+                        'Policy Proof Tracker',
+                        'Planned Publish Date' &lt; Today() &&
+                        Published = false &&
+                        'External consultation required' = false &&
+                        (varFilterOwner = false || Owner.Email = User().Email) &&
+                        (IsBlank(varTypeFilter) || varTypeFilter = "" || 'Document Type'.Value = varTypeFilter)
+                    ),
+                    PlannedDate, 'Planned Publish Date',
+                    ReleaseDateText, Text('Planned Publish Date', "dddd, dd mmmm yyyy")
+                ),
+                PlannedDate,
+                GroupedItems
+            ),
+            ItemCount, CountRows(GroupedItems)
+        ),
+        PlannedDate,
+        SortOrder.Descending
+    )
+)</pre>
         </div>
         <ol start="6">
-          <li>Open <strong>ViewItem</strong>, select the screen itself, then <code>OnVisible</code>. Find <code>DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days")</code> inside the <code>varPlannedPublishDate</code> default (the <code>If(IsBlank(varSelectedRelease) || IsBlank(...'Planned Publish Date'), &lt;this&gt;, ...)</code> branch) and replace just that expression with <code>NextThursday(1)</code>.</li>
-          <li>Further down the same <code>OnVisible</code>, find <code>{_thu: DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7) + (Value - 1) * 7, "Days")}</code> (inside the <code>colThursdayOptions</code> <code>ClearCollect</code>, 104-week sequence) and replace it with:</li>
+          <li>Open <strong>ViewItem</strong>, select the screen itself, then <code>OnVisible</code>. Select all, delete, and paste this complete replacement &mdash; two lines changed (the <code>varPlannedPublishDate</code> default, and the <code>colThursdayOptions</code> build further down), everything else is copied through byte-for-byte, including the deep-link handling and all the <code>Reset()</code> calls:</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
-              <span>ViewItem.OnVisible &mdash; colThursdayOptions, one record only</span>
+              <span>ViewItem.OnVisible &mdash; complete property, select all &amp; replace</span>
               <span class="code-stamp" data-updated="2026-09-02T00:00:00Z">v1 &middot; 2026-09-02 BST</span>
             </div>
             <button data-copy="next-thursday-viewitem" type="button">Copy</button>
           </div>
-<pre id="next-thursday-viewitem">{_thu: NextThursday(Value)}</pre>
+<pre id="next-thursday-viewitem">Set(varLoadingLinks, varLinksSourceID &lt;&gt; varSelectedRelease.ID || IsBlank(varSelectedRelease.ID));
+Set(varClosingViewItem, false);
+Set(varSaving, false);
+Set(varShowLinkModal, false);
+Set(varSelectedLink, Blank());
+Set(varErrTitle, false);
+Set(varErrOwner, false);
+Set(varErrDocType, false);
+Set(varErrPublishDate, false);
+Set(
+    varOwnerDefault,
+    If(
+        IsBlank(varSelectedRelease) || IsBlank(varSelectedRelease.Owner.Email),
+        Table({DisplayName: User().FullName, Mail: User().Email}),
+        Table({DisplayName: varSelectedRelease.Owner.DisplayName, Mail: varSelectedRelease.Owner.Email})
+    )
+);
+Set(
+    varPlannedPublishDate,
+    If(
+        IsBlank(varSelectedRelease) || IsBlank(varSelectedRelease.'Planned Publish Date'),
+        NextThursday(1),
+        varSelectedRelease.'Planned Publish Date'
+    )
+);
+If(
+    !varDeepLinkHandled &amp;&amp; !IsBlank(Param("ID")),
+    Set(varDeepLinkHandled, true);
+    Set(varItemID, Param("ID"));
+    Set(varLoading, true);
+    Refresh('Policy Proof Tracker');
+    Set(varDeepLinkItem, LookUp('Policy Proof Tracker', ID = Value(varItemID)));
+    If(
+        !IsBlank(varDeepLinkItem),
+        Set(varSelectedRelease, varDeepLinkItem);
+        Set(varSelectPolicy, "Filled");
+        Set(varParentSaved, true);
+        Set(varSelectedItem, varDeepLinkItem);
+        Set(varSourceScreen, "Main");
+        Set(varSelectedPerson, varDeepLinkItem.Owner);
+        Refresh(PolicyLinks);
+        BuildLinksForSource(varDeepLinkItem.ID);
+        Set(varOwnerDefault, Table({DisplayName: varDeepLinkItem.Owner.DisplayName, Mail: varDeepLinkItem.Owner.Email}));
+        Set(varPlannedPublishDate, varDeepLinkItem.'Planned Publish Date'),
+        Notify("This item could not be found. It may have been deleted or the link may be incorrect.", NotificationType.Error);
+        Set(varDeepLinkNotFound, true)
+    );
+    Set(varLoading, false)
+);
+Reset(txtTitle1);
+Reset(drpDocType1);
+Reset(dpkPublishDate1);
+Reset(cmb_Owner1);
+Reset(ckbHighPriority1);
+Reset(txtReasonHighPri1);
+Reset(ckbExtConsult1);
+Reset(txtExtConsultDetails1);
+Reset(ckbTopItem1);
+Reset(txtNewsletterTitle1);
+Reset(txtAudience1);
+Reset(txtSummary1);
+Reset(txtRemarks1);
+Reset(ckbPillarLead1);
+Reset(radApproval1);
+Reset(ckbPublished1);
+Reset(dpkPublishedDate1);
+Set(varShowThursdayPicker, false);
+ClearCollect(
+    colThursdayItemCounts,
+    AddColumns(
+        GroupBy(
+            AddColumns(
+                Filter(
+                    'Policy Proof Tracker',
+                    'Planned Publish Date' &gt;= Today() &amp;&amp;
+                    'Planned Publish Date' &lt;= DateAdd(Today(), 104 * 7, "Days")
+                ),
+                GroupDate, 'Planned Publish Date'
+            ),
+            GroupDate,
+            GroupedItems
+        ),
+        DayItemCount,
+        CountRows(GroupedItems)
+    )
+);
+ClearCollect(
+    colThursdayOptions,
+    ForAll(
+        Sequence(104),
+        With(
+            {_thu: NextThursday(Value)},
+            {
+                ThursdayDate: _thu,
+                ItemCount: Coalesce(LookUp(colThursdayItemCounts, GroupDate = _thu, DayItemCount), 0)
+            }
+        )
+    )
+);
+If(
+    !IsBlank(varSelectedRelease.ID),
+    If(
+        !IsBlank(LookUp(colActiveItems, ID = varSelectedRelease.ID)),
+        ClearCollect(colLinks, Filter(colActiveLinks, PolicyTrackerSource.Id = varSelectedRelease.ID));
+        Set(varLinksSourceID, varSelectedRelease.ID),
+        If(
+            varLinksSourceID &lt;&gt; varSelectedRelease.ID,
+            BuildLinksForSource(varSelectedRelease.ID)
+        )
+    );
+    Set(varLoadingLinks, false),
+    Clear(colLinks);
+    Set(varLoadingLinks, false)
+);</pre>
+        </div>
+        <div class="callout warn">
+          <strong>Do not touch the "Historic" case above it</strong> in Main's HeaderGallery &mdash; that's the different, past-facing formula described in the warning above, not a duplicate (it's already unchanged in the complete block you just pasted).
         </div>
         <ol start="8">
-          <li>Open <strong>Overview</strong>, find <strong>galOverviewColumns1</strong>. Select <code>Items</code>, find <code>{PublishDate: DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7) + (Value - 1) * 7, "Days")}</code> and replace it with:</li>
+          <li>Open <strong>Overview</strong>, select <strong>galOverviewColumns1</strong>. Select <code>Items</code>, select all, delete, and paste this complete replacement:</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
-              <span>galOverviewColumns1.Items &mdash; one record only</span>
+              <span>galOverviewColumns1.Items &mdash; complete property, select all &amp; replace</span>
               <span class="code-stamp" data-updated="2026-09-02T00:00:00Z">v1 &middot; 2026-09-02 BST</span>
             </div>
             <button data-copy="next-thursday-overview" type="button">Copy</button>
           </div>
-<pre id="next-thursday-overview">{PublishDate: NextThursday(Value)}</pre>
+<pre id="next-thursday-overview">AddColumns(
+    ForAll(
+        Sequence(4),
+        {
+            PublishDate: NextThursday(Value)
+        }
+    ),
+    ItemsForDate,
+    With(
+        {_targetDate: PublishDate},
+        Filter(
+            'Policy Proof Tracker',
+            Year('Planned Publish Date') = Year(_targetDate) &amp;&amp;
+            Month('Planned Publish Date') = Month(_targetDate) &amp;&amp;
+            Day('Planned Publish Date') = Day(_targetDate)
+        )
+    )
+)</pre>
         </div>
         <div class="callout ok">
           <strong>Test:</strong> full Preview close/reopen after adding the App Formula (same rule as always for Formulas/OnStart changes). Then check each of the four spots does what it always did &mdash; "+ New Entry" still defaults to the same date it used to, Main's dashboard and Overview's 4-week grid still show the same weeks in the same order, ViewItem's Thursday picker still lists 104 weeks starting from the same date. Nothing should look different; only the formula source changed.
