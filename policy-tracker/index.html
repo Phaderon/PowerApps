@@ -323,6 +323,9 @@ Clear(colLinks);
 Navigate(ViewItem, ScreenTransition.Fade);
 Set(varParentSaved, false);</pre>
         </div>
+        <div class="callout warn">
+          <strong>OPEN ISSUE, reported 2026-09-02, not yet resolved:</strong> pasting the block below broke Main live &mdash; all 4 dashboard rows showed "0 items"/"No releases went out that week" and the date labels went blank. Root cause not yet confirmed. <strong>If you haven't pasted this yet, skip straight to the "Open Issue" section at the bottom of this fix before continuing</strong> &mdash; it has a rollback and a diagnostic label to run first.
+        </div>
         <ol start="4">
           <li>Still in <strong>Main</strong>, select <strong>HeaderGallery</strong> (the dashboard's date-grouped release list). Select <code>Items</code>, select all, delete, and paste this complete replacement &mdash; only the <code>"Current"</code> case changed, the <code>"Historic"</code>/<code>"Future"</code>/<code>"UnapprovedHistoric"</code> cases are copied through byte-for-byte:</li>
         </ol>
@@ -613,6 +616,160 @@ If(
         </div>
         <div class="callout ok">
           <strong>Test:</strong> full Preview close/reopen after adding the App Formula (same rule as always for Formulas/OnStart changes). Then check each of the four spots does what it always did &mdash; "+ New Entry" still defaults to the same date it used to, Main's dashboard and Overview's 4-week grid still show the same weeks in the same order, ViewItem's Thursday picker still lists 104 weeks starting from the same date. Nothing should look different; only the formula source changed.
+        </div>
+
+        <h3 id="headergallery-open-issue">Open Issue &mdash; HeaderGallery "Current" Case Broke Main (reported 2026-09-02)</h3>
+        <p>After pasting the <code>HeaderGallery.Items</code> block above, all 4 rows on Main's "Due Next 4 Weeks" dashboard showed <strong>0 items</strong>, "No releases went out that week," and blank/truncated date labels &mdash; even though the top pill still correctly showed 13 due items, meaning the underlying data (<code>colActiveItems</code>) was fine and the break is specific to this gallery's date matching. Leading theory, not yet confirmed: <code>NextThursday(Value)</code>'s explicit <code>: Date</code> return type coerces the value differently than the original bare <code>DateAdd(...)</code> expression did, so the equality check against <code>colActiveItems</code>'s <code>'Planned Publish Date'</code> silently matches nothing. Not fixed yet &mdash; roll back first, then run the diagnostic label to confirm or rule this out.</p>
+
+        <h4>Step 1 &mdash; roll back to restore Main immediately</h4>
+        <p>Select <strong>HeaderGallery</strong>, <code>Items</code>, select all, delete, paste this &mdash; identical to the block above except the <code>"Current"</code> case's <code>PlannedDate</code> is back to the original inline formula:</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>HeaderGallery.Items &mdash; ROLLBACK, complete property</span>
+              <span class="code-stamp" data-updated="2026-09-02T00:00:00Z">v2 &middot; 2026-09-02 BST</span>
+            </div>
+            <button data-copy="headergallery-rollback" type="button">Copy</button>
+          </div>
+<pre id="headergallery-rollback">// HeaderGallery.Items — full replacement
+Switch(
+    varSelectedState,
+
+    "Historic",
+    Sort(
+        AddColumns(
+            AddColumns(
+                ForAll(
+                    Sequence(4),
+                    With(
+                        {
+                            _daysSincePreviousThursday:
+                                If(
+                                    Mod(Weekday(Today()) - 5 + 7, 7) = 0,
+                                    7,
+                                    Mod(Weekday(Today()) - 5 + 7, 7)
+                                )
+                        },
+                        {PlannedDate: DateAdd(Today(), -_daysSincePreviousThursday - ((Value - 1) * 7), "Days")}
+                    )
+                ),
+                ReleaseDateText,
+                Text(PlannedDate, "dddd, dd mmmm yyyy"),
+                GroupedItems,
+                With(
+                    {_targetDate: PlannedDate},
+                    Filter(
+                        'Policy Proof Tracker',
+                        'Planned Publish Date' = _targetDate &&
+                        (Published = true || 'External consultation required' = true) &&
+                        (varFilterOwner = false || Owner.Email = User().Email) &&
+                        (IsBlank(varTypeFilter) || varTypeFilter = "" || 'Document Type'.Value = varTypeFilter)
+                    )
+                )
+            ),
+            ItemCount, CountRows(GroupedItems)
+        ),
+        PlannedDate,
+        SortOrder.Descending
+    ),
+
+    "Future",
+    Sort(
+        AddColumns(
+            GroupBy(
+                AddColumns(
+                    Filter(
+                        'Policy Proof Tracker',
+                        'Planned Publish Date' > DateAdd(Today(), 28, "Days") &&
+                        (varFilterOwner = false || Owner.Email = User().Email) &&
+                        (IsBlank(varTypeFilter) || varTypeFilter = "" || 'Document Type'.Value = varTypeFilter)
+                    ),
+                    PlannedDate, 'Planned Publish Date',
+                    ReleaseDateText, Text('Planned Publish Date', "dddd, dd mmmm yyyy")
+                ),
+                PlannedDate,
+                GroupedItems
+            ),
+            ItemCount, CountRows(GroupedItems)
+        ),
+        PlannedDate,
+        SortOrder.Ascending
+    ),
+
+    "Current",
+    Sort(
+        AddColumns(
+            AddColumns(
+                ForAll(
+                    Sequence(4),
+                    {PlannedDate: DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7) + (Value - 1) * 7, "Days")}
+                ),
+                ReleaseDateText,
+                Text(PlannedDate, "dddd, dd mmmm yyyy"),
+                GroupedItems,
+                With(
+                    {_targetDate: PlannedDate},
+                    Filter(
+                        colActiveItems,
+                        'Planned Publish Date' = _targetDate &&
+                        (varFilterOwner = false || Owner.Email = User().Email) &&
+                        (IsBlank(varTypeFilter) || varTypeFilter = "" || 'Document Type'.Value = varTypeFilter)
+                    )
+                )
+            ),
+            ItemCount, CountRows(GroupedItems)
+        ),
+        PlannedDate,
+        SortOrder.Ascending
+    ),
+
+    "UnapprovedHistoric",
+    Sort(
+        AddColumns(
+            GroupBy(
+                AddColumns(
+                    Filter(
+                        'Policy Proof Tracker',
+                        'Planned Publish Date' &lt; Today() &&
+                        Published = false &&
+                        'External consultation required' = false &&
+                        (varFilterOwner = false || Owner.Email = User().Email) &&
+                        (IsBlank(varTypeFilter) || varTypeFilter = "" || 'Document Type'.Value = varTypeFilter)
+                    ),
+                    PlannedDate, 'Planned Publish Date',
+                    ReleaseDateText, Text('Planned Publish Date', "dddd, dd mmmm yyyy")
+                ),
+                PlannedDate,
+                GroupedItems
+            ),
+            ItemCount, CountRows(GroupedItems)
+        ),
+        PlannedDate,
+        SortOrder.Descending
+    )
+)</pre>
+        </div>
+        <div class="callout ok">
+          Paste that in and Main should come back immediately &mdash; this is a screen property, no Preview restart needed.
+        </div>
+
+        <h4>Step 2 &mdash; diagnose with a temporary label (once Main is confirmed working again)</h4>
+        <p>Add a temporary <strong>Label</strong> anywhere on Main, set <code>AutoHeight</code> to <code>true</code>, and set its <code>Text</code> to this formula. This does not change any data.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Temporary debug label - Text</span>
+              <span class="code-stamp" data-updated="2026-09-02T00:00:00Z">v1 &middot; 2026-09-02 BST</span>
+            </div>
+            <button data-copy="headergallery-diagnostic" type="button">Copy</button>
+          </div>
+<pre id="headergallery-diagnostic">"Today = " &amp; Text(Today(), "dd mmm yyyy") &amp; Char(10) &amp;
+"NextThursday(1) = " &amp; Text(NextThursday(1), "dd mmm yyyy hh:mm:ss") &amp; Char(10) &amp;
+"Inline formula = " &amp; Text(DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"), "dd mmm yyyy hh:mm:ss") &amp; Char(10) &amp;
+"Are they equal? = " &amp; Text(NextThursday(1) = DateAdd(Today(), Mod(5 - Weekday(Today()) + 7, 7), "Days"))</pre>
+        </div>
+        <div class="callout warn">
+          Report back what the last line says ("Are they equal?"). If <code>false</code>, that confirms the return-type theory above and the fix is to change <code>NextThursday</code> to not force a <code>Date</code>-typed return. If <code>true</code>, the bug is somewhere else in the pipeline and this section will be updated with the real cause once found. Delete the temporary label once done either way.
         </div>
       </section>
 
