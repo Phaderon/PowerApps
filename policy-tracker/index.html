@@ -1153,6 +1153,9 @@ Y: =15
 Width: =Parent.Width - 180
 Height: =36</pre>
         </div>
+        <div class="callout warn">
+          <strong>Corrected 2026-09-03:</strong> whatever control Studio actually inserted here reads its typed text via <code>.Text</code>, not <code>.Value</code> as originally written below &mdash; confirmed live, <code>.Value</code> threw an error. Both button formulas below are already updated to <code>txtReleaseLink.Text</code>. If <code>Placeholder</code> above also errors for you, try <code>HintText</code> instead &mdash; property names don't always match what the "Modern"/"Classic" label on the control implies, check Studio's own property dropdown for what's actually available on your control rather than assuming from the name.
+        </div>
 
         <ol start="3">
           <li>Open <strong>App &rarr; Formulas</strong>. Select all of <code>RefreshNewsletterPack</code> only and replace with this complete version &mdash; the <code>varNewsletterBodyLead</code>/<code>varNewsletterBodyEmpty</code> blocks are removed, everything else is unchanged from Fix 3:</li>
@@ -1253,7 +1256,7 @@ Height: =36</pre>
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnDraftBatch1_1.OnSelect &mdash; complete property</span>
-              <span class="code-stamp" data-updated="2026-09-03T00:00:00Z">v5 &middot; 2026-09-03 BST</span>
+              <span class="code-stamp" data-updated="2026-09-03T00:00:00Z">v6 &middot; 2026-09-03 BST &mdash; corrected .Text</span>
             </div>
             <button data-copy="release-link-batch1" type="button">Copy</button>
           </div>
@@ -1272,7 +1275,7 @@ Height: =36</pre>
             If(
                 CountRows(colNewsletterPack) = 0,
                 "There are no policy releases this week.&lt;br&gt;&lt;br&gt;",
-                "Please find a link to this week's releases here - &lt;a href=""" &amp; Coalesce(Trim(txtReleaseLink.Value), "#") &amp; """&gt;Cadets Branch Weekly Policy Updates - " &amp; Text(varNewsletterTargetDate, "dd mmm yyyy") &amp; "&lt;/a&gt;&lt;br&gt;Below is a summary of this week's releases from Cadets Branch:&lt;br&gt;&lt;br&gt;" &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;")
+                "Please find a link to this week's releases here - &lt;a href=""" &amp; Coalesce(Trim(txtReleaseLink.Text), "#") &amp; """&gt;Cadets Branch Weekly Policy Updates - " &amp; Text(varNewsletterTargetDate, "dd mmm yyyy") &amp; "&lt;/a&gt;&lt;br&gt;Below is a summary of this week's releases from Cadets Branch:&lt;br&gt;&lt;br&gt;" &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;")
             ) &amp;
             varNewsletterBodyStatic,
             {Bcc: varBatch1Bcc}
@@ -1289,7 +1292,7 @@ Height: =36</pre>
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnDraftBatch2_1.OnSelect &mdash; complete property</span>
-              <span class="code-stamp" data-updated="2026-09-03T00:00:00Z">v5 &middot; 2026-09-03 BST</span>
+              <span class="code-stamp" data-updated="2026-09-03T00:00:00Z">v6 &middot; 2026-09-03 BST &mdash; corrected .Text</span>
             </div>
             <button data-copy="release-link-batch2" type="button">Copy</button>
           </div>
@@ -1308,7 +1311,7 @@ Height: =36</pre>
             If(
                 CountRows(colNewsletterPack) = 0,
                 "There are no policy releases this week.&lt;br&gt;&lt;br&gt;",
-                "Please find a link to this week's releases here - &lt;a href=""" &amp; Coalesce(Trim(txtReleaseLink.Value), "#") &amp; """&gt;Cadets Branch Weekly Policy Updates - " &amp; Text(varNewsletterTargetDate, "dd mmm yyyy") &amp; "&lt;/a&gt;&lt;br&gt;Below is a summary of this week's releases from Cadets Branch:&lt;br&gt;&lt;br&gt;" &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;")
+                "Please find a link to this week's releases here - &lt;a href=""" &amp; Coalesce(Trim(txtReleaseLink.Text), "#") &amp; """&gt;Cadets Branch Weekly Policy Updates - " &amp; Text(varNewsletterTargetDate, "dd mmm yyyy") &amp; "&lt;/a&gt;&lt;br&gt;Below is a summary of this week's releases from Cadets Branch:&lt;br&gt;&lt;br&gt;" &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;")
             ) &amp;
             varNewsletterBodyStatic,
             {Bcc: varBatch2Bcc}
