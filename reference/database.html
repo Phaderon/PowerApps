@@ -8854,6 +8854,9 @@ SortByColumns(
 </code></pre>
 <p>```</p>
 <p>Always make clear: control name, property name, and that this replaces the entire property value.</p>
+<h3 id="never-a-find-and-replace-instruction-always-the-complete-property">Never a find-and-replace instruction — always the complete property</h3>
+<p><strong>Hard rule, no exceptions, applies to every fix guide and every chat reply, not just full app builds.</strong> Never write "find this line and change it to X" or "replace just that record/expression with Y" for a property, even when only one line of a much larger formula actually changed. Always give the FULL current property value with the change already applied, as one complete, standalone, select-all-and-paste-over code block — regardless of how long the surrounding formula is (100+ lines is fine, give it in full).</p>
+<p><strong>Why:</strong> confirmed incident, Policy Tracker guide, 2026-09-02. Allan: "I want to copy, override, paste... find button 1-9... select the on-select, find a certain line, replace a certain line — I haven't got time for that." This had already recurred 8 times before that session (see <code>feedback-complete-formulas</code> in Claude's memory) for the "same formula on two controls, only wrote one out" variant; the "one control, one line inside a big formula" variant is the same failure and is now also covered. If a mirror/export might be stale relative to live Studio, say so once as a warning — never as an excuse to give a partial diff instead of the full block.</p>
 <hr />
 <h2 id="what-never-goes-in-screen-yaml">What Never Goes in Screen YAML</h2>
 <ul>
