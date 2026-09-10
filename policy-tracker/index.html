@@ -254,14 +254,15 @@
         <a href="#newsletter-udf-refactor">Fix 2 - NewsletterPack Refresh Logic Moved Into One UDF</a>
         <a href="#newsletter-ready-race-condition">Fix 3 - Thursday Batch Buttons Fail If Clicked Before NewsletterPack Finishes Loading</a>
         <a href="#newsletter-release-link-field">Fix 4 - Real Release Link Field, Replacing The Google.com Placeholder</a>
+        <a href="#newsletter-log-to-archive">Fix 5 - Log Newsletter Release To The Weekly Updates Archive List</a>
       </nav>
     </aside>
 
     <main>
       <div class="topline">
-        <span class="pill">Updated 3 Sep 2026</span>
+        <span class="pill">Updated 10 Sep 2026</span>
         <span class="pill">Policy Tracker only</span>
-        <span class="pill">4 fixes</span>
+        <span class="pill">5 fixes</span>
       </div>
       <h1>Policy Tracker Fix Guide</h1>
       <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
@@ -1325,6 +1326,78 @@ Height: =36</pre>
         </div>
         <div class="callout ok">
           <strong>Test:</strong> full Preview close/reopen (App Formulas changed again). Leave <code>txtReleaseLink</code> empty, click a batch button, open the draft &mdash; the link should be present, clickable, and go nowhere when clicked (no error, no blank tab). Then type a real URL into the field and click the other batch button &mdash; that draft's link should go straight to it. Confirm the zero-release-week message still shows correctly if you fake an empty week (no link paragraph at all in that case, by design).
+        </div>
+      </section>
+
+      <section id="newsletter-log-to-archive">
+        <h2>Fix 5 - Log Newsletter Release To The Weekly Updates Archive List</h2>
+        <p class="meta-line">NewsletterPack &middot; new SharePoint data source + new button &middot; requires Fix 1-4 applied first</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
+        </div>
+        <p>Added 2026-09-10. Adds a button next to the release link field &mdash; click it once the newsletter's ready and it logs this week's release straight into the <strong>Weekly Policy Updates Archive</strong> SharePoint list (the same list already linked in the batch emails' "Previous Newsletters" section), instead of you adding that row by hand.</p>
+        <div class="callout warn">
+          <strong>You need to fill in three column names before pasting the last block below.</strong> Open the <strong>Weekly Policy Updates Archive</strong> list in SharePoint and note the exact column header text for the date column, the URL column, and the description column. Wherever you see <code>&lt;&lt;DATE COLUMN&gt;&gt;</code>, <code>&lt;&lt;URL COLUMN&gt;&gt;</code>, <code>&lt;&lt;DESCRIPTION COLUMN&gt;&gt;</code> below, replace it with the real header text (single-quoted if it contains a space, same style as <code>'Planned Publish Date'</code> elsewhere in this app).
+        </div>
+        <div class="callout">
+          <strong>What it sends:</strong> Date &mdash; this Thursday's target date (<code>varNewsletterTargetDate</code>, same value used in the subject line). URL &mdash; whatever's typed in <code>txtReleaseLink</code>. Description &mdash; one bullet per qualifying item's title only, no audience line (<code>colNewsletterPack</code>'s <code>PackTitle</code>, same source as the email body, just without the "Intended audience" sub-line). The button is blocked (with a warning, not a silent no-op) if there are no qualifying items, or if the release link is still blank or the inert <code>#</code> fallback.
+        </div>
+
+        <ol>
+          <li>In Studio, go to <strong>Data</strong> (left rail) &rarr; <strong>Add data</strong> &rarr; <strong>SharePoint</strong>. If you already have a connection to the <code>modgovuk.sharepoint.com/teams/1598</code> site (the same one <code>Policy Proof Tracker</code> uses), pick it from your existing connections rather than adding a new one. Tick <strong>Weekly Policy Updates Archive</strong> and add it.</li>
+          <li>Open <strong>NewsletterPack</strong>. In the "Email-ready format" panel, add a new <strong>Button</strong> control (Insert &rarr; Button). Rename it <strong>btnLogToArchive_1</strong> (right-click &rarr; Rename in the tree view). Position it directly under <code>txtReleaseLink</code>, full width &mdash; if it overlaps the Thursday Batch buttons or the preview gallery below, just drag those down a little, position isn't functionally important.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnLogToArchive_1 &mdash; new control properties</span>
+              <span class="code-stamp" data-updated="2026-09-10T00:00:00Z">v1 &middot; 2026-09-10 BST</span>
+            </div>
+            <button data-copy="log-archive-control" type="button">Copy</button>
+          </div>
+<pre id="log-archive-control">Text: ="Log to Weekly Updates Archive"
+X: =20
+Y: =61
+Width: =Parent.Width - 40
+Height: =36
+DisplayMode: =If(Coalesce(varNewsletterReady, false), DisplayMode.Edit, DisplayMode.Disabled)</pre>
+        </div>
+        <ol start="3">
+          <li>With <strong>btnLogToArchive_1</strong> still selected, set <code>OnSelect</code> to this &mdash; remember to swap in your three real column names first:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnLogToArchive_1.OnSelect &mdash; complete property</span>
+              <span class="code-stamp" data-updated="2026-09-10T00:00:00Z">v1 &middot; 2026-09-10 BST</span>
+            </div>
+            <button data-copy="log-archive-onselect" type="button">Copy</button>
+          </div>
+<pre id="log-archive-onselect">If(
+    !Coalesce(varNewsletterReady, false) || IsBlank(varNewsletterSubject),
+    Notify("Newsletter data is still loading - wait a moment and try again.", NotificationType.Warning),
+    CountRows(colNewsletterPack) = 0,
+    Notify("No qualifying newsletter items for this Thursday - nothing to log.", NotificationType.Warning),
+    Coalesce(Trim(txtReleaseLink.Text), "#") = "#",
+    Notify("Add the real release link above before logging this week's release.", NotificationType.Warning),
+    Patch(
+        'Weekly Policy Updates Archive',
+        Defaults('Weekly Policy Updates Archive'),
+        {
+            &lt;&lt;DATE COLUMN&gt;&gt;: varNewsletterTargetDate,
+            &lt;&lt;URL COLUMN&gt;&gt;: { Value: Trim(txtReleaseLink.Text), DisplayText: "Cadets Branch Weekly Policy Updates - " &amp; Text(varNewsletterTargetDate, "dd mmm yyyy") },
+            &lt;&lt;DESCRIPTION COLUMN&gt;&gt;: Concat(colNewsletterPack, "• " &amp; PackTitle &amp; Char(10))
+        }
+    );
+    Notify("Added to the Weekly Updates Archive list.", NotificationType.Success)
+)</pre>
+        </div>
+        <div class="callout warn">
+          <strong>If your URL column is a Hyperlink or Picture type</strong> (right-click the column in SharePoint &rarr; Edit &rarr; check its type), the <code>{ Value: ..., DisplayText: ... }</code> record above is required &mdash; SharePoint won't accept a plain string. If it's actually a plain Single line of text column instead, replace that whole record with just <code>Trim(txtReleaseLink.Text)</code>.
+        </div>
+        <div class="callout ok">
+          <strong>Test:</strong> open NewsletterPack, wait for it to finish loading (button goes from greyed-out to coloured), leave the release link blank and click the button &mdash; should warn and refuse. Paste a real link, click again &mdash; should succeed, and a new row should appear in <strong>Weekly Policy Updates Archive</strong> with this Thursday's date, your link, and one bullet per qualifying item's title.
         </div>
       </section>
     </main>
