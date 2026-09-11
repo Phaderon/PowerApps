@@ -5,8 +5,13 @@
 // per-file size cap and a total-bucket-size cap before accepting a write.
 // See AGENTS.md "Hosting" section for the full design note.
 
+// This endpoint buffers the whole request via request.formData() (Workers have a
+// 128MB memory ceiling), so its cap stays deliberately small. It's now only used by
+// the "leave a note" text feature - real file uploads go through
+// functions/api/upload/presign.js instead, which streams straight to R2 and has its
+// own, much larger cap. Don't raise this one; route bigger files through presign.js.
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25MB per file
-const MAX_BUCKET_BYTES = 8 * 1024 * 1024 * 1024; // 8GB soft cap (R2 free tier is 10GB)
+const MAX_BUCKET_BYTES = 8 * 1024 * 1024 * 1024; // 8GB soft cap (R2 free tier is 10GB) - keep in sync with presign.js
 
 // CORS is opened up so the "leave a note" widget can be embedded on other
 // app guide sites that live on a different origin (e.g. the Staff Movements

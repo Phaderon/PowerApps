@@ -424,12 +424,26 @@ h1 {
         <button class="strip" type="button" id="open-upload" style="cursor:pointer; font: inherit; text-align: left;">
           <div class="strip-main">
             <h3>Upload files for Claude</h3>
-            <p>Drop screenshots, exports or zips somewhere Claude can pull them from directly. Password required.</p>
+            <p>Drop screenshots, exports, zips or big files (videos included) somewhere Claude can pull them from directly. Password required.</p>
           </div>
           <div class="meta">
             <span class="type">Uploads</span>
             <span class="pill">Multi-file</span>
+            <span class="pill">Up to 2GB each</span>
             <span class="pill">Auto-deletes after 14 days</span>
+          </div>
+          <div class="actions"><span class="open">Open</span></div>
+        </button>
+
+        <button class="strip" type="button" id="open-manage" style="cursor:pointer; font: inherit; text-align: left;">
+          <div class="strip-main">
+            <h3>Manage uploaded files</h3>
+            <p>See what's currently in the upload box from any device, download it, or delete it. Same password as above.</p>
+          </div>
+          <div class="meta">
+            <span class="type">File manager</span>
+            <span class="pill">Download</span>
+            <span class="pill">Delete</span>
           </div>
           <div class="actions"><span class="open">Open</span></div>
         </button>
@@ -459,7 +473,7 @@ h1 {
         <h2>Upload files for Claude</h2>
         <button type="button" id="upload-close" aria-label="Close" class="upload-x">&times;</button>
       </div>
-      <p class="upload-note">Files land in a locked storage bucket only Claude can read via the API &mdash; not public. They auto-delete after 14 days. Max 25MB per file.</p>
+      <p class="upload-note">Files land in a locked storage bucket only Claude can read via the API &mdash; not public. They auto-delete after 14 days. Max 2GB per file, uploaded straight to storage so big video files are fine.</p>
       <label class="upload-label" for="upload-password">Password <span class="upload-hint">(hint: Theta&hellip;)</span></label>
       <input type="password" id="upload-password" autocomplete="off" required />
       <label class="upload-label" for="upload-files">Files</label>
@@ -469,6 +483,23 @@ h1 {
         <span id="upload-status" class="upload-status"></span>
       </div>
       <ul id="upload-list" class="upload-list"></ul>
+    </form>
+  </dialog>
+
+  <dialog id="manage-dialog">
+    <form class="upload-form" id="manage-form">
+      <div class="upload-head">
+        <h2>Manage uploaded files</h2>
+        <button type="button" id="manage-close" aria-label="Close" class="upload-x">&times;</button>
+      </div>
+      <p class="upload-note">Same locked storage bucket as the upload box. Download saves straight through your browser; delete is immediate and can't be undone.</p>
+      <label class="upload-label" for="manage-password">Password <span class="upload-hint">(hint: Theta&hellip;)</span></label>
+      <input type="password" id="manage-password" autocomplete="off" required />
+      <div class="upload-actions">
+        <button type="submit" class="btn-copy-card" id="manage-load">Load files</button>
+        <span id="manage-status" class="upload-status"></span>
+      </div>
+      <ul id="manage-list" class="manage-list"></ul>
     </form>
   </dialog>
 
@@ -521,13 +552,72 @@ h1 {
   .upload-actions { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
   .upload-status { font-size: .82rem; color: var(--muted); }
   .upload-list { margin: 0; padding: 0; list-style: none; font-size: .82rem; color: var(--muted); }
-  .upload-list li { padding: 2px 0; }
+  .upload-list li { padding: 4px 0; }
+  .upload-progress-track {
+    height: 6px;
+    border-radius: 4px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    overflow: hidden;
+    margin-top: 3px;
+  }
+  .upload-progress-fill { height: 100%; width: 0%; background: var(--blue); transition: width .15s; }
+  .upload-progress-fill.err { background: var(--red); }
+  .upload-progress-fill.ok { background: var(--green); }
+  #manage-dialog { border: 1px solid var(--line); border-radius: 12px; padding: 0; background: var(--panel); color: var(--ink); width: min(560px, 92vw); }
+  #manage-dialog::backdrop { background: rgba(10,16,26,.5); }
+  .manage-list { margin: 8px 0 0; padding: 0; list-style: none; max-height: 320px; overflow-y: auto; }
+  .manage-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: .82rem;
+  }
+  .manage-list li:last-child { border-bottom: none; }
+  .manage-name { flex-grow: 1; min-width: 0; color: var(--ink); font-weight: 650; overflow-wrap: anywhere; }
+  .manage-meta { color: var(--faint); font-size: .78rem; white-space: nowrap; }
+  .manage-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .manage-btn {
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--ink);
+    border-radius: 6px;
+    padding: 5px 9px;
+    font-size: .78rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .manage-btn:hover { border-color: var(--line-strong); }
+  .manage-btn.danger { color: var(--red); }
+  .manage-empty { color: var(--faint); font-size: .82rem; padding: 6px 0; }
   </style>
   <script>
   (function(){
     var dialog = document.getElementById('upload-dialog');
     document.getElementById('open-upload').addEventListener('click', function(){ dialog.showModal(); });
     document.getElementById('upload-close').addEventListener('click', function(){ dialog.close(); });
+
+    // Uploads a single File directly to R2 via a presigned URL (XHR, not
+    // fetch, because only XHR exposes upload progress events) and reports
+    // progress back through onProgress(0..1).
+    function putFileDirect(url, file, onProgress) {
+      return new Promise(function(resolve, reject){
+        var xhr = new XMLHttpRequest();
+        xhr.open('PUT', url, true);
+        xhr.upload.addEventListener('progress', function(e){
+          if (e.lengthComputable) onProgress(e.loaded / e.total);
+        });
+        xhr.addEventListener('load', function(){
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else reject(new Error('upload failed (' + xhr.status + ')'));
+        });
+        xhr.addEventListener('error', function(){ reject(new Error('network error')); });
+        xhr.send(file);
+      });
+    }
 
     document.getElementById('upload-form').addEventListener('submit', async function(e){
       e.preventDefault();
@@ -537,28 +627,163 @@ h1 {
       var files = document.getElementById('upload-files').files;
       if (!files.length) return;
 
-      var fd = new FormData();
-      fd.append('password', password);
-      for (var i = 0; i < files.length; i++) fd.append('files', files[i]);
-
-      status.textContent = 'Uploading...';
+      status.textContent = 'Requesting upload slots...';
       list.innerHTML = '';
+      var rows = [];
+      for (var i = 0; i < files.length; i++) {
+        var li = document.createElement('li');
+        var nameEl = document.createElement('div');
+        nameEl.textContent = files[i].name;
+        var track = document.createElement('div');
+        track.className = 'upload-progress-track';
+        var fill = document.createElement('div');
+        fill.className = 'upload-progress-fill';
+        track.appendChild(fill);
+        li.appendChild(nameEl);
+        li.appendChild(track);
+        list.appendChild(li);
+        rows.push({ file: files[i], fill: fill });
+      }
+
       try {
-        var res = await fetch('/api/upload', { method: 'POST', body: fd });
-        var data = await res.json();
-        if (!res.ok) {
-          status.textContent = data.error || 'Upload failed';
+        var presignRes = await fetch('/api/upload/presign', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            password: password,
+            files: Array.prototype.map.call(files, function(f){ return { name: f.name, size: f.size }; })
+          })
+        });
+        var presignData = await presignRes.json();
+        if (!presignRes.ok) {
+          status.textContent = presignData.error || 'Upload failed';
           return;
         }
+
+        status.textContent = 'Uploading...';
+        await Promise.all(presignData.presigned.map(function(p, idx){
+          var row = rows[idx];
+          return putFileDirect(p.url, row.file, function(frac){
+            row.fill.style.width = Math.round(frac * 100) + '%';
+          }).then(function(){
+            row.fill.style.width = '100%';
+            row.fill.classList.add('ok');
+          }).catch(function(err){
+            row.fill.classList.add('err');
+            throw err;
+          });
+        }));
+
         status.textContent = 'Done';
-        data.uploaded.forEach(function(f){
-          var li = document.createElement('li');
-          li.textContent = '✓ ' + f.name;
-          list.appendChild(li);
-        });
         document.getElementById('upload-files').value = '';
       } catch (err) {
-        status.textContent = 'Upload failed';
+        status.textContent = 'Upload failed - ' + err.message;
+      }
+    });
+  })();
+
+  (function(){
+    var dialog = document.getElementById('manage-dialog');
+    document.getElementById('open-manage').addEventListener('click', function(){ dialog.showModal(); });
+    document.getElementById('manage-close').addEventListener('click', function(){ dialog.close(); });
+
+    function humanSize(bytes){
+      if (bytes < 1024) return bytes + ' B';
+      var units = ['KB', 'MB', 'GB'];
+      var val = bytes;
+      var u = -1;
+      do { val /= 1024; u++; } while (val >= 1024 && u < units.length - 1);
+      return val.toFixed(val >= 10 ? 0 : 1) + ' ' + units[u];
+    }
+
+    function humanAge(iso){
+      var ms = Date.now() - new Date(iso).getTime();
+      var mins = Math.floor(ms / 60000);
+      if (mins < 60) return mins + 'm ago';
+      var hours = Math.floor(mins / 60);
+      if (hours < 48) return hours + 'h ago';
+      return Math.floor(hours / 24) + 'd ago';
+    }
+
+    function displayName(key){
+      var idx = key.indexOf('__');
+      return idx === -1 ? key : key.slice(idx + 2);
+    }
+
+    function render(objects, password) {
+      var list = document.getElementById('manage-list');
+      list.innerHTML = '';
+      if (!objects.length) {
+        var empty = document.createElement('li');
+        empty.className = 'manage-empty';
+        empty.textContent = 'Nothing uploaded right now.';
+        list.appendChild(empty);
+        return;
+      }
+      objects.forEach(function(o){
+        var li = document.createElement('li');
+
+        var name = document.createElement('div');
+        name.className = 'manage-name';
+        name.textContent = displayName(o.key);
+
+        var meta = document.createElement('div');
+        meta.className = 'manage-meta';
+        meta.textContent = humanSize(o.size) + ' · ' + humanAge(o.uploaded);
+
+        var actions = document.createElement('div');
+        actions.className = 'manage-actions';
+
+        var dl = document.createElement('a');
+        dl.className = 'manage-btn';
+        dl.textContent = 'Download';
+        dl.href = '/api/upload/' + encodeURIComponent(o.key) + '?password=' + encodeURIComponent(password);
+        dl.target = '_blank';
+        dl.rel = 'noopener';
+
+        var del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'manage-btn danger';
+        del.textContent = 'Delete';
+        del.addEventListener('click', async function(){
+          if (!confirm('Delete "' + displayName(o.key) + '"? This can\'t be undone.')) return;
+          del.disabled = true;
+          del.textContent = 'Deleting...';
+          try {
+            await fetch('/api/upload/' + encodeURIComponent(o.key) + '?password=' + encodeURIComponent(password), { method: 'DELETE' });
+            li.remove();
+            if (!list.children.length) render([], password);
+          } catch (err) {
+            del.disabled = false;
+            del.textContent = 'Delete';
+          }
+        });
+
+        actions.appendChild(dl);
+        actions.appendChild(del);
+        li.appendChild(name);
+        li.appendChild(meta);
+        li.appendChild(actions);
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById('manage-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var status = document.getElementById('manage-status');
+      var password = document.getElementById('manage-password').value;
+      status.textContent = 'Loading...';
+      try {
+        var res = await fetch('/api/upload?password=' + encodeURIComponent(password));
+        var data = await res.json();
+        if (!res.ok) {
+          status.textContent = data.error || 'Load failed';
+          return;
+        }
+        status.textContent = '';
+        render(data.objects, password);
+      } catch (err) {
+        status.textContent = 'Load failed';
       }
     });
   })();

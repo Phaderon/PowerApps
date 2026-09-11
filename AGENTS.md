@@ -77,11 +77,43 @@ values to "today" once, and only then start actually deleting on future visits).
 this check every time you're asked to touch the Policy Tracker guide, not just when
 explicitly asked to clean up.
 
-**Homepage has a password-gated multi-file upload box into R2** (added 2026-08-17,
-`functions/api/upload.js` + `functions/api/upload/[key].js`, R2 bucket
+**Homepage has a password-gated multi-file upload box into R2, plus a file-manager UI**
+(upload box added 2026-08-17; direct-to-R2 large-file path + file manager added
+2026-09-11 after the user asked to upload a 360MB video). R2 bucket
 `powerapps-uploads` bound to the `powerapps` Pages project as `UPLOADS`, password
-stored as the Pages secret `UPLOAD_PASSWORD`, not in this repo). The user uses this to
-hand files (screenshots, exports, zips) to whichever agent is working, from any device.
+stored as the Pages secret `UPLOAD_PASSWORD`, not in this repo). The user treats this as
+an ad hoc Dropbox — uploading from a work laptop, then downloading from a home PC via
+the same page, as well as handing files to whichever agent is working.
+
+- `functions/api/upload.js` — password check + small-file path (used only by the
+  "leave a note" text-note feature now). Buffers the whole request into memory via
+  `request.formData()`, so it deliberately keeps a small 25MB per-file cap — Workers
+  have a 128MB memory ceiling and this path would crash well before 128MB anyway.
+  **Never raise this cap** — route anything bigger through presign.js instead.
+- `functions/api/upload/presign.js` — the real upload path for the homepage's file
+  picker. Mints a short-lived (6h) presigned R2 PUT URL per file using the vendored
+  `functions/_lib/aws4fetch.js` (unmodified upstream `aws4fetch`, MIT, fetched from
+  `https://cdn.jsdelivr.net/npm/aws4fetch@1.0.20/dist/aws4fetch.esm.js` — no
+  node_modules/build step in this repo's deploy pattern, so it's vendored as a plain
+  file, not npm-installed). The browser then PUTs the raw file straight to R2, so this
+  Function never sees the file body and isn't memory-bound. Per-file cap is 2GB
+  (`MAX_FILE_BYTES` in that file), enforced against the client-declared size before
+  signing. Needs two Pages secrets that don't exist yet if this hasn't been set up on
+  a fresh deploy: `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` — an R2 API token
+  scoped to **Object Read & Write** on just the `powerapps-uploads` bucket, created via
+  the Cloudflare dashboard (R2 → Manage API Tokens; this can't be minted headlessly the
+  same way the Pages deploy token was, so ask the user if it's ever missing). CORS on
+  the `powerapps-uploads` bucket allows `PUT` from `https://powerapps.pages.dev` only
+  (set once via the Cloudflare API, not in this repo — re-apply if the bucket's CORS
+  policy is ever cleared).
+- `functions/api/upload/[key].js` — GET (download, streamed from the R2 binding, no
+  size limit issue since responses stream rather than buffer), DELETE. Unchanged.
+- Homepage's "Manage uploaded files" dialog (`index.html`) is the file-manager UI:
+  same password, lists everything via the GET-list endpoint, Download links open the
+  existing `[key].js` GET endpoint directly (browser's native download, no custom
+  progress bar — deliberate, the user chose this over building one), Delete calls the
+  DELETE endpoint with a confirm() guard first.
+
 **Read what's there instead of asking the user to re-send:**
 `curl "https://powerapps.pages.dev/api/upload?password=<UPLOAD_PASSWORD>"` lists
 objects; fetch one with
@@ -90,11 +122,11 @@ Get the password value from the user directly if you don't already have it in th
 session — never print it into a file, guide page, or committed code. **Storage
 safeguards, all already in place, don't remove them:** an R2 bucket lifecycle rule
 auto-deletes every object after 14 days (set via the Cloudflare API directly on the
-bucket, not enforced in code); the upload Function also rejects any single file over
-25MB and refuses new uploads once the bucket's total size is within ~2GB of the R2 free
-tier's 10GB/month cap. If asked to raise these limits, remember the point of the caps is
-to make this feature unable to blow through the free tier unattended — don't just delete
-them, ask first if a genuinely bigger file needs to go through.
+bucket, not enforced in code); uploads refuse once the bucket's total size is within
+~2GB of the R2 free tier's 10GB/month cap (`MAX_BUCKET_BYTES` in both upload.js and
+presign.js — keep these two in sync if either changes). If asked to raise the per-file
+cap further, remember the point of the caps is to make this feature unable to blow
+through the free tier unattended — don't just delete them, ask first.
 
 **Always start here:** `reference/database.html` — every reference document in this
 repo consolidated onto one page, in reading order (known-bad-patterns first, since
