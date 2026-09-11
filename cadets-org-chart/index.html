@@ -644,6 +644,13 @@ Select(btnRenderInfoSys)</pre>
             <li>The original department name strings for Media &amp; Comms and Policy &amp; Pers used a bare <code>&amp;</code> inside the generated SVG text &mdash; invalid XML (SVG is XML; an unescaped <code>&amp;</code> in text content doesn't parse). Confirmed with an offline XML parser before this ever reached Studio. Fixed below &mdash; these now correctly contain the literal characters <code>&amp;amp;</code>, not a bare <code>&amp;</code>.</li>
           </ol>
         </div>
+        <div class="callout warn">
+          <strong>Corrected again 2026-09-11, after this actually rendered &mdash; two more findings from visually reviewing the real output, not from Studio errors this time:</strong>
+          <ol style="margin:8px 0 0;">
+            <li><strong>CEP overlapped Policy &amp; Pers's own last row.</strong> A real arithmetic mistake: Policy &amp; Pers's tallest column has 2 entries (a lead + 1 worker), and its content-height was worked out using the 1-entry formula by mistake (<code>71</code> instead of the correct <code>101</code>), so CEP was placed 30 units too high &mdash; straight into Policy &amp; Pers's own C. Hughes/D. Campbell row. Fixed: CEP's header now starts at <code>y=710</code> (was <code>680</code>) and its card at <code>y=740</code> (was <code>710</code>).</li>
+            <li><strong>Command's DCOMD and COS were left-aligned instead of centred over their own children</strong>, so Chris Williams's 5 direct reports fanned out asymmetrically rather than branching symmetrically underneath him. Fixed by centring each parent over the horizontal span of its own children instead of a fixed position: DCOMD moved from <code>X=20</code> to <code>X=352.5</code> (centred over DCOMD PS/Colonel Cadets/COS), COS moved from <code>X=400</code> to <code>X=685</code> (centred over its 5 direct reports) &mdash; as a side effect, SO2 Plans (the middle of COS's 5 reports) now sits dead-centre under COS with a single straight connector line. All 10 Command connector coordinates recomputed to match.</li>
+          </ol>
+        </div>
         <p>Combines Command and all 9 department panels into <strong>one generated SVG, one Image control</strong> &mdash; matching the single A3 sheet in the mockup, not the two side-by-side test pictures Phases 1-2 used. 108 posts across 10 panels in one generated picture, versus Phase 2's 24 in one &mdash; that scale question is exactly what this phase exists to answer; don't assume it works the same way just because the smaller pieces did.</p>
         <p>Positions below are computed from the same measured page grid in the Visual Spec section (Command full-width; Safeguarding/Training/Information Systems as equal thirds; Media &amp; Comms/CCF(A)/Policy &amp; Pers+CEP/Support/CCF as the bottom row, 10pt gutters throughout), worked out by hand once for this fixed 10-department layout &mdash; this is <strong>not</strong> a generic "any number of departments, any arrangement" algorithm. A real SharePoint-backed version would need that generalised; this phase only proves the picture can be built and rendered at this scale and complexity.</p>
         <div class="callout warn">
@@ -657,15 +664,15 @@ Select(btnRenderInfoSys)</pre>
           <div class="code-toolbar">
             <div class="code-meta">
               <span>App &middot; OnStart &mdash; full Command (11 posts) + the other 8 departments (86 posts)</span>
-              <span class="code-stamp" data-updated="2026-09-11T09:46:55Z">v1 &middot; 2026-09-11 10:46 BST</span>
+              <span class="code-stamp" data-updated="2026-09-11T10:37:49Z">v2 &middot; 2026-09-11 11:37 BST &mdash; DCOMD/COS recentred over their own children</span>
             </div>
             <button data-copy="phase3-onstart" type="button">Copy</button>
           </div>
 <pre id="phase3-onstart">ClearCollect(colCommandFullPosts,
-    {PostID: "CMD-DCOMD",   X: 20,  Y: 38,  W: 170, H: 34, Title: "DCOMD",                  Occupant: "Alex Morgan",      Category: "Regular",           IsVacant: false},
+    {PostID: "CMD-DCOMD",   X: 352.5,Y: 38, W: 170, H: 34, Title: "DCOMD",                  Occupant: "Alex Morgan",      Category: "Regular",           IsVacant: false},
     {PostID: "CMD-PS",      X: 20,  Y: 82,  W: 170, H: 34, Title: "DCOMD PS",                Occupant: "Sam Taylor",       Category: "Aspire",             IsVacant: false},
     {PostID: "CMD-COLCDT",  X: 210, Y: 82,  W: 170, H: 34, Title: "Colonel Cadets",           Occupant: "Jordan Patel",     Category: "ACCT UK Employee",   IsVacant: false},
-    {PostID: "CMD-COS",     X: 400, Y: 82,  W: 170, H: 34, Title: "COS",                      Occupant: "Chris Williams",   Category: "Regular",            IsVacant: false},
+    {PostID: "CMD-COS",     X: 685, Y: 82,  W: 170, H: 34, Title: "COS",                      Occupant: "Chris Williams",   Category: "Regular",            IsVacant: false},
     {PostID: "CMD-INFOMGR", X: 400, Y: 126, W: 140, H: 34, Title: "SO2 Information Mgmt",     Occupant: "Jamie Clarke",     Category: "Civil Servant",       IsVacant: false},
     {PostID: "CMD-XO",      X: 550, Y: 126, W: 140, H: 34, Title: "XO",                       Occupant: "",                 Category: "",                    IsVacant: true},
     {PostID: "CMD-PLANS",   X: 700, Y: 126, W: 140, H: 34, Title: "SO2 Plans",                Occupant: "Taylor Evans",     Category: "FTRS",                IsVacant: false},
@@ -676,16 +683,16 @@ Select(btnRenderInfoSys)</pre>
 );
 
 ClearCollect(colCommandFullConnectors,
-    {X1: 105, Y1: 72,  X2: 105, Y2: 82},   // DCOMD -&gt; DCOMD PS
-    {X1: 105, Y1: 72,  X2: 295, Y2: 82},   // DCOMD -&gt; Colonel Cadets
-    {X1: 105, Y1: 72,  X2: 485, Y2: 82},   // DCOMD -&gt; COS
-    {X1: 485, Y1: 116, X2: 470, Y2: 126},  // COS -&gt; SO2 Information Mgmt
-    {X1: 485, Y1: 116, X2: 620, Y2: 126},  // COS -&gt; XO (vacant)
-    {X1: 485, Y1: 116, X2: 770, Y2: 126},  // COS -&gt; SO2 Plans
-    {X1: 485, Y1: 116, X2: 920, Y2: 126},  // COS -&gt; Project Officer
-    {X1: 485, Y1: 116, X2: 1070,Y2: 126},  // COS -&gt; CO Training Centre
-    {X1: 470, Y1: 160, X2: 470, Y2: 170},  // SO2 Information Mgmt -&gt; Information Officer
-    {X1: 620, Y1: 160, X2: 620, Y2: 170}   // XO -&gt; Branch Administrator (vacancy keeps its child)
+    {X1: 437.5, Y1: 72,  X2: 105, Y2: 82},  // DCOMD -&gt; DCOMD PS
+    {X1: 437.5, Y1: 72,  X2: 295, Y2: 82},  // DCOMD -&gt; Colonel Cadets
+    {X1: 437.5, Y1: 72,  X2: 770, Y2: 82},  // DCOMD -&gt; COS
+    {X1: 770, Y1: 116, X2: 470, Y2: 126},   // COS -&gt; SO2 Information Mgmt
+    {X1: 770, Y1: 116, X2: 620, Y2: 126},   // COS -&gt; XO (vacant)
+    {X1: 770, Y1: 116, X2: 770, Y2: 126},   // COS -&gt; SO2 Plans (dead centre - straight line)
+    {X1: 770, Y1: 116, X2: 920, Y2: 126},   // COS -&gt; Project Officer
+    {X1: 770, Y1: 116, X2: 1070,Y2: 126},   // COS -&gt; CO Training Centre
+    {X1: 470, Y1: 160, X2: 470, Y2: 170},   // SO2 Information Mgmt -&gt; Information Officer
+    {X1: 620, Y1: 160, X2: 620, Y2: 170}    // XO -&gt; Branch Administrator (vacancy keeps its child)
 );
 
 ClearCollect(colSafeguardingPosts,
@@ -789,7 +796,7 @@ ClearCollect(colCcfPosts,
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnRenderFullSheet.OnSelect &mdash; builds all 10 panels, one combined picture, no function</span>
-              <span class="code-stamp" data-updated="2026-09-11T09:46:55Z">v1 &middot; 2026-09-11 10:46 BST</span>
+              <span class="code-stamp" data-updated="2026-09-11T10:37:49Z">v2 &middot; 2026-09-11 11:37 BST &mdash; fixed CEP overlap and Command centring</span>
             </div>
             <button data-copy="phase3-button" type="button">Copy</button>
           </div>
@@ -1112,12 +1119,12 @@ Set(varCcfSvg,
 Set(varCepSvg,
     With(
         {_cat: LookUp(colCategoryColours, Category = "RFCA")},
-        "&lt;rect x='560' y='680' width='180' height='22' fill='#003E32'/&gt;" &amp;
-        "&lt;text x='570' y='695' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;CEP&lt;/text&gt;" &amp;
-        "&lt;rect x='560' y='710' width='140' height='34' rx='3' fill='" &amp; If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF")) &amp; "' stroke='#CBD5D1' stroke-width='0.6'/&gt;" &amp;
-        If(varChartMode = "Quiet", "&lt;rect x='560' y='710' width='4' height='34' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;", "") &amp;
-        "&lt;text x='568' y='724' font-weight='bold' font-size='8' fill='#172A27'&gt;Alex Morgan&lt;/text&gt;" &amp;
-        "&lt;text x='568' y='735' font-size='8' fill='#172A27'&gt;Head of CEP&lt;/text&gt;"
+        "&lt;rect x='560' y='710' width='180' height='22' fill='#003E32'/&gt;" &amp;
+        "&lt;text x='570' y='725' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;CEP&lt;/text&gt;" &amp;
+        "&lt;rect x='560' y='740' width='140' height='34' rx='3' fill='" &amp; If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF")) &amp; "' stroke='#CBD5D1' stroke-width='0.6'/&gt;" &amp;
+        If(varChartMode = "Quiet", "&lt;rect x='560' y='740' width='4' height='34' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;", "") &amp;
+        "&lt;text x='568' y='754' font-weight='bold' font-size='8' fill='#172A27'&gt;Alex Morgan&lt;/text&gt;" &amp;
+        "&lt;text x='568' y='765' font-size='8' fill='#172A27'&gt;Head of CEP&lt;/text&gt;"
     )
 );
 
