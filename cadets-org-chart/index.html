@@ -540,13 +540,16 @@ Select(btnRender)</pre>
 // 1 head + 8 + 8 + 7 = 24 posts, 1 vacancy - matches the mockup panel exactly.
 </pre>
         </div>
+        <div class="callout warn">
+          <strong>Every code block on this page is the complete content for one property &mdash; the whole thing, never a fragment to merge by hand into existing code.</strong> Where that means creating a new control rather than reusing one, this page says so explicitly, as here.
+        </div>
         <ol start="2">
-          <li>Render formula &mdash; same renderer shape as Phase 1, but <code>X</code>/<code>Y</code> are computed via <code>AddColumns</code>, not stored per row:</li>
+          <li>Add a NEW button &mdash; e.g. <code>btnRenderInfoSys</code>, separate from Phase 1's <code>btnRender</code>. Set its <code>OnSelect</code> to this complete formula (same renderer shape as Phase 1, but <code>X</code>/<code>Y</code> are computed via <code>AddColumns</code>, not stored per row):</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
-              <span>Render formula &mdash; computed column/row grid layout for one department</span>
+              <span>btnRenderInfoSys.OnSelect &mdash; computed column/row grid layout for one department</span>
               <span class="code-stamp" data-updated="2026-09-11T08:59:07Z">v3 &middot; 2026-09-11 09:59 BST &mdash; fixed AddColumns quoted column names (Studio rejected them, see callout below)</span>
             </div>
             <button data-copy="phase2-render" type="button">Copy</button>
@@ -593,7 +596,25 @@ Select(btnRender)</pre>
 Set(varInfoSysDataUri, "data:image/svg+xml," &amp; EncodeUrl(varInfoSysSvg))
 </pre>
         </div>
-        <p>Point a second Image control at <code>=varInfoSysDataUri</code>.</p>
+        <ol start="3">
+          <li>Point a second Image control at <code>=varInfoSysDataUri</code>.</li>
+          <li>Update your existing toggle button (from Phase 1) so it refreshes BOTH pictures &mdash; replace its <code>OnSelect</code> entirely, don't just add a line to what's there now:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Toggle button.OnSelect &mdash; complete replacement, flips both pictures</span>
+              <span class="code-stamp" data-updated="2026-09-11T09:02:00Z">v1 &middot; 2026-09-11 10:02 BST</span>
+            </div>
+            <button data-copy="phase2-toggle" type="button">Copy</button>
+          </div>
+<pre id="phase2-toggle">Set(varChartMode, If(varChartMode = "Quiet", "Coloured", "Quiet"));
+Select(btnRender);
+Select(btnRenderInfoSys)</pre>
+        </div>
+        <div class="callout warn">
+          Skip this and the toggle button will still only flip the Command picture &mdash; the Information Systems picture silently stays on whichever mode it last rendered in, the same "stale until the next click" bug Phase 1's toggle had, just on the second image. Use your actual button names if they differ from <code>btnRender</code>/<code>btnRenderInfoSys</code>.
+        </div>
         <div class="callout warn">
           <strong>Fixed 2026-09-11 &mdash; real mistake, caught by Studio:</strong> the <code>AddColumns</code> call above originally had its new-column-name arguments as quoted strings (<code>"_x"</code>, <code>"_y"</code>, etc.) &mdash; Studio rejected this with "Expected identifier name," blocking the button from being built at all. <code>AddColumns(table, ColumnName, formula, ...)</code> needs a <strong>bare identifier</strong> for the column name, never a quoted string &mdash; this exact rule already existed in <code>known-bad-patterns.md</code> before this formula was written; it just wasn't checked against this specific formula. Corrected above. If you pasted the broken version, delete the whole <code>AddColumns(...)</code> block and repaste this one rather than hand-editing just the quotes.
         </div>
