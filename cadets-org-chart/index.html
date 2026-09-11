@@ -1465,6 +1465,31 @@ Set(varAutoTreeDataUri, "data:image/svg+xml," &amp; EncodeUrl(varAutoTreeSvg))</
         <div class="callout ok">
           <strong>What to check:</strong> does it run at all, or does something in that chain redline &mdash; if so, record the exact error and which <code>ClearCollect</code> step it's on. If it renders: do all 10 boxes appear, correctly nested 4 levels deep, with P10 under P5 specifically? Is every gap between siblings under the same manager an identical, clean distance (Python's simulation says it should be a uniform 10pt everywhere)? <strong>Then the actual point of this whole phase:</strong> delete <code>P8</code> from the <code>OnStart</code> data above, or add a <code>P11</code> under <code>P3</code>, re-run, and see whether the tree reflows correctly on its own &mdash; with no coordinate anywhere touched by a person. That's the one result that actually matters; everything above it is just getting there.
         </div>
+        <div class="callout warn" id="phase4-debugging">
+          <strong>If only some cards appear (e.g. just the root) &mdash; add these three temporary Labels, then delete them once you've read the result.</strong> Power Fx tends to go quiet rather than red when one of the nested <code>ThisRecord</code> references above binds to the wrong row &mdash; the chain runs, Studio shows no error, and it just silently computes wrong numbers instead. These three Labels tell us exactly where the chain actually breaks, rather than guessing at the whole formula again.
+        </div>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Three temporary diagnostic Labels &mdash; delete after reading</span>
+              <span class="code-stamp" data-updated="2026-09-11T17:53:28Z">v1 &middot; 2026-09-11 18:53 BST</span>
+            </div>
+            <button data-copy="phase4-debug-labels" type="button">Copy</button>
+          </div>
+<pre id="phase4-debug-labels">// Label 1 -- did every row survive the whole chain?
+"colFinal rows: " &amp; CountRows(colFinal)
+
+// Label 2 -- what Depth did each post actually get?
+Concat(colFinal, PostID &amp; "-&gt;d" &amp; Depth &amp; "  ", "")
+
+// Label 3 -- what final X/Y did each post actually get?
+Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ")  ", "")</pre>
+        </div>
+        <ul style="margin:10px 0 0; padding-left:20px; font-size:.95rem;">
+          <li><strong>Label 1 isn't 10:</strong> something upstream is dropping rows entirely &mdash; surprising, since <code>AddColumns</code> should never remove a row, but the first thing to rule out.</li>
+          <li><strong>Label 1 is 10, but Label 2 shows everyone at the same depth</strong> (e.g. everyone <code>d0</code>): Step A's depth-detection chain isn't correctly telling P2&ndash;P10 apart from the root.</li>
+          <li><strong>Depths look right, but Label 3 shows everyone bunched at the same X/Y (or blank):</strong> Step B/C (width or position) is the problem, not depth &mdash; and everyone would be stacked exactly on top of each other, which looks on screen exactly like only one card rendering, with the rest hidden directly underneath it.</li>
+        </ul>
         <div class="callout warn">
           <strong>What NOT to conclude from this phase:</strong> passing it proves the algorithm works for a tree up to 4 levels deep, computed live. It does not yet prove this scales to Command's real size/complexity combined with Phase 3's visual polish (colour rails, vacancy dashing, category lookup &mdash; all already proven separately, just not combined with this yet), that a real SharePoint list's <code>ManagerPostID</code> behaves identically to a local collection, or anything about squads, dotted/matrix lines, or panel borders &mdash; all deliberately out of scope here.
         </div>
