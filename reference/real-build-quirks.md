@@ -219,3 +219,11 @@ This depends on the app's intended data contract: `BM Memberships.GroupName` mus
 ## Notify-First Validation Pattern Breaks Error Borders
 
 If validation calls `Notify(...)` before setting error variables, the Notify message appears but the error borders (Visible driven by error variables) never show because the success path immediately clears everything. Set all error variables first, then check them in an If guard. See `ui-patterns.md` for the correct pattern.
+
+## Image Control Can Display A Generated SVG Data URI — But `Base64()` Is Not A Real Function
+
+Confirmed live 2026-09-11, Cadets Org Chart project (`C:\Users\Phaderon\Projects\PowerApps-Apps\cadets-org-chart\`) — the first live test anywhere in this app family of an Image control showing a computed vector graphic instead of a static media asset.
+
+**Works:** setting an Image control's `Image` property directly to a `data:image/svg+xml;utf8,<url-encoded-svg-markup>` string literal renders correctly — rounded-corner shapes, fill colours, dashed borders, and connector lines all appeared as drawn. This confirms the core primitive behind "render an org-chart-style diagram as generated SVG in an Image control" is viable in this tenant, not just in theory.
+
+**Does not work:** `Base64(anyTextValue)` — Studio's formula bar rejects it outright: *"'Base64' is an unknown or unsupported function."* This function has no prior use anywhere else in this Bible either, so treat any future guide/example that calls a bare `Base64()` on a text value as unverified until re-confirmed live. (`EncodeUrl()` — already in real use elsewhere in this app family for URL-encoding — is the next candidate for building a data URI from a *dynamically constructed* SVG string; update this entry once that's confirmed either way.)
