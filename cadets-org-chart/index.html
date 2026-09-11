@@ -342,12 +342,18 @@
 <pre id="phase0-test-a">="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 120'&gt;&lt;rect x='0' y='0' width='300' height='120' fill='%23F7F4F6'/&gt;&lt;rect x='10' y='10' width='120' height='34' rx='3' fill='%23CFF4F1' stroke='%23CBD5D1' stroke-width='0.6'/&gt;&lt;text x='16' y='24' font-family='Arial' font-weight='bold' font-size='8' fill='%23172A27'&gt;B. Hamilton&lt;/text&gt;&lt;text x='16' y='34' font-family='Arial' font-size='8' fill='%23172A27'&gt;Casework lead&lt;/text&gt;&lt;rect x='10' y='55' width='120' height='34' rx='3' fill='none' stroke='%236B7570' stroke-width='0.6' stroke-dasharray='2,2'/&gt;&lt;text x='16' y='69' font-family='Arial' font-weight='bold' font-size='8' fill='%23172A27'&gt;GAPPED&lt;/text&gt;&lt;text x='16' y='79' font-family='Arial' font-size='8' fill='%23172A27'&gt;Caseworker&lt;/text&gt;&lt;line x1='70' y1='44' x2='70' y2='55' stroke='%238A9A94' stroke-width='0.6'/&gt;&lt;/svg&gt;"
 </pre>
         </div>
+        <div class="callout ok">
+          <strong>CONFIRMED PASSED, 2026-09-11.</strong> Rendered correctly in Studio: rounded-corner card, category-colour fill, dashed "GAPPED" vacant card, and the connector line all present. This resolves the single biggest open risk in this whole plan &mdash; the Image control genuinely can display a computed SVG in this tenant. See <code>docs/validation.md</code> in the project for the full note.
+        </div>
         <p>Then, separately, add a Button whose <code>OnSelect</code> builds the same picture through Power Fx string concatenation instead of a hand-typed literal, and point the Image control at the resulting variable:</p>
+        <div class="callout warn">
+          <strong>CONFIRMED FAILED, 2026-09-11: <code>Base64()</code> is not a real function here.</strong> Studio's formula bar rejected it outright &mdash; "'Base64' is an unknown or unsupported function." The code block below has been updated to try <code>EncodeUrl()</code> instead (a function already in confirmed real use elsewhere in this app family, unlike <code>Base64</code>, which had zero prior use anywhere in the Bible) &mdash; that swap itself is <strong>not yet confirmed</strong>, so treat it as the next thing to test, not a known-working fix.
+        </div>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
-              <span>Button &middot; OnSelect &mdash; Test B, formula-built SVG + Base64()</span>
-              <span class="code-stamp" data-updated="2026-09-11T00:21:35Z">v1 &middot; 2026-09-11 01:21 BST</span>
+              <span>Button &middot; OnSelect &mdash; Test B, formula-built SVG + EncodeUrl()</span>
+              <span class="code-stamp" data-updated="2026-09-11T08:30:26Z">v2 &middot; 2026-09-11 09:30 BST &mdash; Base64() confirmed broken, swapped for EncodeUrl() (unconfirmed)</span>
             </div>
             <button data-copy="phase0-test-b" type="button">Copy</button>
           </div>
@@ -359,7 +365,7 @@
     "&lt;text x='16' y='34' font-family='Arial' font-size='8' fill='#172A27'&gt;" &amp; "Casework lead" &amp; "&lt;/text&gt;" &amp;
     "&lt;/svg&gt;"
 );
-Set(varTestDataUri, "data:image/svg+xml;base64," &amp; Base64(varTestSvg))
+Set(varTestDataUri, "data:image/svg+xml," &amp; EncodeUrl(varTestSvg))
 </pre>
         </div>
         <p>Set that Image control's <code>Image</code> property to <code>=varTestDataUri</code>, and add a Label showing <code>=Len(varTestSvg)</code> so the generated string isn't silently empty.</p>
