@@ -258,6 +258,7 @@
         <a href="#phase-0">Phase 0 - Static SVG Sanity Test</a>
         <a href="#phase-1">Phase 1 - Formula-Generated Command Proof</a>
         <a href="#phase-2">Phase 2 - Full Department (24 Posts, Computed)</a>
+        <a href="#phase-3">Phase 3 - Full Single-Sheet Render (All 10 Departments)</a>
         <a href="#next-steps">Next Steps</a>
         <a href="#open-questions">Known Limitations / Open Questions</a>
       </nav>
@@ -629,6 +630,285 @@ Select(btnRenderInfoSys)</pre>
         </div>
       </section>
 
+      <section id="phase-3">
+        <h2>Phase 3 - Full Single-Sheet Render (All 10 Departments)</h2>
+        <p class="meta-line">Run after Phase 2 passes (it has) &middot; still local <code>ClearCollect</code> data, no SharePoint &middot; the biggest formula/string this project has attempted by a wide margin</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this phase">&#9660;</button>
+        </div>
+        <p>Combines Command and all 9 department panels into <strong>one generated SVG, one Image control</strong> &mdash; matching the single A3 sheet in the mockup, not the two side-by-side test pictures Phases 1-2 used. 108 posts across 10 panels in one generated picture, versus Phase 2's 24 in one &mdash; that scale question is exactly what this phase exists to answer; don't assume it works the same way just because the smaller pieces did.</p>
+        <p>Positions below are computed from the same measured page grid in the Visual Spec section (Command full-width; Safeguarding/Training/Information Systems as equal thirds; Media &amp; Comms/CCF(A)/Policy &amp; Pers+CEP/Support/CCF as the bottom row, 10pt gutters throughout), worked out by hand once for this fixed 10-department layout &mdash; this is <strong>not</strong> a generic "any number of departments, any arrangement" algorithm. A real SharePoint-backed version would need that generalised; this phase only proves the picture can be built and rendered at this scale and complexity.</p>
+        <div class="callout warn">
+          <strong>Every code block on this page is the complete content for one property &mdash; the whole thing, never a fragment to merge by hand into existing code.</strong>
+        </div>
+
+        <ol>
+          <li>Add to <strong>App.OnStart</strong>, alongside everything from Phases 1-2. This is a full replacement-by-addition: keep your existing <code>colCategoryColours</code>, <code>colCommandPosts</code>/<code>colCommandConnectors</code> (Phase 1's 5-post subset &mdash; untouched, still useful on its own), <code>colInfoSysPosts</code> (Phase 2), and <code>varChartMode</code>. Add these new collections alongside them &mdash; <strong>Command gets its own separate, full 11-post collection here</strong> (<code>colCommandFullPosts</code>/<code>colCommandFullConnectors</code>), distinct from Phase 1's 5-post proof subset, because this phase needs the whole department, not an excerpt.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>App &middot; OnStart &mdash; full Command (11 posts) + the other 8 departments (86 posts)</span>
+              <span class="code-stamp" data-updated="2026-09-11T09:31:59Z">v1 &middot; 2026-09-11 10:31 BST</span>
+            </div>
+            <button data-copy="phase3-onstart" type="button">Copy</button>
+          </div>
+<pre id="phase3-onstart">ClearCollect(colCommandFullPosts,
+    {PostID: "CMD-DCOMD",   X: 20,  Y: 38,  W: 170, H: 34, Title: "DCOMD",                  Occupant: "Alex Morgan",      Category: "Regular",           IsVacant: false},
+    {PostID: "CMD-PS",      X: 20,  Y: 82,  W: 170, H: 34, Title: "DCOMD PS",                Occupant: "Sam Taylor",       Category: "Aspire",             IsVacant: false},
+    {PostID: "CMD-COLCDT",  X: 210, Y: 82,  W: 170, H: 34, Title: "Colonel Cadets",           Occupant: "Jordan Patel",     Category: "ACCT UK Employee",   IsVacant: false},
+    {PostID: "CMD-COS",     X: 400, Y: 82,  W: 170, H: 34, Title: "COS",                      Occupant: "Chris Williams",   Category: "Regular",            IsVacant: false},
+    {PostID: "CMD-INFOMGR", X: 400, Y: 126, W: 140, H: 34, Title: "SO2 Information Mgmt",     Occupant: "Jamie Clarke",     Category: "Civil Servant",       IsVacant: false},
+    {PostID: "CMD-XO",      X: 550, Y: 126, W: 140, H: 34, Title: "XO",                       Occupant: "",                 Category: "",                    IsVacant: true},
+    {PostID: "CMD-PLANS",   X: 700, Y: 126, W: 140, H: 34, Title: "SO2 Plans",                Occupant: "Taylor Evans",     Category: "FTRS",                IsVacant: false},
+    {PostID: "CMD-PROJOFF", X: 850, Y: 126, W: 140, H: 34, Title: "Project Officer",          Occupant: "Casey Hughes",     Category: "ACCT UK Employee",    IsVacant: false},
+    {PostID: "CMD-TRGCTR",  X: 1000,Y: 126, W: 140, H: 34, Title: "CO Training Centre",       Occupant: "Morgan Lewis",     Category: "Regular",             IsVacant: false},
+    {PostID: "CMD-INFOOFC", X: 400, Y: 170, W: 140, H: 34, Title: "Information Officer",       Occupant: "Drew Campbell",   Category: "Civil Servant",       IsVacant: false},
+    {PostID: "CMD-BRADMIN", X: 550, Y: 170, W: 140, H: 34, Title: "Branch Administrator",     Occupant: "Ashley Thompson",  Category: "Aspire",              IsVacant: false}
+);
+
+ClearCollect(colCommandFullConnectors,
+    {X1: 105, Y1: 72,  X2: 105, Y2: 82},   // DCOMD -&gt; DCOMD PS
+    {X1: 105, Y1: 72,  X2: 295, Y2: 82},   // DCOMD -&gt; Colonel Cadets
+    {X1: 105, Y1: 72,  X2: 485, Y2: 82},   // DCOMD -&gt; COS
+    {X1: 485, Y1: 116, X2: 470, Y2: 126},  // COS -&gt; SO2 Information Mgmt
+    {X1: 485, Y1: 116, X2: 620, Y2: 126},  // COS -&gt; XO (vacant)
+    {X1: 485, Y1: 116, X2: 770, Y2: 126},  // COS -&gt; SO2 Plans
+    {X1: 485, Y1: 116, X2: 920, Y2: 126},  // COS -&gt; Project Officer
+    {X1: 485, Y1: 116, X2: 1070,Y2: 126},  // COS -&gt; CO Training Centre
+    {X1: 470, Y1: 160, X2: 470, Y2: 170},  // SO2 Information Mgmt -&gt; Information Officer
+    {X1: 620, Y1: 160, X2: 620, Y2: 170}   // XO -&gt; Branch Administrator (vacancy keeps its child)
+);
+
+ClearCollect(colSafeguardingPosts,
+    {PostID: "SG-HEAD", Col: 0, Row: 0, Title: "Head of Safeguarding", Occupant: "Hayden Foster",    Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-101",  Col: 1, Row: 0, Title: "Casework lead",        Occupant: "B. Hamilton",       Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-102",  Col: 1, Row: 1, Title: "Caseworker",           Occupant: "H. Foster",         Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-103",  Col: 1, Row: 2, Title: "Caseworker",           Occupant: "Q. Roberts",        Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-104",  Col: 1, Row: 3, Title: "Caseworker",           Occupant: "D. Robertson",      Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-105",  Col: 1, Row: 4, Title: "Caseworker",           Occupant: "R. Montgomery",     Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-201",  Col: 2, Row: 0, Title: "Casework lead",        Occupant: "A. Henderson",      Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-202",  Col: 2, Row: 1, Title: "Caseworker",           Occupant: "F. Matthews",       Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-203",  Col: 2, Row: 2, Title: "Caseworker",           Occupant: "",                  Category: "",              IsVacant: true},
+    {PostID: "SG-204",  Col: 2, Row: 3, Title: "Caseworker",           Occupant: "R. Phillips",       Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-205",  Col: 2, Row: 4, Title: "Caseworker",           Occupant: "F. Edwards",        Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-301",  Col: 3, Row: 0, Title: "Casework lead",        Occupant: "A. Morgan",         Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-302",  Col: 3, Row: 1, Title: "Caseworker",           Occupant: "S. Taylor",         Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-303",  Col: 3, Row: 2, Title: "Caseworker",           Occupant: "",                  Category: "",              IsVacant: true},
+    {PostID: "SG-304",  Col: 3, Row: 3, Title: "Caseworker",           Occupant: "C. Williams",       Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-305",  Col: 3, Row: 4, Title: "Caseworker",           Occupant: "J. Clarke",         Category: "Civil Servant", IsVacant: false}
+);
+
+ClearCollect(colTrainingPosts,
+    {PostID: "TR-HEAD", Col: 0, Row: 0, Title: "Head of Training", Occupant: "Avery Henderson", Category: "FTRS", IsVacant: false},
+    {PostID: "TR-101",  Col: 1, Row: 0, Title: "Training lead",    Occupant: "R. Montgomery",    Category: "FTRS", IsVacant: false},
+    {PostID: "TR-102",  Col: 1, Row: 1, Title: "Training officer", Occupant: "A. Henderson",      Category: "FTRS", IsVacant: false},
+    {PostID: "TR-103",  Col: 1, Row: 2, Title: "Training officer", Occupant: "F. Matthews",       Category: "FTRS", IsVacant: false},
+    {PostID: "TR-104",  Col: 1, Row: 3, Title: "Training officer", Occupant: "L. Cunningham",     Category: "FTRS", IsVacant: false},
+    {PostID: "TR-105",  Col: 1, Row: 4, Title: "Training officer", Occupant: "R. Phillips",       Category: "FTRS", IsVacant: false},
+    {PostID: "TR-106",  Col: 1, Row: 5, Title: "Training officer", Occupant: "F. Edwards",        Category: "FTRS", IsVacant: false},
+    {PostID: "TR-107",  Col: 1, Row: 6, Title: "Training officer", Occupant: "A. Morgan",         Category: "FTRS", IsVacant: false},
+    {PostID: "TR-201",  Col: 2, Row: 0, Title: "Training lead",    Occupant: "S. Taylor",         Category: "FTRS", IsVacant: false},
+    {PostID: "TR-202",  Col: 2, Row: 1, Title: "Training officer", Occupant: "J. Patel",          Category: "FTRS", IsVacant: false},
+    {PostID: "TR-203",  Col: 2, Row: 2, Title: "Training officer", Occupant: "C. Williams",       Category: "FTRS", IsVacant: false},
+    {PostID: "TR-204",  Col: 2, Row: 3, Title: "Training officer", Occupant: "J. Clarke",         Category: "FTRS", IsVacant: false},
+    {PostID: "TR-205",  Col: 2, Row: 4, Title: "Training officer", Occupant: "R. Bennett",        Category: "FTRS", IsVacant: false},
+    {PostID: "TR-206",  Col: 2, Row: 5, Title: "Training officer", Occupant: "T. Evans",          Category: "FTRS", IsVacant: false},
+    {PostID: "TR-301",  Col: 3, Row: 0, Title: "Training lead",    Occupant: "C. Hughes",         Category: "FTRS", IsVacant: false},
+    {PostID: "TR-302",  Col: 3, Row: 1, Title: "Training officer", Occupant: "M. Lewis",          Category: "FTRS", IsVacant: false},
+    {PostID: "TR-303",  Col: 3, Row: 2, Title: "Training officer", Occupant: "D. Campbell",       Category: "FTRS", IsVacant: false},
+    {PostID: "TR-304",  Col: 3, Row: 3, Title: "Training officer", Occupant: "A. Thompson",       Category: "FTRS", IsVacant: false},
+    {PostID: "TR-305",  Col: 3, Row: 4, Title: "Training officer", Occupant: "L. Richardson",     Category: "FTRS", IsVacant: false},
+    {PostID: "TR-306",  Col: 3, Row: 5, Title: "Training officer", Occupant: "C. Wilson",         Category: "FTRS", IsVacant: false}
+);
+
+ClearCollect(colMediaPosts,
+    {PostID: "MC-HEAD", Col: 0, Row: 0, Title: "Head of Communications", Occupant: "Cameron Stewart", Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-101",  Col: 1, Row: 0, Title: "Comms lead",             Occupant: "C. Wilson",        Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-102",  Col: 1, Row: 1, Title: "Communications officer",Occupant: "C. Stewart",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-103",  Col: 1, Row: 2, Title: "Communications officer",Occupant: "F. Brooks",        Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-104",  Col: 1, Row: 3, Title: "Communications officer",Occupant: "R. Mitchell",      Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-105",  Col: 1, Row: 4, Title: "Communications officer",Occupant: "E. Anderson",      Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-201",  Col: 2, Row: 0, Title: "Comms lead",             Occupant: "B. Hamilton",      Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-202",  Col: 2, Row: 1, Title: "Communications officer",Occupant: "H. Foster",        Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-203",  Col: 2, Row: 2, Title: "Communications officer",Occupant: "Q. Roberts",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-204",  Col: 2, Row: 3, Title: "Communications officer",Occupant: "D. Robertson",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-205",  Col: 2, Row: 4, Title: "Communications officer",Occupant: "R. Montgomery",    Category: "ACCT UK Employee", IsVacant: false}
+);
+
+ClearCollect(colCcfaPosts,
+    {PostID: "CA-HEAD", Col: 0, Row: 0, Title: "Head of CCF(A)",          Occupant: "Cameron Stewart", Category: "FTRS", IsVacant: false},
+    {PostID: "CA-101",  Col: 1, Row: 0, Title: "Area lead",               Occupant: "C. Wilson",        Category: "FTRS", IsVacant: false},
+    {PostID: "CA-102",  Col: 1, Row: 1, Title: "Cadet training officer", Occupant: "C. Stewart",       Category: "FTRS", IsVacant: false},
+    {PostID: "CA-103",  Col: 1, Row: 2, Title: "Cadet training officer", Occupant: "F. Brooks",        Category: "FTRS", IsVacant: false},
+    {PostID: "CA-104",  Col: 1, Row: 3, Title: "Cadet training officer", Occupant: "R. Mitchell",      Category: "FTRS", IsVacant: false},
+    {PostID: "CA-105",  Col: 1, Row: 4, Title: "Cadet training officer", Occupant: "E. Anderson",      Category: "FTRS", IsVacant: false},
+    {PostID: "CA-201",  Col: 2, Row: 0, Title: "Area lead",               Occupant: "B. Hamilton",      Category: "FTRS", IsVacant: false},
+    {PostID: "CA-202",  Col: 2, Row: 1, Title: "Cadet training officer", Occupant: "H. Foster",        Category: "FTRS", IsVacant: false},
+    {PostID: "CA-203",  Col: 2, Row: 2, Title: "Cadet training officer", Occupant: "Q. Roberts",       Category: "FTRS", IsVacant: false},
+    {PostID: "CA-204",  Col: 2, Row: 3, Title: "Cadet training officer", Occupant: "D. Robertson",     Category: "FTRS", IsVacant: false},
+    {PostID: "CA-205",  Col: 2, Row: 4, Title: "Cadet training officer", Occupant: "R. Montgomery",    Category: "FTRS", IsVacant: false}
+);
+
+ClearCollect(colPolicyPosts,
+    {PostID: "PP-HEAD", Col: 0, Row: 0, Title: "Head of Policy &amp; Personnel", Occupant: "Casey Hughes", Category: "Civil Servant", IsVacant: false},
+    {PostID: "PP-101",  Col: 1, Row: 0, Title: "Policy lead",   Occupant: "T. Evans",   Category: "Civil Servant", IsVacant: false},
+    {PostID: "PP-102",  Col: 1, Row: 1, Title: "Policy officer",Occupant: "C. Hughes",  Category: "Civil Servant", IsVacant: false},
+    {PostID: "PP-201",  Col: 2, Row: 0, Title: "Policy lead",   Occupant: "M. Lewis",   Category: "Civil Servant", IsVacant: false},
+    {PostID: "PP-202",  Col: 2, Row: 1, Title: "Policy officer",Occupant: "D. Campbell",Category: "Civil Servant", IsVacant: false}
+);
+
+ClearCollect(colSupportPosts,
+    {PostID: "SP-HEAD", Col: 0, Row: 0, Title: "Head of Support", Occupant: "Morgan Lewis", Category: "Civil Servant", IsVacant: false},
+    {PostID: "SP-101",  Col: 1, Row: 0, Title: "Support lead",    Occupant: "C. Hughes",     Category: "Civil Servant", IsVacant: false},
+    {PostID: "SP-102",  Col: 1, Row: 1, Title: "Support officer",Occupant: "M. Lewis",      Category: "Civil Servant", IsVacant: false},
+    {PostID: "SP-103",  Col: 1, Row: 2, Title: "Support officer",Occupant: "D. Campbell",   Category: "Civil Servant", IsVacant: false},
+    {PostID: "SP-201",  Col: 2, Row: 0, Title: "Support lead",    Occupant: "",              Category: "",              IsVacant: true},
+    {PostID: "SP-202",  Col: 2, Row: 1, Title: "Support officer",Occupant: "L. Richardson", Category: "Civil Servant", IsVacant: false}
+);
+
+ClearCollect(colCcfPosts,
+    {PostID: "CF-HEAD", Col: 0, Row: 0, Title: "Head of CCF",   Occupant: "Robin Bennett", Category: "Civil Servant", IsVacant: false},
+    {PostID: "CF-101",  Col: 1, Row: 0, Title: "Policy officer",Occupant: "J. Clarke",     Category: "Civil Servant", IsVacant: false},
+    {PostID: "CF-201",  Col: 2, Row: 0, Title: "Policy officer",Occupant: "R. Bennett",    Category: "Civil Servant", IsVacant: false}
+);</pre>
+        </div>
+
+        <ol start="2">
+          <li>Add a NEW button &mdash; e.g. <code>btnRenderFullSheet</code> &mdash; separate from every earlier render button. Set its <code>OnSelect</code> to this complete formula. It's long because it builds ten panels in one go, but it's the same <code>Concat</code>/<code>AddColumns</code>/<code>LookUp</code>/<code>EncodeUrl</code> shapes already confirmed working in Phases 1-2 &mdash; just repeated per department with each panel's own position baked in, not a new kind of formula.</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnRenderFullSheet.OnSelect &mdash; builds all 10 panels, one combined picture</span>
+              <span class="code-stamp" data-updated="2026-09-11T09:31:59Z">v1 &middot; 2026-09-11 10:31 BST</span>
+            </div>
+            <button data-copy="phase3-button" type="button">Copy</button>
+          </div>
+<pre id="phase3-button">Set(varCommandFullSvg,
+    "&lt;rect x='20' y='8' width='1134.6' height='22' fill='#003E32'/&gt;" &amp;
+    "&lt;text x='30' y='23' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;Command&lt;/text&gt;" &amp;
+    Concat(colCommandFullConnectors, "&lt;line x1='" &amp; X1 &amp; "' y1='" &amp; Y1 &amp; "' x2='" &amp; X2 &amp; "' y2='" &amp; Y2 &amp; "' stroke='#8A9A94' stroke-width='0.6'/&gt;", "") &amp;
+    Concat(
+        colCommandFullPosts,
+        With(
+            {
+                _cat: LookUp(colCategoryColours, Category = ThisRecord.Category),
+                _safeTitle: Substitute(Substitute(Substitute(ThisRecord.Title, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;"),
+                _safeOcc: Substitute(Substitute(Substitute(ThisRecord.Occupant, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;")
+            },
+            "&lt;rect x='" &amp; X &amp; "' y='" &amp; Y &amp; "' width='" &amp; W &amp; "' height='" &amp; H &amp; "' rx='3' " &amp;
+                "fill='" &amp; If(IsVacant, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))) &amp; "' " &amp;
+                "stroke='" &amp; If(IsVacant, "#6B7570", "#CBD5D1") &amp; "' stroke-width='0.6'" &amp;
+                If(IsVacant, " stroke-dasharray='2,2'", "") &amp; "/&gt;" &amp;
+            If(varChartMode = "Quiet" &amp;&amp; !IsVacant,
+                "&lt;rect x='" &amp; X &amp; "' y='" &amp; Y &amp; "' width='4' height='" &amp; H &amp; "' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;",
+                ""
+            ) &amp;
+            "&lt;text x='" &amp; (X + 8) &amp; "' y='" &amp; (Y + 14) &amp; "' font-weight='bold' font-size='8' fill='#172A27'&gt;" &amp;
+                If(IsVacant, "GAPPED", _safeOcc) &amp; "&lt;/text&gt;" &amp;
+            "&lt;text x='" &amp; (X + 8) &amp; "' y='" &amp; (Y + 25) &amp; "' font-size='8' fill='#172A27'&gt;" &amp; _safeTitle &amp; "&lt;/text&gt;"
+        ),
+        ""
+    )
+);
+
+Set(varSafeguardingSvg, RenderDept(colSafeguardingPosts, "Safeguarding", 20,   258, 371.5, 3));
+Set(varTrainingSvg,     RenderDept(colTrainingPosts,     "Training",     401.5,258, 371.5, 3));
+Set(varInfoSys2Svg,     RenderDept(colInfoSysPosts,      "Information Systems", 783, 258, 371.5, 3));
+Set(varMediaSvg,        RenderDept(colMediaPosts,        "Media &amp; Comms",20,   593, 260,   2));
+Set(varCcfaSvg,         RenderDept(colCcfaPosts,         "CCF(A)",       290,  593, 260,   2));
+Set(varPolicySvg,       RenderDept(colPolicyPosts,       "Policy &amp; Pers",560,  593, 180,   2));
+Set(varSupportSvg,      RenderDept(colSupportPosts,      "Support",      750,  593, 190,   2));
+Set(varCcfSvg,          RenderDept(colCcfPosts,          "CCF",          950,  593, 204.6, 2));
+
+Set(varCepSvg,
+    With(
+        {_cat: LookUp(colCategoryColours, Category = "RFCA")},
+        "&lt;rect x='560' y='680' width='180' height='22' fill='#003E32'/&gt;" &amp;
+        "&lt;text x='570' y='695' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;CEP&lt;/text&gt;" &amp;
+        "&lt;rect x='560' y='710' width='140' height='34' rx='3' fill='" &amp; If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF")) &amp; "' stroke='#CBD5D1' stroke-width='0.6'/&gt;" &amp;
+        If(varChartMode = "Quiet", "&lt;rect x='560' y='710' width='4' height='34' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;", "") &amp;
+        "&lt;text x='568' y='724' font-weight='bold' font-size='8' fill='#172A27'&gt;Alex Morgan&lt;/text&gt;" &amp;
+        "&lt;text x='568' y='735' font-size='8' fill='#172A27'&gt;Head of CEP&lt;/text&gt;"
+    )
+);
+
+Set(varFullSheetSvg,
+    "&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1191 810' font-family='Arial'&gt;" &amp;
+    "&lt;rect x='0' y='0' width='1191' height='810' fill='#FFFFFF'/&gt;" &amp;
+    varCommandFullSvg &amp; varSafeguardingSvg &amp; varTrainingSvg &amp; varInfoSys2Svg &amp;
+    varMediaSvg &amp; varCcfaSvg &amp; varPolicySvg &amp; varSupportSvg &amp; varCcfSvg &amp; varCepSvg &amp;
+    "&lt;/svg&gt;"
+);
+Set(varFullSheetDataUri, "data:image/svg+xml," &amp; EncodeUrl(varFullSheetSvg))</pre>
+        </div>
+
+        <div class="callout warn">
+          <strong>This formula calls <code>RenderDept(...)</code> as if it were a function &mdash; it isn't yet, and that's the first thing to verify, not assume.</strong> Power Fx supports defining real, reusable functions via Named Formulas/User Defined Functions in the App object's <code>Formulas</code> property (the same mechanism behind the confirmed-working <code>NextThursday</code> UDF elsewhere in this Bible) &mdash; but a function that takes a <strong>table</strong> as a parameter, like this one needs to, is NOT yet confirmed working anywhere in this Bible. This is the single biggest unverified assumption in this phase, bigger than the string-size question. Test it in isolation first.
+        </div>
+
+        <ol start="3">
+          <li>Before pasting the button formula above, add this to <code>App.OnStart</code> (or the App's <code>Formulas</code> property, whichever your Studio version exposes) and see if Studio accepts it at all:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>App &middot; Formulas &mdash; RenderDept, a table-parameter function (unverified shape)</span>
+              <span class="code-stamp" data-updated="2026-09-11T09:31:59Z">v1 &middot; 2026-09-11 10:31 BST</span>
+            </div>
+            <button data-copy="phase3-renderdept" type="button">Copy</button>
+          </div>
+<pre id="phase3-renderdept">RenderDept(posts: Table, deptName: Text, offX: Number, offY: Number, panelW: Number, numCols: Number): Text =
+    With(
+        { _gutter: 10, _headH: 34, _headGap: 10, _cardH: 27, _rowGap: 3, _colW: (panelW - (numCols - 1) * 10) / numCols },
+        "&lt;rect x='" &amp; offX &amp; "' y='" &amp; (offY - 30) &amp; "' width='" &amp; panelW &amp; "' height='22' fill='#003E32'/&gt;" &amp;
+        "&lt;text x='" &amp; (offX + 10) &amp; "' y='" &amp; (offY - 15) &amp; "' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;" &amp; deptName &amp; "&lt;/text&gt;" &amp;
+        Concat(
+            AddColumns(
+                posts,
+                _x, offX + If(Col = 0, (panelW - 140) / 2, (Col - 1) * (_colW + _gutter)),
+                _y, offY + If(Col = 0, 0, _headH + _headGap + Row * (_cardH + _rowGap)),
+                _w, If(Col = 0, 140, _colW),
+                _h, If(Col = 0, _headH, _cardH)
+            ),
+            With(
+                {
+                    _cat: LookUp(colCategoryColours, Category = ThisRecord.Category),
+                    _safeTitle: Substitute(Substitute(Substitute(ThisRecord.Title, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;"),
+                    _safeOcc: Substitute(Substitute(Substitute(ThisRecord.Occupant, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;")
+                },
+                "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='" &amp; _w &amp; "' height='" &amp; _h &amp; "' rx='3' " &amp;
+                    "fill='" &amp; If(IsVacant, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))) &amp; "' " &amp;
+                    "stroke='" &amp; If(IsVacant, "#6B7570", "#CBD5D1") &amp; "' stroke-width='0.6'" &amp;
+                    If(IsVacant, " stroke-dasharray='2,2'", "") &amp; "/&gt;" &amp;
+                If(varChartMode = "Quiet" &amp;&amp; !IsVacant,
+                    "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='4' height='" &amp; _h &amp; "' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;",
+                    ""
+                ) &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 12) &amp; "' font-weight='bold' font-size='7' fill='#172A27'&gt;" &amp;
+                    If(IsVacant, "GAPPED", _safeOcc) &amp; "&lt;/text&gt;" &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 22) &amp; "' font-size='7' fill='#172A27'&gt;" &amp; _safeTitle &amp; "&lt;/text&gt;"
+            ),
+            ""
+        )
+    );</pre>
+        </div>
+        <div class="callout warn">
+          <strong>If Studio rejects this</strong> (wrong parameter syntax, "Table" not a valid type name, or any other paste-time error) &mdash; report the exact error, and don't try to guess-fix the syntax yourself; this is genuinely new ground and the fix needs to come from what Studio actually says, the same way <code>Base64()</code>/<code>AddColumns</code> quoting got fixed. The fallback if functions-with-table-parameters don't work at all: <strong>inline the same body nine times</strong>, once per department, each with its own collection/constants hardcoded directly &mdash; verbose, but only reuses patterns already confirmed working. Ask if you hit this and want that version written out instead.
+        </div>
+
+        <ol start="4">
+          <li>Point one Image control at <code>=varFullSheetDataUri</code>.</li>
+        </ol>
+        <p>Once this is confirmed working, the two separate test images/buttons from Phases 1-2 have done their job &mdash; resize/hide them or delete them rather than keeping three render buttons and two extra images going forward. This one Image control is the real target, not an addition to the other two.</p>
+
+        <div class="callout ok">
+          <strong>What to check and record:</strong> does <code>RenderDept</code> as a table-parameter function even paste (the single biggest open question, ahead of everything else)? Does Studio accept a formula/string this much larger than Phase 2's without erroring, timing out or lagging? Are all 108 posts present, correctly grouped into their 10 panels, in the measured grid positions? Do all 5 vacancies render correctly together in one picture (Command XO, two in Safeguarding, one in Information Systems, one in Support)? Does the hand-placed page grid actually look like the mockup's page 3/4, or do panels visibly collide/overlap?
+        </div>
+      </section>
+
       <section id="next-steps">
         <h2>Next Steps</h2>
         <p>Phases 0-2 are all confirmed passed. Deliberately staying on local hardcoded
@@ -636,14 +916,13 @@ Select(btnRenderInfoSys)</pre>
         question left below is answerable without it, and the brief's own phasing puts
         the data layer last for exactly that reason.</p>
         <ol>
-          <li><strong>Phase 3 &mdash; full single-sheet render (not started).</strong> Combine
-          Command and all 9 department panels into ONE generated SVG, ONE Image
-          control, matching the measured page grid in <code>visual-spec.md</code> (Command
-          full-width; Safeguarding/Training/Information Systems as equal thirds;
-          Media &amp; Comms/CCF(A)/Policy &amp; Pers+CEP/Support/CCF as the bottom row). Still
-          local <code>ClearCollect</code> data, no list. This is the real test of whether
-          Power Fx can handle a formula/string this large, and whether the multi-row
-          page grid holds up when computed rather than eyeballed per panel.</li>
+          <li><strong>Phase 3 &mdash; full single-sheet render (formula written, not yet
+          run).</strong> See the Phase 3 section above &mdash; combines Command and all 9
+          department panels into ONE generated SVG, ONE Image control, matching the
+          measured page grid in the Visual Spec section. Still local
+          <code>ClearCollect</code> data, no list. A real data bug (two departments
+          silently missing one person each) was caught and fixed during authoring,
+          before this ever reached Studio.</li>
           <li><strong>Phase 4 &mdash; real A3 <code>Print()</code> test (not started).</strong> First
           test anywhere in this Bible of <code>Print()</code>/A3 export &mdash; needs Phase 3's
           single combined image first, since the point is printing one whole sheet, not
