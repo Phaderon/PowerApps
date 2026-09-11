@@ -8683,6 +8683,14 @@ git push origin main
 9a. Run <code>python3 tools/audit-formulas.py path/to/index.html [any local src/formulas/*.md files]</code> — checks the actual Power Fx content (not just guide prose/YAML) for patterns already confirmed broken live in this Bible: <code>Base64()</code>, <code>AddColumns</code>/<code>GroupBy</code> quoted column names, <code>Table</code>-typed UDF parameters, a UDF definition mixed with imperative statements (OnStart/OnSelect vs. the separate <code>Formulas</code> property), unescaped <code>&amp;</code> inside generated markup strings, and unbalanced brackets. If the project keeps local formula source files separate from the published guide, also run it with <code>--diff &lt;local.md&gt; &lt;guide.html&gt;</code> to catch drift between what was actually tested and what's actually published — added 2026-09-11 after exactly that drift was found live (a <code>Base64()</code> fix landed in a guide but never made it back into the local source file).</li>
 <li>Run <code>git diff --check</code>.</li>
 <li>Preview locally and test responsive layout and copy buttons.</li>
+<li><strong>Adding a new <code>&lt;section id="..."&gt;</code> to any guide? Add its matching link to that
+    page's sidebar <code>&lt;nav&gt;</code> in the same edit, not as an afterthought.</strong> Verify with a
+    script, not by eye — <code>&lt;section id&gt;</code> values and <code>&lt;nav&gt;&lt;a href="#..."&gt;</code> targets must
+    match exactly, same count, same set. Added 2026-09-11 after this was missed twice
+    in a row on the same guide (Cadets Org Chart's "Clear All Pictures" and "Phase 4"
+    sections were both only reachable by scrolling, with no sidebar link at all) —
+    the builder relies on that sidebar to navigate a growing page and a silently
+    unlisted section defeats the entire point of having one.</li>
 </ol>
 <h2 id="defaults-standard">Defaults Standard</h2>
 <p>Future guides should separate required changes from defaults.</p>

@@ -28,6 +28,14 @@ If something is uncertain, mark it as unverified and do not publish it as a buil
 9a. Run `python3 tools/audit-formulas.py path/to/index.html [any local src/formulas/*.md files]` — checks the actual Power Fx content (not just guide prose/YAML) for patterns already confirmed broken live in this Bible: `Base64()`, `AddColumns`/`GroupBy` quoted column names, `Table`-typed UDF parameters, a UDF definition mixed with imperative statements (OnStart/OnSelect vs. the separate `Formulas` property), unescaped `&` inside generated markup strings, and unbalanced brackets. If the project keeps local formula source files separate from the published guide, also run it with `--diff <local.md> <guide.html>` to catch drift between what was actually tested and what's actually published — added 2026-09-11 after exactly that drift was found live (a `Base64()` fix landed in a guide but never made it back into the local source file).
 10. Run `git diff --check`.
 11. Preview locally and test responsive layout and copy buttons.
+12. **Adding a new `<section id="...">` to any guide? Add its matching link to that
+    page's sidebar `<nav>` in the same edit, not as an afterthought.** Verify with a
+    script, not by eye — `<section id>` values and `<nav><a href="#...">` targets must
+    match exactly, same count, same set. Added 2026-09-11 after this was missed twice
+    in a row on the same guide (Cadets Org Chart's "Clear All Pictures" and "Phase 4"
+    sections were both only reachable by scrolling, with no sidebar link at all) —
+    the builder relies on that sidebar to navigate a growing page and a silently
+    unlisted section defeats the entire point of having one.
 
 ## Defaults Standard
 
