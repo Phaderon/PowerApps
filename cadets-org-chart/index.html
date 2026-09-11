@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cadets Org Chart - Proof &amp; Build Guide</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --paper: #ffffff;
+      --ink: #172033;
+      --muted: #637084;
+      --line: #d9e1ec;
+      --primary: #004e42;
+      --primary-soft: #e8f4ef;
+      --green: #1f7a4d;
+      --amber: #a86500;
+      --red: #a33a3a;
+      --code-bg: #111827;
+      --code-ink: #f8fafc;
+      --callout-warn-bg: #fff7e8;
+      --callout-ok-bg: #edf8f2;
+      --code-pill-bg: #eef3f8;
+      --code-pill-border: #dce5f0;
+      --radius: 10px;
+      --shadow: 0 12px 32px rgba(20, 34, 56, .10);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0f1520; --paper: #161d2b; --ink: #e8ecf3; --muted: #93a1b8; --line: #2a3347;
+        --primary: #4fd1a5; --primary-soft: rgba(79,209,165,.14); --green: #52c98a; --amber: #d9a441; --red: #e2726f;
+        --callout-warn-bg: rgba(217,164,65,.14); --callout-ok-bg: rgba(82,201,138,.14);
+        --code-pill-bg: #1c2434; --code-pill-border: #34405a;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #0f1520; --paper: #161d2b; --ink: #e8ecf3; --muted: #93a1b8; --line: #2a3347;
+      --primary: #4fd1a5; --primary-soft: rgba(79,209,165,.14); --green: #52c98a; --amber: #d9a441; --red: #e2726f;
+      --callout-warn-bg: rgba(217,164,65,.14); --callout-ok-bg: rgba(82,201,138,.14);
+      --code-pill-bg: #1c2434; --code-pill-border: #34405a;
+    }
+    #theme-toggle {
+      position: fixed; top: 14px; right: 14px; z-index: 50;
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+      font-size: 1.1rem; cursor: pointer; box-shadow: var(--shadow);
+    }
+    .fix-controls {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin: 4px 0 16px; padding: 8px 12px;
+      border: 1px solid var(--line); border-radius: 8px; background: var(--primary-soft);
+    }
+    .fix-check { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; font-size: .88rem; }
+    .fix-check input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--green); }
+    .fix-view-toggle {
+      background: transparent; border: 1px solid var(--line); border-radius: 6px;
+      width: 28px; height: 28px; color: var(--muted); cursor: pointer; font-size: .85rem;
+    }
+    section[data-done="true"] { border-left: 3px solid var(--green); padding-left: 13px; }
+    section[data-done="true"] .fix-check { color: var(--green); }
+    section[data-expanded="false"] > :not(h2):not(.meta-line):not(.fix-controls) { display: none; }
+    section[data-expanded="false"] .fix-view-toggle { transform: rotate(-90deg); }
+    nav a.fix-done::before { content: "✓ "; color: var(--green); font-weight: 800; }
+    .update-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+      background: var(--callout-ok-bg); color: var(--green);
+      font-size: .72rem; font-weight: 800; white-space: nowrap;
+    }
+    .update-pill::before { content: "●"; font-size: .6rem; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+    }
+    a { color: var(--primary); }
+    .shell {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 24px;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    aside {
+      position: sticky;
+      top: 18px;
+      align-self: start;
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    aside h2 { margin: 0 0 4px; font-size: 1.05rem; }
+    aside p { margin: 0 0 14px; color: var(--muted); font-size: .9rem; }
+    nav { display: grid; gap: 4px; }
+    nav a {
+      text-decoration: none;
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 7px 9px;
+      font-size: .9rem;
+    }
+    nav a:hover { background: var(--primary-soft); color: var(--primary); }
+    nav a.active {
+      background: var(--primary-soft); color: var(--primary); font-weight: 700;
+      box-shadow: inset 3px 0 0 var(--primary);
+    }
+    main {
+      min-width: 0;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+    }
+    .topline {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: .82rem;
+      font-weight: 700;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+    .lead {
+      margin: 0 0 24px;
+      max-width: 860px;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+    section {
+      border-top: 1px solid var(--line);
+      margin-top: 30px;
+      padding-top: 26px;
+    }
+    h2 { margin: 0 0 12px; font-size: 1.55rem; }
+    h3 { margin: 24px 0 10px; font-size: 1.15rem; }
+    .callout {
+      border-left: 4px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 16px 0;
+    }
+    .warn {
+      border-left-color: var(--amber);
+      background: var(--callout-warn-bg);
+    }
+    .ok {
+      border-left-color: var(--green);
+      background: var(--callout-ok-bg);
+    }
+    code {
+      font-family: var(--mono);
+      background: var(--code-pill-bg);
+      border: 1px solid var(--code-pill-border);
+      border-radius: 6px;
+      padding: 1px 5px;
+      font-size: .92em;
+    }
+    .code-card {
+      background: var(--code-bg);
+      color: var(--code-ink);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 14px 0 22px;
+    }
+    .code-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      color: #cbd5e1;
+      font-size: .85rem;
+    }
+    .code-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .code-stamp { color: #7c8aa0; font-size: .72rem; font-weight: 500; }
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-weight: 700;
+      background: var(--primary-soft);
+      color: var(--primary);
+      cursor: pointer;
+    }
+    pre {
+      margin: 0;
+      padding: 16px;
+      overflow: auto;
+      white-space: pre;
+      font-family: var(--mono);
+      font-size: .9rem;
+      line-height: 1.55;
+    }
+    ul, ol { padding-left: 1.3rem; }
+    li { margin: 6px 0; }
+    .meta-line { color: var(--muted); font-size: .85rem; margin: 0 0 10px; }
+    table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: .92rem; }
+    th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; }
+    th { background: var(--primary-soft); color: var(--primary); }
+    .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line); vertical-align: middle; margin-right: 6px; }
+    @media (max-width: 860px) {
+      .shell { display: block; padding: 12px; }
+      aside { position: static; margin-bottom: 14px; }
+      main { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <button id="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">&#127769;</button>
+  <script>
+  (function(){
+    var key='pa-theme', root=document.documentElement, btn=document.getElementById('theme-toggle');
+    function apply(t){root.setAttribute('data-theme',t);btn.textContent=t==='dark'?'☀️':'🌙';}
+    apply(localStorage.getItem(key)||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
+    btn.addEventListener('click',function(){
+      var next=root.getAttribute('data-theme')==='dark'?'light':'dark';
+      apply(next); localStorage.setItem(key,next);
+    });
+  })();
+  </script>
+  <div class="shell">
+    <aside>
+      <h2>Cadets Org Chart</h2>
+      <p>Feasibility proof and build log. Each phase stays on this page in the order it's run.</p>
+      <nav>
+        <a href="../">Guide library</a>
+        <a href="#" id="open-note">Leave a note for Claude</a>
+        <a href="#what-this-page-is">What This Page Is</a>
+        <a href="#visual-spec">Visual Spec (measured)</a>
+        <a href="#phase-0">Phase 0 - Static SVG Sanity Test</a>
+        <a href="#phase-1">Phase 1 - Formula-Generated Command Proof</a>
+        <a href="#phase-2">Phase 2 - Full Department (24 Posts, Computed)</a>
+        <a href="#next-steps">Next Steps (Not Started)</a>
+        <a href="#open-questions">Known Limitations / Open Questions</a>
+      </nav>
+    </aside>
+
+    <main>
+      <div class="topline">
+        <span class="pill">Updated 11 Sep 2026</span>
+        <span class="pill">Cadets Org Chart only</span>
+        <span class="pill">Rendering proof stage</span>
+      </div>
+      <h1>Cadets Org Chart - Proof &amp; Build Guide</h1>
+      <p class="lead">Replacing the manually-maintained Visio branch org chart (108 posts, 10 departments, 5 vacancies) with a Microsoft-only, SharePoint-list-driven Power Apps chart. Current stage: proving a Power-Fx-generated SVG in an Image control can actually reproduce the approved mockup design, before any SharePoint schema or editing screens are built. Nothing below has been run in Power Apps yet &mdash; tick each phase off only once you've genuinely run it and it matches.</p>
+
+      <section id="what-this-page-is">
+        <h2>What This Page Is</h2>
+        <p>Working proof log for the Cadets Org Chart canvas app (local project: <code>C:\Users\Phaderon\Projects\PowerApps-Apps\cadets-org-chart</code> &mdash; no separate GitHub/screen-YAML repo yet, this project hasn't reached real screens). Full brief, the four-page mockup PDF and the separate interactive HTML concept live in that project's <code>docs/handoff/</code> folder.</p>
+        <div class="callout warn">
+          <strong>Why this starts with a proof, not a build:</strong> the Power Apps Bible has zero prior lab-verified experience with a computed SVG in an Image control, or with <code>Print()</code>/A3 export &mdash; this is genuinely new ground for this app family, not a known-working pattern being reapplied. Phase 0 below is the cheapest possible test of the riskiest assumption.
+        </div>
+      </section>
+
+      <section id="visual-spec">
+        <h2>Visual Spec (measured, not eyeballed)</h2>
+        <p>Extracted directly from the mockup PDF's vector paths and text runs (PyMuPDF), not read off the rendered image. Page size on both mockup styles: <strong>1190.55&times;841.89pt = 420&times;297mm = A3 landscape</strong>. Content margin 28pt each side, 10pt gutter between panels.</p>
+        <h3>Category colour palette (both display modes share this)</h3>
+        <table>
+          <thead><tr><th>Category</th><th>Hex</th></tr></thead>
+          <tbody>
+            <tr><td><span class="swatch" style="background:#E4EFD9"></span>Regular</td><td><code>#E4EFD9</code></td></tr>
+            <tr><td><span class="swatch" style="background:#CFF4F1"></span>Civil Servant</td><td><code>#CFF4F1</code></td></tr>
+            <tr><td><span class="swatch" style="background:#FFC7C7"></span>FTRS</td><td><code>#FFC7C7</code></td></tr>
+            <tr><td><span class="swatch" style="background:#FFE6A1"></span>Aspire</td><td><code>#FFE6A1</code></td></tr>
+            <tr><td><span class="swatch" style="background:#F6D0F1"></span>ACCT UK Employee</td><td><code>#F6D0F1</code></td></tr>
+            <tr><td><span class="swatch" style="background:#F7EFAC"></span>RFCA</td><td><code>#F7EFAC</code></td></tr>
+            <tr><td><span class="swatch" style="background:#D8E3FB"></span>ACCT UK Contractor</td><td><code>#D8E3FB</code></td></tr>
+            <tr><td><span class="swatch" style="background:#F7D6AD"></span>Ext Contractor</td><td><code>#F7D6AD</code></td></tr>
+            <tr><td><span class="swatch" style="background:#E5D4EF"></span>CFAV</td><td><code>#E5D4EF</code></td></tr>
+          </tbody>
+        </table>
+        <h3>Two display modes, same palette</h3>
+        <p><strong>Mode A - "Department panels":</strong> card body fill = the category colour directly, neutral grey-green border regardless of category.<br>
+        <strong>Mode B - "Quiet print style" (print priority):</strong> card body stays white; category colour becomes a 4pt-wide vertical rail on the card's left edge only. Vacant cards use a dashed grey border and pale grey fill (<code>#F0F1F0</code>) in <em>both</em> modes &mdash; vacancy overrides category colour entirely.</p>
+        <h3>Cards, connectors, type</h3>
+        <table>
+          <thead><tr><th>Element</th><th>Measurement</th></tr></thead>
+          <tbody>
+            <tr><td>Standard post card</td><td>109.8 &times; 27pt</td></tr>
+            <tr><td>"Head of {Dept}" card</td><td>115 &times; 34pt</td></tr>
+            <tr><td>Card border</td><td>0.6pt stroke, &asymp;<code>#CBD5D1</code>, small rounded corners (~3pt, not numerically confirmed)</td></tr>
+            <tr><td>Vacant card border</td><td>0.6pt dashed <code>[2 2]</code>, &asymp;<code>#6B7570</code></td></tr>
+            <tr><td>Connector lines</td><td>0.6pt solid, &asymp;<code>#8A9A94</code>, orthogonal only (no diagonals/curves)</td></tr>
+            <tr><td>Department header bar</td><td>fill <code>#003E32</code>, 22-23pt tall, white bold text</td></tr>
+            <tr><td>Card name / role text</td><td>Helvetica-Bold / Helvetica, 8pt, <code>#172A27</code></td></tr>
+          </tbody>
+        </table>
+        <div class="callout warn">
+          Helvetica (the mockup's font) is not guaranteed available as-is in Power Apps &mdash; needs a live check against Arial/Segoe UI substitution. Flagged, not silently substituted.
+        </div>
+      </section>
+
+      <section id="phase-0">
+        <h2>Phase 0 - Static SVG Sanity Test</h2>
+        <p class="meta-line">Blank throwaway canvas app &middot; ~5 minutes &middot; tests the riskiest assumption in isolation</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this phase">&#9660;</button>
+        </div>
+        <p>Does Power Apps' Image control accept a computed SVG data URI at all, in your actual MOD tenant? Neither this Bible nor Policy Tracker's has ever tried it &mdash; everything downstream depends on this primitive working. Test A is hand-typed, no Power Fx string-building. Test B does the same thing via a formula, to separate "does SVG render" from "does string concatenation survive."</p>
+        <ol>
+          <li>New blank canvas app (tablet, any format &mdash; throwaway, delete after). Insert &rarr; Image, resize to roughly fill the screen.</li>
+          <li>Set the Image control's <code>Image</code> property to this complete formula (note the pre-escaped <code>%23</code> in place of literal <code>#</code> &mdash; this test also proves whether that matters):</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Image control &middot; Image property &mdash; Test A, hand-typed literal SVG</span>
+              <span class="code-stamp" data-updated="2026-09-11T00:21:35Z">v1 &middot; 2026-09-11 01:21 BST</span>
+            </div>
+            <button data-copy="phase0-test-a" type="button">Copy</button>
+          </div>
+<pre id="phase0-test-a">="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 120'&gt;&lt;rect x='0' y='0' width='300' height='120' fill='%23F7F4F6'/&gt;&lt;rect x='10' y='10' width='120' height='34' rx='3' fill='%23CFF4F1' stroke='%23CBD5D1' stroke-width='0.6'/&gt;&lt;text x='16' y='24' font-family='Arial' font-weight='bold' font-size='8' fill='%23172A27'&gt;B. Hamilton&lt;/text&gt;&lt;text x='16' y='34' font-family='Arial' font-size='8' fill='%23172A27'&gt;Casework lead&lt;/text&gt;&lt;rect x='10' y='55' width='120' height='34' rx='3' fill='none' stroke='%236B7570' stroke-width='0.6' stroke-dasharray='2,2'/&gt;&lt;text x='16' y='69' font-family='Arial' font-weight='bold' font-size='8' fill='%23172A27'&gt;GAPPED&lt;/text&gt;&lt;text x='16' y='79' font-family='Arial' font-size='8' fill='%23172A27'&gt;Caseworker&lt;/text&gt;&lt;line x1='70' y1='44' x2='70' y2='55' stroke='%238A9A94' stroke-width='0.6'/&gt;&lt;/svg&gt;"
+</pre>
+        </div>
+        <p>Then, separately, add a Button whose <code>OnSelect</code> builds the same picture through Power Fx string concatenation instead of a hand-typed literal, and point the Image control at the resulting variable:</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Button &middot; OnSelect &mdash; Test B, formula-built SVG + Base64()</span>
+              <span class="code-stamp" data-updated="2026-09-11T00:21:35Z">v1 &middot; 2026-09-11 01:21 BST</span>
+            </div>
+            <button data-copy="phase0-test-b" type="button">Copy</button>
+          </div>
+<pre id="phase0-test-b">Set(varTestSvg,
+    "&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 120'&gt;" &amp;
+    "&lt;rect x='0' y='0' width='300' height='120' fill='#F7F4F6'/&gt;" &amp;
+    "&lt;rect x='10' y='10' width='120' height='34' rx='3' fill='#CFF4F1' stroke='#CBD5D1' stroke-width='0.6'/&gt;" &amp;
+    "&lt;text x='16' y='24' font-family='Arial' font-weight='bold' font-size='8' fill='#172A27'&gt;" &amp; "B. Hamilton" &amp; "&lt;/text&gt;" &amp;
+    "&lt;text x='16' y='34' font-family='Arial' font-size='8' fill='#172A27'&gt;" &amp; "Casework lead" &amp; "&lt;/text&gt;" &amp;
+    "&lt;/svg&gt;"
+);
+Set(varTestDataUri, "data:image/svg+xml;base64," &amp; Base64(varTestSvg))
+</pre>
+        </div>
+        <p>Set that Image control's <code>Image</code> property to <code>=varTestDataUri</code>, and add a Label showing <code>=Len(varTestSvg)</code> so the generated string isn't silently empty.</p>
+        <div class="callout ok">
+          <strong>Record:</strong> does a small card, a dashed vacant card and a connector line actually render (Test A)? Does <code>Base64()</code> exist and work as expected (Test B, unverified in the Bible)? Screenshot either way &mdash; a blank/broken image is just as useful a result as a working one. Passing this proves the primitive only &mdash; nothing about 108 posts, print, or real label lengths.
+        </div>
+      </section>
+
+      <section id="phase-1">
+        <h2>Phase 1 - Formula-Generated Command Proof (5 posts, both colour modes)</h2>
+        <p class="meta-line">Same blank test app &middot; run after Phase 0 passes &middot; proves category-colour lookup, vacancy styling, connectors, text escaping</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this phase">&#9660;</button>
+        </div>
+        <p>Dataset matches the same 5-post Command excerpt already validated conceptually in the handoff's interactive HTML concept (Chris Williams/COS as the head, one vacant XO with a subordinate) &mdash; not a newly invented example. Positions are hand-placed for this fixed dataset, not yet computed by a layout algorithm &mdash; that's Phase 2 and step 3 of the wider plan, not this phase.</p>
+        <ol>
+          <li>Add to <strong>App.OnStart</strong>:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>App &middot; OnStart &mdash; category colours + 5-post Command sample data + connectors</span>
+              <span class="code-stamp" data-updated="2026-09-11T00:21:35Z">v1 &middot; 2026-09-11 01:21 BST</span>
+            </div>
+            <button data-copy="phase1-appstart" type="button">Copy</button>
+          </div>
+<pre id="phase1-appstart">ClearCollect(colCategoryColours,
+    {Category: "Regular",             Hex: "#E4EFD9"},
+    {Category: "Civil Servant",       Hex: "#CFF4F1"},
+    {Category: "FTRS",                Hex: "#FFC7C7"},
+    {Category: "Aspire",              Hex: "#FFE6A1"},
+    {Category: "ACCT UK Employee",    Hex: "#F6D0F1"},
+    {Category: "RFCA",                Hex: "#F7EFAC"},
+    {Category: "ACCT UK Contractor",  Hex: "#D8E3FB"},
+    {Category: "Ext Contractor",      Hex: "#F7D6AD"},
+    {Category: "CFAV",                Hex: "#E5D4EF"}
+);
+
+ClearCollect(colCommandPosts,
+    {PostID: "CMD-001", X: 170, Y: 10,  W: 140, H: 34, Title: "COS",                Occupant: "Chris Williams", Category: "Regular",  IsVacant: false},
+    {PostID: "CMD-002", X: 10,  Y: 70,  W: 140, H: 34, Title: "SO2 Information Mgmt",Occupant: "Jordan Patel",   Category: "Civil Servant", IsVacant: false},
+    {PostID: "CMD-003", X: 170, Y: 70,  W: 140, H: 34, Title: "XO",                 Occupant: "",               Category: "",          IsVacant: true},
+    {PostID: "CMD-004", X: 330, Y: 70,  W: 140, H: 34, Title: "SO2 Plans",          Occupant: "Alex Morgan",    Category: "FTRS",       IsVacant: false},
+    {PostID: "CMD-005", X: 170, Y: 130, W: 140, H: 34, Title: "Branch Administrator",Occupant: "Robin Bennett", Category: "Aspire",     IsVacant: false}
+);
+
+ClearCollect(colCommandConnectors,
+    {X1: 240, Y1: 44, X2: 80,  Y2: 70},   // COS -&gt; SO2 Info Mgmt
+    {X1: 240, Y1: 44, X2: 240, Y2: 70},   // COS -&gt; XO (vacant)
+    {X1: 240, Y1: 44, X2: 400, Y2: 70},   // COS -&gt; SO2 Plans
+    {X1: 240, Y1: 104,X2: 240, Y2: 130}   // XO -&gt; Branch Administrator (vacancy keeps its child)
+);
+
+Set(varChartMode, "Quiet")  // "Quiet" = white card + colour rail (page 4). "Coloured" = filled card (page 3)
+</pre>
+        </div>
+        <ol start="2">
+          <li>Add a Button <code>btnRender</code> with this <code>OnSelect</code> &mdash; the actual renderer:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnRender.OnSelect &mdash; builds the SVG from colCommandPosts/colCommandConnectors</span>
+              <span class="code-stamp" data-updated="2026-09-11T00:21:35Z">v1 &middot; 2026-09-11 01:21 BST</span>
+            </div>
+            <button data-copy="phase1-render" type="button">Copy</button>
+          </div>
+<pre id="phase1-render">Set(varCommandSvg,
+    "&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 180' font-family='Arial'&gt;" &amp;
+    "&lt;rect x='0' y='0' width='480' height='180' fill='#FFFFFF'/&gt;" &amp;
+    Concat(
+        colCommandConnectors,
+        "&lt;line x1='" &amp; X1 &amp; "' y1='" &amp; Y1 &amp; "' x2='" &amp; X2 &amp; "' y2='" &amp; Y2 &amp; "' stroke='#8A9A94' stroke-width='0.6'/&gt;",
+        ""
+    ) &amp;
+    Concat(
+        colCommandPosts,
+        With(
+            {
+                _cat: LookUp(colCategoryColours, Category = ThisRecord.Category),
+                _safeTitle: Substitute(Substitute(Substitute(ThisRecord.Title, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;"),
+                _safeOcc: Substitute(Substitute(Substitute(ThisRecord.Occupant, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;")
+            },
+            "&lt;rect x='" &amp; X &amp; "' y='" &amp; Y &amp; "' width='" &amp; W &amp; "' height='" &amp; H &amp; "' rx='3' " &amp;
+                "fill='" &amp; If(IsVacant, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))) &amp; "' " &amp;
+                "stroke='" &amp; If(IsVacant, "#6B7570", "#CBD5D1") &amp; "' stroke-width='0.6'" &amp;
+                If(IsVacant, " stroke-dasharray='2,2'", "") &amp;
+                "/&gt;" &amp;
+            If(varChartMode = "Quiet" &amp;&amp; !IsVacant,
+                "&lt;rect x='" &amp; X &amp; "' y='" &amp; Y &amp; "' width='4' height='" &amp; H &amp; "' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;",
+                ""
+            ) &amp;
+            "&lt;text x='" &amp; (X + 8) &amp; "' y='" &amp; (Y + 14) &amp; "' font-weight='bold' font-size='8' fill='#172A27'&gt;" &amp;
+                If(IsVacant, "GAPPED", _safeOcc) &amp; "&lt;/text&gt;" &amp;
+            "&lt;text x='" &amp; (X + 8) &amp; "' y='" &amp; (Y + 25) &amp; "' font-size='8' fill='#172A27'&gt;" &amp; _safeTitle &amp; "&lt;/text&gt;"
+        ),
+        ""
+    ) &amp;
+    "&lt;/svg&gt;"
+);
+Set(varCommandDataUri, "data:image/svg+xml;base64," &amp; Base64(varCommandSvg))
+</pre>
+        </div>
+        <ol start="3">
+          <li>Set the Image control's <code>Image</code> property to <code>=varCommandDataUri</code>. Add a second button toggling <code>Set(varChartMode, If(varChartMode="Quiet","Coloured","Quiet"))</code> then re-running the render, so both mockup styles can be flipped on the same screen.</li>
+        </ol>
+        <div class="callout warn">
+          <strong>Unverified in the Bible &mdash; report exactly what Studio says, don't assume:</strong> does <code>Concat</code> over a table with a per-row <code>With(...)</code> block work in this property context at all? Does <code>LookUp</code> inside that <code>With</code> correctly resolve per-row, or collapse to one value for every row (the Bible documents this exact failure shape for nested-Filter row-identifier bleed elsewhere &mdash; check the rendered output doesn't show the same category colour on every card)?
+        </div>
+        <div class="callout ok">
+          <strong>Test:</strong> vacant XO renders dashed/grey and its child (Branch Administrator) still visibly connects to it &mdash; the specific hard-requirement case. Both colour modes visually match the Visual Spec section above.
+        </div>
+      </section>
+
+      <section id="phase-2">
+        <h2>Phase 2 - Full Department (Information Systems, 24 posts, computed positions)</h2>
+        <p class="meta-line">Run after Phase 1 passes &middot; real department size/shape &middot; positions computed from a column/row index, not hand-typed</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this phase">&#9660;</button>
+        </div>
+        <p>A tiny 5-box demo doesn't validate the real 108-post requirement. This phase does two new things: a full real department size/shape (transcribed from the mockup's Information Systems panel &mdash; same illustrative names as the source, not real staff), and positions computed from a <code>Col</code>/<code>Row</code> index rather than typed per box &mdash; a first slice of deterministic placement (the full page-grid across all 10 departments is still a later step, see Next Steps).</p>
+        <ol>
+          <li>Add to <strong>App.OnStart</strong>, alongside Phase 1's <code>colCategoryColours</code>:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>App &middot; OnStart &mdash; Information Systems, 24 posts (1 head + 8 + 8 + 7), 1 vacancy</span>
+              <span class="code-stamp" data-updated="2026-09-11T00:21:35Z">v1 &middot; 2026-09-11 01:21 BST</span>
+            </div>
+            <button data-copy="phase2-appstart" type="button">Copy</button>
+          </div>
+<pre id="phase2-appstart">ClearCollect(colInfoSysPosts,
+    {PostID: "IS-HEAD", Col: 0, Row: 0, Title: "Head of Digital",           Occupant: "Finley Edwards",  Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-101",  Col: 1, Row: 0, Title: "Delivery lead",             Occupant: "R. Phillips",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-102",  Col: 1, Row: 1, Title: "Digital services officer",  Occupant: "F. Edwards",      Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-103",  Col: 1, Row: 2, Title: "Digital services officer",  Occupant: "A. Morgan",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-104",  Col: 1, Row: 3, Title: "Digital services officer",  Occupant: "S. Taylor",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-105",  Col: 1, Row: 4, Title: "Digital services officer",  Occupant: "J. Patel",        Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-106",  Col: 1, Row: 5, Title: "Digital services officer",  Occupant: "C. Williams",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-107",  Col: 1, Row: 6, Title: "Digital services officer",  Occupant: "J. Clarke",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-108",  Col: 1, Row: 7, Title: "Digital services officer",  Occupant: "R. Bennett",      Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-201",  Col: 2, Row: 0, Title: "Delivery lead",             Occupant: "T. Evans",        Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-202",  Col: 2, Row: 1, Title: "Digital services officer",  Occupant: "",                Category: "",                 IsVacant: true},
+    {PostID: "IS-203",  Col: 2, Row: 2, Title: "Digital services officer",  Occupant: "M. Lewis",        Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-204",  Col: 2, Row: 3, Title: "Digital services officer",  Occupant: "D. Campbell",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-205",  Col: 2, Row: 4, Title: "Digital services officer",  Occupant: "A. Thompson",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-206",  Col: 2, Row: 5, Title: "Digital services officer",  Occupant: "L. Richardson",   Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-207",  Col: 2, Row: 6, Title: "Digital services officer",  Occupant: "C. Wilson",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-208",  Col: 2, Row: 7, Title: "Digital services officer",  Occupant: "C. Stewart",      Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-301",  Col: 3, Row: 0, Title: "Delivery lead",             Occupant: "F. Brooks",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-302",  Col: 3, Row: 1, Title: "Digital services officer",  Occupant: "R. Mitchell",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-303",  Col: 3, Row: 2, Title: "Digital services officer",  Occupant: "E. Anderson",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-304",  Col: 3, Row: 3, Title: "Digital services officer",  Occupant: "B. Hamilton",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-305",  Col: 3, Row: 4, Title: "Digital services officer",  Occupant: "H. Foster",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-306",  Col: 3, Row: 5, Title: "Digital services officer",  Occupant: "Q. Roberts",      Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-307",  Col: 3, Row: 6, Title: "Digital services officer",  Occupant: "D. Robertson",    Category: "ACCT UK Employee", IsVacant: false}
+);
+// 1 head + 8 + 8 + 7 = 24 posts, 1 vacancy - matches the mockup panel exactly.
+</pre>
+        </div>
+        <ol start="2">
+          <li>Render formula &mdash; same renderer shape as Phase 1, but <code>X</code>/<code>Y</code> are computed via <code>AddColumns</code>, not stored per row:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Render formula &mdash; computed column/row grid layout for one department</span>
+              <span class="code-stamp" data-updated="2026-09-11T00:21:35Z">v1 &middot; 2026-09-11 01:21 BST</span>
+            </div>
+            <button data-copy="phase2-render" type="button">Copy</button>
+          </div>
+<pre id="phase2-render">Set(varInfoSysSvg,
+    With(
+        {
+            _panelW: 371, _gutter: 10, _headH: 34, _headGap: 10, _cardH: 27, _rowGap: 3,
+            _colW: (371 - 2*10) / 3
+        },
+        "&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 371 260' font-family='Arial'&gt;" &amp;
+        "&lt;rect x='0' y='0' width='371' height='260' fill='#FFFFFF'/&gt;" &amp;
+        Concat(
+            AddColumns(
+                colInfoSysPosts,
+                "_x", If(Col = 0, (_panelW - 140) / 2, (Col - 1) * (_colW + _gutter)),
+                "_y", If(Col = 0, 0, _headH + _headGap + Row * (_cardH + _rowGap)),
+                "_w", If(Col = 0, 140, _colW),
+                "_h", If(Col = 0, _headH, _cardH)
+            ),
+            With(
+                {
+                    _cat: LookUp(colCategoryColours, Category = ThisRecord.Category),
+                    _safeTitle: Substitute(Substitute(Substitute(ThisRecord.Title, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;"),
+                    _safeOcc: Substitute(Substitute(Substitute(ThisRecord.Occupant, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;")
+                },
+                "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='" &amp; _w &amp; "' height='" &amp; _h &amp; "' rx='3' " &amp;
+                    "fill='" &amp; If(IsVacant, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))) &amp; "' " &amp;
+                    "stroke='" &amp; If(IsVacant, "#6B7570", "#CBD5D1") &amp; "' stroke-width='0.6'" &amp;
+                    If(IsVacant, " stroke-dasharray='2,2'", "") &amp; "/&gt;" &amp;
+                If(varChartMode = "Quiet" &amp;&amp; !IsVacant,
+                    "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='4' height='" &amp; _h &amp; "' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;",
+                    ""
+                ) &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 12) &amp; "' font-weight='bold' font-size='7' fill='#172A27'&gt;" &amp;
+                    If(IsVacant, "GAPPED", _safeOcc) &amp; "&lt;/text&gt;" &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 22) &amp; "' font-size='7' fill='#172A27'&gt;" &amp; _safeTitle &amp; "&lt;/text&gt;"
+            ),
+            ""
+        ) &amp;
+        "&lt;/svg&gt;"
+    )
+);
+Set(varInfoSysDataUri, "data:image/svg+xml;base64," &amp; Base64(varInfoSysSvg))
+</pre>
+        </div>
+        <p>Point a second Image control at <code>=varInfoSysDataUri</code>.</p>
+        <div class="callout warn">
+          <strong>Label wrapping/truncation:</strong> "Digital services officer" at 7-8pt inside a ~117pt column card &mdash; does it fit on one line as the mockup shows, or wrap/clip? SVG <code>&lt;text&gt;</code> does NOT auto-wrap; if real post titles are longer than this mockup's shortened labels, the renderer needs an explicit wrap step (split into <code>&lt;tspan&gt;</code> lines by measured character width) before this is production-safe. Record actual behaviour, don't assume it fits.
+        </div>
+        <div class="callout ok">
+          <strong>Test:</strong> all 8/8/7 boxes present, correctly ordered, one vacancy shown correctly among real entries. Note any visible lag generating/redrawing 24 boxes &mdash; the real full page is ~108 posts across 10 panels, so this is the first real signal on whether that scales.
+        </div>
+      </section>
+
+      <section id="next-steps">
+        <h2>Next Steps (Not Started)</h2>
+        <p>From the original brief, once Phases 0-2 above are confirmed:</p>
+        <ol>
+          <li><strong>Layout and print with the actual structure</strong> &mdash; real 108 posts (not mockup labels), full page-grid layout across all 10 departments (only Information Systems' internal column packing is proven so far), a real <code>Print()</code> A3 test, a defined legibility/overflow threshold.</li>
+          <li><strong>Data and editing</strong> &mdash; SharePoint schema (PostID, ReportsToPostID, TeamID, OccupantName/person reference, PersonnelCategory, OccupancyStatus, display order), validation (cycles, missing parents, duplicate IDs), permissions at the data layer, not just hidden controls.</li>
+          <li><strong>Delivery and evidence</strong> &mdash; acceptance tests (fill vacancy, vacate-with-child, change category, move reporting post, long labels, invalid/cyclic relationship, full record count, both styles, real A3 export) become real once the data layer exists.</li>
+        </ol>
+      </section>
+
+      <section id="open-questions">
+        <h2>Known Limitations / Open Questions</h2>
+        <ul>
+          <li>Only Command (hand-placed) and Information Systems (one department, computed grid) are drafted. The other 8 departments and the full-page composition (all panels together, per the measured page grid) are not yet built.</li>
+          <li>Corner radius on cards is visually estimated (~3pt), not numerically confirmed from the PDF's path data.</li>
+          <li><code>Print()</code>'s documented restrictions (no mobile, no multi-page, browser print-to-PDF only) haven't been tested against a real full-page render yet.</li>
+          <li>If any item above turns out to work (or not) when tested, add the finding to <code>C:\Users\Phaderon\Projects\PowerApps\reference\real-build-quirks.md</code> per the Bible's own "newly verified facts get added back" rule &mdash; not just left on this page.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    document.querySelectorAll('button[data-copy]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const target = document.getElementById(button.dataset.copy);
+        if (!target) return;
+        await navigator.clipboard.writeText(target.innerText);
+        const old = button.textContent;
+        button.textContent = 'Copied';
+        setTimeout(() => { button.textContent = old; }, 1300);
+      });
+    });
+  </script>
+
+  <script>
+    (function () {
+      var APP = 'cadets-org-chart';
+      var fixSections = Array.from(document.querySelectorAll('.fix-controls')).map(function (el) {
+        return el.closest('section');
+      }).filter(Boolean);
+
+      function setState(section, done) {
+        section.setAttribute('data-done', done ? 'true' : 'false');
+        section.setAttribute('data-expanded', done ? 'false' : 'true');
+        var checkbox = section.querySelector('.fix-done-checkbox');
+        if (checkbox) checkbox.checked = done;
+        var navLink = document.querySelector('nav a[href="#' + section.id + '"]');
+        if (navLink) navLink.classList.toggle('fix-done', done);
+      }
+
+      fetch('/api/fix-status?app=' + APP)
+        .then(function (r) { return r.ok ? r.json() : {}; })
+        .catch(function () { return {}; })
+        .then(function (data) {
+          fixSections.forEach(function (section) {
+            setState(section, !!data[section.id]);
+          });
+        });
+
+      fixSections.forEach(function (section) {
+        var checkbox = section.querySelector('.fix-done-checkbox');
+        var viewToggle = section.querySelector('.fix-view-toggle');
+
+        checkbox.addEventListener('change', function () {
+          var done = checkbox.checked;
+          setState(section, done);
+          fetch('/api/fix-status', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ app: APP, id: section.id, done: done }),
+          }).catch(function () {
+            /* offline or blocked - local UI state still applied, will re-sync on next load */
+          });
+        });
+
+        viewToggle.addEventListener('click', function () {
+          var expanded = section.getAttribute('data-expanded') === 'true';
+          section.setAttribute('data-expanded', expanded ? 'false' : 'true');
+        });
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var navLinks = Array.from(document.querySelectorAll('nav a[href^="#"]'));
+      var sections = navLinks.map(function (a) {
+        return document.getElementById(a.getAttribute('href').slice(1));
+      }).filter(Boolean);
+
+      if (!sections.length || !('IntersectionObserver' in window)) return;
+
+      function setActive(id) {
+        navLinks.forEach(function (a) {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+        });
+      }
+
+      var observer = new IntersectionObserver(function (entries) {
+        var visible = entries.filter(function (e) { return e.isIntersecting; });
+        if (visible.length === 0) return;
+        visible.sort(function (a, b) { return a.boundingClientRect.top - b.boundingClientRect.top; });
+        setActive(visible[0].target.id);
+      }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+
+      sections.forEach(function (s) { observer.observe(s); });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var RECENT_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours - past this, no pill, just the plain stamp
+      var now = Date.now();
+
+      function formatAge(ms) {
+        var mins = Math.round(ms / 60000);
+        if (mins < 1) return 'just now';
+        if (mins < 60) return mins + 'm ago';
+        var hours = Math.round(mins / 60);
+        if (hours < 24) return hours + 'h ago';
+        return Math.round(hours / 24) + 'd ago';
+      }
+
+      document.querySelectorAll('.code-stamp[data-updated]').forEach(function (stamp) {
+        var updated = new Date(stamp.getAttribute('data-updated')).getTime();
+        if (isNaN(updated)) return;
+        var age = now - updated;
+        if (age >= 0 && age < RECENT_WINDOW_MS) {
+          var pill = document.createElement('span');
+          pill.className = 'update-pill';
+          pill.textContent = 'Updated ' + formatAge(age);
+          stamp.after(pill);
+        }
+      });
+    })();
+  </script>
+
+  <dialog id="note-dialog">
+    <form method="dialog" class="note-form" id="note-form">
+      <div class="note-head">
+        <h2>Leave a note for Claude &mdash; Cadets Org Chart</h2>
+        <button type="button" id="note-close" aria-label="Close" class="note-x">&times;</button>
+      </div>
+      <p class="note-hint-text">Saved into the shared locked storage bucket only Claude can read &mdash; not public. Auto-deletes after 14 days.</p>
+      <label class="note-label" for="note-password">Password <span class="note-hint">(hint: Theta&hellip;)</span></label>
+      <input type="password" id="note-password" autocomplete="off" required />
+      <label class="note-label" for="note-text">Note</label>
+      <textarea id="note-text" rows="8" required placeholder="Type or paste anything..."></textarea>
+      <div class="note-actions">
+        <button type="submit" id="note-submit">Save note</button>
+        <span id="note-status" class="note-status"></span>
+      </div>
+    </form>
+  </dialog>
+  <style>
+  #note-dialog { border: 1px solid var(--line); border-radius: 12px; padding: 0; background: var(--paper); color: var(--ink); width: min(560px, 92vw); }
+  #note-dialog::backdrop { background: rgba(10,16,26,.5); }
+  .note-form { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .note-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .note-head h2 { margin: 0; font-size: 1.05rem; color: var(--ink); }
+  .note-x { border: none; background: none; color: var(--muted); font-size: 1.4rem; line-height: 1; cursor: pointer; }
+  .note-hint-text { margin: 0; color: var(--muted); font-size: .82rem; }
+  .note-label { font-size: .82rem; font-weight: 700; color: var(--muted); }
+  .note-hint { font-weight: 400; color: var(--muted); }
+  #note-password, #note-text {
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 7px;
+    background: var(--bg); color: var(--ink); font: inherit;
+  }
+  #note-text { resize: vertical; font-family: inherit; line-height: 1.4; }
+  #note-submit {
+    border: none; border-radius: 7px; padding: 9px 16px; font: inherit; font-weight: 700;
+    background: var(--primary); color: #fff; cursor: pointer;
+  }
+  .note-actions { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+  .note-status { font-size: .82rem; color: var(--muted); }
+  </style>
+  <script>
+  (function(){
+    var dialog = document.getElementById('note-dialog');
+    document.getElementById('open-note').addEventListener('click', function(e){ e.preventDefault(); dialog.showModal(); });
+    document.getElementById('note-close').addEventListener('click', function(){ dialog.close(); });
+    document.getElementById('note-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var status = document.getElementById('note-status');
+      var password = document.getElementById('note-password').value;
+      var text = document.getElementById('note-text').value;
+      if (!text.trim()) return;
+      var stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      var file = new File([text], 'note-cadets-org-chart-' + stamp + '.txt', { type: 'text/plain' });
+      var fd = new FormData();
+      fd.append('password', password);
+      fd.append('files', file);
+      status.textContent = 'Saving...';
+      try {
+        var res = await fetch('https://powerapps.pages.dev/api/upload', { method: 'POST', body: fd });
+        var data = await res.json();
+        if (!res.ok) { status.textContent = data.error || 'Save failed'; return; }
+        status.textContent = 'Saved.';
+        document.getElementById('note-text').value = '';
+        setTimeout(function(){ dialog.close(); status.textContent = ''; }, 900);
+      } catch (err) { status.textContent = 'Save failed'; }
+    });
+  })();
+  </script>
+</body>
+</html>
