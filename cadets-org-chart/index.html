@@ -1275,7 +1275,7 @@ Set(varFullSheetDataUri, "")</pre>
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnComputeTree.OnSelect &mdash; depth, then width bottom-up, then X top-down, then render</span>
-              <span class="code-stamp" data-updated="2026-09-11T18:15:29Z">v2 &middot; 2026-09-11 19:15 BST &mdash; fixed self-join scoping (ThisRecord replaced with captured With-bound names) after the first test showed every non-root post landing at the same wrong depth</span>
+              <span class="code-stamp" data-updated="2026-09-11T18:26:47Z">v3 &middot; 2026-09-11 19:26 BST &mdash; the tree now computes correctly; fixed cards being drawn at their full subtree width (P1/P3 looked huge) instead of a fixed size centred within it</span>
             </div>
             <button data-copy="phase4-compute" type="button">Copy</button>
           </div>
@@ -1479,9 +1479,12 @@ Set(varAutoTreeSvg,
     ) &amp;
     Concat(
         colFinal,
-        "&lt;rect x='" &amp; FinalX &amp; "' y='" &amp; FinalY &amp; "' width='" &amp; FinalW &amp; "' height='34' rx='3' fill='#FFFFFF' stroke='#CBD5D1' stroke-width='0.7'/&gt;" &amp;
-        "&lt;text x='" &amp; (FinalX + 8) &amp; "' y='" &amp; (FinalY + 15) &amp; "' font-weight='bold' font-size='8' fill='#172A27'&gt;" &amp; PostID &amp; "&lt;/text&gt;" &amp;
-        "&lt;text x='" &amp; (FinalX + 8) &amp; "' y='" &amp; (FinalY + 26) &amp; "' font-size='8' fill='#172A27'&gt;" &amp; Title &amp; "&lt;/text&gt;",
+        With(
+            { _cardX: FinalX + (FinalW - 150) / 2 },
+            "&lt;rect x='" &amp; _cardX &amp; "' y='" &amp; FinalY &amp; "' width='150' height='34' rx='3' fill='#FFFFFF' stroke='#CBD5D1' stroke-width='0.7'/&gt;" &amp;
+            "&lt;text x='" &amp; (_cardX + 8) &amp; "' y='" &amp; (FinalY + 15) &amp; "' font-weight='bold' font-size='8' fill='#172A27'&gt;" &amp; PostID &amp; "&lt;/text&gt;" &amp;
+            "&lt;text x='" &amp; (_cardX + 8) &amp; "' y='" &amp; (FinalY + 26) &amp; "' font-size='8' fill='#172A27'&gt;" &amp; Title &amp; "&lt;/text&gt;"
+        ),
         ""
     ) &amp;
     "&lt;/svg&gt;"
@@ -1548,6 +1551,9 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
           <li><strong>Label 1 is 10, but Label 2 shows everyone at the same depth</strong> (e.g. everyone <code>d0</code>): Step A's depth-detection chain isn't correctly telling P2&ndash;P10 apart from the root.</li>
           <li><strong>Depths look right, but Label 3 shows everyone bunched at the same X/Y (or blank):</strong> Step B/C (width or position) is the problem, not depth &mdash; and everyone would be stacked exactly on top of each other, which looks on screen exactly like only one card rendering, with the rest hidden directly underneath it.</li>
         </ul>
+        <div class="callout ok">
+          <strong>Second real result, 2026-09-11 &mdash; the core proof passed.</strong> After the fix above, the tree rendered correctly: all 10 boxes, correctly nested 4 levels deep, P10 under P5 specifically, every sibling gap clean and identical &mdash; computed entirely from <code>ManagerPostID</code>, no coordinate touched by hand. One real cosmetic bug alongside it, now fixed in the formula above: every card was drawn at its own <em>subtree</em> width rather than a fixed card size, so P1 (root) and P3 (the bushy branch) rendered as huge stretched bars spanning their whole reserved space, while true leaves (P2, P4) looked normal &mdash; subtree width is correct for <em>spacing</em> siblings apart, but the card itself should stay a fixed size, centred within that reserved space, same as Command's own real cards do. Fixed by drawing every card at a constant 150-wide box centred on <code>FinalX + FinalW/2</code>, rather than drawing the box at the full <code>FinalW</code>. Not yet re-tested against this specific fix.
+        </div>
         <div class="callout warn">
           <strong>What NOT to conclude from this phase:</strong> passing it proves the algorithm works for a tree up to 4 levels deep, computed live. It does not yet prove this scales to Command's real size/complexity combined with Phase 3's visual polish (colour rails, vacancy dashing, category lookup &mdash; all already proven separately, just not combined with this yet), that a real SharePoint list's <code>ManagerPostID</code> behaves identically to a local collection, or anything about squads, dotted/matrix lines, or panel borders &mdash; all deliberately out of scope here.
         </div>
