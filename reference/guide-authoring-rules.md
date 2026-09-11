@@ -25,6 +25,7 @@ If something is uncertain, mark it as unverified and do not publish it as a buil
 7. For formulas, use `powerfx-patterns.md` and source-linked Microsoft Learn pages.
 8. Add any new verified fact to this reference pack.
 9. Run `python3 tools/audit-guide.py path/to/index.html`.
+9a. Run `python3 tools/audit-formulas.py path/to/index.html [any local src/formulas/*.md files]` — checks the actual Power Fx content (not just guide prose/YAML) for patterns already confirmed broken live in this Bible: `Base64()`, `AddColumns`/`GroupBy` quoted column names, `Table`-typed UDF parameters, a UDF definition mixed with imperative statements (OnStart/OnSelect vs. the separate `Formulas` property), unescaped `&` inside generated markup strings, and unbalanced brackets. If the project keeps local formula source files separate from the published guide, also run it with `--diff <local.md> <guide.html>` to catch drift between what was actually tested and what's actually published — added 2026-09-11 after exactly that drift was found live (a `Base64()` fix landed in a guide but never made it back into the local source file).
 10. Run `git diff --check`.
 11. Preview locally and test responsive layout and copy buttons.
 
