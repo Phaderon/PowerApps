@@ -347,13 +347,13 @@
         </div>
         <p>Then, separately, add a Button whose <code>OnSelect</code> builds the same picture through Power Fx string concatenation instead of a hand-typed literal, and point the Image control at the resulting variable:</p>
         <div class="callout warn">
-          <strong>CONFIRMED FAILED, 2026-09-11: <code>Base64()</code> is not a real function here.</strong> Studio's formula bar rejected it outright &mdash; "'Base64' is an unknown or unsupported function." The code block below has been updated to try <code>EncodeUrl()</code> instead (a function already in confirmed real use elsewhere in this app family, unlike <code>Base64</code>, which had zero prior use anywhere in the Bible) &mdash; that swap itself is <strong>not yet confirmed</strong>, so treat it as the next thing to test, not a known-working fix.
+          <strong><code>Base64()</code> confirmed NOT a real function here</strong> &mdash; Studio's formula bar rejected it outright: "'Base64' is an unknown or unsupported function." <strong>Fix confirmed passed, 2026-09-11:</strong> the code block below builds the data URI with <code>EncodeUrl()</code> instead, and it rendered correctly. Use <code>EncodeUrl()</code>, never <code>Base64()</code>, for this pattern anywhere else in this project.
         </div>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
               <span>Button &middot; OnSelect &mdash; Test B, formula-built SVG + EncodeUrl()</span>
-              <span class="code-stamp" data-updated="2026-09-11T08:30:26Z">v2 &middot; 2026-09-11 09:30 BST &mdash; Base64() confirmed broken, swapped for EncodeUrl() (unconfirmed)</span>
+              <span class="code-stamp" data-updated="2026-09-11T08:32:47Z">v3 &middot; 2026-09-11 09:32 BST &mdash; EncodeUrl() confirmed working</span>
             </div>
             <button data-copy="phase0-test-b" type="button">Copy</button>
           </div>
@@ -370,7 +370,7 @@ Set(varTestDataUri, "data:image/svg+xml," &amp; EncodeUrl(varTestSvg))
         </div>
         <p>Set that Image control's <code>Image</code> property to <code>=varTestDataUri</code>, and add a Label showing <code>=Len(varTestSvg)</code> so the generated string isn't silently empty.</p>
         <div class="callout ok">
-          <strong>Record:</strong> does a small card, a dashed vacant card and a connector line actually render (Test A)? Does <code>Base64()</code> exist and work as expected (Test B, unverified in the Bible)? Screenshot either way &mdash; a blank/broken image is just as useful a result as a working one. Passing this proves the primitive only &mdash; nothing about 108 posts, print, or real label lengths.
+          <strong>Result:</strong> Test A passed &mdash; a small card, a dashed vacant card and a connector line all rendered. Test B failed with <code>Base64()</code>, then passed once switched to <code>EncodeUrl()</code>. Both confirmed live, 2026-09-11. Passing this proves the primitive only &mdash; nothing about 108 posts, print, or real label lengths yet.
         </div>
       </section>
 
@@ -430,7 +430,7 @@ Set(varChartMode, "Quiet")  // "Quiet" = white card + colour rail (page 4). "Col
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnRender.OnSelect &mdash; builds the SVG from colCommandPosts/colCommandConnectors</span>
-              <span class="code-stamp" data-updated="2026-09-11T00:21:35Z">v1 &middot; 2026-09-11 01:21 BST</span>
+              <span class="code-stamp" data-updated="2026-09-11T08:32:47Z">v2 &middot; 2026-09-11 09:32 BST &mdash; Base64() replaced with confirmed-working EncodeUrl()</span>
             </div>
             <button data-copy="phase1-render" type="button">Copy</button>
           </div>
@@ -467,7 +467,7 @@ Set(varChartMode, "Quiet")  // "Quiet" = white card + colour rail (page 4). "Col
     ) &amp;
     "&lt;/svg&gt;"
 );
-Set(varCommandDataUri, "data:image/svg+xml;base64," &amp; Base64(varCommandSvg))
+Set(varCommandDataUri, "data:image/svg+xml," &amp; EncodeUrl(varCommandSvg))
 </pre>
         </div>
         <ol start="3">
@@ -536,7 +536,7 @@ Set(varCommandDataUri, "data:image/svg+xml;base64," &amp; Base64(varCommandSvg))
           <div class="code-toolbar">
             <div class="code-meta">
               <span>Render formula &mdash; computed column/row grid layout for one department</span>
-              <span class="code-stamp" data-updated="2026-09-11T00:21:35Z">v1 &middot; 2026-09-11 01:21 BST</span>
+              <span class="code-stamp" data-updated="2026-09-11T08:32:47Z">v2 &middot; 2026-09-11 09:32 BST &mdash; Base64() replaced with confirmed-working EncodeUrl()</span>
             </div>
             <button data-copy="phase2-render" type="button">Copy</button>
           </div>
@@ -579,7 +579,7 @@ Set(varCommandDataUri, "data:image/svg+xml;base64," &amp; Base64(varCommandSvg))
         "&lt;/svg&gt;"
     )
 );
-Set(varInfoSysDataUri, "data:image/svg+xml;base64," &amp; Base64(varInfoSysSvg))
+Set(varInfoSysDataUri, "data:image/svg+xml," &amp; EncodeUrl(varInfoSysSvg))
 </pre>
         </div>
         <p>Point a second Image control at <code>=varInfoSysDataUri</code>.</p>
