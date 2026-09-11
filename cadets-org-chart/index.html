@@ -1269,13 +1269,16 @@ Set(varFullSheetDataUri, "")</pre>
           <li>Set <code>btnComputeTree.OnSelect</code> to this complete formula. It's long &mdash; 11 sequential <code>ClearCollect</code> steps &mdash; on purpose: each step does only one small, safe thing (figure out one depth level, for width or for position) rather than one clever formula trying to do everything at once.</li>
         </ol>
         <div class="callout warn">
-          <strong>Corrected 2026-09-11 after the first real test result</strong> &mdash; pasted clean, no Studio errors, but every row except the root came out at the same, wrong depth (see the debugging section below for the exact numbers). Every nested lookup that was meant to find "my manager" or "my siblings" was finding nothing, for every row. The original version relied on <code>ThisRecord.field</code> to reach the outer <code>AddColumns</code> row from inside a nested <code>Filter</code>/<code>LookUp</code> &mdash; which works when looking up a genuinely separate table (Command's own <code>LookUp(colCategoryColours, Category = ThisRecord.Category)</code>), but every lookup in this phase is a <strong>self-join</strong> (a table looking itself up from inside an <code>AddColumns</code> over that same table), and <code>ThisRecord</code> did not reliably reach the outer row in that shape. <strong>Fixed by capturing the value you need from the outer row into a plain <code>With</code>-bound name first</strong> &mdash; e.g. <code>With({ _myMgr: ManagerPostID }, LookUp(colD0, PostID = _myMgr))</code> &mdash; so there's no shared field name left to be ambiguous about. Every step below now uses this pattern instead. Still genuinely unverified whether this specific fix is enough &mdash; that's exactly what testing it again tells us.
+          <strong>Corrected 2026-09-11 after the first real test result</strong> &mdash; pasted clean, no Studio errors, but every row except the root came out at the same, wrong depth (see the debugging section below for the exact numbers). Every nested lookup that was meant to find "my manager" or "my siblings" was finding nothing, for every row. The original version relied on <code>ThisRecord.field</code> to reach the outer <code>AddColumns</code> row from inside a nested <code>Filter</code>/<code>LookUp</code> &mdash; which works when looking up a genuinely separate table (Command's own <code>LookUp(colCategoryColours, Category = ThisRecord.Category)</code>), but every lookup in this phase is a <strong>self-join</strong> (a table looking itself up from inside an <code>AddColumns</code> over that same table), and <code>ThisRecord</code> did not reliably reach the outer row in that shape. <strong>Fixed by capturing the value you need from the outer row into a plain <code>With</code>-bound name first</strong> &mdash; e.g. <code>With({ _myMgr: ManagerPostID }, LookUp(colD0, PostID = _myMgr))</code> &mdash; so there's no shared field name left to be ambiguous about. Every step below now uses this pattern instead.
+        </div>
+        <div class="callout warn">
+          <strong>Redesigned again 2026-09-11, after the tree rendered correctly and Allan flagged a real space-efficiency problem:</strong> siblings were positioned by reserving each one's <em>full subtree width</em> &mdash; correct for never overlapping, but wasteful. P2 and P4 (plain leaves) were pushed out to the far edges of the whole row just because their sibling P3 needed a lot of room for its own 5 children &mdash; on a page where several departments have to share the width, that's real space lost to blank margin either side of two boxes that don't need it. <strong>Fixed by no longer reserving subtree width for sibling spacing at all</strong> &mdash; every sibling group now packs tightly using a fixed card width (150), exactly the way Command's real, shipped layout already does (DCOMD PS/Colonel Cadets/COS are packed by their own 170pt card width, not by how much room COS's own 5 reports need). A bushy branch's children still centre correctly on that branch's own (now much closer-in) position &mdash; they just extend below it as needed, rather than the branch itself being pushed out to make room in the row above. This let the whole width-computation step be dropped entirely &mdash; fixed-width packing needs no width calculation at all, only <code>Depth</code>, <code>ManagerPostID</code> and <code>SortOrder</code>. <strong>The one real trade-off, stated plainly, not hidden:</strong> this is safe &mdash; no two boxes ever overlap &mdash; exactly as long as, at any given sibling level, <strong>at most one sibling has descendants wide enough to need extra room below it</strong>. That's true of Command and true of this test tree. If a real department ever has two team leads side by side who <em>both</em> have several reports, their two fan-outs below could collide, since neither is reserving room for the other any more &mdash; the guard against that is checking the rendered picture for overlapping boxes, not trusting the formula to prevent it. Still genuinely unverified whether this redesign holds up &mdash; that's exactly what testing it again tells us.
         </div>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
-              <span>btnComputeTree.OnSelect &mdash; depth, then width bottom-up, then X top-down, then render</span>
-              <span class="code-stamp" data-updated="2026-09-11T18:26:47Z">v3 &middot; 2026-09-11 19:26 BST &mdash; the tree now computes correctly; fixed cards being drawn at their full subtree width (P1/P3 looked huge) instead of a fixed size centred within it</span>
+              <span>btnComputeTree.OnSelect &mdash; depth, then X position (fixed-width sibling packing), then render</span>
+              <span class="code-stamp" data-updated="2026-09-11T18:38:00Z">v4 &middot; 2026-09-11 19:38 BST &mdash; dropped subtree-width reservation entirely; siblings now pack tight by fixed card size (matches Command), so P2/P4 no longer sit pushed out to the edges</span>
             </div>
             <button data-copy="phase4-compute" type="button">Copy</button>
           </div>
@@ -1313,65 +1316,14 @@ ClearCollect(colWithDepth,
     AddColumns(colD2, Depth, If(!IsBlank(Depth2), Depth2, 3))
 );
 
-// ---- Step B: subtree width, bottom-up, one pass per level (deepest first) ----
-ClearCollect(colWidthPass0,
-    AddColumns(colWithDepth, W0, 150)
-);
-ClearCollect(colWidthPass1,
-    AddColumns(
-        colWidthPass0,
-        W1,
-        If(
-            Depth = 2,
-            With(
-                { _myID: PostID },
-                With(
-                    { _kids: Filter(colWidthPass0, ManagerPostID = _myID) },
-                    If(CountRows(_kids) = 0, 150, Sum(_kids, W0) + (CountRows(_kids) - 1) * 10)
-                )
-            ),
-            W0
-        )
-    )
-);
-ClearCollect(colWidthPass2,
-    AddColumns(
-        colWidthPass1,
-        W2,
-        If(
-            Depth = 1,
-            With(
-                { _myID: PostID },
-                With(
-                    { _kids: Filter(colWidthPass1, ManagerPostID = _myID) },
-                    If(CountRows(_kids) = 0, 150, Sum(_kids, W1) + (CountRows(_kids) - 1) * 10)
-                )
-            ),
-            W1
-        )
-    )
-);
-ClearCollect(colWidthPass3,
-    AddColumns(
-        colWidthPass2,
-        W3,
-        If(
-            Depth = 0,
-            With(
-                { _myID: PostID },
-                With(
-                    { _kids: Filter(colWidthPass2, ManagerPostID = _myID) },
-                    If(CountRows(_kids) = 0, 150, Sum(_kids, W2) + (CountRows(_kids) - 1) * 10)
-                )
-            ),
-            W2
-        )
-    )
-);
-
-// ---- Step C: X position, top-down, one pass per level (root first) ----
+// ---- Step B: X position, top-down, one pass per level (root first) ----
+// No width computation needed any more -- every sibling group packs tightly using a
+// fixed 150pt card width, not each sibling's own subtree width. This is exactly the
+// same tight-packing Command's own shipped layout uses (siblings packed by their own
+// card width, with a bushy branch's children centred on that branch's actual
+// position rather than the branch itself being pushed out to make room for them).
 ClearCollect(colX0,
-    AddColumns(colWidthPass3, X0, If(Depth = 0, 625 - W3 / 2, Blank()))
+    AddColumns(colWithDepth, X0, If(Depth = 0, 625 - 75, Blank()))
 );
 ClearCollect(colX1,
     AddColumns(
@@ -1390,10 +1342,10 @@ ClearCollect(colX1,
                     },
                     With(
                         {
-                            _groupTotalW: Sum(_allSibs, W3) + (CountRows(_allSibs) - 1) * 10,
-                            _precedingW: Sum(_precedingSibs, W3) + CountRows(_precedingSibs) * 10
+                            _groupTotalW: CountRows(_allSibs) * 150 + (CountRows(_allSibs) - 1) * 10,
+                            _precedingW: CountRows(_precedingSibs) * 150 + CountRows(_precedingSibs) * 10
                         },
-                        _parent.X0 + _parent.W3 / 2 - _groupTotalW / 2 + _precedingW
+                        _parent.X0 + 75 - _groupTotalW / 2 + _precedingW
                     )
                 )
             )
@@ -1417,10 +1369,10 @@ ClearCollect(colX2,
                     },
                     With(
                         {
-                            _groupTotalW: Sum(_allSibs, W3) + (CountRows(_allSibs) - 1) * 10,
-                            _precedingW: Sum(_precedingSibs, W3) + CountRows(_precedingSibs) * 10
+                            _groupTotalW: CountRows(_allSibs) * 150 + (CountRows(_allSibs) - 1) * 10,
+                            _precedingW: CountRows(_precedingSibs) * 150 + CountRows(_precedingSibs) * 10
                         },
-                        _parent.X1 + _parent.W3 / 2 - _groupTotalW / 2 + _precedingW
+                        _parent.X1 + 75 - _groupTotalW / 2 + _precedingW
                     )
                 )
             )
@@ -1444,10 +1396,10 @@ ClearCollect(colX3,
                     },
                     With(
                         {
-                            _groupTotalW: Sum(_allSibs, W3) + (CountRows(_allSibs) - 1) * 10,
-                            _precedingW: Sum(_precedingSibs, W3) + CountRows(_precedingSibs) * 10
+                            _groupTotalW: CountRows(_allSibs) * 150 + (CountRows(_allSibs) - 1) * 10,
+                            _precedingW: CountRows(_precedingSibs) * 150 + CountRows(_precedingSibs) * 10
                         },
-                        _parent.X2 + _parent.W3 / 2 - _groupTotalW / 2 + _precedingW
+                        _parent.X2 + 75 - _groupTotalW / 2 + _precedingW
                     )
                 )
             )
@@ -1455,9 +1407,9 @@ ClearCollect(colX3,
     )
 );
 
-// ---- Step D: collapse into one clean table, then render exactly like Command ----
+// ---- Step C: collapse into one clean table, then render exactly like Command ----
 ClearCollect(colFinal,
-    AddColumns(colX3, FinalW, W3, FinalX, X3, FinalY, 20 + Depth * 64)
+    AddColumns(colX3, FinalX, X3, FinalY, 20 + Depth * 64)
 );
 
 Set(varAutoTreeSvg,
@@ -1469,9 +1421,9 @@ Set(varAutoTreeSvg,
             { _myMgr: ManagerPostID },
             With(
                 { _parent: LookUp(colFinal, PostID = _myMgr) },
-                "&lt;path d='M" &amp; (_parent.FinalX + _parent.FinalW / 2) &amp; "," &amp; (_parent.FinalY + 34) &amp;
+                "&lt;path d='M" &amp; (_parent.FinalX + 75) &amp; "," &amp; (_parent.FinalY + 34) &amp;
                     " V" &amp; (_parent.FinalY + 34 + (FinalY - (_parent.FinalY + 34)) / 2) &amp;
-                    " H" &amp; (FinalX + FinalW / 2) &amp;
+                    " H" &amp; (FinalX + 75) &amp;
                     " V" &amp; FinalY &amp; "' stroke='#8A9A94' stroke-width='0.8' fill='none'/&gt;"
             )
         ),
@@ -1479,12 +1431,9 @@ Set(varAutoTreeSvg,
     ) &amp;
     Concat(
         colFinal,
-        With(
-            { _cardX: FinalX + (FinalW - 150) / 2 },
-            "&lt;rect x='" &amp; _cardX &amp; "' y='" &amp; FinalY &amp; "' width='150' height='34' rx='3' fill='#FFFFFF' stroke='#CBD5D1' stroke-width='0.7'/&gt;" &amp;
-            "&lt;text x='" &amp; (_cardX + 8) &amp; "' y='" &amp; (FinalY + 15) &amp; "' font-weight='bold' font-size='8' fill='#172A27'&gt;" &amp; PostID &amp; "&lt;/text&gt;" &amp;
-            "&lt;text x='" &amp; (_cardX + 8) &amp; "' y='" &amp; (FinalY + 26) &amp; "' font-size='8' fill='#172A27'&gt;" &amp; Title &amp; "&lt;/text&gt;"
-        ),
+        "&lt;rect x='" &amp; FinalX &amp; "' y='" &amp; FinalY &amp; "' width='150' height='34' rx='3' fill='#FFFFFF' stroke='#CBD5D1' stroke-width='0.7'/&gt;" &amp;
+        "&lt;text x='" &amp; (FinalX + 8) &amp; "' y='" &amp; (FinalY + 15) &amp; "' font-weight='bold' font-size='8' fill='#172A27'&gt;" &amp; PostID &amp; "&lt;/text&gt;" &amp;
+        "&lt;text x='" &amp; (FinalX + 8) &amp; "' y='" &amp; (FinalY + 26) &amp; "' font-size='8' fill='#172A27'&gt;" &amp; Title &amp; "&lt;/text&gt;",
         ""
     ) &amp;
     "&lt;/svg&gt;"
@@ -1499,7 +1448,7 @@ Set(varAutoTreeDataUri, "data:image/svg+xml," &amp; EncodeUrl(varAutoTreeSvg))</
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnClearTree.OnSelect &mdash; resets the whole computed pipeline, leaves colTreePosts (your test data) untouched</span>
-              <span class="code-stamp" data-updated="2026-09-11T18:19:51Z">v1 &middot; 2026-09-11 19:19 BST</span>
+              <span class="code-stamp" data-updated="2026-09-11T18:37:17Z">v2 &middot; 2026-09-11 19:37 BST &mdash; dropped the width-computation collections, which no longer exist after the space-conservation redesign below</span>
             </div>
             <button data-copy="phase4-clear" type="button">Copy</button>
           </div>
@@ -1507,10 +1456,6 @@ Set(varAutoTreeDataUri, "data:image/svg+xml," &amp; EncodeUrl(varAutoTreeSvg))</
 Clear(colD1);
 Clear(colD2);
 Clear(colWithDepth);
-Clear(colWidthPass0);
-Clear(colWidthPass1);
-Clear(colWidthPass2);
-Clear(colWidthPass3);
 Clear(colX0);
 Clear(colX1);
 Clear(colX2);
@@ -1552,7 +1497,7 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
           <li><strong>Depths look right, but Label 3 shows everyone bunched at the same X/Y (or blank):</strong> Step B/C (width or position) is the problem, not depth &mdash; and everyone would be stacked exactly on top of each other, which looks on screen exactly like only one card rendering, with the rest hidden directly underneath it.</li>
         </ul>
         <div class="callout ok">
-          <strong>Second real result, 2026-09-11 &mdash; the core proof passed.</strong> After the fix above, the tree rendered correctly: all 10 boxes, correctly nested 4 levels deep, P10 under P5 specifically, every sibling gap clean and identical &mdash; computed entirely from <code>ManagerPostID</code>, no coordinate touched by hand. One real cosmetic bug alongside it, now fixed in the formula above: every card was drawn at its own <em>subtree</em> width rather than a fixed card size, so P1 (root) and P3 (the bushy branch) rendered as huge stretched bars spanning their whole reserved space, while true leaves (P2, P4) looked normal &mdash; subtree width is correct for <em>spacing</em> siblings apart, but the card itself should stay a fixed size, centred within that reserved space, same as Command's own real cards do. Fixed by drawing every card at a constant 150-wide box centred on <code>FinalX + FinalW/2</code>, rather than drawing the box at the full <code>FinalW</code>. Not yet re-tested against this specific fix.
+          <strong>Second real result, 2026-09-11 &mdash; the core proof passed.</strong> After the fix above, the tree rendered correctly: all 10 boxes, correctly nested 4 levels deep, P10 under P5 specifically, every sibling gap clean and identical &mdash; computed entirely from <code>ManagerPostID</code>, no coordinate touched by hand. One real cosmetic bug alongside it, now fixed in the formula above: every card was drawn at its own <em>subtree</em> width rather than a fixed card size, so P1 (root) and P3 (the bushy branch) rendered as huge stretched bars spanning their whole reserved space, while true leaves (P2, P4) looked normal &mdash; subtree width is correct for <em>spacing</em> siblings apart, but the card itself should stay a fixed size, centred within that reserved space, same as Command's own real cards do. Fixed by drawing every card at a constant 150-wide box centred on <code>FinalX + FinalW/2</code>, rather than drawing the box at the full <code>FinalW</code>. <strong>Superseded by the space-conservation redesign above</strong> &mdash; once sibling spacing stopped reserving subtree width at all, <code>FinalW</code>/<code>W3</code> and the whole width-computation step became unnecessary and were removed; this entry is kept as an accurate record of what was found and fixed at the time, not a description of the current formula.
         </div>
         <div class="callout warn">
           <strong>What NOT to conclude from this phase:</strong> passing it proves the algorithm works for a tree up to 4 levels deep, computed live. It does not yet prove this scales to Command's real size/complexity combined with Phase 3's visual polish (colour rails, vacancy dashing, category lookup &mdash; all already proven separately, just not combined with this yet), that a real SharePoint list's <code>ManagerPostID</code> behaves identically to a local collection, or anything about squads, dotted/matrix lines, or panel borders &mdash; all deliberately out of scope here.
