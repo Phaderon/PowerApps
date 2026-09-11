@@ -1179,6 +1179,31 @@ Set(varFullSheetDataUri, "data:image/svg+xml," &amp; EncodeUrl(varFullSheetSvg))
         </div>
       </section>
 
+      <section id="clear-all-pictures">
+        <h2>Testing Aid &mdash; Clear All Pictures Button</h2>
+        <p>With Phases 0-3 all built side by side for testing, you can end up with several images stacked on screen with no way to blank them without pressing <strong>F5</strong> and re-running the whole <code>App.OnStart</code>. This button clears every render's picture in one click, without restarting anything.</p>
+        <ol>
+          <li>Add a new button &mdash; e.g. <code>btnClearAll</code> &mdash; anywhere handy on the screen. Set its <code>OnSelect</code> to this complete formula:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnClearAll.OnSelect &mdash; blanks every render variable built so far (Phases 0-3)</span>
+              <span class="code-stamp" data-updated="2026-09-11T11:15:21Z">v1 &middot; 2026-09-11 12:15 BST</span>
+            </div>
+            <button data-copy="clear-all-onselect" type="button">Copy</button>
+          </div>
+<pre id="clear-all-onselect">Set(varTestDataUri, "");
+Set(varCommandDataUri, "");
+Set(varInfoSysDataUri, "");
+Set(varFullSheetDataUri, "")</pre>
+        </div>
+        <p>Each Image control bound to <code>=varTestDataUri</code>/<code>=varCommandDataUri</code>/<code>=varInfoSysDataUri</code>/<code>=varFullSheetDataUri</code> shows nothing once its variable is blank &mdash; this doesn't touch <code>varChartMode</code> or any of the <code>col...</code> collections from <code>App.OnStart</code>, so pressing a render button afterwards redraws exactly as before. If you skipped Phase 0's static test image or already deleted a phase's button/image per the "resize/hide them or delete them" note above, drop that line &mdash; it's harmless to leave in (Power Fx doesn't error setting a variable that's simply unused), but no need to keep it either.</p>
+        <div class="callout warn">
+          <strong>This is another accumulating property, same as <a href="#current-state">Current State</a>.</strong> Any future phase that adds its own new render variable (another <code>var...DataUri</code>) needs a new <code>Set(varNewThing, "")</code> line added to <em>this same box</em>, republished in full &mdash; not a separate button, not a partial addition elsewhere. Follows the guide's own Accumulating Properties Standard.
+        </div>
+      </section>
+
       <section id="next-steps">
         <h2>Next Steps</h2>
         <p>Phases 0-2 are all confirmed passed. Deliberately staying on local hardcoded
