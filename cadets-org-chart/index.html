@@ -550,7 +550,7 @@ Select(btnRender)</pre>
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnRenderInfoSys.OnSelect &mdash; computed column/row grid layout for one department</span>
-              <span class="code-stamp" data-updated="2026-09-11T08:59:07Z">v3 &middot; 2026-09-11 09:59 BST &mdash; fixed AddColumns quoted column names (Studio rejected them, see callout below)</span>
+              <span class="code-stamp" data-updated="2026-09-11T09:10:36Z">v4 &middot; 2026-09-11 10:10 BST &mdash; fixed undersized viewBox/canvas height (was clipping the 8-row columns)</span>
             </div>
             <button data-copy="phase2-render" type="button">Copy</button>
           </div>
@@ -560,8 +560,8 @@ Select(btnRender)</pre>
             _panelW: 371, _gutter: 10, _headH: 34, _headGap: 10, _cardH: 27, _rowGap: 3,
             _colW: (371 - 2*10) / 3
         },
-        "&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 371 260' font-family='Arial'&gt;" &amp;
-        "&lt;rect x='0' y='0' width='371' height='260' fill='#FFFFFF'/&gt;" &amp;
+        "&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 371 291' font-family='Arial'&gt;" &amp;
+        "&lt;rect x='0' y='0' width='371' height='291' fill='#FFFFFF'/&gt;" &amp;
         Concat(
             AddColumns(
                 colInfoSysPosts,
@@ -596,8 +596,11 @@ Select(btnRender)</pre>
 Set(varInfoSysDataUri, "data:image/svg+xml," &amp; EncodeUrl(varInfoSysSvg))
 </pre>
         </div>
+        <div class="callout warn">
+          <strong>Fixed 2026-09-11 &mdash; a second real mistake, this one a clipping bug, not a Studio error:</strong> the <code>viewBox</code>/background above were hardcoded to <code>260</code> tall, but the tallest column here has 8 entries (delivery lead + 7 workers) &mdash; the actual content needs <code>34 (head) + 10 (gap) + 8&times;(27+3) (rows) - 3 (no trailing gap) = 281</code>, so <code>260</code> genuinely wasn't enough room; real content was being cut off, this was never an Image-control display setting. Corrected to <code>291</code> above (281 + a little breathing room). This number is specific to <em>this</em> dataset's 8-row column &mdash; it isn't self-adjusting if the data changes.
+        </div>
         <ol start="3">
-          <li>Point a second Image control at <code>=varInfoSysDataUri</code>.</li>
+          <li>Point a second Image control at <code>=varInfoSysDataUri</code>, positioned so it does <strong>not overlap</strong> the Command Image control from Phase 1 (below it, or side by side). These are two independent, simultaneous proofs, not two views of one thing &mdash; nothing hides the Command picture when this one renders, or vice versa, because nothing was ever asked to. Overlapping controls just show whichever rendered most recently sitting in front of the other.</li>
           <li>Update your existing toggle button (from Phase 1) so it refreshes BOTH pictures &mdash; replace its <code>OnSelect</code> entirely, don't just add a line to what's there now:</li>
         </ol>
         <div class="code-card">
