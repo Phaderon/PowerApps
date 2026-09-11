@@ -276,6 +276,8 @@
         <a href="#phase-1">Phase 1 - Formula-Generated Command Proof</a>
         <a href="#phase-2">Phase 2 - Full Department (24 Posts, Computed)</a>
         <a href="#phase-3">Phase 3 - Full Single-Sheet Render (All 10 Departments)</a>
+        <a href="#clear-all-pictures">Testing Aid - Clear All Pictures</a>
+        <a href="#phase-4">Phase 4 - Automated Tree Layout Proof</a>
         <a href="#next-steps">Next Steps</a>
         <a href="#open-questions">Known Limitations / Open Questions</a>
       </nav>
@@ -1488,7 +1490,33 @@ Set(varAutoTreeDataUri, "data:image/svg+xml," &amp; EncodeUrl(varAutoTreeSvg))</
         </div>
         <ol start="5">
           <li>Set the Image control's <code>Image</code> property to <code>=varAutoTreeDataUri</code>.</li>
+          <li>Add a second button &mdash; e.g. <code>btnClearTree</code> &mdash; so you can reset every intermediate collection and the picture without restarting Studio each time you edit <code>colTreePosts</code> in <code>OnStart</code> (add/remove a person, per the actual point of this phase below). Set its <code>OnSelect</code> to this complete formula:</li>
         </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnClearTree.OnSelect &mdash; resets the whole computed pipeline, leaves colTreePosts (your test data) untouched</span>
+              <span class="code-stamp" data-updated="2026-09-11T18:19:51Z">v1 &middot; 2026-09-11 19:19 BST</span>
+            </div>
+            <button data-copy="phase4-clear" type="button">Copy</button>
+          </div>
+<pre id="phase4-clear">Clear(colD0);
+Clear(colD1);
+Clear(colD2);
+Clear(colWithDepth);
+Clear(colWidthPass0);
+Clear(colWidthPass1);
+Clear(colWidthPass2);
+Clear(colWidthPass3);
+Clear(colX0);
+Clear(colX1);
+Clear(colX2);
+Clear(colX3);
+Clear(colFinal);
+Set(varAutoTreeSvg, "");
+Set(varAutoTreeDataUri, "")</pre>
+        </div>
+        <p class="meta-line">This only clears the 13 collections <code>btnComputeTree</code> builds and the two render variables &mdash; it deliberately leaves <code>colTreePosts</code> alone, since that's your edited test roster, not something to wipe. Press this, edit <code>OnStart</code>'s data, re-run <code>App.OnStart</code> (or just re-open the app), then press <code>btnComputeTree</code> again.</p>
         <div class="callout ok">
           <strong>What to check:</strong> does it run at all, or does something in that chain redline &mdash; if so, record the exact error and which <code>ClearCollect</code> step it's on. If it renders: do all 10 boxes appear, correctly nested 4 levels deep, with P10 under P5 specifically? Is every gap between siblings under the same manager an identical, clean distance (Python's simulation says it should be a uniform 10pt everywhere)? <strong>Then the actual point of this whole phase:</strong> delete <code>P8</code> from the <code>OnStart</code> data above, or add a <code>P11</code> under <code>P3</code>, re-run, and see whether the tree reflows correctly on its own &mdash; with no coordinate anywhere touched by a person. That's the one result that actually matters; everything above it is just getting there.
         </div>
