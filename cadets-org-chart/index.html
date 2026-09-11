@@ -637,20 +637,27 @@ Select(btnRenderInfoSys)</pre>
           <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
           <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this phase">&#9660;</button>
         </div>
+        <div class="callout warn">
+          <strong>Rewritten 2026-09-11 after two real findings from the first attempt:</strong>
+          <ol style="margin:8px 0 0;">
+            <li>The first version defined a reusable <code>RenderDept(...)</code> function taking a <strong>table</strong> parameter. Pasted into <code>OnStart</code>, it threw a confusing, unrelated-looking error &mdash; <em>"Name isn't valid. 'posts' isn't recognized."</em> &mdash; because a function <strong>definition</strong> isn't valid inside <code>OnStart</code> at all; it belongs in the separate <code>Formulas</code> property on the App object (Advanced pane of the Properties panel, select the App/root tree-view node) &mdash; the same place this Bible's <code>NextThursday</code> UDF already lives. Pasted correctly into <code>Formulas</code>, it then failed differently: <em>"Unknown type Table."</em> &mdash; <code>Table</code> is not a valid Power Fx parameter type here, confirmed, not guessed. <strong>This phase no longer uses a function at all</strong> &mdash; every department's render logic is inlined directly, repeated per department. Verbose, but every individual shape in it is already confirmed working from Phases 1-2.</li>
+            <li>The original department name strings for Media &amp; Comms and Policy &amp; Pers used a bare <code>&amp;</code> inside the generated SVG text &mdash; invalid XML (SVG is XML; an unescaped <code>&amp;</code> in text content doesn't parse). Confirmed with an offline XML parser before this ever reached Studio. Fixed below &mdash; these now correctly contain the literal characters <code>&amp;amp;</code>, not a bare <code>&amp;</code>.</li>
+          </ol>
+        </div>
         <p>Combines Command and all 9 department panels into <strong>one generated SVG, one Image control</strong> &mdash; matching the single A3 sheet in the mockup, not the two side-by-side test pictures Phases 1-2 used. 108 posts across 10 panels in one generated picture, versus Phase 2's 24 in one &mdash; that scale question is exactly what this phase exists to answer; don't assume it works the same way just because the smaller pieces did.</p>
         <p>Positions below are computed from the same measured page grid in the Visual Spec section (Command full-width; Safeguarding/Training/Information Systems as equal thirds; Media &amp; Comms/CCF(A)/Policy &amp; Pers+CEP/Support/CCF as the bottom row, 10pt gutters throughout), worked out by hand once for this fixed 10-department layout &mdash; this is <strong>not</strong> a generic "any number of departments, any arrangement" algorithm. A real SharePoint-backed version would need that generalised; this phase only proves the picture can be built and rendered at this scale and complexity.</p>
         <div class="callout warn">
-          <strong>Every code block on this page is the complete content for one property &mdash; the whole thing, never a fragment to merge by hand into existing code.</strong>
+          <strong>Every code block on this page is the complete content for one property &mdash; the whole thing, never a fragment to merge by hand into existing code. Do the two steps below in order &mdash; step 1 fully, then step 2 &mdash; there's no "come back to this bit later" step this time.</strong>
         </div>
 
         <ol>
-          <li>Add to <strong>App.OnStart</strong>, alongside everything from Phases 1-2. This is a full replacement-by-addition: keep your existing <code>colCategoryColours</code>, <code>colCommandPosts</code>/<code>colCommandConnectors</code> (Phase 1's 5-post subset &mdash; untouched, still useful on its own), <code>colInfoSysPosts</code> (Phase 2), and <code>varChartMode</code>. Add these new collections alongside them &mdash; <strong>Command gets its own separate, full 11-post collection here</strong> (<code>colCommandFullPosts</code>/<code>colCommandFullConnectors</code>), distinct from Phase 1's 5-post proof subset, because this phase needs the whole department, not an excerpt.</li>
+          <li>Add to <strong>App.OnStart</strong>, alongside everything from Phases 1-2. Keep your existing <code>colCategoryColours</code>, <code>colCommandPosts</code>/<code>colCommandConnectors</code> (Phase 1's 5-post subset &mdash; untouched, still useful on its own), <code>colInfoSysPosts</code> (Phase 2), and <code>varChartMode</code>. Add these new collections alongside them &mdash; <strong>Command gets its own separate, full 11-post collection here</strong> (<code>colCommandFullPosts</code>/<code>colCommandFullConnectors</code>), distinct from Phase 1's 5-post proof subset, because this phase needs the whole department, not an excerpt.</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
               <span>App &middot; OnStart &mdash; full Command (11 posts) + the other 8 departments (86 posts)</span>
-              <span class="code-stamp" data-updated="2026-09-11T09:31:59Z">v1 &middot; 2026-09-11 10:31 BST</span>
+              <span class="code-stamp" data-updated="2026-09-11T09:46:55Z">v1 &middot; 2026-09-11 10:46 BST</span>
             </div>
             <button data-copy="phase3-onstart" type="button">Copy</button>
           </div>
@@ -776,13 +783,13 @@ ClearCollect(colCcfPosts,
         </div>
 
         <ol start="2">
-          <li>Add a NEW button &mdash; e.g. <code>btnRenderFullSheet</code> &mdash; separate from every earlier render button. Set its <code>OnSelect</code> to this complete formula. It's long because it builds ten panels in one go, but it's the same <code>Concat</code>/<code>AddColumns</code>/<code>LookUp</code>/<code>EncodeUrl</code> shapes already confirmed working in Phases 1-2 &mdash; just repeated per department with each panel's own position baked in, not a new kind of formula.</li>
+          <li>Add a NEW button &mdash; e.g. <code>btnRenderFullSheet</code> &mdash; separate from every earlier render button. Set its <code>OnSelect</code> to this complete formula &mdash; the whole thing, no function, nothing else to define first. It's long because it builds ten panels in one go, but every individual shape in it (<code>Concat</code>/<code>AddColumns</code>/<code>LookUp</code>/<code>EncodeUrl</code>) is the exact pattern already confirmed working in Phases 1-2, just repeated per department with each panel's own position baked directly in as numbers.</li>
         </ol>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
-              <span>btnRenderFullSheet.OnSelect &mdash; builds all 10 panels, one combined picture</span>
-              <span class="code-stamp" data-updated="2026-09-11T09:31:59Z">v1 &middot; 2026-09-11 10:31 BST</span>
+              <span>btnRenderFullSheet.OnSelect &mdash; builds all 10 panels, one combined picture, no function</span>
+              <span class="code-stamp" data-updated="2026-09-11T09:46:55Z">v1 &middot; 2026-09-11 10:46 BST</span>
             </div>
             <button data-copy="phase3-button" type="button">Copy</button>
           </div>
@@ -814,62 +821,16 @@ ClearCollect(colCcfPosts,
     )
 );
 
-Set(varSafeguardingSvg, RenderDept(colSafeguardingPosts, "Safeguarding", 20,   258, 371.5, 3));
-Set(varTrainingSvg,     RenderDept(colTrainingPosts,     "Training",     401.5,258, 371.5, 3));
-Set(varInfoSys2Svg,     RenderDept(colInfoSysPosts,      "Information Systems", 783, 258, 371.5, 3));
-Set(varMediaSvg,        RenderDept(colMediaPosts,        "Media &amp; Comms",20,   593, 260,   2));
-Set(varCcfaSvg,         RenderDept(colCcfaPosts,         "CCF(A)",       290,  593, 260,   2));
-Set(varPolicySvg,       RenderDept(colPolicyPosts,       "Policy &amp; Pers",560,  593, 180,   2));
-Set(varSupportSvg,      RenderDept(colSupportPosts,      "Support",      750,  593, 190,   2));
-Set(varCcfSvg,          RenderDept(colCcfPosts,          "CCF",          950,  593, 204.6, 2));
-
-Set(varCepSvg,
+Set(varSafeguardingSvg,
     With(
-        {_cat: LookUp(colCategoryColours, Category = "RFCA")},
-        "&lt;rect x='560' y='680' width='180' height='22' fill='#003E32'/&gt;" &amp;
-        "&lt;text x='570' y='695' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;CEP&lt;/text&gt;" &amp;
-        "&lt;rect x='560' y='710' width='140' height='34' rx='3' fill='" &amp; If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF")) &amp; "' stroke='#CBD5D1' stroke-width='0.6'/&gt;" &amp;
-        If(varChartMode = "Quiet", "&lt;rect x='560' y='710' width='4' height='34' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;", "") &amp;
-        "&lt;text x='568' y='724' font-weight='bold' font-size='8' fill='#172A27'&gt;Alex Morgan&lt;/text&gt;" &amp;
-        "&lt;text x='568' y='735' font-size='8' fill='#172A27'&gt;Head of CEP&lt;/text&gt;"
-    )
-);
-
-Set(varFullSheetSvg,
-    "&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1191 810' font-family='Arial'&gt;" &amp;
-    "&lt;rect x='0' y='0' width='1191' height='810' fill='#FFFFFF'/&gt;" &amp;
-    varCommandFullSvg &amp; varSafeguardingSvg &amp; varTrainingSvg &amp; varInfoSys2Svg &amp;
-    varMediaSvg &amp; varCcfaSvg &amp; varPolicySvg &amp; varSupportSvg &amp; varCcfSvg &amp; varCepSvg &amp;
-    "&lt;/svg&gt;"
-);
-Set(varFullSheetDataUri, "data:image/svg+xml," &amp; EncodeUrl(varFullSheetSvg))</pre>
-        </div>
-
-        <div class="callout warn">
-          <strong>This formula calls <code>RenderDept(...)</code> as if it were a function &mdash; it isn't yet, and that's the first thing to verify, not assume.</strong> Power Fx supports defining real, reusable functions via Named Formulas/User Defined Functions in the App object's <code>Formulas</code> property (the same mechanism behind the confirmed-working <code>NextThursday</code> UDF elsewhere in this Bible) &mdash; but a function that takes a <strong>table</strong> as a parameter, like this one needs to, is NOT yet confirmed working anywhere in this Bible. This is the single biggest unverified assumption in this phase, bigger than the string-size question. Test it in isolation first.
-        </div>
-
-        <ol start="3">
-          <li>Before pasting the button formula above, add this to <code>App.OnStart</code> (or the App's <code>Formulas</code> property, whichever your Studio version exposes) and see if Studio accepts it at all:</li>
-        </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>App &middot; Formulas &mdash; RenderDept, a table-parameter function (unverified shape)</span>
-              <span class="code-stamp" data-updated="2026-09-11T09:31:59Z">v1 &middot; 2026-09-11 10:31 BST</span>
-            </div>
-            <button data-copy="phase3-renderdept" type="button">Copy</button>
-          </div>
-<pre id="phase3-renderdept">RenderDept(posts: Table, deptName: Text, offX: Number, offY: Number, panelW: Number, numCols: Number): Text =
-    With(
-        { _gutter: 10, _headH: 34, _headGap: 10, _cardH: 27, _rowGap: 3, _colW: (panelW - (numCols - 1) * 10) / numCols },
-        "&lt;rect x='" &amp; offX &amp; "' y='" &amp; (offY - 30) &amp; "' width='" &amp; panelW &amp; "' height='22' fill='#003E32'/&gt;" &amp;
-        "&lt;text x='" &amp; (offX + 10) &amp; "' y='" &amp; (offY - 15) &amp; "' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;" &amp; deptName &amp; "&lt;/text&gt;" &amp;
+        { _gutter: 10, _headH: 34, _headGap: 10, _cardH: 27, _rowGap: 3, _colW: (371.5 - 2*10) / 3 },
+        "&lt;rect x='20' y='228' width='371.5' height='22' fill='#003E32'/&gt;" &amp;
+        "&lt;text x='30' y='243' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;Safeguarding&lt;/text&gt;" &amp;
         Concat(
             AddColumns(
-                posts,
-                _x, offX + If(Col = 0, (panelW - 140) / 2, (Col - 1) * (_colW + _gutter)),
-                _y, offY + If(Col = 0, 0, _headH + _headGap + Row * (_cardH + _rowGap)),
+                colSafeguardingPosts,
+                _x, 20 + If(Col = 0, (371.5 - 140) / 2, (Col - 1) * (_colW + _gutter)),
+                _y, 258 + If(Col = 0, 0, _headH + _headGap + Row * (_cardH + _rowGap)),
                 _w, If(Col = 0, 140, _colW),
                 _h, If(Col = 0, _headH, _cardH)
             ),
@@ -893,19 +854,290 @@ Set(varFullSheetDataUri, "data:image/svg+xml," &amp; EncodeUrl(varFullSheetSvg))
             ),
             ""
         )
-    );</pre>
-        </div>
-        <div class="callout warn">
-          <strong>If Studio rejects this</strong> (wrong parameter syntax, "Table" not a valid type name, or any other paste-time error) &mdash; report the exact error, and don't try to guess-fix the syntax yourself; this is genuinely new ground and the fix needs to come from what Studio actually says, the same way <code>Base64()</code>/<code>AddColumns</code> quoting got fixed. The fallback if functions-with-table-parameters don't work at all: <strong>inline the same body nine times</strong>, once per department, each with its own collection/constants hardcoded directly &mdash; verbose, but only reuses patterns already confirmed working. Ask if you hit this and want that version written out instead.
+    )
+);
+
+Set(varTrainingSvg,
+    With(
+        { _gutter: 10, _headH: 34, _headGap: 10, _cardH: 27, _rowGap: 3, _colW: (371.5 - 2*10) / 3 },
+        "&lt;rect x='401.5' y='228' width='371.5' height='22' fill='#003E32'/&gt;" &amp;
+        "&lt;text x='411.5' y='243' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;Training&lt;/text&gt;" &amp;
+        Concat(
+            AddColumns(
+                colTrainingPosts,
+                _x, 401.5 + If(Col = 0, (371.5 - 140) / 2, (Col - 1) * (_colW + _gutter)),
+                _y, 258 + If(Col = 0, 0, _headH + _headGap + Row * (_cardH + _rowGap)),
+                _w, If(Col = 0, 140, _colW),
+                _h, If(Col = 0, _headH, _cardH)
+            ),
+            With(
+                {
+                    _cat: LookUp(colCategoryColours, Category = ThisRecord.Category),
+                    _safeTitle: Substitute(Substitute(Substitute(ThisRecord.Title, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;"),
+                    _safeOcc: Substitute(Substitute(Substitute(ThisRecord.Occupant, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;")
+                },
+                "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='" &amp; _w &amp; "' height='" &amp; _h &amp; "' rx='3' " &amp;
+                    "fill='" &amp; If(IsVacant, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))) &amp; "' " &amp;
+                    "stroke='" &amp; If(IsVacant, "#6B7570", "#CBD5D1") &amp; "' stroke-width='0.6'" &amp;
+                    If(IsVacant, " stroke-dasharray='2,2'", "") &amp; "/&gt;" &amp;
+                If(varChartMode = "Quiet" &amp;&amp; !IsVacant,
+                    "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='4' height='" &amp; _h &amp; "' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;",
+                    ""
+                ) &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 12) &amp; "' font-weight='bold' font-size='7' fill='#172A27'&gt;" &amp;
+                    If(IsVacant, "GAPPED", _safeOcc) &amp; "&lt;/text&gt;" &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 22) &amp; "' font-size='7' fill='#172A27'&gt;" &amp; _safeTitle &amp; "&lt;/text&gt;"
+            ),
+            ""
+        )
+    )
+);
+
+Set(varInfoSys2Svg,
+    With(
+        { _gutter: 10, _headH: 34, _headGap: 10, _cardH: 27, _rowGap: 3, _colW: (371.5 - 2*10) / 3 },
+        "&lt;rect x='783' y='228' width='371.5' height='22' fill='#003E32'/&gt;" &amp;
+        "&lt;text x='793' y='243' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;Information Systems&lt;/text&gt;" &amp;
+        Concat(
+            AddColumns(
+                colInfoSysPosts,
+                _x, 783 + If(Col = 0, (371.5 - 140) / 2, (Col - 1) * (_colW + _gutter)),
+                _y, 258 + If(Col = 0, 0, _headH + _headGap + Row * (_cardH + _rowGap)),
+                _w, If(Col = 0, 140, _colW),
+                _h, If(Col = 0, _headH, _cardH)
+            ),
+            With(
+                {
+                    _cat: LookUp(colCategoryColours, Category = ThisRecord.Category),
+                    _safeTitle: Substitute(Substitute(Substitute(ThisRecord.Title, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;"),
+                    _safeOcc: Substitute(Substitute(Substitute(ThisRecord.Occupant, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;")
+                },
+                "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='" &amp; _w &amp; "' height='" &amp; _h &amp; "' rx='3' " &amp;
+                    "fill='" &amp; If(IsVacant, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))) &amp; "' " &amp;
+                    "stroke='" &amp; If(IsVacant, "#6B7570", "#CBD5D1") &amp; "' stroke-width='0.6'" &amp;
+                    If(IsVacant, " stroke-dasharray='2,2'", "") &amp; "/&gt;" &amp;
+                If(varChartMode = "Quiet" &amp;&amp; !IsVacant,
+                    "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='4' height='" &amp; _h &amp; "' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;",
+                    ""
+                ) &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 12) &amp; "' font-weight='bold' font-size='7' fill='#172A27'&gt;" &amp;
+                    If(IsVacant, "GAPPED", _safeOcc) &amp; "&lt;/text&gt;" &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 22) &amp; "' font-size='7' fill='#172A27'&gt;" &amp; _safeTitle &amp; "&lt;/text&gt;"
+            ),
+            ""
+        )
+    )
+);
+
+Set(varMediaSvg,
+    With(
+        { _gutter: 10, _headH: 34, _headGap: 10, _cardH: 27, _rowGap: 3, _colW: (260 - 1*10) / 2 },
+        "&lt;rect x='20' y='563' width='260' height='22' fill='#003E32'/&gt;" &amp;
+        "&lt;text x='30' y='578' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;Media &amp;amp; Comms&lt;/text&gt;" &amp;
+        Concat(
+            AddColumns(
+                colMediaPosts,
+                _x, 20 + If(Col = 0, (260 - 140) / 2, (Col - 1) * (_colW + _gutter)),
+                _y, 593 + If(Col = 0, 0, _headH + _headGap + Row * (_cardH + _rowGap)),
+                _w, If(Col = 0, 140, _colW),
+                _h, If(Col = 0, _headH, _cardH)
+            ),
+            With(
+                {
+                    _cat: LookUp(colCategoryColours, Category = ThisRecord.Category),
+                    _safeTitle: Substitute(Substitute(Substitute(ThisRecord.Title, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;"),
+                    _safeOcc: Substitute(Substitute(Substitute(ThisRecord.Occupant, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;")
+                },
+                "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='" &amp; _w &amp; "' height='" &amp; _h &amp; "' rx='3' " &amp;
+                    "fill='" &amp; If(IsVacant, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))) &amp; "' " &amp;
+                    "stroke='" &amp; If(IsVacant, "#6B7570", "#CBD5D1") &amp; "' stroke-width='0.6'" &amp;
+                    If(IsVacant, " stroke-dasharray='2,2'", "") &amp; "/&gt;" &amp;
+                If(varChartMode = "Quiet" &amp;&amp; !IsVacant,
+                    "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='4' height='" &amp; _h &amp; "' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;",
+                    ""
+                ) &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 12) &amp; "' font-weight='bold' font-size='7' fill='#172A27'&gt;" &amp;
+                    If(IsVacant, "GAPPED", _safeOcc) &amp; "&lt;/text&gt;" &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 22) &amp; "' font-size='7' fill='#172A27'&gt;" &amp; _safeTitle &amp; "&lt;/text&gt;"
+            ),
+            ""
+        )
+    )
+);
+
+Set(varCcfaSvg,
+    With(
+        { _gutter: 10, _headH: 34, _headGap: 10, _cardH: 27, _rowGap: 3, _colW: (260 - 1*10) / 2 },
+        "&lt;rect x='290' y='563' width='260' height='22' fill='#003E32'/&gt;" &amp;
+        "&lt;text x='300' y='578' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;CCF(A)&lt;/text&gt;" &amp;
+        Concat(
+            AddColumns(
+                colCcfaPosts,
+                _x, 290 + If(Col = 0, (260 - 140) / 2, (Col - 1) * (_colW + _gutter)),
+                _y, 593 + If(Col = 0, 0, _headH + _headGap + Row * (_cardH + _rowGap)),
+                _w, If(Col = 0, 140, _colW),
+                _h, If(Col = 0, _headH, _cardH)
+            ),
+            With(
+                {
+                    _cat: LookUp(colCategoryColours, Category = ThisRecord.Category),
+                    _safeTitle: Substitute(Substitute(Substitute(ThisRecord.Title, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;"),
+                    _safeOcc: Substitute(Substitute(Substitute(ThisRecord.Occupant, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;")
+                },
+                "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='" &amp; _w &amp; "' height='" &amp; _h &amp; "' rx='3' " &amp;
+                    "fill='" &amp; If(IsVacant, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))) &amp; "' " &amp;
+                    "stroke='" &amp; If(IsVacant, "#6B7570", "#CBD5D1") &amp; "' stroke-width='0.6'" &amp;
+                    If(IsVacant, " stroke-dasharray='2,2'", "") &amp; "/&gt;" &amp;
+                If(varChartMode = "Quiet" &amp;&amp; !IsVacant,
+                    "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='4' height='" &amp; _h &amp; "' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;",
+                    ""
+                ) &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 12) &amp; "' font-weight='bold' font-size='7' fill='#172A27'&gt;" &amp;
+                    If(IsVacant, "GAPPED", _safeOcc) &amp; "&lt;/text&gt;" &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 22) &amp; "' font-size='7' fill='#172A27'&gt;" &amp; _safeTitle &amp; "&lt;/text&gt;"
+            ),
+            ""
+        )
+    )
+);
+
+Set(varPolicySvg,
+    With(
+        { _gutter: 10, _headH: 34, _headGap: 10, _cardH: 27, _rowGap: 3, _colW: (180 - 1*10) / 2 },
+        "&lt;rect x='560' y='563' width='180' height='22' fill='#003E32'/&gt;" &amp;
+        "&lt;text x='570' y='578' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;Policy &amp;amp; Pers&lt;/text&gt;" &amp;
+        Concat(
+            AddColumns(
+                colPolicyPosts,
+                _x, 560 + If(Col = 0, (180 - 140) / 2, (Col - 1) * (_colW + _gutter)),
+                _y, 593 + If(Col = 0, 0, _headH + _headGap + Row * (_cardH + _rowGap)),
+                _w, If(Col = 0, 140, _colW),
+                _h, If(Col = 0, _headH, _cardH)
+            ),
+            With(
+                {
+                    _cat: LookUp(colCategoryColours, Category = ThisRecord.Category),
+                    _safeTitle: Substitute(Substitute(Substitute(ThisRecord.Title, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;"),
+                    _safeOcc: Substitute(Substitute(Substitute(ThisRecord.Occupant, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;")
+                },
+                "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='" &amp; _w &amp; "' height='" &amp; _h &amp; "' rx='3' " &amp;
+                    "fill='" &amp; If(IsVacant, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))) &amp; "' " &amp;
+                    "stroke='" &amp; If(IsVacant, "#6B7570", "#CBD5D1") &amp; "' stroke-width='0.6'" &amp;
+                    If(IsVacant, " stroke-dasharray='2,2'", "") &amp; "/&gt;" &amp;
+                If(varChartMode = "Quiet" &amp;&amp; !IsVacant,
+                    "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='4' height='" &amp; _h &amp; "' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;",
+                    ""
+                ) &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 12) &amp; "' font-weight='bold' font-size='7' fill='#172A27'&gt;" &amp;
+                    If(IsVacant, "GAPPED", _safeOcc) &amp; "&lt;/text&gt;" &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 22) &amp; "' font-size='7' fill='#172A27'&gt;" &amp; _safeTitle &amp; "&lt;/text&gt;"
+            ),
+            ""
+        )
+    )
+);
+
+Set(varSupportSvg,
+    With(
+        { _gutter: 10, _headH: 34, _headGap: 10, _cardH: 27, _rowGap: 3, _colW: (190 - 1*10) / 2 },
+        "&lt;rect x='750' y='563' width='190' height='22' fill='#003E32'/&gt;" &amp;
+        "&lt;text x='760' y='578' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;Support&lt;/text&gt;" &amp;
+        Concat(
+            AddColumns(
+                colSupportPosts,
+                _x, 750 + If(Col = 0, (190 - 140) / 2, (Col - 1) * (_colW + _gutter)),
+                _y, 593 + If(Col = 0, 0, _headH + _headGap + Row * (_cardH + _rowGap)),
+                _w, If(Col = 0, 140, _colW),
+                _h, If(Col = 0, _headH, _cardH)
+            ),
+            With(
+                {
+                    _cat: LookUp(colCategoryColours, Category = ThisRecord.Category),
+                    _safeTitle: Substitute(Substitute(Substitute(ThisRecord.Title, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;"),
+                    _safeOcc: Substitute(Substitute(Substitute(ThisRecord.Occupant, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;")
+                },
+                "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='" &amp; _w &amp; "' height='" &amp; _h &amp; "' rx='3' " &amp;
+                    "fill='" &amp; If(IsVacant, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))) &amp; "' " &amp;
+                    "stroke='" &amp; If(IsVacant, "#6B7570", "#CBD5D1") &amp; "' stroke-width='0.6'" &amp;
+                    If(IsVacant, " stroke-dasharray='2,2'", "") &amp; "/&gt;" &amp;
+                If(varChartMode = "Quiet" &amp;&amp; !IsVacant,
+                    "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='4' height='" &amp; _h &amp; "' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;",
+                    ""
+                ) &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 12) &amp; "' font-weight='bold' font-size='7' fill='#172A27'&gt;" &amp;
+                    If(IsVacant, "GAPPED", _safeOcc) &amp; "&lt;/text&gt;" &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 22) &amp; "' font-size='7' fill='#172A27'&gt;" &amp; _safeTitle &amp; "&lt;/text&gt;"
+            ),
+            ""
+        )
+    )
+);
+
+Set(varCcfSvg,
+    With(
+        { _gutter: 10, _headH: 34, _headGap: 10, _cardH: 27, _rowGap: 3, _colW: (204.6 - 1*10) / 2 },
+        "&lt;rect x='950' y='563' width='204.6' height='22' fill='#003E32'/&gt;" &amp;
+        "&lt;text x='960' y='578' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;CCF&lt;/text&gt;" &amp;
+        Concat(
+            AddColumns(
+                colCcfPosts,
+                _x, 950 + If(Col = 0, (204.6 - 140) / 2, (Col - 1) * (_colW + _gutter)),
+                _y, 593 + If(Col = 0, 0, _headH + _headGap + Row * (_cardH + _rowGap)),
+                _w, If(Col = 0, 140, _colW),
+                _h, If(Col = 0, _headH, _cardH)
+            ),
+            With(
+                {
+                    _cat: LookUp(colCategoryColours, Category = ThisRecord.Category),
+                    _safeTitle: Substitute(Substitute(Substitute(ThisRecord.Title, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;"),
+                    _safeOcc: Substitute(Substitute(Substitute(ThisRecord.Occupant, "&amp;", "&amp;amp;"), "&lt;", "&amp;lt;"), "&gt;", "&amp;gt;")
+                },
+                "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='" &amp; _w &amp; "' height='" &amp; _h &amp; "' rx='3' " &amp;
+                    "fill='" &amp; If(IsVacant, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))) &amp; "' " &amp;
+                    "stroke='" &amp; If(IsVacant, "#6B7570", "#CBD5D1") &amp; "' stroke-width='0.6'" &amp;
+                    If(IsVacant, " stroke-dasharray='2,2'", "") &amp; "/&gt;" &amp;
+                If(varChartMode = "Quiet" &amp;&amp; !IsVacant,
+                    "&lt;rect x='" &amp; _x &amp; "' y='" &amp; _y &amp; "' width='4' height='" &amp; _h &amp; "' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;",
+                    ""
+                ) &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 12) &amp; "' font-weight='bold' font-size='7' fill='#172A27'&gt;" &amp;
+                    If(IsVacant, "GAPPED", _safeOcc) &amp; "&lt;/text&gt;" &amp;
+                "&lt;text x='" &amp; (_x + 6) &amp; "' y='" &amp; (_y + 22) &amp; "' font-size='7' fill='#172A27'&gt;" &amp; _safeTitle &amp; "&lt;/text&gt;"
+            ),
+            ""
+        )
+    )
+);
+
+Set(varCepSvg,
+    With(
+        {_cat: LookUp(colCategoryColours, Category = "RFCA")},
+        "&lt;rect x='560' y='680' width='180' height='22' fill='#003E32'/&gt;" &amp;
+        "&lt;text x='570' y='695' font-weight='700' font-size='10.5' fill='#FFFFFF'&gt;CEP&lt;/text&gt;" &amp;
+        "&lt;rect x='560' y='710' width='140' height='34' rx='3' fill='" &amp; If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF")) &amp; "' stroke='#CBD5D1' stroke-width='0.6'/&gt;" &amp;
+        If(varChartMode = "Quiet", "&lt;rect x='560' y='710' width='4' height='34' fill='" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; "'/&gt;", "") &amp;
+        "&lt;text x='568' y='724' font-weight='bold' font-size='8' fill='#172A27'&gt;Alex Morgan&lt;/text&gt;" &amp;
+        "&lt;text x='568' y='735' font-size='8' fill='#172A27'&gt;Head of CEP&lt;/text&gt;"
+    )
+);
+
+Set(varFullSheetSvg,
+    "&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1191 810' font-family='Arial'&gt;" &amp;
+    "&lt;rect x='0' y='0' width='1191' height='810' fill='#FFFFFF'/&gt;" &amp;
+    varCommandFullSvg &amp; varSafeguardingSvg &amp; varTrainingSvg &amp; varInfoSys2Svg &amp;
+    varMediaSvg &amp; varCcfaSvg &amp; varPolicySvg &amp; varSupportSvg &amp; varCcfSvg &amp; varCepSvg &amp;
+    "&lt;/svg&gt;"
+);
+Set(varFullSheetDataUri, "data:image/svg+xml," &amp; EncodeUrl(varFullSheetSvg))</pre>
         </div>
 
-        <ol start="4">
+        <ol start="3">
           <li>Point one Image control at <code>=varFullSheetDataUri</code>.</li>
         </ol>
         <p>Once this is confirmed working, the two separate test images/buttons from Phases 1-2 have done their job &mdash; resize/hide them or delete them rather than keeping three render buttons and two extra images going forward. This one Image control is the real target, not an addition to the other two.</p>
 
         <div class="callout ok">
-          <strong>What to check and record:</strong> does <code>RenderDept</code> as a table-parameter function even paste (the single biggest open question, ahead of everything else)? Does Studio accept a formula/string this much larger than Phase 2's without erroring, timing out or lagging? Are all 108 posts present, correctly grouped into their 10 panels, in the measured grid positions? Do all 5 vacancies render correctly together in one picture (Command XO, two in Safeguarding, one in Information Systems, one in Support)? Does the hand-placed page grid actually look like the mockup's page 3/4, or do panels visibly collide/overlap?
+          <strong>What to check and record:</strong> does Studio accept a formula/string this much larger than Phase 2's without erroring, timing out or lagging (the table-parameter-function question from the first attempt is closed &mdash; no function is used any more)? Are all 108 posts present, correctly grouped into their 10 panels, in the measured grid positions? Do all 5 vacancies render correctly together in one picture (Command XO, two in Safeguarding, one in Information Systems, one in Support)? Does "Media &amp; Comms" and "Policy &amp; Pers" header text render as "&amp;", not broken or missing &mdash; confirming the XML-escaping fix holds up live, not just in an offline check? Does the hand-placed page grid actually look like the mockup's page 3/4, or do panels visibly collide/overlap?
         </div>
       </section>
 
