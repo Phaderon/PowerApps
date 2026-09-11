@@ -310,7 +310,7 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-11T11:09:47Z">v2 &middot; 2026-09-11 12:09 BST &mdash; fixed missing semicolon after Set(varChartMode,...) that broke OnStart once later phases added more statements after it</span>
+                <span class="code-stamp" data-updated="2026-09-11T11:50:50Z">v3 &middot; 2026-09-11 12:50 BST &mdash; Command's siblings now packed tight with plain 10pt gutters (no more dead gap), orthogonal elbow connectors throughout (see Phase 3 for detail)</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
@@ -374,30 +374,34 @@ ClearCollect(colInfoSysPosts,
 
 // ==== From Phase 3: full Command (11 posts) + the other 8 departments (86 posts) ====
 ClearCollect(colCommandFullPosts,
-    {PostID: "CMD-DCOMD",   X: 352.5,Y: 38, W: 170, H: 34, Title: "DCOMD",                  Occupant: "Alex Morgan",      Category: "Regular",           IsVacant: false},
-    {PostID: "CMD-PS",      X: 20,  Y: 82,  W: 170, H: 34, Title: "DCOMD PS",                Occupant: "Sam Taylor",       Category: "Aspire",             IsVacant: false},
-    {PostID: "CMD-COLCDT",  X: 210, Y: 82,  W: 170, H: 34, Title: "Colonel Cadets",           Occupant: "Jordan Patel",     Category: "ACCT UK Employee",   IsVacant: false},
-    {PostID: "CMD-COS",     X: 685, Y: 82,  W: 170, H: 34, Title: "COS",                      Occupant: "Chris Williams",   Category: "Regular",            IsVacant: false},
-    {PostID: "CMD-INFOMGR", X: 400, Y: 126, W: 140, H: 34, Title: "SO2 Information Mgmt",     Occupant: "Jamie Clarke",     Category: "Civil Servant",       IsVacant: false},
-    {PostID: "CMD-XO",      X: 550, Y: 126, W: 140, H: 34, Title: "XO",                       Occupant: "",                 Category: "",                    IsVacant: true},
-    {PostID: "CMD-PLANS",   X: 700, Y: 126, W: 140, H: 34, Title: "SO2 Plans",                Occupant: "Taylor Evans",     Category: "FTRS",                IsVacant: false},
-    {PostID: "CMD-PROJOFF", X: 850, Y: 126, W: 140, H: 34, Title: "Project Officer",          Occupant: "Casey Hughes",     Category: "ACCT UK Employee",    IsVacant: false},
-    {PostID: "CMD-TRGCTR",  X: 1000,Y: 126, W: 140, H: 34, Title: "CO Training Centre",       Occupant: "Morgan Lewis",     Category: "Regular",             IsVacant: false},
-    {PostID: "CMD-INFOOFC", X: 400, Y: 170, W: 140, H: 34, Title: "Information Officer",       Occupant: "Drew Campbell",   Category: "Civil Servant",       IsVacant: false},
-    {PostID: "CMD-BRADMIN", X: 550, Y: 170, W: 140, H: 34, Title: "Branch Administrator",     Occupant: "Ashley Thompson",  Category: "Aspire",              IsVacant: false}
+    {PostID: "CMD-DCOMD",   X: 502.3,Y: 38,  W: 170, H: 34, Title: "DCOMD",                 Occupant: "Alex Morgan",     Category: "Regular",           IsVacant: false},
+    {PostID: "CMD-PS",      X: 179.8,Y: 82,  W: 170, H: 34, Title: "DCOMD PS",              Occupant: "Sam Taylor",      Category: "Aspire",            IsVacant: false},
+    {PostID: "CMD-COLCDT",  X: 359.8,Y: 82,  W: 170, H: 34, Title: "Colonel Cadets",         Occupant: "Jordan Patel",    Category: "ACCT UK Employee",  IsVacant: false},
+    {PostID: "CMD-COS",     X: 539.8,Y: 82,  W: 170, H: 34, Title: "COS",                    Occupant: "Chris Williams",  Category: "Regular",           IsVacant: false},
+    {PostID: "CMD-INFOMGR", X: 254.8,Y: 126, W: 140, H: 34, Title: "SO2 Information Mgmt",   Occupant: "Jamie Clarke",    Category: "Civil Servant",     IsVacant: false},
+    {PostID: "CMD-XO",      X: 404.8,Y: 126, W: 140, H: 34, Title: "XO",                     Occupant: "",                Category: "",                   IsVacant: true},
+    {PostID: "CMD-PLANS",   X: 554.8,Y: 126, W: 140, H: 34, Title: "SO2 Plans",              Occupant: "Taylor Evans",    Category: "FTRS",              IsVacant: false},
+    {PostID: "CMD-PROJOFF", X: 704.8,Y: 126, W: 140, H: 34, Title: "Project Officer",        Occupant: "Casey Hughes",    Category: "ACCT UK Employee",  IsVacant: false},
+    {PostID: "CMD-TRGCTR",  X: 854.8,Y: 126, W: 140, H: 34, Title: "CO Training Centre",     Occupant: "Morgan Lewis",    Category: "Regular",           IsVacant: false},
+    {PostID: "CMD-INFOOFC", X: 254.8,Y: 170, W: 140, H: 34, Title: "Information Officer",    Occupant: "Drew Campbell",   Category: "Civil Servant",     IsVacant: false},
+    {PostID: "CMD-BRADMIN", X: 404.8,Y: 170, W: 140, H: 34, Title: "Branch Administrator",   Occupant: "Ashley Thompson", Category: "Aspire",            IsVacant: false}
 );
 
 ClearCollect(colCommandFullConnectors,
-    {X1: 437.5, Y1: 72,  X2: 105, Y2: 82},  // DCOMD -&gt; DCOMD PS
-    {X1: 437.5, Y1: 72,  X2: 295, Y2: 82},  // DCOMD -&gt; Colonel Cadets
-    {X1: 437.5, Y1: 72,  X2: 770, Y2: 82},  // DCOMD -&gt; COS
-    {X1: 770, Y1: 116, X2: 470, Y2: 126},   // COS -&gt; SO2 Information Mgmt
-    {X1: 770, Y1: 116, X2: 620, Y2: 126},   // COS -&gt; XO (vacant)
-    {X1: 770, Y1: 116, X2: 770, Y2: 126},   // COS -&gt; SO2 Plans (dead centre - straight line)
-    {X1: 770, Y1: 116, X2: 920, Y2: 126},   // COS -&gt; Project Officer
-    {X1: 770, Y1: 116, X2: 1070,Y2: 126},   // COS -&gt; CO Training Centre
-    {X1: 470, Y1: 160, X2: 470, Y2: 170},   // SO2 Information Mgmt -&gt; Information Officer
-    {X1: 620, Y1: 160, X2: 620, Y2: 170}    // XO -&gt; Branch Administrator (vacancy keeps its child)
+    {X1: 587.3, Y1: 72,  X2: 587.3, Y2: 77},  // DCOMD -&gt; bus (level 1)
+    {X1: 264.8, Y1: 77,  X2: 624.8, Y2: 77},  // bus line across DCOMD's 3 children
+    {X1: 264.8, Y1: 77,  X2: 264.8, Y2: 82},  // bus -&gt; DCOMD PS
+    {X1: 444.8, Y1: 77,  X2: 444.8, Y2: 82},  // bus -&gt; Colonel Cadets
+    {X1: 624.8, Y1: 77,  X2: 624.8, Y2: 82},  // bus -&gt; COS
+    {X1: 624.8, Y1: 116, X2: 624.8, Y2: 121}, // COS -&gt; bus (level 2)
+    {X1: 324.8, Y1: 121, X2: 924.8, Y2: 121}, // bus line across COS's 5 children
+    {X1: 324.8, Y1: 121, X2: 324.8, Y2: 126}, // bus -&gt; SO2 Information Mgmt
+    {X1: 474.8, Y1: 121, X2: 474.8, Y2: 126}, // bus -&gt; XO (vacant)
+    {X1: 624.8, Y1: 121, X2: 624.8, Y2: 126}, // bus -&gt; SO2 Plans (dead centre)
+    {X1: 774.8, Y1: 121, X2: 774.8, Y2: 126}, // bus -&gt; Project Officer
+    {X1: 924.8, Y1: 121, X2: 924.8, Y2: 126}, // bus -&gt; CO Training Centre
+    {X1: 324.8, Y1: 160, X2: 324.8, Y2: 170}, // SO2 Information Mgmt -&gt; Information Officer
+    {X1: 474.8, Y1: 160, X2: 474.8, Y2: 170}  // XO -&gt; Branch Administrator (vacancy keeps its child)
 );
 
 ClearCollect(colSafeguardingPosts,
@@ -808,6 +812,13 @@ Select(btnRenderInfoSys)</pre>
           <ol style="margin:8px 0 0;">
             <li><strong>CEP overlapped Policy &amp; Pers's own last row.</strong> A real arithmetic mistake: Policy &amp; Pers's tallest column has 2 entries (a lead + 1 worker), and its content-height was worked out using the 1-entry formula by mistake (<code>71</code> instead of the correct <code>101</code>), so CEP was placed 30 units too high &mdash; straight into Policy &amp; Pers's own C. Hughes/D. Campbell row. Fixed: CEP's header now starts at <code>y=710</code> (was <code>680</code>) and its card at <code>y=740</code> (was <code>710</code>).</li>
             <li><strong>Command's DCOMD and COS were left-aligned instead of centred over their own children</strong>, so Chris Williams's 5 direct reports fanned out asymmetrically rather than branching symmetrically underneath him. Fixed by centring each parent over the horizontal span of its own children instead of a fixed position: DCOMD moved from <code>X=20</code> to <code>X=352.5</code> (centred over DCOMD PS/Colonel Cadets/COS), COS moved from <code>X=400</code> to <code>X=685</code> (centred over its 5 direct reports) &mdash; as a side effect, SO2 Plans (the middle of COS's 5 reports) now sits dead-centre under COS with a single straight connector line. All 10 Command connector coordinates recomputed to match.</li>
+          </ol>
+        </div>
+        <div class="callout warn">
+          <strong>Reworked again 2026-09-11, after Allan reviewed a real render and flagged two more issues &mdash; both real:</strong>
+          <ol style="margin:8px 0 0;">
+            <li><strong>"Centred over its own children" still left a large dead gap between Colonel Cadets and COS</strong>, because COS's 5 children were positioned independently starting at a fixed <code>X=400</code> rather than being packed next to Colonel Cadets &mdash; DCOMD's 3 children (2 narrow leaves + COS's much wider subtree) were never actually laid out as siblings. A first attempt at fixing this reserved a full subtree-width "slot" for COS and centred its card in the middle of that slot &mdash; but that just recreated almost the same dead gap (COS's card floats to the centre of its own wide slot, away from its narrower neighbour), so it was corrected again before this ever reached Allan: <strong>DCOMD PS, Colonel Cadets and COS are now packed tightly using only their own card widths</strong>, each separated by a plain 10pt gutter, ignoring how wide COS's own subtree needs to be. COS's 5 children are then centred on <strong>COS's own actual resulting position</strong> (not on some pre-reserved slot), which keeps the "spider" fan under Chris Williams perfectly symmetric even though COS itself now sits snugly next to Colonel Cadets. DCOMD is placed at the exact horizontal centre of the panel (matching "top centre in the middle" literally) rather than at the mathematical midpoint of its own 3 children &mdash; those two points are close but not identical here, since COS carries far more reports than its two siblings; the difference is small enough that DCOMD's own connector stub still lands cleanly within its children's bus line. One visible trade-off, flagged here for Allan to confirm he's happy with: because every gap is now a genuine 10pt gutter rather than an invented one, and Command only has 3 top-level branches, the whole tree is narrower than the full-width panel and ends up centred with roughly 160pt of blank margin on each side, rather than stretching to fill the header bar's full width.</li>
+            <li><strong>Every Command connector was still a single diagonal line from centre to centre</strong>, which the Visual Spec section never actually specified &mdash; the mockup's connectors are <strong>orthogonal only</strong> (horizontal/vertical "elbow" segments, never a diagonal). Replaced every Command edge with a proper elbow: a vertical stub down from the parent to a "bus" line at the midpoint of the row gap, one horizontal bus line spanning the full width of that group of siblings, then a vertical drop from the bus into each child. A single-child edge (SO2 Information Mgmt &rarr; Information Officer, XO &rarr; Branch Administrator) is still just one straight vertical line, since parent and child share the same X and no elbow is needed. 10 connector rows became 14 to represent this &mdash; every row is still just one straight segment, purely horizontal or purely vertical.</li>
           </ol>
         </div>
         <p>Combines Command and all 9 department panels into <strong>one generated SVG, one Image control</strong> &mdash; matching the single A3 sheet in the mockup, not the two side-by-side test pictures Phases 1-2 used. 108 posts across 10 panels in one generated picture, versus Phase 2's 24 in one &mdash; that scale question is exactly what this phase exists to answer; don't assume it works the same way just because the smaller pieces did.</p>
