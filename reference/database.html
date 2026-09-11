@@ -8678,7 +8678,8 @@ git push origin main
 <li>Check <code>powerapps-control-defaults.md</code> before listing default visual properties.</li>
 <li>For formulas, use <code>powerfx-patterns.md</code> and source-linked Microsoft Learn pages.</li>
 <li>Add any new verified fact to this reference pack.</li>
-<li>Run <code>python3 tools/audit-guide.py path/to/index.html</code>.</li>
+<li>Run <code>python3 tools/audit-guide.py path/to/index.html</code>.
+9a. Run <code>python3 tools/audit-formulas.py path/to/index.html [any local src/formulas/*.md files]</code> — checks the actual Power Fx content (not just guide prose/YAML) for patterns already confirmed broken live in this Bible: <code>Base64()</code>, <code>AddColumns</code>/<code>GroupBy</code> quoted column names, <code>Table</code>-typed UDF parameters, a UDF definition mixed with imperative statements (OnStart/OnSelect vs. the separate <code>Formulas</code> property), unescaped <code>&amp;</code> inside generated markup strings, and unbalanced brackets. If the project keeps local formula source files separate from the published guide, also run it with <code>--diff &lt;local.md&gt; &lt;guide.html&gt;</code> to catch drift between what was actually tested and what's actually published — added 2026-09-11 after exactly that drift was found live (a <code>Base64()</code> fix landed in a guide but never made it back into the local source file).</li>
 <li>Run <code>git diff --check</code>.</li>
 <li>Preview locally and test responsive layout and copy buttons.</li>
 </ol>
@@ -8725,6 +8726,46 @@ git push origin main
 <li>Control names in property tables copy on click.</li>
 <li>Responsive split-screen behavior with no page-level horizontal overflow.</li>
 <li>Critical technical notes near the bottom for hard-won build quirks.</li>
+</ul>
+<h2 id="accumulating-properties-standard">Accumulating Properties Standard</h2>
+<p>Added 2026-09-11, Cadets Org Chart project, after the user explicitly asked to never
+have to work out what to add vs. what to keep for a growing <code>App.OnStart</code>.</p>
+<p>If a guide's build process adds to the same property across multiple stages/phases
+(most commonly <code>App.OnStart</code>, but this applies to any control property that keeps
+growing rather than being replaced each time — e.g. a toggle button's <code>OnSelect</code> that
+needs to know about more things to refresh as more screens are added) — maintain one
+"Current State" section near the top of the guide with the complete, current content
+of that property, and republish it in full every time anything changes. Never make the
+reader diff a per-stage snippet against what they already pasted.</p>
+<p>Present it collapsed by default (native <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code>, no JS needed) with a
+<code>code-card</code>/copy button inside, so it doesn't dominate the page for a reader who
+doesn't need it right now — see <code>cadets-org-chart/index.html</code>'s <code>#current-state</code>
+section for a working example, including the accordion CSS.</p>
+<p>Per-phase/per-stage sections remain useful as the record of <em>why</em> each piece exists;
+they are not a substitute for the one always-complete reference.</p>
+<h2 id="guide-weight-standard">Guide Weight Standard</h2>
+<p>Added 2026-09-11, Cadets Org Chart project, after a still-active phase (not yet
+markable "complete", so the existing per-phase collapse/checkbox mechanism doesn't
+apply) accumulated three rounds of fix history and one very large unchanged code
+block, and the builder asked "where is the new code for this" rather than scroll past
+all of it again.</p>
+<p>When a phase gets a second (or third...) round of fixes before it's ever marked
+complete:</p>
+<ul>
+<li>Add one short, always-visible callout right after that phase's <code>fix-controls</code> block
+  stating plainly what changed THIS round, where the corrected data/formula actually
+  lives (usually the Current State box), and whether any large code block below is
+  still unchanged and therefore doesn't need re-copying.</li>
+<li>Wrap the accumulating "why this changed" history callouts in a <code>cs-accordion</code>
+  <code>&lt;details&gt;</code>, collapsed by default — they're a record of why, not something to read
+  every visit.</li>
+<li>Wrap any large code block that did NOT change this round in its own collapsed
+  <code>cs-accordion</code> <code>&lt;details&gt;</code> too, with a one-line note above it saying so — don't make
+  the builder scroll past hundreds of unchanged lines to find what's new.</li>
+<li>Never hide the actual current instructions/data itself this way — only the
+  historical narrative and unchanged bulk content. The one thing that must always stay
+  immediately visible (not inside a collapsed accordion) is the "what changed this
+  round + where to get it" callout itself.</li>
 </ul>
 <h2 id="layer-order-standard">Layer Order Standard</h2>
 <p>When a control is a visual background, card, panel, row fill, indentation strip, or progress-bar background, the guide must say so before the user builds on top of it.</p>

@@ -800,6 +800,11 @@ Select(btnRenderInfoSys)</pre>
           <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
           <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this phase">&#9660;</button>
         </div>
+        <div class="callout ok">
+          <strong>Latest fix (2026-09-11) &mdash; what actually changed:</strong> Command's layout only. The gap between Colonel Cadets and COS is closed (every gap is now a plain 10pt gutter), COS's 5 reports still fan out symmetrically underneath Chris Williams, and every connector is now a right-angle elbow instead of a diagonal line. <strong>The corrected data is already in the <a href="#current-state">Current State</a> box near the top of this page</strong> &mdash; re-copy <code>App.OnStart</code> from there, same as always. <strong>The render button's formula below (step 2) has NOT changed</strong> &mdash; if you already pasted it once, you don't need to touch it again; only the data changed. The three callouts directly below are the history of why this took three attempts &mdash; collapsed by default, expand only if you want the detail.
+        </div>
+        <details class="cs-accordion">
+          <summary>History &mdash; why Command's data has changed three times (click to expand)</summary>
         <div class="callout warn">
           <strong>Rewritten 2026-09-11 after two real findings from the first attempt:</strong>
           <ol style="margin:8px 0 0;">
@@ -821,6 +826,7 @@ Select(btnRenderInfoSys)</pre>
             <li><strong>Every Command connector was still a single diagonal line from centre to centre</strong>, which the Visual Spec section never actually specified &mdash; the mockup's connectors are <strong>orthogonal only</strong> (horizontal/vertical "elbow" segments, never a diagonal). Replaced every Command edge with a proper elbow: a vertical stub down from the parent to a "bus" line at the midpoint of the row gap, one horizontal bus line spanning the full width of that group of siblings, then a vertical drop from the bus into each child. A single-child edge (SO2 Information Mgmt &rarr; Information Officer, XO &rarr; Branch Administrator) is still just one straight vertical line, since parent and child share the same X and no elbow is needed. 10 connector rows became 14 to represent this &mdash; every row is still just one straight segment, purely horizontal or purely vertical.</li>
           </ol>
         </div>
+        </details>
         <p>Combines Command and all 9 department panels into <strong>one generated SVG, one Image control</strong> &mdash; matching the single A3 sheet in the mockup, not the two side-by-side test pictures Phases 1-2 used. 108 posts across 10 panels in one generated picture, versus Phase 2's 24 in one &mdash; that scale question is exactly what this phase exists to answer; don't assume it works the same way just because the smaller pieces did.</p>
         <p>Positions below are computed from the same measured page grid in the Visual Spec section (Command full-width; Safeguarding/Training/Information Systems as equal thirds; Media &amp; Comms/CCF(A)/Policy &amp; Pers+CEP/Support/CCF as the bottom row, 10pt gutters throughout), worked out by hand once for this fixed 10-department layout &mdash; this is <strong>not</strong> a generic "any number of departments, any arrangement" algorithm. A real SharePoint-backed version would need that generalised; this phase only proves the picture can be built and rendered at this scale and complexity.</p>
         <div class="callout warn">
@@ -834,7 +840,12 @@ Select(btnRenderInfoSys)</pre>
         <ol start="2">
           <li>Add a NEW button &mdash; e.g. <code>btnRenderFullSheet</code> &mdash; separate from every earlier render button. Set its <code>OnSelect</code> to this complete formula &mdash; the whole thing, no function, nothing else to define first. It's long because it builds ten panels in one go, but every individual shape in it (<code>Concat</code>/<code>AddColumns</code>/<code>LookUp</code>/<code>EncodeUrl</code>) is the exact pattern already confirmed working in Phases 1-2, just repeated per department with each panel's own position baked directly in as numbers.</li>
         </ol>
-        <div class="code-card">
+        <div class="callout ok" style="margin-bottom:0;">
+          <strong>Unchanged by today's fix.</strong> Only the DATA in Current State changed (Command's coordinates/connectors) &mdash; this formula itself is exactly what you pasted last time. Collapsed below since there's nothing new to copy; expand only if you want to check it against what you already have.
+        </div>
+        <details class="cs-accordion">
+          <summary>btnRenderFullSheet.OnSelect &mdash; full formula, unchanged (click to expand)</summary>
+        <div class="code-card" style="margin-top:10px;">
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnRenderFullSheet.OnSelect &mdash; builds all 10 panels, one combined picture, no function</span>
@@ -1179,6 +1190,7 @@ Set(varFullSheetSvg,
 );
 Set(varFullSheetDataUri, "data:image/svg+xml," &amp; EncodeUrl(varFullSheetSvg))</pre>
         </div>
+        </details>
 
         <ol start="3">
           <li>Point one Image control at <code>=varFullSheetDataUri</code>.</li>

@@ -107,6 +107,32 @@ section for a working example, including the accordion CSS.
 Per-phase/per-stage sections remain useful as the record of *why* each piece exists;
 they are not a substitute for the one always-complete reference.
 
+## Guide Weight Standard
+
+Added 2026-09-11, Cadets Org Chart project, after a still-active phase (not yet
+markable "complete", so the existing per-phase collapse/checkbox mechanism doesn't
+apply) accumulated three rounds of fix history and one very large unchanged code
+block, and the builder asked "where is the new code for this" rather than scroll past
+all of it again.
+
+When a phase gets a second (or third...) round of fixes before it's ever marked
+complete:
+
+- Add one short, always-visible callout right after that phase's `fix-controls` block
+  stating plainly what changed THIS round, where the corrected data/formula actually
+  lives (usually the Current State box), and whether any large code block below is
+  still unchanged and therefore doesn't need re-copying.
+- Wrap the accumulating "why this changed" history callouts in a `cs-accordion`
+  `<details>`, collapsed by default — they're a record of why, not something to read
+  every visit.
+- Wrap any large code block that did NOT change this round in its own collapsed
+  `cs-accordion` `<details>` too, with a one-line note above it saying so — don't make
+  the builder scroll past hundreds of unchanged lines to find what's new.
+- Never hide the actual current instructions/data itself this way — only the
+  historical narrative and unchanged bulk content. The one thing that must always stay
+  immediately visible (not inside a collapsed accordion) is the "what changed this
+  round + where to get it" callout itself.
+
 ## Layer Order Standard
 
 When a control is a visual background, card, panel, row fill, indentation strip, or progress-bar background, the guide must say so before the user builds on top of it.
