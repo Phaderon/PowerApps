@@ -182,6 +182,22 @@
       padding: 1px 5px;
       font-size: .92em;
     }
+    .cs-accordion {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--primary-soft);
+      padding: 12px 14px;
+      margin: 12px 0;
+    }
+    .cs-accordion summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--primary);
+      list-style: none;
+    }
+    .cs-accordion summary::-webkit-details-marker { display: none; }
+    .cs-accordion summary::before { content: "\25B8"; display: inline-block; margin-right: 8px; transition: transform .15s; }
+    .cs-accordion[open] summary::before { transform: rotate(90deg); }
     .code-card {
       background: var(--code-bg);
       color: var(--code-ink);
@@ -254,6 +270,7 @@
         <a href="../">Guide library</a>
         <a href="#" id="open-note">Leave a note for Claude</a>
         <a href="#what-this-page-is">What This Page Is</a>
+        <a href="#current-state">Current State - Full OnStart</a>
         <a href="#visual-spec">Visual Spec (measured)</a>
         <a href="#phase-0">Phase 0 - Static SVG Sanity Test</a>
         <a href="#phase-1">Phase 1 - Formula-Generated Command Proof</a>
@@ -279,6 +296,223 @@
         <div class="callout warn">
           <strong>Why this starts with a proof, not a build:</strong> the Power Apps Bible has zero prior lab-verified experience with a computed SVG in an Image control, or with <code>Print()</code>/A3 export &mdash; this is genuinely new ground for this app family, not a known-working pattern being reapplied. Phase 0 below is the cheapest possible test of the riskiest assumption.
         </div>
+      </section>
+
+      <section id="current-state">
+        <h2>Current State &mdash; Full App.OnStart &amp; Toggle Button</h2>
+        <div class="callout warn">
+          <strong>Standing rule from 2026-09-11 onward:</strong> whenever <code>App.OnStart</code> or the toggle button's <code>OnSelect</code> needs any change, THIS section gets updated to the new complete content and republished in full &mdash; never a diff, never "just add this bit." You should never have to work out what to keep and what to replace. The per-phase sections below stay as the record of <em>why</em> each piece exists; this section is the one thing to actually copy from.
+        </div>
+
+        <details class="cs-accordion">
+          <summary>App.OnStart &mdash; full, current, all phases so far (click to expand)</summary>
+          <div class="code-card" style="margin-top:10px;">
+            <div class="code-toolbar">
+              <div class="code-meta">
+                <span>App &middot; OnStart &mdash; complete replacement</span>
+                <span class="code-stamp" data-updated="2026-09-11T10:43:06Z">v1 &middot; 2026-09-11 11:43 BST</span>
+              </div>
+              <button data-copy="current-onstart" type="button">Copy</button>
+            </div>
+<pre id="current-onstart">// ==== From Phase 1: category colours, Command 5-post proof subset, chart mode ====
+ClearCollect(colCategoryColours,
+    {Category: "Regular",             Hex: "#E4EFD9"},
+    {Category: "Civil Servant",       Hex: "#CFF4F1"},
+    {Category: "FTRS",                Hex: "#FFC7C7"},
+    {Category: "Aspire",              Hex: "#FFE6A1"},
+    {Category: "ACCT UK Employee",    Hex: "#F6D0F1"},
+    {Category: "RFCA",                Hex: "#F7EFAC"},
+    {Category: "ACCT UK Contractor",  Hex: "#D8E3FB"},
+    {Category: "Ext Contractor",      Hex: "#F7D6AD"},
+    {Category: "CFAV",                Hex: "#E5D4EF"}
+);
+
+ClearCollect(colCommandPosts,
+    {PostID: "CMD-001", X: 170, Y: 10,  W: 140, H: 34, Title: "COS",                Occupant: "Chris Williams", Category: "Regular",  IsVacant: false},
+    {PostID: "CMD-002", X: 10,  Y: 70,  W: 140, H: 34, Title: "SO2 Information Mgmt",Occupant: "Jordan Patel",   Category: "Civil Servant", IsVacant: false},
+    {PostID: "CMD-003", X: 170, Y: 70,  W: 140, H: 34, Title: "XO",                 Occupant: "",               Category: "",          IsVacant: true},
+    {PostID: "CMD-004", X: 330, Y: 70,  W: 140, H: 34, Title: "SO2 Plans",          Occupant: "Alex Morgan",    Category: "FTRS",       IsVacant: false},
+    {PostID: "CMD-005", X: 170, Y: 130, W: 140, H: 34, Title: "Branch Administrator",Occupant: "Robin Bennett", Category: "Aspire",     IsVacant: false}
+);
+
+ClearCollect(colCommandConnectors,
+    {X1: 240, Y1: 44, X2: 80,  Y2: 70},   // COS -&gt; SO2 Info Mgmt
+    {X1: 240, Y1: 44, X2: 240, Y2: 70},   // COS -&gt; XO (vacant)
+    {X1: 240, Y1: 44, X2: 400, Y2: 70},   // COS -&gt; SO2 Plans
+    {X1: 240, Y1: 104,X2: 240, Y2: 130}   // XO -&gt; Branch Administrator (vacancy keeps its child)
+);
+
+Set(varChartMode, "Quiet")  // "Quiet" = white card + colour rail (page 4). "Coloured" = filled card (page 3)
+
+// ==== From Phase 2: Information Systems (24 posts) ====
+ClearCollect(colInfoSysPosts,
+    {PostID: "IS-HEAD", Col: 0, Row: 0, Title: "Head of Digital",           Occupant: "Finley Edwards",  Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-101",  Col: 1, Row: 0, Title: "Delivery lead",             Occupant: "R. Phillips",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-102",  Col: 1, Row: 1, Title: "Digital services officer",  Occupant: "F. Edwards",      Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-103",  Col: 1, Row: 2, Title: "Digital services officer",  Occupant: "A. Morgan",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-104",  Col: 1, Row: 3, Title: "Digital services officer",  Occupant: "S. Taylor",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-105",  Col: 1, Row: 4, Title: "Digital services officer",  Occupant: "J. Patel",        Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-106",  Col: 1, Row: 5, Title: "Digital services officer",  Occupant: "C. Williams",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-107",  Col: 1, Row: 6, Title: "Digital services officer",  Occupant: "J. Clarke",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-108",  Col: 1, Row: 7, Title: "Digital services officer",  Occupant: "R. Bennett",      Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-201",  Col: 2, Row: 0, Title: "Delivery lead",             Occupant: "T. Evans",        Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-202",  Col: 2, Row: 1, Title: "Digital services officer",  Occupant: "",                Category: "",                 IsVacant: true},
+    {PostID: "IS-203",  Col: 2, Row: 2, Title: "Digital services officer",  Occupant: "M. Lewis",        Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-204",  Col: 2, Row: 3, Title: "Digital services officer",  Occupant: "D. Campbell",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-205",  Col: 2, Row: 4, Title: "Digital services officer",  Occupant: "A. Thompson",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-206",  Col: 2, Row: 5, Title: "Digital services officer",  Occupant: "L. Richardson",   Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-207",  Col: 2, Row: 6, Title: "Digital services officer",  Occupant: "C. Wilson",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-208",  Col: 2, Row: 7, Title: "Digital services officer",  Occupant: "C. Stewart",      Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-301",  Col: 3, Row: 0, Title: "Delivery lead",             Occupant: "F. Brooks",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-302",  Col: 3, Row: 1, Title: "Digital services officer",  Occupant: "R. Mitchell",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-303",  Col: 3, Row: 2, Title: "Digital services officer",  Occupant: "E. Anderson",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-304",  Col: 3, Row: 3, Title: "Digital services officer",  Occupant: "B. Hamilton",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-305",  Col: 3, Row: 4, Title: "Digital services officer",  Occupant: "H. Foster",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-306",  Col: 3, Row: 5, Title: "Digital services officer",  Occupant: "Q. Roberts",      Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "IS-307",  Col: 3, Row: 6, Title: "Digital services officer",  Occupant: "D. Robertson",    Category: "ACCT UK Employee", IsVacant: false}
+);
+
+// ==== From Phase 3: full Command (11 posts) + the other 8 departments (86 posts) ====
+ClearCollect(colCommandFullPosts,
+    {PostID: "CMD-DCOMD",   X: 352.5,Y: 38, W: 170, H: 34, Title: "DCOMD",                  Occupant: "Alex Morgan",      Category: "Regular",           IsVacant: false},
+    {PostID: "CMD-PS",      X: 20,  Y: 82,  W: 170, H: 34, Title: "DCOMD PS",                Occupant: "Sam Taylor",       Category: "Aspire",             IsVacant: false},
+    {PostID: "CMD-COLCDT",  X: 210, Y: 82,  W: 170, H: 34, Title: "Colonel Cadets",           Occupant: "Jordan Patel",     Category: "ACCT UK Employee",   IsVacant: false},
+    {PostID: "CMD-COS",     X: 685, Y: 82,  W: 170, H: 34, Title: "COS",                      Occupant: "Chris Williams",   Category: "Regular",            IsVacant: false},
+    {PostID: "CMD-INFOMGR", X: 400, Y: 126, W: 140, H: 34, Title: "SO2 Information Mgmt",     Occupant: "Jamie Clarke",     Category: "Civil Servant",       IsVacant: false},
+    {PostID: "CMD-XO",      X: 550, Y: 126, W: 140, H: 34, Title: "XO",                       Occupant: "",                 Category: "",                    IsVacant: true},
+    {PostID: "CMD-PLANS",   X: 700, Y: 126, W: 140, H: 34, Title: "SO2 Plans",                Occupant: "Taylor Evans",     Category: "FTRS",                IsVacant: false},
+    {PostID: "CMD-PROJOFF", X: 850, Y: 126, W: 140, H: 34, Title: "Project Officer",          Occupant: "Casey Hughes",     Category: "ACCT UK Employee",    IsVacant: false},
+    {PostID: "CMD-TRGCTR",  X: 1000,Y: 126, W: 140, H: 34, Title: "CO Training Centre",       Occupant: "Morgan Lewis",     Category: "Regular",             IsVacant: false},
+    {PostID: "CMD-INFOOFC", X: 400, Y: 170, W: 140, H: 34, Title: "Information Officer",       Occupant: "Drew Campbell",   Category: "Civil Servant",       IsVacant: false},
+    {PostID: "CMD-BRADMIN", X: 550, Y: 170, W: 140, H: 34, Title: "Branch Administrator",     Occupant: "Ashley Thompson",  Category: "Aspire",              IsVacant: false}
+);
+
+ClearCollect(colCommandFullConnectors,
+    {X1: 437.5, Y1: 72,  X2: 105, Y2: 82},  // DCOMD -&gt; DCOMD PS
+    {X1: 437.5, Y1: 72,  X2: 295, Y2: 82},  // DCOMD -&gt; Colonel Cadets
+    {X1: 437.5, Y1: 72,  X2: 770, Y2: 82},  // DCOMD -&gt; COS
+    {X1: 770, Y1: 116, X2: 470, Y2: 126},   // COS -&gt; SO2 Information Mgmt
+    {X1: 770, Y1: 116, X2: 620, Y2: 126},   // COS -&gt; XO (vacant)
+    {X1: 770, Y1: 116, X2: 770, Y2: 126},   // COS -&gt; SO2 Plans (dead centre - straight line)
+    {X1: 770, Y1: 116, X2: 920, Y2: 126},   // COS -&gt; Project Officer
+    {X1: 770, Y1: 116, X2: 1070,Y2: 126},   // COS -&gt; CO Training Centre
+    {X1: 470, Y1: 160, X2: 470, Y2: 170},   // SO2 Information Mgmt -&gt; Information Officer
+    {X1: 620, Y1: 160, X2: 620, Y2: 170}    // XO -&gt; Branch Administrator (vacancy keeps its child)
+);
+
+ClearCollect(colSafeguardingPosts,
+    {PostID: "SG-HEAD", Col: 0, Row: 0, Title: "Head of Safeguarding", Occupant: "Hayden Foster",    Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-101",  Col: 1, Row: 0, Title: "Casework lead",        Occupant: "B. Hamilton",       Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-102",  Col: 1, Row: 1, Title: "Caseworker",           Occupant: "H. Foster",         Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-103",  Col: 1, Row: 2, Title: "Caseworker",           Occupant: "Q. Roberts",        Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-104",  Col: 1, Row: 3, Title: "Caseworker",           Occupant: "D. Robertson",      Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-105",  Col: 1, Row: 4, Title: "Caseworker",           Occupant: "R. Montgomery",     Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-201",  Col: 2, Row: 0, Title: "Casework lead",        Occupant: "A. Henderson",      Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-202",  Col: 2, Row: 1, Title: "Caseworker",           Occupant: "F. Matthews",       Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-203",  Col: 2, Row: 2, Title: "Caseworker",           Occupant: "",                  Category: "",              IsVacant: true},
+    {PostID: "SG-204",  Col: 2, Row: 3, Title: "Caseworker",           Occupant: "R. Phillips",       Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-205",  Col: 2, Row: 4, Title: "Caseworker",           Occupant: "F. Edwards",        Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-301",  Col: 3, Row: 0, Title: "Casework lead",        Occupant: "A. Morgan",         Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-302",  Col: 3, Row: 1, Title: "Caseworker",           Occupant: "S. Taylor",         Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-303",  Col: 3, Row: 2, Title: "Caseworker",           Occupant: "",                  Category: "",              IsVacant: true},
+    {PostID: "SG-304",  Col: 3, Row: 3, Title: "Caseworker",           Occupant: "C. Williams",       Category: "Civil Servant", IsVacant: false},
+    {PostID: "SG-305",  Col: 3, Row: 4, Title: "Caseworker",           Occupant: "J. Clarke",         Category: "Civil Servant", IsVacant: false}
+);
+
+ClearCollect(colTrainingPosts,
+    {PostID: "TR-HEAD", Col: 0, Row: 0, Title: "Head of Training", Occupant: "Avery Henderson", Category: "FTRS", IsVacant: false},
+    {PostID: "TR-101",  Col: 1, Row: 0, Title: "Training lead",    Occupant: "R. Montgomery",    Category: "FTRS", IsVacant: false},
+    {PostID: "TR-102",  Col: 1, Row: 1, Title: "Training officer", Occupant: "A. Henderson",      Category: "FTRS", IsVacant: false},
+    {PostID: "TR-103",  Col: 1, Row: 2, Title: "Training officer", Occupant: "F. Matthews",       Category: "FTRS", IsVacant: false},
+    {PostID: "TR-104",  Col: 1, Row: 3, Title: "Training officer", Occupant: "L. Cunningham",     Category: "FTRS", IsVacant: false},
+    {PostID: "TR-105",  Col: 1, Row: 4, Title: "Training officer", Occupant: "R. Phillips",       Category: "FTRS", IsVacant: false},
+    {PostID: "TR-106",  Col: 1, Row: 5, Title: "Training officer", Occupant: "F. Edwards",        Category: "FTRS", IsVacant: false},
+    {PostID: "TR-107",  Col: 1, Row: 6, Title: "Training officer", Occupant: "A. Morgan",         Category: "FTRS", IsVacant: false},
+    {PostID: "TR-201",  Col: 2, Row: 0, Title: "Training lead",    Occupant: "S. Taylor",         Category: "FTRS", IsVacant: false},
+    {PostID: "TR-202",  Col: 2, Row: 1, Title: "Training officer", Occupant: "J. Patel",          Category: "FTRS", IsVacant: false},
+    {PostID: "TR-203",  Col: 2, Row: 2, Title: "Training officer", Occupant: "C. Williams",       Category: "FTRS", IsVacant: false},
+    {PostID: "TR-204",  Col: 2, Row: 3, Title: "Training officer", Occupant: "J. Clarke",         Category: "FTRS", IsVacant: false},
+    {PostID: "TR-205",  Col: 2, Row: 4, Title: "Training officer", Occupant: "R. Bennett",        Category: "FTRS", IsVacant: false},
+    {PostID: "TR-206",  Col: 2, Row: 5, Title: "Training officer", Occupant: "T. Evans",          Category: "FTRS", IsVacant: false},
+    {PostID: "TR-301",  Col: 3, Row: 0, Title: "Training lead",    Occupant: "C. Hughes",         Category: "FTRS", IsVacant: false},
+    {PostID: "TR-302",  Col: 3, Row: 1, Title: "Training officer", Occupant: "M. Lewis",          Category: "FTRS", IsVacant: false},
+    {PostID: "TR-303",  Col: 3, Row: 2, Title: "Training officer", Occupant: "D. Campbell",       Category: "FTRS", IsVacant: false},
+    {PostID: "TR-304",  Col: 3, Row: 3, Title: "Training officer", Occupant: "A. Thompson",       Category: "FTRS", IsVacant: false},
+    {PostID: "TR-305",  Col: 3, Row: 4, Title: "Training officer", Occupant: "L. Richardson",     Category: "FTRS", IsVacant: false},
+    {PostID: "TR-306",  Col: 3, Row: 5, Title: "Training officer", Occupant: "C. Wilson",         Category: "FTRS", IsVacant: false}
+);
+
+ClearCollect(colMediaPosts,
+    {PostID: "MC-HEAD", Col: 0, Row: 0, Title: "Head of Communications", Occupant: "Cameron Stewart", Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-101",  Col: 1, Row: 0, Title: "Comms lead",             Occupant: "C. Wilson",        Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-102",  Col: 1, Row: 1, Title: "Communications officer",Occupant: "C. Stewart",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-103",  Col: 1, Row: 2, Title: "Communications officer",Occupant: "F. Brooks",        Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-104",  Col: 1, Row: 3, Title: "Communications officer",Occupant: "R. Mitchell",      Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-105",  Col: 1, Row: 4, Title: "Communications officer",Occupant: "E. Anderson",      Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-201",  Col: 2, Row: 0, Title: "Comms lead",             Occupant: "B. Hamilton",      Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-202",  Col: 2, Row: 1, Title: "Communications officer",Occupant: "H. Foster",        Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-203",  Col: 2, Row: 2, Title: "Communications officer",Occupant: "Q. Roberts",       Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-204",  Col: 2, Row: 3, Title: "Communications officer",Occupant: "D. Robertson",     Category: "ACCT UK Employee", IsVacant: false},
+    {PostID: "MC-205",  Col: 2, Row: 4, Title: "Communications officer",Occupant: "R. Montgomery",    Category: "ACCT UK Employee", IsVacant: false}
+);
+
+ClearCollect(colCcfaPosts,
+    {PostID: "CA-HEAD", Col: 0, Row: 0, Title: "Head of CCF(A)",          Occupant: "Cameron Stewart", Category: "FTRS", IsVacant: false},
+    {PostID: "CA-101",  Col: 1, Row: 0, Title: "Area lead",               Occupant: "C. Wilson",        Category: "FTRS", IsVacant: false},
+    {PostID: "CA-102",  Col: 1, Row: 1, Title: "Cadet training officer", Occupant: "C. Stewart",       Category: "FTRS", IsVacant: false},
+    {PostID: "CA-103",  Col: 1, Row: 2, Title: "Cadet training officer", Occupant: "F. Brooks",        Category: "FTRS", IsVacant: false},
+    {PostID: "CA-104",  Col: 1, Row: 3, Title: "Cadet training officer", Occupant: "R. Mitchell",      Category: "FTRS", IsVacant: false},
+    {PostID: "CA-105",  Col: 1, Row: 4, Title: "Cadet training officer", Occupant: "E. Anderson",      Category: "FTRS", IsVacant: false},
+    {PostID: "CA-201",  Col: 2, Row: 0, Title: "Area lead",               Occupant: "B. Hamilton",      Category: "FTRS", IsVacant: false},
+    {PostID: "CA-202",  Col: 2, Row: 1, Title: "Cadet training officer", Occupant: "H. Foster",        Category: "FTRS", IsVacant: false},
+    {PostID: "CA-203",  Col: 2, Row: 2, Title: "Cadet training officer", Occupant: "Q. Roberts",       Category: "FTRS", IsVacant: false},
+    {PostID: "CA-204",  Col: 2, Row: 3, Title: "Cadet training officer", Occupant: "D. Robertson",     Category: "FTRS", IsVacant: false},
+    {PostID: "CA-205",  Col: 2, Row: 4, Title: "Cadet training officer", Occupant: "R. Montgomery",    Category: "FTRS", IsVacant: false}
+);
+
+ClearCollect(colPolicyPosts,
+    {PostID: "PP-HEAD", Col: 0, Row: 0, Title: "Head of Policy &amp; Personnel", Occupant: "Casey Hughes", Category: "Civil Servant", IsVacant: false},
+    {PostID: "PP-101",  Col: 1, Row: 0, Title: "Policy lead",   Occupant: "T. Evans",   Category: "Civil Servant", IsVacant: false},
+    {PostID: "PP-102",  Col: 1, Row: 1, Title: "Policy officer",Occupant: "C. Hughes",  Category: "Civil Servant", IsVacant: false},
+    {PostID: "PP-201",  Col: 2, Row: 0, Title: "Policy lead",   Occupant: "M. Lewis",   Category: "Civil Servant", IsVacant: false},
+    {PostID: "PP-202",  Col: 2, Row: 1, Title: "Policy officer",Occupant: "D. Campbell",Category: "Civil Servant", IsVacant: false}
+);
+
+ClearCollect(colSupportPosts,
+    {PostID: "SP-HEAD", Col: 0, Row: 0, Title: "Head of Support", Occupant: "Morgan Lewis", Category: "Civil Servant", IsVacant: false},
+    {PostID: "SP-101",  Col: 1, Row: 0, Title: "Support lead",    Occupant: "C. Hughes",     Category: "Civil Servant", IsVacant: false},
+    {PostID: "SP-102",  Col: 1, Row: 1, Title: "Support officer",Occupant: "M. Lewis",      Category: "Civil Servant", IsVacant: false},
+    {PostID: "SP-103",  Col: 1, Row: 2, Title: "Support officer",Occupant: "D. Campbell",   Category: "Civil Servant", IsVacant: false},
+    {PostID: "SP-201",  Col: 2, Row: 0, Title: "Support lead",    Occupant: "",              Category: "",              IsVacant: true},
+    {PostID: "SP-202",  Col: 2, Row: 1, Title: "Support officer",Occupant: "L. Richardson", Category: "Civil Servant", IsVacant: false}
+);
+
+ClearCollect(colCcfPosts,
+    {PostID: "CF-HEAD", Col: 0, Row: 0, Title: "Head of CCF",   Occupant: "Robin Bennett", Category: "Civil Servant", IsVacant: false},
+    {PostID: "CF-101",  Col: 1, Row: 0, Title: "Policy officer",Occupant: "J. Clarke",     Category: "Civil Servant", IsVacant: false},
+    {PostID: "CF-201",  Col: 2, Row: 0, Title: "Policy officer",Occupant: "R. Bennett",    Category: "Civil Servant", IsVacant: false}
+);</pre>
+          </div>
+        </details>
+
+        <details class="cs-accordion">
+          <summary>Toggle button OnSelect &mdash; full, current (click to expand)</summary>
+          <div class="code-card" style="margin-top:10px;">
+            <div class="code-toolbar">
+              <div class="code-meta">
+                <span>Toggle button &middot; OnSelect &mdash; complete replacement, refreshes all three pictures</span>
+                <span class="code-stamp" data-updated="2026-09-11T10:43:06Z">v1 &middot; 2026-09-11 11:43 BST</span>
+              </div>
+              <button data-copy="current-toggle" type="button">Copy</button>
+            </div>
+<pre id="current-toggle">Set(varChartMode, If(varChartMode = "Quiet", "Coloured", "Quiet"));
+Select(btnRender);
+Select(btnRenderInfoSys);
+Select(btnRenderFullSheet)</pre>
+          </div>
+        </details>
+
+        <p class="meta-line" style="margin-top:10px;">Once Phase 3's combined picture is confirmed and you don't need Phase 1/2's separate test images side by side any more, you can delete <code>colCommandPosts</code>/<code>colCommandConnectors</code>/<code>colInfoSysPosts</code> and their render blocks/buttons/images, and drop the corresponding <code>Select()</code> calls above &mdash; not done automatically here, since this still reflects all three phases' test rigs coexisting.</p>
       </section>
 
       <section id="visual-spec">

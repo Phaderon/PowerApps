@@ -86,6 +86,27 @@ Reuse the Training Tracker guide style unless there is a clear reason not to:
 - Responsive split-screen behavior with no page-level horizontal overflow.
 - Critical technical notes near the bottom for hard-won build quirks.
 
+## Accumulating Properties Standard
+
+Added 2026-09-11, Cadets Org Chart project, after the user explicitly asked to never
+have to work out what to add vs. what to keep for a growing `App.OnStart`.
+
+If a guide's build process adds to the same property across multiple stages/phases
+(most commonly `App.OnStart`, but this applies to any control property that keeps
+growing rather than being replaced each time — e.g. a toggle button's `OnSelect` that
+needs to know about more things to refresh as more screens are added) — maintain one
+"Current State" section near the top of the guide with the complete, current content
+of that property, and republish it in full every time anything changes. Never make the
+reader diff a per-stage snippet against what they already pasted.
+
+Present it collapsed by default (native `<details>`/`<summary>`, no JS needed) with a
+`code-card`/copy button inside, so it doesn't dominate the page for a reader who
+doesn't need it right now — see `cadets-org-chart/index.html`'s `#current-state`
+section for a working example, including the accordion CSS.
+
+Per-phase/per-stage sections remain useful as the record of *why* each piece exists;
+they are not a substitute for the one always-complete reference.
+
 ## Layer Order Standard
 
 When a control is a visual background, card, panel, row fill, indentation strip, or progress-bar background, the guide must say so before the user builds on top of it.
