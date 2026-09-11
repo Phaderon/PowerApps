@@ -471,13 +471,24 @@ Set(varCommandDataUri, "data:image/svg+xml," &amp; EncodeUrl(varCommandSvg))
 </pre>
         </div>
         <ol start="3">
-          <li>Set the Image control's <code>Image</code> property to <code>=varCommandDataUri</code>. Add a second button toggling <code>Set(varChartMode, If(varChartMode="Quiet","Coloured","Quiet"))</code> then re-running the render, so both mockup styles can be flipped on the same screen.</li>
+          <li>Set the Image control's <code>Image</code> property to <code>=varCommandDataUri</code>. Add a second button (e.g. <code>btnToggleMode</code>) whose <code>OnSelect</code> is:</li>
         </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnToggleMode.OnSelect &mdash; flips the mode AND re-triggers the render button</span>
+              <span class="code-stamp" data-updated="2026-09-11T08:47:54Z">v1 &middot; 2026-09-11 09:47 BST</span>
+            </div>
+            <button data-copy="phase1-toggle" type="button">Copy</button>
+          </div>
+<pre id="phase1-toggle">Set(varChartMode, If(varChartMode = "Quiet", "Coloured", "Quiet"));
+Select(btnRender)</pre>
+        </div>
         <div class="callout warn">
-          <strong>Unverified in the Bible &mdash; report exactly what Studio says, don't assume:</strong> does <code>Concat</code> over a table with a per-row <code>With(...)</code> block work in this property context at all? Does <code>LookUp</code> inside that <code>With</code> correctly resolve per-row, or collapse to one value for every row (the Bible documents this exact failure shape for nested-Filter row-identifier bleed elsewhere &mdash; check the rendered output doesn't show the same category colour on every card)?
+          <code>btnRender</code> here must be your render button's actual <strong>control name</strong> (tree view / Properties dropdown), not its display Text &mdash; easy to mix up if both buttons happen to show the same caption. <strong>Why this line is needed at all:</strong> <code>varCommandDataUri</code> only changes when its own <code>Set()</code> runs. Flipping <code>varChartMode</code> alone doesn't make anything else recompute &mdash; nothing in Power Fx reactively reruns a different <code>Set()</code> formula just because a variable it reads has changed. Skip the <code>Select()</code> line and the toggle button will appear to lag one click behind: pressing it does nothing, and the <em>next</em> press of the render button shows the flip instead.
         </div>
         <div class="callout ok">
-          <strong>Test:</strong> vacant XO renders dashed/grey and its child (Branch Administrator) still visibly connects to it &mdash; the specific hard-requirement case. Both colour modes visually match the Visual Spec section above.
+          <strong>CONFIRMED PASSED, 2026-09-11</strong> (screenshot on file, both colour modes). <code>Concat</code>/<code>With</code>/<code>LookUp</code> resolved category colour correctly per-row, not collapsed to one value across every card. Vacant XO rendered dashed/grey with <code>GAPPED</code>, and Branch Administrator still visibly connects to it underneath &mdash; the hard-requirement case. Both colour modes matched the Visual Spec section above. The toggle-button lag above was the one real gap, and it's a wiring issue, not a rendering one &mdash; now fixed and logged in <code>known-bad-patterns.md</code> as a reusable pattern for this whole app family.
         </div>
       </section>
 
