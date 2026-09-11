@@ -1267,13 +1267,13 @@ Set(varFullSheetDataUri, "")</pre>
           <li>Set <code>btnComputeTree.OnSelect</code> to this complete formula. It's long &mdash; 11 sequential <code>ClearCollect</code> steps &mdash; on purpose: each step does only one small, safe thing (figure out one depth level, for width or for position) rather than one clever formula trying to do everything at once.</li>
         </ol>
         <div class="callout warn">
-          <strong>The one scoping rule every step below depends on:</strong> a bare field name inside a nested <code>Filter</code>/<code>LookUp</code> refers to <em>that function's own</em> row; <code>ThisRecord.field</code> reaches back out to the row the outer <code>AddColumns</code>/<code>Concat</code> is currently processing &mdash; the exact same rule Command's own category-colour lookup already relies on (<code>LookUp(colCategoryColours, Category = ThisRecord.Category)</code>). Get this backwards anywhere below and a step will likely <em>not</em> redline &mdash; it'll silently compute nonsense (usually "everyone gets the same width"). If the rendered tree looks flat/wrong rather than erroring, check the actual numbers with Studio's formula debugger before assuming the shape below is correct.
+          <strong>Corrected 2026-09-11 after the first real test result</strong> &mdash; pasted clean, no Studio errors, but every row except the root came out at the same, wrong depth (see the debugging section below for the exact numbers). Every nested lookup that was meant to find "my manager" or "my siblings" was finding nothing, for every row. The original version relied on <code>ThisRecord.field</code> to reach the outer <code>AddColumns</code> row from inside a nested <code>Filter</code>/<code>LookUp</code> &mdash; which works when looking up a genuinely separate table (Command's own <code>LookUp(colCategoryColours, Category = ThisRecord.Category)</code>), but every lookup in this phase is a <strong>self-join</strong> (a table looking itself up from inside an <code>AddColumns</code> over that same table), and <code>ThisRecord</code> did not reliably reach the outer row in that shape. <strong>Fixed by capturing the value you need from the outer row into a plain <code>With</code>-bound name first</strong> &mdash; e.g. <code>With({ _myMgr: ManagerPostID }, LookUp(colD0, PostID = _myMgr))</code> &mdash; so there's no shared field name left to be ambiguous about. Every step below now uses this pattern instead. Still genuinely unverified whether this specific fix is enough &mdash; that's exactly what testing it again tells us.
         </div>
         <div class="code-card">
           <div class="code-toolbar">
             <div class="code-meta">
               <span>btnComputeTree.OnSelect &mdash; depth, then width bottom-up, then X top-down, then render</span>
-              <span class="code-stamp" data-updated="2026-09-11T17:42:25Z">v1 &middot; 2026-09-11 18:42 BST</span>
+              <span class="code-stamp" data-updated="2026-09-11T18:15:29Z">v2 &middot; 2026-09-11 19:15 BST &mdash; fixed self-join scoping (ThisRecord replaced with captured With-bound names) after the first test showed every non-root post landing at the same wrong depth</span>
             </div>
             <button data-copy="phase4-compute" type="button">Copy</button>
           </div>
@@ -1287,7 +1287,10 @@ ClearCollect(colD1,
         Depth1,
         If(
             !IsBlank(Depth0), Depth0,
-            If(LookUp(colD0, PostID = ThisRecord.ManagerPostID).Depth0 = 0, 1, Blank())
+            With(
+                { _myMgr: ManagerPostID },
+                If(LookUp(colD0, PostID = _myMgr).Depth0 = 0, 1, Blank())
+            )
         )
     )
 );
@@ -1297,7 +1300,10 @@ ClearCollect(colD2,
         Depth2,
         If(
             !IsBlank(Depth1), Depth1,
-            If(LookUp(colD1, PostID = ThisRecord.ManagerPostID).Depth1 = 1, 2, Blank())
+            With(
+                { _myMgr: ManagerPostID },
+                If(LookUp(colD1, PostID = _myMgr).Depth1 = 1, 2, Blank())
+            )
         )
     )
 );
@@ -1316,8 +1322,11 @@ ClearCollect(colWidthPass1,
         If(
             Depth = 2,
             With(
-                { _kids: Filter(colWidthPass0, ManagerPostID = ThisRecord.PostID) },
-                If(CountRows(_kids) = 0, 150, Sum(_kids, W0) + (CountRows(_kids) - 1) * 10)
+                { _myID: PostID },
+                With(
+                    { _kids: Filter(colWidthPass0, ManagerPostID = _myID) },
+                    If(CountRows(_kids) = 0, 150, Sum(_kids, W0) + (CountRows(_kids) - 1) * 10)
+                )
             ),
             W0
         )
@@ -1330,8 +1339,11 @@ ClearCollect(colWidthPass2,
         If(
             Depth = 1,
             With(
-                { _kids: Filter(colWidthPass1, ManagerPostID = ThisRecord.PostID) },
-                If(CountRows(_kids) = 0, 150, Sum(_kids, W1) + (CountRows(_kids) - 1) * 10)
+                { _myID: PostID },
+                With(
+                    { _kids: Filter(colWidthPass1, ManagerPostID = _myID) },
+                    If(CountRows(_kids) = 0, 150, Sum(_kids, W1) + (CountRows(_kids) - 1) * 10)
+                )
             ),
             W1
         )
@@ -1344,8 +1356,11 @@ ClearCollect(colWidthPass3,
         If(
             Depth = 0,
             With(
-                { _kids: Filter(colWidthPass2, ManagerPostID = ThisRecord.PostID) },
-                If(CountRows(_kids) = 0, 150, Sum(_kids, W2) + (CountRows(_kids) - 1) * 10)
+                { _myID: PostID },
+                With(
+                    { _kids: Filter(colWidthPass2, ManagerPostID = _myID) },
+                    If(CountRows(_kids) = 0, 150, Sum(_kids, W2) + (CountRows(_kids) - 1) * 10)
+                )
             ),
             W2
         )
@@ -1364,17 +1379,20 @@ ClearCollect(colX1,
             Depth &lt;&gt; 1,
             X0,
             With(
-                {
-                    _parent: LookUp(colX0, PostID = ThisRecord.ManagerPostID),
-                    _allSibs: Filter(colX0, ManagerPostID = ThisRecord.ManagerPostID),
-                    _precedingSibs: Filter(colX0, ManagerPostID = ThisRecord.ManagerPostID &amp;&amp; SortOrder &lt; ThisRecord.SortOrder)
-                },
+                { _myMgr: ManagerPostID, _mySort: SortOrder },
                 With(
                     {
-                        _groupTotalW: Sum(_allSibs, W3) + (CountRows(_allSibs) - 1) * 10,
-                        _precedingW: Sum(_precedingSibs, W3) + CountRows(_precedingSibs) * 10
+                        _parent: LookUp(colX0, PostID = _myMgr),
+                        _allSibs: Filter(colX0, ManagerPostID = _myMgr),
+                        _precedingSibs: Filter(colX0, ManagerPostID = _myMgr &amp;&amp; SortOrder &lt; _mySort)
                     },
-                    _parent.X0 + _parent.W3 / 2 - _groupTotalW / 2 + _precedingW
+                    With(
+                        {
+                            _groupTotalW: Sum(_allSibs, W3) + (CountRows(_allSibs) - 1) * 10,
+                            _precedingW: Sum(_precedingSibs, W3) + CountRows(_precedingSibs) * 10
+                        },
+                        _parent.X0 + _parent.W3 / 2 - _groupTotalW / 2 + _precedingW
+                    )
                 )
             )
         )
@@ -1388,17 +1406,20 @@ ClearCollect(colX2,
             Depth &lt;&gt; 2,
             X1,
             With(
-                {
-                    _parent: LookUp(colX1, PostID = ThisRecord.ManagerPostID),
-                    _allSibs: Filter(colX1, ManagerPostID = ThisRecord.ManagerPostID),
-                    _precedingSibs: Filter(colX1, ManagerPostID = ThisRecord.ManagerPostID &amp;&amp; SortOrder &lt; ThisRecord.SortOrder)
-                },
+                { _myMgr: ManagerPostID, _mySort: SortOrder },
                 With(
                     {
-                        _groupTotalW: Sum(_allSibs, W3) + (CountRows(_allSibs) - 1) * 10,
-                        _precedingW: Sum(_precedingSibs, W3) + CountRows(_precedingSibs) * 10
+                        _parent: LookUp(colX1, PostID = _myMgr),
+                        _allSibs: Filter(colX1, ManagerPostID = _myMgr),
+                        _precedingSibs: Filter(colX1, ManagerPostID = _myMgr &amp;&amp; SortOrder &lt; _mySort)
                     },
-                    _parent.X1 + _parent.W3 / 2 - _groupTotalW / 2 + _precedingW
+                    With(
+                        {
+                            _groupTotalW: Sum(_allSibs, W3) + (CountRows(_allSibs) - 1) * 10,
+                            _precedingW: Sum(_precedingSibs, W3) + CountRows(_precedingSibs) * 10
+                        },
+                        _parent.X1 + _parent.W3 / 2 - _groupTotalW / 2 + _precedingW
+                    )
                 )
             )
         )
@@ -1412,17 +1433,20 @@ ClearCollect(colX3,
             Depth &lt;&gt; 3,
             X2,
             With(
-                {
-                    _parent: LookUp(colX2, PostID = ThisRecord.ManagerPostID),
-                    _allSibs: Filter(colX2, ManagerPostID = ThisRecord.ManagerPostID),
-                    _precedingSibs: Filter(colX2, ManagerPostID = ThisRecord.ManagerPostID &amp;&amp; SortOrder &lt; ThisRecord.SortOrder)
-                },
+                { _myMgr: ManagerPostID, _mySort: SortOrder },
                 With(
                     {
-                        _groupTotalW: Sum(_allSibs, W3) + (CountRows(_allSibs) - 1) * 10,
-                        _precedingW: Sum(_precedingSibs, W3) + CountRows(_precedingSibs) * 10
+                        _parent: LookUp(colX2, PostID = _myMgr),
+                        _allSibs: Filter(colX2, ManagerPostID = _myMgr),
+                        _precedingSibs: Filter(colX2, ManagerPostID = _myMgr &amp;&amp; SortOrder &lt; _mySort)
                     },
-                    _parent.X2 + _parent.W3 / 2 - _groupTotalW / 2 + _precedingW
+                    With(
+                        {
+                            _groupTotalW: Sum(_allSibs, W3) + (CountRows(_allSibs) - 1) * 10,
+                            _precedingW: Sum(_precedingSibs, W3) + CountRows(_precedingSibs) * 10
+                        },
+                        _parent.X2 + _parent.W3 / 2 - _groupTotalW / 2 + _precedingW
+                    )
                 )
             )
         )
@@ -1440,11 +1464,14 @@ Set(varAutoTreeSvg,
     Concat(
         Filter(colFinal, !IsBlank(ManagerPostID)),
         With(
-            { _parent: LookUp(colFinal, PostID = ThisRecord.ManagerPostID) },
-            "&lt;path d='M" &amp; (_parent.FinalX + _parent.FinalW / 2) &amp; "," &amp; (_parent.FinalY + 34) &amp;
-                " V" &amp; (_parent.FinalY + 34 + (FinalY - (_parent.FinalY + 34)) / 2) &amp;
-                " H" &amp; (FinalX + FinalW / 2) &amp;
-                " V" &amp; FinalY &amp; "' stroke='#8A9A94' stroke-width='0.8' fill='none'/&gt;"
+            { _myMgr: ManagerPostID },
+            With(
+                { _parent: LookUp(colFinal, PostID = _myMgr) },
+                "&lt;path d='M" &amp; (_parent.FinalX + _parent.FinalW / 2) &amp; "," &amp; (_parent.FinalY + 34) &amp;
+                    " V" &amp; (_parent.FinalY + 34 + (FinalY - (_parent.FinalY + 34)) / 2) &amp;
+                    " H" &amp; (FinalX + FinalW / 2) &amp;
+                    " V" &amp; FinalY &amp; "' stroke='#8A9A94' stroke-width='0.8' fill='none'/&gt;"
+            )
         ),
         ""
     ) &amp;
@@ -1465,8 +1492,8 @@ Set(varAutoTreeDataUri, "data:image/svg+xml," &amp; EncodeUrl(varAutoTreeSvg))</
         <div class="callout ok">
           <strong>What to check:</strong> does it run at all, or does something in that chain redline &mdash; if so, record the exact error and which <code>ClearCollect</code> step it's on. If it renders: do all 10 boxes appear, correctly nested 4 levels deep, with P10 under P5 specifically? Is every gap between siblings under the same manager an identical, clean distance (Python's simulation says it should be a uniform 10pt everywhere)? <strong>Then the actual point of this whole phase:</strong> delete <code>P8</code> from the <code>OnStart</code> data above, or add a <code>P11</code> under <code>P3</code>, re-run, and see whether the tree reflows correctly on its own &mdash; with no coordinate anywhere touched by a person. That's the one result that actually matters; everything above it is just getting there.
         </div>
-        <div class="callout warn" id="phase4-debugging">
-          <strong>If only some cards appear (e.g. just the root) &mdash; add these three temporary Labels, then delete them once you've read the result.</strong> Power Fx tends to go quiet rather than red when one of the nested <code>ThisRecord</code> references above binds to the wrong row &mdash; the chain runs, Studio shows no error, and it just silently computes wrong numbers instead. These three Labels tell us exactly where the chain actually breaks, rather than guessing at the whole formula again.
+        <div class="callout ok" id="phase4-debugging">
+          <strong>First real result, 2026-09-11 &mdash; RESOLVED, root cause found.</strong> Pasted clean, no Studio errors at all, but pressing the button only ever showed one card (the root, P1) &mdash; nothing else appeared. These three temporary diagnostic Labels (kept below in case anything like this happens again) confirmed exactly why.
         </div>
         <div class="code-card">
           <div class="code-toolbar">
@@ -1485,7 +1512,10 @@ Concat(colFinal, PostID &amp; "-&gt;d" &amp; Depth &amp; "  ", "")
 // Label 3 -- what final X/Y did each post actually get?
 Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ")  ", "")</pre>
         </div>
-        <ul style="margin:10px 0 0; padding-left:20px; font-size:.95rem;">
+        <p><strong>Actual result:</strong> Label 1 = <code>10</code> (every row survived). Label 2 = <code>P1-&gt;d0 P2-&gt;d3 P3-&gt;d3 P4-&gt;d3 P5-&gt;d3 P6-&gt;d3 P7-&gt;d3 P8-&gt;d3 P9-&gt;d3 P10-&gt;d3</code> &mdash; only the root resolved correctly; every other post fell straight through to the final catch-all depth, meaning every nested lookup that was supposed to find "my manager" found nothing, for every row. Label 3 confirmed the knock-on effect: every non-root post landed at the exact same position, <code>(-795, 212)</code> &mdash; stacked exactly on top of each other, which is why only one card was visible (whichever one happened to be drawn last).</p>
+        <p><strong>Root cause:</strong> the original formula relied on <code>ThisRecord.field</code> to reach the outer <code>AddColumns</code> row from inside a nested <code>Filter</code>/<code>LookUp</code> &mdash; which works when looking up a genuinely separate table (Command's <code>LookUp(colCategoryColours, Category = ThisRecord.Category)</code>), but every lookup in this phase is a <strong>self-join</strong> (a table looking itself up from inside an <code>AddColumns</code> over that same table), and <code>ThisRecord</code> did not reliably reach the outer row in that shape. Fixed above by capturing the outer row's value into a plain <code>With</code>-bound name first, so there's nothing left to be ambiguous about. <strong>Not yet re-tested against this fix.</strong></p>
+        <p style="margin-top:14px;"><strong>What each Label result means, for next time:</strong></p>
+        <ul style="margin:6px 0 0; padding-left:20px; font-size:.95rem;">
           <li><strong>Label 1 isn't 10:</strong> something upstream is dropping rows entirely &mdash; surprising, since <code>AddColumns</code> should never remove a row, but the first thing to rule out.</li>
           <li><strong>Label 1 is 10, but Label 2 shows everyone at the same depth</strong> (e.g. everyone <code>d0</code>): Step A's depth-detection chain isn't correctly telling P2&ndash;P10 apart from the root.</li>
           <li><strong>Depths look right, but Label 3 shows everyone bunched at the same X/Y (or blank):</strong> Step B/C (width or position) is the problem, not depth &mdash; and everyone would be stacked exactly on top of each other, which looks on screen exactly like only one card rendering, with the rest hidden directly underneath it.</li>
