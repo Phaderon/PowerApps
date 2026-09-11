@@ -547,7 +547,7 @@ Select(btnRender)</pre>
           <div class="code-toolbar">
             <div class="code-meta">
               <span>Render formula &mdash; computed column/row grid layout for one department</span>
-              <span class="code-stamp" data-updated="2026-09-11T08:32:47Z">v2 &middot; 2026-09-11 09:32 BST &mdash; Base64() replaced with confirmed-working EncodeUrl()</span>
+              <span class="code-stamp" data-updated="2026-09-11T08:59:07Z">v3 &middot; 2026-09-11 09:59 BST &mdash; fixed AddColumns quoted column names (Studio rejected them, see callout below)</span>
             </div>
             <button data-copy="phase2-render" type="button">Copy</button>
           </div>
@@ -562,10 +562,10 @@ Select(btnRender)</pre>
         Concat(
             AddColumns(
                 colInfoSysPosts,
-                "_x", If(Col = 0, (_panelW - 140) / 2, (Col - 1) * (_colW + _gutter)),
-                "_y", If(Col = 0, 0, _headH + _headGap + Row * (_cardH + _rowGap)),
-                "_w", If(Col = 0, 140, _colW),
-                "_h", If(Col = 0, _headH, _cardH)
+                _x, If(Col = 0, (_panelW - 140) / 2, (Col - 1) * (_colW + _gutter)),
+                _y, If(Col = 0, 0, _headH + _headGap + Row * (_cardH + _rowGap)),
+                _w, If(Col = 0, 140, _colW),
+                _h, If(Col = 0, _headH, _cardH)
             ),
             With(
                 {
@@ -594,6 +594,9 @@ Set(varInfoSysDataUri, "data:image/svg+xml," &amp; EncodeUrl(varInfoSysSvg))
 </pre>
         </div>
         <p>Point a second Image control at <code>=varInfoSysDataUri</code>.</p>
+        <div class="callout warn">
+          <strong>Fixed 2026-09-11 &mdash; real mistake, caught by Studio:</strong> the <code>AddColumns</code> call above originally had its new-column-name arguments as quoted strings (<code>"_x"</code>, <code>"_y"</code>, etc.) &mdash; Studio rejected this with "Expected identifier name," blocking the button from being built at all. <code>AddColumns(table, ColumnName, formula, ...)</code> needs a <strong>bare identifier</strong> for the column name, never a quoted string &mdash; this exact rule already existed in <code>known-bad-patterns.md</code> before this formula was written; it just wasn't checked against this specific formula. Corrected above. If you pasted the broken version, delete the whole <code>AddColumns(...)</code> block and repaste this one rather than hand-editing just the quotes.
+        </div>
         <div class="callout warn">
           <strong>Label wrapping/truncation:</strong> "Digital services officer" at 7-8pt inside a ~117pt column card &mdash; does it fit on one line as the mockup shows, or wrap/clip? SVG <code>&lt;text&gt;</code> does NOT auto-wrap; if real post titles are longer than this mockup's shortened labels, the renderer needs an explicit wrap step (split into <code>&lt;tspan&gt;</code> lines by measured character width) before this is production-safe. Record actual behaviour, don't assume it fits.
         </div>
