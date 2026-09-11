@@ -310,7 +310,7 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-11T10:43:06Z">v1 &middot; 2026-09-11 11:43 BST</span>
+                <span class="code-stamp" data-updated="2026-09-11T11:09:47Z">v2 &middot; 2026-09-11 12:09 BST &mdash; fixed missing semicolon after Set(varChartMode,...) that broke OnStart once later phases added more statements after it</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
@@ -342,7 +342,7 @@ ClearCollect(colCommandConnectors,
     {X1: 240, Y1: 104,X2: 240, Y2: 130}   // XO -&gt; Branch Administrator (vacancy keeps its child)
 );
 
-Set(varChartMode, "Quiet")  // "Quiet" = white card + colour rail (page 4). "Coloured" = filled card (page 3)
+Set(varChartMode, "Quiet");  // "Quiet" = white card + colour rail (page 4). "Coloured" = filled card (page 3)
 
 // ==== From Phase 2: Information Systems (24 posts) ====
 ClearCollect(colInfoSysPosts,
