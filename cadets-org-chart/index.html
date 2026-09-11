@@ -258,7 +258,7 @@
         <a href="#phase-0">Phase 0 - Static SVG Sanity Test</a>
         <a href="#phase-1">Phase 1 - Formula-Generated Command Proof</a>
         <a href="#phase-2">Phase 2 - Full Department (24 Posts, Computed)</a>
-        <a href="#next-steps">Next Steps (Not Started)</a>
+        <a href="#next-steps">Next Steps</a>
         <a href="#open-questions">Known Limitations / Open Questions</a>
       </nav>
     </aside>
@@ -270,7 +270,7 @@
         <span class="pill">Rendering proof stage</span>
       </div>
       <h1>Cadets Org Chart - Proof &amp; Build Guide</h1>
-      <p class="lead">Replacing the manually-maintained Visio branch org chart (108 posts, 10 departments, 5 vacancies) with a Microsoft-only, SharePoint-list-driven Power Apps chart. Current stage: proving a Power-Fx-generated SVG in an Image control can actually reproduce the approved mockup design, before any SharePoint schema or editing screens are built. Nothing below has been run in Power Apps yet &mdash; tick each phase off only once you've genuinely run it and it matches.</p>
+      <p class="lead">Replacing the manually-maintained Visio branch org chart (108 posts, 10 departments, 5 vacancies) with a Microsoft-only, SharePoint-list-driven Power Apps chart. Phases 0-2 are confirmed passed &mdash; the Image-control-renders-generated-SVG approach genuinely works, including at real department scale. Current stage: combining all 10 departments into one full-sheet render, still on local data, before any SharePoint schema or editing screens are built.</p>
 
       <section id="what-this-page-is">
         <h2>What This Page Is</h2>
@@ -630,12 +630,37 @@ Select(btnRenderInfoSys)</pre>
       </section>
 
       <section id="next-steps">
-        <h2>Next Steps (Not Started)</h2>
-        <p>From the original brief, once Phases 0-2 above are confirmed:</p>
+        <h2>Next Steps</h2>
+        <p>Phases 0-2 are all confirmed passed. Deliberately staying on local hardcoded
+        data for as long as possible before introducing SharePoint &mdash; every
+        question left below is answerable without it, and the brief's own phasing puts
+        the data layer last for exactly that reason.</p>
         <ol>
-          <li><strong>Layout and print with the actual structure</strong> &mdash; real 108 posts (not mockup labels), full page-grid layout across all 10 departments (only Information Systems' internal column packing is proven so far), a real <code>Print()</code> A3 test, a defined legibility/overflow threshold.</li>
-          <li><strong>Data and editing</strong> &mdash; SharePoint schema (PostID, ReportsToPostID, TeamID, OccupantName/person reference, PersonnelCategory, OccupancyStatus, display order), validation (cycles, missing parents, duplicate IDs), permissions at the data layer, not just hidden controls.</li>
-          <li><strong>Delivery and evidence</strong> &mdash; acceptance tests (fill vacancy, vacate-with-child, change category, move reporting post, long labels, invalid/cyclic relationship, full record count, both styles, real A3 export) become real once the data layer exists.</li>
+          <li><strong>Phase 3 &mdash; full single-sheet render (not started).</strong> Combine
+          Command and all 9 department panels into ONE generated SVG, ONE Image
+          control, matching the measured page grid in <code>visual-spec.md</code> (Command
+          full-width; Safeguarding/Training/Information Systems as equal thirds;
+          Media &amp; Comms/CCF(A)/Policy &amp; Pers+CEP/Support/CCF as the bottom row). Still
+          local <code>ClearCollect</code> data, no list. This is the real test of whether
+          Power Fx can handle a formula/string this large, and whether the multi-row
+          page grid holds up when computed rather than eyeballed per panel.</li>
+          <li><strong>Phase 4 &mdash; real A3 <code>Print()</code> test (not started).</strong> First
+          test anywhere in this Bible of <code>Print()</code>/A3 export &mdash; needs Phase 3's
+          single combined image first, since the point is printing one whole sheet, not
+          two side-by-side test pictures.</li>
+          <li><strong>Phase 5 &mdash; real-length label stress test (not started).</strong> Swap
+          the mockup's shortened labels for full-length real post titles (occupant
+          names stay illustrative/placeholder, not real staff, per the brief) to check
+          nothing wraps or clips at true production text lengths.</li>
+          <li><strong>Data and editing (later, deliberately deferred)</strong> &mdash; SharePoint
+          schema (PostID, ReportsToPostID, TeamID, OccupantName/person reference,
+          PersonnelCategory, OccupancyStatus, display order), validation (cycles,
+          missing parents, duplicate IDs), permissions at the data layer, not just
+          hidden controls.</li>
+          <li><strong>Delivery and evidence</strong> &mdash; acceptance tests (fill vacancy,
+          vacate-with-child, change category, move reporting post, long labels,
+          invalid/cyclic relationship, full record count, both styles, real A3 export)
+          become real once the data layer exists.</li>
         </ol>
       </section>
 
