@@ -1500,6 +1500,30 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
           <strong>Second real result, 2026-09-11 &mdash; the core proof passed.</strong> After the fix above, the tree rendered correctly: all 10 boxes, correctly nested 4 levels deep, P10 under P5 specifically, every sibling gap clean and identical &mdash; computed entirely from <code>ManagerPostID</code>, no coordinate touched by hand. One real cosmetic bug alongside it, now fixed in the formula above: every card was drawn at its own <em>subtree</em> width rather than a fixed card size, so P1 (root) and P3 (the bushy branch) rendered as huge stretched bars spanning their whole reserved space, while true leaves (P2, P4) looked normal &mdash; subtree width is correct for <em>spacing</em> siblings apart, but the card itself should stay a fixed size, centred within that reserved space, same as Command's own real cards do. Fixed by drawing every card at a constant 150-wide box centred on <code>FinalX + FinalW/2</code>, rather than drawing the box at the full <code>FinalW</code>. <strong>Superseded by the space-conservation redesign above</strong> &mdash; once sibling spacing stopped reserving subtree width at all, <code>FinalW</code>/<code>W3</code> and the whole width-computation step became unnecessary and were removed; this entry is kept as an accurate record of what was found and fixed at the time, not a description of the current formula.
         </div>
         <div class="callout warn">
+          <strong>Stress test &mdash; two bushy siblings at once (predicted to collide, on purpose).</strong> The space-conservation redesign above is only overlap-safe when at most one sibling per group has descendants wide enough to need room below it. This deliberately breaks that assumption: one root, two team leads side by side, each with 2 reports of their own &mdash; no plain leaf sibling in between to soak up space. <strong>Predicted outcome, worked out in Python before this was ever written here:</strong> Lead A's 2nd report and Lead B's 1st report land on the <em>exact same coordinates</em> &mdash; a complete, 100% overlap, not just a tight squeeze. This isn't a new bug to chase &mdash; it's confirming the documented limit actually bites when triggered, so you can recognise it on sight in real department data rather than mistaking it for a fresh regression.
+          <br><br>
+          Swap this in for the <code>OnStart</code> data above (same button, same everything else &mdash; only the test data changes):
+        </div>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Throwaway app &middot; App.OnStart &mdash; two bushy siblings, no buffer between them</span>
+              <span class="code-stamp" data-updated="2026-09-11T18:55:17Z">v1 &middot; 2026-09-11 19:55 BST</span>
+            </div>
+            <button data-copy="phase4-stress-data" type="button">Copy</button>
+          </div>
+<pre id="phase4-stress-data">ClearCollect(colTreePosts,
+    {PostID: "Q1", ManagerPostID: Blank(), SortOrder: 1, Title: "Root"},
+    {PostID: "Q2", ManagerPostID: "Q1",    SortOrder: 1, Title: "Team Lead A"},
+    {PostID: "Q3", ManagerPostID: "Q1",    SortOrder: 2, Title: "Team Lead B"},
+    {PostID: "Q4", ManagerPostID: "Q2",    SortOrder: 1, Title: "A's report 1"},
+    {PostID: "Q5", ManagerPostID: "Q2",    SortOrder: 2, Title: "A's report 2"},
+    {PostID: "Q6", ManagerPostID: "Q3",    SortOrder: 1, Title: "B's report 1"},
+    {PostID: "Q7", ManagerPostID: "Q3",    SortOrder: 2, Title: "B's report 2"}
+)</pre>
+        </div>
+        <p class="meta-line">Expected: Q2/Q3 sit a clean 10pt apart (only one level, no collision possible yet). Underneath, Q5 (A's 2nd report) and Q6 (B's 1st report) should render <strong>exactly on top of each other</strong> &mdash; look for a box that seems to be "missing" from the picture, not a subtle misalignment. If Studio shows something different from this prediction, that's more interesting than if it matches &mdash; it means the real behaviour doesn't match the reasoning above, worth reporting exactly what you see either way.</p>
+        <div class="callout warn">
           <strong>What NOT to conclude from this phase:</strong> passing it proves the algorithm works for a tree up to 4 levels deep, computed live. It does not yet prove this scales to Command's real size/complexity combined with Phase 3's visual polish (colour rails, vacancy dashing, category lookup &mdash; all already proven separately, just not combined with this yet), that a real SharePoint list's <code>ManagerPostID</code> behaves identically to a local collection, or anything about squads, dotted/matrix lines, or panel borders &mdash; all deliberately out of scope here.
         </div>
       </section>
