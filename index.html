@@ -9,6 +9,7 @@
   --bg: #f7f8fb;
   --panel: #ffffff;
   --panel-2: #f1f5f9;
+  --panel-hover: #fbfdff;
   --ink: #18212f;
   --muted: #5d6b7d;
   --faint: #7f8da0;
@@ -142,7 +143,7 @@ h1 {
 .strip:hover,
 .strip:focus {
   border-color: var(--line-strong);
-  background: #fbfdff;
+  background: var(--panel-hover);
   outline: none;
 }
 .strip-main {
@@ -219,13 +220,13 @@ h1 {
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f1520; --panel: #161d2b; --panel-2: #1c2434; --ink: #e8ecf3; --muted: #93a1b8;
+    --bg: #0f1520; --panel: #161d2b; --panel-2: #1c2434; --panel-hover: #1f2739; --ink: #e8ecf3; --muted: #93a1b8;
     --faint: #6b7a91; --line: #2a3347; --line-strong: #3c4864;
     --blue: #4fd1a5; --blue-soft: rgba(79,209,165,.14); --green: #52c98a; --green-soft: rgba(82,201,138,.14); --red: #e2726f;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f1520; --panel: #161d2b; --panel-2: #1c2434; --ink: #e8ecf3; --muted: #93a1b8;
+  --bg: #0f1520; --panel: #161d2b; --panel-2: #1c2434; --panel-hover: #1f2739; --ink: #e8ecf3; --muted: #93a1b8;
   --faint: #6b7a91; --line: #2a3347; --line-strong: #3c4864;
   --blue: #4fd1a5; --blue-soft: rgba(79,209,165,.14); --green: #52c98a; --green-soft: rgba(82,201,138,.14); --red: #e2726f;
 }
@@ -538,7 +539,7 @@ h1 {
   .upload-note { margin: 0; color: var(--muted); font-size: .82rem; }
   .upload-label { font-size: .82rem; font-weight: 700; color: var(--muted); }
   .upload-hint { font-weight: 400; color: var(--faint); }
-  #upload-password, #upload-files, #note-password, #note-text {
+  #upload-password, #upload-files, #note-password, #note-text, #manage-password {
     padding: 8px 10px;
     border: 1px solid var(--line);
     border-radius: 7px;
