@@ -1227,30 +1227,290 @@ Set(varFullSheetDataUri, "")</pre>
         </div>
       </section>
 
+      <section id="phase-4">
+        <h2>Phase 4 &mdash; Automated Tree Layout Proof (no hand-typed coordinates)</h2>
+        <p class="meta-line">Blank throwaway canvas app, separate from this project &middot; ~20-30 minutes &middot; tests whether Power Fx can compute a management tree's own layout from a <code>ManagerPostID</code> field alone</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this phase">&#9660;</button>
+        </div>
+        <div class="callout warn">
+          <strong>Why this exists:</strong> Command's coordinates were all worked out by hand, offline, then pasted in as literal numbers &mdash; that's a real, recurring cost the moment someone is added to, removed from, or moved within Command (or any department built the same way). This phase tests whether Power Fx can do that computation itself, live, from nothing but a <code>ManagerPostID</code> field &mdash; no recursion (confirmed not to work here back in Phase 3), just a short, repeated chain of non-recursive steps, one per depth level, for a <strong>fixed maximum depth</strong> (4 levels here, matching Command's actual shape). <strong>This is genuinely unverified.</strong> The underlying maths was checked in Python first and gives sane, correct numbers (every sibling gap comes out as an identical, clean 10pt &mdash; the exact "no dead gaps" result Command's own fix was chasing by hand) &mdash; but that only proves the algorithm is right, not that Power Fx accepts every formula shape below. Expect at least one real error the first time this is pasted in, the same way Phase 3's first <code>RenderDept</code> attempt genuinely failed twice before the working shape was found &mdash; that's the point of testing this in isolation first.
+        </div>
+        <ol>
+          <li>New blank canvas app (tablet, any format) &mdash; throwaway, delete it after, same as Phase 0. This is entirely separate from the real cadets-org-chart app; nothing here touches <a href="#current-state">Current State</a>.</li>
+          <li>Insert one Button (e.g. <code>btnComputeTree</code>) and one Image control, sized to fill most of the screen.</li>
+          <li>Add to this throwaway app's own <strong>App.OnStart</strong> &mdash; deliberately shaped like Command (root, 3 branches, one bushy with 5 reports, one of those with a further report of their own) so the computed result can be sanity-checked against Command's own already-trusted numbers:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Throwaway app &middot; App.OnStart &mdash; a Command-shaped fake tree</span>
+              <span class="code-stamp" data-updated="2026-09-11T17:42:25Z">v1 &middot; 2026-09-11 18:42 BST</span>
+            </div>
+            <button data-copy="phase4-data" type="button">Copy</button>
+          </div>
+<pre id="phase4-data">ClearCollect(colTreePosts,
+    {PostID: "P1",  ManagerPostID: Blank(), SortOrder: 1, Title: "Root"},
+    {PostID: "P2",  ManagerPostID: "P1",    SortOrder: 1, Title: "Branch A (leaf)"},
+    {PostID: "P3",  ManagerPostID: "P1",    SortOrder: 2, Title: "Branch B (bushy)"},
+    {PostID: "P4",  ManagerPostID: "P1",    SortOrder: 3, Title: "Branch C (leaf)"},
+    {PostID: "P5",  ManagerPostID: "P3",    SortOrder: 1, Title: "B - report 1"},
+    {PostID: "P6",  ManagerPostID: "P3",    SortOrder: 2, Title: "B - report 2"},
+    {PostID: "P7",  ManagerPostID: "P3",    SortOrder: 3, Title: "B - report 3"},
+    {PostID: "P8",  ManagerPostID: "P3",    SortOrder: 4, Title: "B - report 4"},
+    {PostID: "P9",  ManagerPostID: "P3",    SortOrder: 5, Title: "B - report 5"},
+    {PostID: "P10", ManagerPostID: "P5",    SortOrder: 1, Title: "B1's own report"}
+)</pre>
+        </div>
+        <ol start="4">
+          <li>Set <code>btnComputeTree.OnSelect</code> to this complete formula. It's long &mdash; 11 sequential <code>ClearCollect</code> steps &mdash; on purpose: each step does only one small, safe thing (figure out one depth level, for width or for position) rather than one clever formula trying to do everything at once.</li>
+        </ol>
+        <div class="callout warn">
+          <strong>The one scoping rule every step below depends on:</strong> a bare field name inside a nested <code>Filter</code>/<code>LookUp</code> refers to <em>that function's own</em> row; <code>ThisRecord.field</code> reaches back out to the row the outer <code>AddColumns</code>/<code>Concat</code> is currently processing &mdash; the exact same rule Command's own category-colour lookup already relies on (<code>LookUp(colCategoryColours, Category = ThisRecord.Category)</code>). Get this backwards anywhere below and a step will likely <em>not</em> redline &mdash; it'll silently compute nonsense (usually "everyone gets the same width"). If the rendered tree looks flat/wrong rather than erroring, check the actual numbers with Studio's formula debugger before assuming the shape below is correct.
+        </div>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnComputeTree.OnSelect &mdash; depth, then width bottom-up, then X top-down, then render</span>
+              <span class="code-stamp" data-updated="2026-09-11T17:42:25Z">v1 &middot; 2026-09-11 18:42 BST</span>
+            </div>
+            <button data-copy="phase4-compute" type="button">Copy</button>
+          </div>
+<pre id="phase4-compute">// ---- Step A: work out each post's Depth (0 = root), one pass per level ----
+ClearCollect(colD0,
+    AddColumns(colTreePosts, Depth0, If(IsBlank(ManagerPostID), 0, Blank()))
+);
+ClearCollect(colD1,
+    AddColumns(
+        colD0,
+        Depth1,
+        If(
+            !IsBlank(Depth0), Depth0,
+            If(LookUp(colD0, PostID = ThisRecord.ManagerPostID).Depth0 = 0, 1, Blank())
+        )
+    )
+);
+ClearCollect(colD2,
+    AddColumns(
+        colD1,
+        Depth2,
+        If(
+            !IsBlank(Depth1), Depth1,
+            If(LookUp(colD1, PostID = ThisRecord.ManagerPostID).Depth1 = 1, 2, Blank())
+        )
+    )
+);
+ClearCollect(colWithDepth,
+    AddColumns(colD2, Depth, If(!IsBlank(Depth2), Depth2, 3))
+);
+
+// ---- Step B: subtree width, bottom-up, one pass per level (deepest first) ----
+ClearCollect(colWidthPass0,
+    AddColumns(colWithDepth, W0, 150)
+);
+ClearCollect(colWidthPass1,
+    AddColumns(
+        colWidthPass0,
+        W1,
+        If(
+            Depth = 2,
+            With(
+                { _kids: Filter(colWidthPass0, ManagerPostID = ThisRecord.PostID) },
+                If(CountRows(_kids) = 0, 150, Sum(_kids, W0) + (CountRows(_kids) - 1) * 10)
+            ),
+            W0
+        )
+    )
+);
+ClearCollect(colWidthPass2,
+    AddColumns(
+        colWidthPass1,
+        W2,
+        If(
+            Depth = 1,
+            With(
+                { _kids: Filter(colWidthPass1, ManagerPostID = ThisRecord.PostID) },
+                If(CountRows(_kids) = 0, 150, Sum(_kids, W1) + (CountRows(_kids) - 1) * 10)
+            ),
+            W1
+        )
+    )
+);
+ClearCollect(colWidthPass3,
+    AddColumns(
+        colWidthPass2,
+        W3,
+        If(
+            Depth = 0,
+            With(
+                { _kids: Filter(colWidthPass2, ManagerPostID = ThisRecord.PostID) },
+                If(CountRows(_kids) = 0, 150, Sum(_kids, W2) + (CountRows(_kids) - 1) * 10)
+            ),
+            W2
+        )
+    )
+);
+
+// ---- Step C: X position, top-down, one pass per level (root first) ----
+ClearCollect(colX0,
+    AddColumns(colWidthPass3, X0, If(Depth = 0, 625 - W3 / 2, Blank()))
+);
+ClearCollect(colX1,
+    AddColumns(
+        colX0,
+        X1,
+        If(
+            Depth &lt;&gt; 1,
+            X0,
+            With(
+                {
+                    _parent: LookUp(colX0, PostID = ThisRecord.ManagerPostID),
+                    _allSibs: Filter(colX0, ManagerPostID = ThisRecord.ManagerPostID),
+                    _precedingSibs: Filter(colX0, ManagerPostID = ThisRecord.ManagerPostID &amp;&amp; SortOrder &lt; ThisRecord.SortOrder)
+                },
+                With(
+                    {
+                        _groupTotalW: Sum(_allSibs, W3) + (CountRows(_allSibs) - 1) * 10,
+                        _precedingW: Sum(_precedingSibs, W3) + CountRows(_precedingSibs) * 10
+                    },
+                    _parent.X0 + _parent.W3 / 2 - _groupTotalW / 2 + _precedingW
+                )
+            )
+        )
+    )
+);
+ClearCollect(colX2,
+    AddColumns(
+        colX1,
+        X2,
+        If(
+            Depth &lt;&gt; 2,
+            X1,
+            With(
+                {
+                    _parent: LookUp(colX1, PostID = ThisRecord.ManagerPostID),
+                    _allSibs: Filter(colX1, ManagerPostID = ThisRecord.ManagerPostID),
+                    _precedingSibs: Filter(colX1, ManagerPostID = ThisRecord.ManagerPostID &amp;&amp; SortOrder &lt; ThisRecord.SortOrder)
+                },
+                With(
+                    {
+                        _groupTotalW: Sum(_allSibs, W3) + (CountRows(_allSibs) - 1) * 10,
+                        _precedingW: Sum(_precedingSibs, W3) + CountRows(_precedingSibs) * 10
+                    },
+                    _parent.X1 + _parent.W3 / 2 - _groupTotalW / 2 + _precedingW
+                )
+            )
+        )
+    )
+);
+ClearCollect(colX3,
+    AddColumns(
+        colX2,
+        X3,
+        If(
+            Depth &lt;&gt; 3,
+            X2,
+            With(
+                {
+                    _parent: LookUp(colX2, PostID = ThisRecord.ManagerPostID),
+                    _allSibs: Filter(colX2, ManagerPostID = ThisRecord.ManagerPostID),
+                    _precedingSibs: Filter(colX2, ManagerPostID = ThisRecord.ManagerPostID &amp;&amp; SortOrder &lt; ThisRecord.SortOrder)
+                },
+                With(
+                    {
+                        _groupTotalW: Sum(_allSibs, W3) + (CountRows(_allSibs) - 1) * 10,
+                        _precedingW: Sum(_precedingSibs, W3) + CountRows(_precedingSibs) * 10
+                    },
+                    _parent.X2 + _parent.W3 / 2 - _groupTotalW / 2 + _precedingW
+                )
+            )
+        )
+    )
+);
+
+// ---- Step D: collapse into one clean table, then render exactly like Command ----
+ClearCollect(colFinal,
+    AddColumns(colX3, FinalW, W3, FinalX, X3, FinalY, 20 + Depth * 64)
+);
+
+Set(varAutoTreeSvg,
+    "&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1250 300' font-family='Arial'&gt;" &amp;
+    "&lt;rect x='0' y='0' width='1250' height='300' fill='#FFFFFF'/&gt;" &amp;
+    Concat(
+        Filter(colFinal, !IsBlank(ManagerPostID)),
+        With(
+            { _parent: LookUp(colFinal, PostID = ThisRecord.ManagerPostID) },
+            "&lt;path d='M" &amp; (_parent.FinalX + _parent.FinalW / 2) &amp; "," &amp; (_parent.FinalY + 34) &amp;
+                " V" &amp; (_parent.FinalY + 34 + (FinalY - (_parent.FinalY + 34)) / 2) &amp;
+                " H" &amp; (FinalX + FinalW / 2) &amp;
+                " V" &amp; FinalY &amp; "' stroke='#8A9A94' stroke-width='0.8' fill='none'/&gt;"
+        ),
+        ""
+    ) &amp;
+    Concat(
+        colFinal,
+        "&lt;rect x='" &amp; FinalX &amp; "' y='" &amp; FinalY &amp; "' width='" &amp; FinalW &amp; "' height='34' rx='3' fill='#FFFFFF' stroke='#CBD5D1' stroke-width='0.7'/&gt;" &amp;
+        "&lt;text x='" &amp; (FinalX + 8) &amp; "' y='" &amp; (FinalY + 15) &amp; "' font-weight='bold' font-size='8' fill='#172A27'&gt;" &amp; PostID &amp; "&lt;/text&gt;" &amp;
+        "&lt;text x='" &amp; (FinalX + 8) &amp; "' y='" &amp; (FinalY + 26) &amp; "' font-size='8' fill='#172A27'&gt;" &amp; Title &amp; "&lt;/text&gt;",
+        ""
+    ) &amp;
+    "&lt;/svg&gt;"
+);
+Set(varAutoTreeDataUri, "data:image/svg+xml," &amp; EncodeUrl(varAutoTreeSvg))</pre>
+        </div>
+        <ol start="5">
+          <li>Set the Image control's <code>Image</code> property to <code>=varAutoTreeDataUri</code>.</li>
+        </ol>
+        <div class="callout ok">
+          <strong>What to check:</strong> does it run at all, or does something in that chain redline &mdash; if so, record the exact error and which <code>ClearCollect</code> step it's on. If it renders: do all 10 boxes appear, correctly nested 4 levels deep, with P10 under P5 specifically? Is every gap between siblings under the same manager an identical, clean distance (Python's simulation says it should be a uniform 10pt everywhere)? <strong>Then the actual point of this whole phase:</strong> delete <code>P8</code> from the <code>OnStart</code> data above, or add a <code>P11</code> under <code>P3</code>, re-run, and see whether the tree reflows correctly on its own &mdash; with no coordinate anywhere touched by a person. That's the one result that actually matters; everything above it is just getting there.
+        </div>
+        <div class="callout warn">
+          <strong>What NOT to conclude from this phase:</strong> passing it proves the algorithm works for a tree up to 4 levels deep, computed live. It does not yet prove this scales to Command's real size/complexity combined with Phase 3's visual polish (colour rails, vacancy dashing, category lookup &mdash; all already proven separately, just not combined with this yet), that a real SharePoint list's <code>ManagerPostID</code> behaves identically to a local collection, or anything about squads, dotted/matrix lines, or panel borders &mdash; all deliberately out of scope here.
+        </div>
+      </section>
+
       <section id="next-steps">
         <h2>Next Steps</h2>
-        <p>Phases 0-2 are all confirmed passed. Deliberately staying on local hardcoded
+        <p>Phases 0-3 are all confirmed passed, including Command's layout rework. Deliberately staying on local hardcoded
         data for as long as possible before introducing SharePoint &mdash; every
         question left below is answerable without it, and the brief's own phasing puts
         the data layer last for exactly that reason.</p>
         <ol>
-          <li><strong>Phase 3 &mdash; full single-sheet render (formula written, not yet
-          run).</strong> See the Phase 3 section above &mdash; combines Command and all 9
-          department panels into ONE generated SVG, ONE Image control, matching the
-          measured page grid in the Visual Spec section. Still local
-          <code>ClearCollect</code> data, no list. A real data bug (two departments
-          silently missing one person each) was caught and fixed during authoring,
-          before this ever reached Studio.</li>
-          <li><strong>Phase 4 &mdash; real A3 <code>Print()</code> test (not started).</strong> First
-          test anywhere in this Bible of <code>Print()</code>/A3 export &mdash; needs Phase 3's
-          single combined image first, since the point is printing one whole sheet, not
-          two side-by-side test pictures.</li>
-          <li><strong>Phase 5 &mdash; real-length label stress test (not started).</strong> Swap
+          <li><strong>Phase 4 &mdash; <a href="#phase-4">Automated Tree Layout Proof</a> (not yet run).</strong>
+          Tests whether Power Fx can compute a management tree's layout itself from a
+          <code>ManagerPostID</code> field, so adding/removing/moving someone stops
+          requiring hand-recomputed coordinates. The single riskiest open technical
+          question in the project right now &mdash; everything below assumes an answer
+          to this first.</li>
+          <li><strong>If Phase 4 passes &mdash; retire the flat department grid.</strong> Every
+          department becomes the same kind of automatically-laid-out tree Command
+          already is (sized to however deep that department's real reporting actually
+          goes), rather than keeping two separate rendering systems. Information
+          Systems' full depth/squads/dotted-lines was confirmed a fringe case, not
+          needed generally &mdash; most departments just need "head at the top, and any
+          one person underneath can have their own couple of reports," which this same
+          mechanism already covers.</li>
+          <li><strong>Colour legend/key (not started, but the hard part already works).</strong>
+          <code>colCategoryColours</code> is already the single source of truth every
+          card's colour reads from &mdash; changing one row's <code>Hex</code> already
+          recolours every matching card everywhere, with no other change needed. What's
+          actually missing is a rendered key/legend on the sheet itself, reading from
+          that same table, so it never falls out of sync with the cards. Small, low-risk,
+          worth doing whenever colour work resumes.</li>
+          <li><strong>Phase 5 &mdash; real A3 <code>Print()</code> test (not started).</strong> First
+          test anywhere in this Bible of <code>Print()</code>/A3 export.</li>
+          <li><strong>Phase 6 &mdash; real-length label stress test (not started).</strong> Swap
           the mockup's shortened labels for full-length real post titles (occupant
           names stay illustrative/placeholder, not real staff, per the brief) to check
           nothing wraps or clips at true production text lengths.</li>
+          <li><strong>Interactive "explore" screen (later, separate from the print sheet).</strong>
+          An Image control has no clickable sub-regions &mdash; confirmed back in Phase 0,
+          still true. A click-to-expand experience needs real Power Apps galleries/buttons
+          as a second screen sharing the same <code>ManagerPostID</code> data, not a
+          change to this SVG rendering.</li>
           <li><strong>Data and editing (later, deliberately deferred)</strong> &mdash; SharePoint
-          schema (PostID, ReportsToPostID, TeamID, OccupantName/person reference,
+          schema (PostID, ManagerPostID, TeamID, OccupantName/person reference,
           PersonnelCategory, OccupancyStatus, display order), validation (cycles,
           missing parents, duplicate IDs), permissions at the data layer, not just
           hidden controls.</li>
