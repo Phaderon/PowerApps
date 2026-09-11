@@ -278,6 +278,7 @@
         <a href="#phase-3">Phase 3 - Full Single-Sheet Render (All 10 Departments)</a>
         <a href="#clear-all-pictures">Testing Aid - Clear All Pictures</a>
         <a href="#phase-4">Phase 4 - Automated Tree Layout Proof</a>
+        <a href="#phase-5">Phase 5 - Power Automate Depth Proof</a>
         <a href="#next-steps">Next Steps</a>
         <a href="#open-questions">Known Limitations / Open Questions</a>
       </nav>
@@ -1528,6 +1529,87 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
         </div>
       </section>
 
+      <section id="phase-5">
+        <h2>Phase 5 &mdash; Power Automate Proves Iterative Computation (Depth from Manager Chain)</h2>
+        <p class="meta-line">A SharePoint list + a Power Automate flow, both new to this project &middot; ~30-45 minutes &middot; tests the single riskiest new assumption in this pivot away from Power Fx doing the hard maths</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this phase">&#9660;</button>
+        </div>
+        <div class="callout warn">
+          <strong>Why this exists:</strong> Phase 4 proved Power Fx can compute a tree's <em>simple</em> layout live (fixed-width sibling packing), but the redesign needed for real departments &mdash; verified directly against the real Cadets Branch Structure chart, where Safeguarding alone has two 6-person teams sitting side by side &mdash; needs a genuinely different kind of computation: comparing how far neighbouring branches actually reach at every shared level. That needs real loops and variables that persist across iterations. Power Fx's <code>AddColumns</code>/<code>Filter</code> chain (which has already produced two real scoping bugs today) doesn't have that &mdash; a <strong>Power Automate cloud flow</strong> does.
+        </div>
+        <div class="callout warn">
+          <strong>SharePoint calculated columns cannot do any of this.</strong> A calculated column only ever sees fields on its own row &mdash; no way to look up a manager's row, let alone walk a chain of them. The computation has to live in a flow, not the list. The list's job stays simple: store the roster and a <code>ShowOnOrgChart</code> tick-box.
+        </div>
+        <div class="callout warn">
+          <strong>This is genuinely unverified &mdash; reasoned through carefully from Power Automate's documented behaviour and this Bible's own confirmed flow gotchas (its Power Automate reference notes &mdash; the <code>Initialize variable</code> placement rule in particular is load-bearing for this design), but none of it has run in Studio yet.</strong> Same reason Phase 0 tested "can an Image control show a computed SVG at all" in isolation before anything was built on top of it.
+        </div>
+
+        <ol>
+          <li>Create a new SharePoint list &mdash; e.g. <code>OrgChartTest</code> &mdash; with these columns, beyond the built-in <code>Title</code> (used here as the PostID):</li>
+        </ol>
+        <table>
+          <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>Title</code></td><td>Single line of text (built-in)</td><td>The PostID, e.g. <code>P1</code></td></tr>
+            <tr><td><code>ManagerPostID</code></td><td>Single line of text</td><td>Another item's <code>Title</code>, blank for the root</td></tr>
+            <tr><td><code>SortOrder</code></td><td>Number</td><td>Sibling order</td></tr>
+            <tr><td><code>PostLabel</code></td><td>Single line of text</td><td>Display role/name, e.g. "Root", "Branch A (leaf)"</td></tr>
+            <tr><td><code>Depth</code></td><td>Number</td><td>Blank for now &mdash; this phase's flow fills it in</td></tr>
+          </tbody>
+        </table>
+        <ol start="2">
+          <li>Enter the same 10-post shape Phase 4 already used, so the result can be checked against numbers already known to be right:</li>
+        </ol>
+        <table>
+          <thead><tr><th>Title</th><th>ManagerPostID</th><th>SortOrder</th><th>PostLabel</th></tr></thead>
+          <tbody>
+            <tr><td>P1</td><td><em>(blank)</em></td><td>1</td><td>Root</td></tr>
+            <tr><td>P2</td><td>P1</td><td>1</td><td>Branch A (leaf)</td></tr>
+            <tr><td>P3</td><td>P1</td><td>2</td><td>Branch B (bushy)</td></tr>
+            <tr><td>P4</td><td>P1</td><td>3</td><td>Branch C (leaf)</td></tr>
+            <tr><td>P5</td><td>P3</td><td>1</td><td>B - report 1</td></tr>
+            <tr><td>P6</td><td>P3</td><td>2</td><td>B - report 2</td></tr>
+            <tr><td>P7</td><td>P3</td><td>3</td><td>B - report 3</td></tr>
+            <tr><td>P8</td><td>P3</td><td>4</td><td>B - report 4</td></tr>
+            <tr><td>P9</td><td>P3</td><td>5</td><td>B - report 5</td></tr>
+            <tr><td>P10</td><td>P5</td><td>1</td><td>B1's own report</td></tr>
+          </tbody>
+        </table>
+        <p class="meta-line">Expected <code>Depth</code> once this phase passes: P1=0, P2/P3/P4=1, P5-P9=2, P10=3 &mdash; exactly what Phase 4's own Depth computation already confirmed live.</p>
+
+        <ol start="3">
+          <li>Create an <strong>Instant cloud flow</strong>, trigger <strong>Manually trigger a flow</strong> (a button &mdash; throwaway test, not yet tied to list changes). Build these actions, in order:</li>
+        </ol>
+        <ol type="a">
+          <li><strong>Get items</strong> &mdash; your SharePoint site, list <code>OrgChartTest</code>. Rename this action to <code>Get_all_posts</code> (Power Automate's own rename control, not the display label) so later expressions can refer to it by a stable name.</li>
+          <li><strong>Initialize variable</strong> <code>varWalkID</code> &mdash; type <strong>String</strong>, no initial value. Must sit here, directly after the trigger/first action, at the very top level of the flow &mdash; <strong>not</strong> inside the loop below. This is the documented placement rule: <code>Initialize variable</code> cannot run inside a loop at all.</li>
+          <li><strong>Initialize variable</strong> <code>varDepth</code> &mdash; type <strong>Integer</strong>, initial value <code>0</code>. Same placement rule applies.</li>
+          <li><strong>Apply to each</strong> &mdash; input: <code>value</code> from <code>Get_all_posts</code>. Everything below is inside this loop, once per post:
+            <ol type="i">
+              <li><strong>Set variable</strong> <code>varWalkID</code> = current item's <code>ManagerPostID</code> (<code>items('Apply_to_each')?['ManagerPostID']</code>).</li>
+              <li><strong>Set variable</strong> <code>varDepth</code> = <code>0</code>.</li>
+              <li><strong>Do until</strong> <code>varWalkID</code> is empty &mdash; condition expression <code>empty(variables('varWalkID'))</code>. Inside this inner loop:
+                <ol type="1">
+                  <li><strong>Set variable</strong> <code>varDepth</code> = <code>add(variables('varDepth'), 1)</code>.</li>
+                  <li><strong>Get items</strong> &mdash; same list, filter query <code>Title eq '@{variables('varWalkID')}'</code>, Top Count <code>1</code>. Rename to <code>Get_manager_item</code> &mdash; a <em>second</em>, separately-named <code>Get items</code> action.</li>
+                  <li><strong>Set variable</strong> <code>varWalkID</code> = <code>if(equals(length(body('Get_manager_item')?['value']), 0), '', first(body('Get_manager_item')?['value'])?['ManagerPostID'])</code> &mdash; reads the found manager's own <code>ManagerPostID</code>; blank once that manager turns out to be the root, which ends the <code>Do until</code> on its next check.</li>
+                </ol>
+              </li>
+              <li><strong>Update item</strong> &mdash; same list, <code>Id</code>: <code>items('Apply_to_each')?['ID']</code> (SharePoint's own internal ID, not the PostID), <code>Depth</code>: <code>variables('varDepth')</code>.</li>
+            </ol>
+          </li>
+        </ol>
+
+        <div class="callout ok">
+          <strong>What to check:</strong> does it save at all &mdash; do the <code>Initialize variable</code> actions actually need to sit where steps b/c say, or does Power Automate allow more flexibility than the Bible's existing note suggests? Does the nested <code>Do until</code> inside <code>Apply to each</code> run without error &mdash; any nesting restriction here, similar to the confirmed <code>Respond to a PowerApp or flow</code> nesting block already logged? After running once: open the list and check <code>Depth</code> against the expected values above &mdash; all 10 correct, especially P10&nbsp;=&nbsp;3 (the only post 3 levels deep, most likely to expose a chain-walking mistake). <strong>Then the actual point of this phase:</strong> add a <code>P11</code> under <code>P3</code> directly in the list (a plain new row, not touching the flow), re-run the flow, and confirm P11 gets <code>Depth = 2</code> correctly, and every other row's <code>Depth</code> stays exactly what it was &mdash; no coordinate, no formula, nothing touched by hand except adding one row of data.
+        </div>
+        <div class="callout warn">
+          <strong>What NOT to conclude from this phase:</strong> passing it proves a flow <em>can</em> do bounded iterative computation over SharePoint list data &mdash; the walking, looping, and writing-back mechanics work. It does not yet prove the harder thing: comparing two branches' full reach at every shared depth (the actual contour/collision-avoidance algorithm, already proven correct in principle against Python, including your real Safeguarding shape) can be built the same way. That's the next phase, once this one passes.
+        </div>
+      </section>
+
       <section id="next-steps">
         <h2>Next Steps</h2>
         <p>Phases 0-3 are all confirmed passed, including Command's layout rework. Deliberately staying on local hardcoded
@@ -1535,20 +1617,29 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
         question left below is answerable without it, and the brief's own phasing puts
         the data layer last for exactly that reason.</p>
         <ol>
-          <li><strong>Phase 4 &mdash; <a href="#phase-4">Automated Tree Layout Proof</a> (not yet run).</strong>
-          Tests whether Power Fx can compute a management tree's layout itself from a
-          <code>ManagerPostID</code> field, so adding/removing/moving someone stops
-          requiring hand-recomputed coordinates. The single riskiest open technical
-          question in the project right now &mdash; everything below assumes an answer
-          to this first.</li>
-          <li><strong>If Phase 4 passes &mdash; retire the flat department grid.</strong> Every
-          department becomes the same kind of automatically-laid-out tree Command
-          already is (sized to however deep that department's real reporting actually
-          goes), rather than keeping two separate rendering systems. Information
+          <li><strong>Phase 4 &mdash; <a href="#phase-4">Automated Tree Layout Proof</a> (CONFIRMED PASSED, then redesigned twice).</strong>
+          Proved Power Fx can compute a simple tree's layout live from a
+          <code>ManagerPostID</code> field. Verified directly against the real Cadets
+          Branch Structure chart, though, that "simple" isn't enough &mdash; Safeguarding
+          alone has two 6-person teams side by side, which Phase 4's fixed-width
+          packing is proven (deliberately, via its own stress test) to collide on.
+          A correct, zero-overlap, provably-minimal algorithm for this <em>has</em> been
+          worked out and verified &mdash; just not in Power Fx (see next step).</li>
+          <li><strong>Phase 5 &mdash; <a href="#phase-5">Power Automate Depth Proof</a> (not yet run).</strong>
+          Pivoted the hard part of the layout algorithm out of Power Fx entirely,
+          onto Power Automate + SharePoint, since a flow has real loops and variables
+          that Power Fx's non-recursive formula chain doesn't. This phase tests only
+          the smallest, riskiest new piece &mdash; can a flow walk a manager chain and
+          write the answer back &mdash; before attempting the full collision-avoiding
+          layout in a flow. The single riskiest open technical question in the
+          project right now.</li>
+          <li><strong>If Phase 5 passes &mdash; build the full layout algorithm as a flow.</strong>
+          Every department becomes the same kind of automatically-laid-out tree
+          Command already is, computed by a flow whenever the SharePoint list
+          changes, with Power Apps only ever reading pre-computed <code>X</code>/<code>Y</code>
+          columns and rendering &mdash; not computing anything itself. Information
           Systems' full depth/squads/dotted-lines was confirmed a fringe case, not
-          needed generally &mdash; most departments just need "head at the top, and any
-          one person underneath can have their own couple of reports," which this same
-          mechanism already covers.</li>
+          needed generally.</li>
           <li><strong>Colour legend/key (not started, but the hard part already works).</strong>
           <code>colCategoryColours</code> is already the single source of truth every
           card's colour reads from &mdash; changing one row's <code>Hex</code> already
@@ -1556,9 +1647,9 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
           actually missing is a rendered key/legend on the sheet itself, reading from
           that same table, so it never falls out of sync with the cards. Small, low-risk,
           worth doing whenever colour work resumes.</li>
-          <li><strong>Phase 5 &mdash; real A3 <code>Print()</code> test (not started).</strong> First
+          <li><strong>Real A3 <code>Print()</code> test (not started).</strong> First
           test anywhere in this Bible of <code>Print()</code>/A3 export.</li>
-          <li><strong>Phase 6 &mdash; real-length label stress test (not started).</strong> Swap
+          <li><strong>Real-length label stress test (not started).</strong> Swap
           the mockup's shortened labels for full-length real post titles (occupant
           names stay illustrative/placeholder, not real staff, per the brief) to check
           nothing wraps or clips at true production text lengths.</li>
@@ -1569,9 +1660,9 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
           change to this SVG rendering.</li>
           <li><strong>Data and editing (later, deliberately deferred)</strong> &mdash; SharePoint
           schema (PostID, ManagerPostID, TeamID, OccupantName/person reference,
-          PersonnelCategory, OccupancyStatus, display order), validation (cycles,
-          missing parents, duplicate IDs), permissions at the data layer, not just
-          hidden controls.</li>
+          PersonnelCategory, OccupancyStatus, display order, <code>ShowOnOrgChart</code>),
+          validation (cycles, missing parents, duplicate IDs), permissions at the data
+          layer, not just hidden controls.</li>
           <li><strong>Delivery and evidence</strong> &mdash; acceptance tests (fill vacancy,
           vacate-with-child, change category, move reporting post, long labels,
           invalid/cyclic relationship, full record count, both styles, real A3 export)
