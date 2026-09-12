@@ -280,6 +280,7 @@
         <a href="#phase-4">Phase 4 - Automated Tree Layout Proof</a>
         <a href="#phase-5">Phase 5 - Power Automate Depth Proof</a>
         <a href="#phase-6a">Phase 6a - Variables &amp; Nested Loop Isolation Test</a>
+        <a href="#phase-6b">Phase 6b - Full Width &amp; Position Computation</a>
         <a href="#next-steps">Next Steps</a>
         <a href="#open-questions">Known Limitations / Open Questions</a>
       </nav>
@@ -1665,6 +1666,65 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
         <p class="meta-line">Corrected 2026-09-12: the first version of this table said P3&nbsp;=&nbsp;15, forgetting that P11 (added directly in the list back in Phase 5's reflow test, reporting to P3, <code>SortOrder</code>&nbsp;6) is now also one of P3's children &mdash; 1+2+3+4+5+6&nbsp;=&nbsp;21. The flow's own arithmetic was right the whole time; the table predicting it was stale.</p>
         <div class="callout ok" id="phase6a-confirmed-passed">
           <strong>CONFIRMED PASSED, 2026-09-12.</strong> Every row matched exactly against the real (P11-inclusive) list data: P1&nbsp;=&nbsp;6, P2&nbsp;=&nbsp;0, P3&nbsp;=&nbsp;21, P4&nbsp;=&nbsp;0, P5&nbsp;=&nbsp;1, all of P6&ndash;P11&nbsp;=&nbsp;0. This confirms three things the full width/position flow depends on: a variable can accumulate correctly across a <em>nested</em> loop (via <code>IncrementVariable</code>, once the earlier self-reference error was fixed), the outer loop's explicit <code>Sequential</code> setting stopped any cross-post bleed (P3's sum contains exactly its own 6 children's values, nothing from any other post's iteration), and the whole reset-loop-write pattern repeats cleanly across 11 independent outer iterations with no leftover state. <strong>Green light to build the full subtree-width-reservation X/Y layout flow on this same pattern.</strong>
+        </div>
+      </section>
+
+      <section id="phase-6b">
+        <h2>Phase 6b &mdash; Full Width &amp; Position Computation (The Big One)</h2>
+        <p class="meta-line">Two new columns on <code>OrgChartTest</code> + one new importable flow package &middot; ~15-20 minutes &middot; computes real X coordinates for every post, using exactly the mechanism Phase 6a just proved</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this phase">&#9660;</button>
+        </div>
+        <div class="callout warn">
+          <strong>The algorithm, in plain terms &mdash; "subtree-width reservation."</strong> Every leaf card reserves a fixed 150px slot. Every post with children reserves whatever width its children need side by side (each child's own reserved width, plus a 10px gutter between them) &mdash; or 150px if that's bigger. A post is always centred over its own children's span. This is computed in two passes: <strong><code>Width</code> bottom-up</strong> (leaves first, working up to the root, since a parent's width depends on its children's widths already being known), then <strong><code>FinalX</code> top-down</strong> (root first, working down to the leaves, since a child's X position depends on knowing where its parent already landed). <code>FinalY</code> doesn't need any of this &mdash; it only depends on a post's own <code>Depth</code>, so it's a plain SharePoint calculated column, not part of the flow.
+        </div>
+        <div class="callout warn">
+          <strong>Why this is safe to build now, not before:</strong> this is the same reset-a-variable/loop-over-children/write-back shape as Phase 6a, just applied twice (once for width, once for position) and repeated once per depth level (bounded to depth 0&ndash;3, same assumption Phase 5's Depth computation already used). Every mechanism it needs &mdash; <code>IncrementVariable</code> accumulating across a nested loop, the outer loop's explicit <code>Sequential</code> setting, the <code>ValidateUpdateListItem</code> write-back &mdash; is now proven working in your real tenant, not just in official docs.
+        </div>
+        <div class="callout ok">
+          <strong>Structurally validated, not yet a confirmed tenant import.</strong> 16 top-level actions (8 sequential passes: 4 for <code>Width</code> depth 3&rarr;0, 4 for <code>FinalX</code> depth 0&rarr;3), 55 actions in total. Built with a small generator script (not run on your machine &mdash; used locally, the same way the test-data spreadsheet was built with a script, to produce this file reliably rather than hand-typing ~500 lines of repetitive JSON) so the 4 nearly-identical width passes and 3 nearly-identical position passes stay consistent with each other. Every JSON file parses, every <code>runAfter</code> reference resolves to a real sibling action, the finished zip's JSON re-parses correctly straight out of the archive, and every action shape shared with the confirmed Phase 5/6a packages (<code>OpenApiConnection</code>/<code>HttpRequest</code>, <code>Foreach</code>, <code>IncrementVariable</code>, the outer-loop-only <code>Sequential</code> setting) matches them exactly &mdash; the nested sum loops deliberately do <strong>not</strong> repeat that setting, since Phase 6a's own confirmed nested loop didn't have it either (nested loops are already sequential by default). <strong>On top of that:</strong> the algorithm's expected output for the exact 11-post test tree was independently simulated in Python before this was ever packaged &mdash; not just hand-arithmetic, an actual run of the same subtree-width-reservation logic &mdash; and it produced the table below.
+        </div>
+
+        <ol>
+          <li>Add two new SharePoint columns to <code>OrgChartTest</code>, both via the normal <strong>+ Add column</strong> button (not Excel import): <code>Width</code> (Number) and <code>FinalX</code> (Number).</li>
+          <li>Add a third column, <code>FinalY</code>, as a <strong>Calculated</strong> column (Number result) with this formula:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>SharePoint calculated column formula for <code>FinalY</code></span>
+              <span class="code-stamp" data-updated="2026-09-12T10:40:00Z">v1 &middot; 2026-09-12 11:40 BST</span>
+            </div>
+            <button data-copy="phase6b-finaly-formula" type="button">Copy</button>
+          </div>
+<pre id="phase6b-finaly-formula">=20+[Depth]*64</pre>
+        </div>
+        <p class="meta-line">Calculated columns reference other columns by their display name (<code>[Depth]</code>), so this works regardless of <code>Depth</code>'s real internal name (<code>field_4</code>) &mdash; SharePoint resolves that for you. This column needs no flow at all: it only ever depends on that same row's own <code>Depth</code>, already computed by Phase 5's flow.</p>
+        <ol start="3">
+          <li><p style="margin:0 0 8px;"><a href="downloads/OrgChart_ComputeWidthPosition_Phase6b.zip" download><strong>OrgChart_ComputeWidthPosition_Phase6b.zip</strong></a> &mdash; ready-to-import flow package, same format as Phase 5/6a. Power Automate &rarr; <strong>My flows</strong> &rarr; <strong>Import</strong> &rarr; <strong>Import Package (Legacy)</strong> &rarr; upload &rarr; select your existing SharePoint connection &rarr; Import. Site address pre-filled (<code>https://modgovuk.sharepoint.com/teams/1598</code>).</li>
+          <li>Run the flow, then check <code>Width</code> and <code>FinalX</code> against the table below.</li>
+        </ol>
+
+        <table>
+          <thead><tr><th>Post</th><th>Expected <code>Width</code></th><th>Expected <code>FinalX</code></th></tr></thead>
+          <tbody>
+            <tr><td>P1 (root)</td><td><code>1270</code></td><td><code>625</code></td></tr>
+            <tr><td>P2</td><td><code>150</code></td><td><code>65</code></td></tr>
+            <tr><td>P3</td><td><code>950</code></td><td><code>625</code></td></tr>
+            <tr><td>P4</td><td><code>150</code></td><td><code>1185</code></td></tr>
+            <tr><td>P5</td><td><code>150</code></td><td><code>225</code></td></tr>
+            <tr><td>P6</td><td><code>150</code></td><td><code>385</code></td></tr>
+            <tr><td>P7</td><td><code>150</code></td><td><code>545</code></td></tr>
+            <tr><td>P8</td><td><code>150</code></td><td><code>705</code></td></tr>
+            <tr><td>P9</td><td><code>150</code></td><td><code>865</code></td></tr>
+            <tr><td>P10</td><td><code>150</code></td><td><code>225</code></td></tr>
+            <tr><td>P11</td><td><code>150</code></td><td><code>1025</code></td></tr>
+          </tbody>
+        </table>
+        <p class="meta-line">Worth a specific look: P10 lands at the exact same <code>FinalX</code> as its only parent P5 (225) &mdash; correct, since a single-child chain needs no horizontal offset. And P3 (950 wide, 6 children) sits centred at exactly the same <code>FinalX</code> as the root (625) purely by coincidence of this test tree's numbers &mdash; not a sign anything's wrong.</p>
+        <div class="callout warn">
+          <strong>What this phase does NOT yet prove:</strong> multiple independent department trees sharing one page (each currently assumes a single root centred on <code>CANVAS_CENTER&nbsp;=&nbsp;625</code>) &mdash; real per-department placement across a full A3 sheet is still Phase 3's job, done separately, with each department's local layout offset onto its own panel position. Also not yet exercised: performance/action-count behaviour at real department scale (up to ~24 posts) rather than this 11-post test tree &mdash; expect this to still be well within Power Automate's limits, but it hasn't been run at that size yet.
         </div>
       </section>
 
