@@ -1563,6 +1563,20 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
         <div class="callout ok">
           <strong>Confirmed 2026-09-12: this package imports successfully</strong> via Import Package (Legacy), matching the structural validation done before it was ever handed over. <strong>What to check next:</strong> once it runs, open the list and check <code>Depth</code> against the expected values above &mdash; all 10 correct, especially P10&nbsp;=&nbsp;3 (the only post 3 levels deep, most likely to expose a chain-walking mistake). <strong>Then the actual point of this phase:</strong> add a <code>P11</code> under <code>P3</code> directly in the list (a plain new row, not touching the flow), re-run the flow, and confirm P11 gets <code>Depth = 2</code> correctly, and every other row's <code>Depth</code> stays exactly what it was &mdash; no coordinate, no formula, nothing touched by hand except adding one row of data.
         </div>
+        <div class="callout warn" id="phase5-run-error">
+          <strong>First real run, 2026-09-12 &mdash; hit an error:</strong> <code>Flow run failed. Action 'Get_All_Items' failed: The field or property 'ManagerPostID' does not exist.</code> This is a well-known SharePoint quirk, not a flow bug: <strong>Create List &gt; From Excel doesn't always give a column the same internal name as its display name</strong>, even for a single word with no spaces. You can see <code>ManagerPostID</code> fine in the list because that's the display name &mdash; the flow's REST calls need the real internal name, and they've apparently diverged.
+        </div>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Paste into a new browser tab (you're already signed into SharePoint) &mdash; shows every real column and its actual internal name</span>
+              <span class="code-stamp" data-updated="2026-09-12T08:03:30Z">v1 &middot; 2026-09-12 09:03 BST</span>
+            </div>
+            <button data-copy="phase5-field-discovery" type="button">Copy</button>
+          </div>
+<pre id="phase5-field-discovery">https://modgovuk.sharepoint.com/teams/1598/_api/web/lists/getbytitle('OrgChartTest')/fields?$filter=Hidden eq false and ReadOnlyField eq false&amp;$select=Title,InternalName,TypeAsString&amp;$top=100</pre>
+        </div>
+        <p class="meta-line">Same pattern this Bible's own "TT - Discover Source List Fields" flow already uses successfully for exactly this problem &mdash; just done directly in a browser tab instead of via a flow, since it's a one-off check. Look through the results for the row where <code>Title</code> (display name) says <code>ManagerPostID</code>, and note what <code>InternalName</code> actually says. Check <code>SortOrder</code>, <code>PostLabel</code>, and <code>Depth</code> too while you're there &mdash; if one column's internal name diverged from its display name, the others may have too, and it's better to fix all of them in the flow at once than hit this same error four more times.</p>
         <div class="callout warn">
           <strong>What NOT to conclude from this phase:</strong> passing it proves a flow <em>can</em> do bounded iterative computation over SharePoint list data &mdash; the walking, looping, and writing-back mechanics work. It does not yet prove the harder thing: comparing two branches' full reach at every shared depth (the actual contour/collision-avoidance algorithm, already proven correct in principle against Python, including your real Safeguarding shape) can be built the same way. That's the next phase, once this one passes.
         </div>
