@@ -1,6 +1,6 @@
 # Power Automate Bible
 
-Last checked: 2026-08-04
+Last checked: 2026-09-12
 
 ## Purpose
 
@@ -158,6 +158,86 @@ Training Tracker confirmed 2026-08-04:
 - It is not automatically enough to create designer clipboard chunks, because the new designer's paste format uses `nodeData` / `nodeOperationInfo` payloads rather than plain WDL action objects.
 
 Audit lesson from `CertfTest`: actions that must run for both "new file attached" and "date-only save" must sit outside the nested `HasNewFile` condition but still inside the outer authorised branch. If `Update item`, `Create audit item`, and success/message variable setters are inside `HasNewFile = true`, an authorised date-only save will skip all metadata/audit/success work.
+
+### SharePoint's Create List > From Excel Does Not Preserve Internal Field Names
+
+Confirmed live 2026-09-12, Cadets Org Chart Phase 5: a list created via **Create
+List > From Excel**, with a real Excel Table whose header row read `Title`,
+`ManagerPostID`, `SortOrder`, `PostLabel`, `Depth`, produced a list where every
+custom column's *display* name matched the header exactly (visible in the list UI,
+in views, everywhere a person looks) — but the *internal* name (what any REST call
+or flow `$select`/`$filter` must actually use) came out as a meaningless
+`field_1`/`field_2`/`field_3`/`field_4`, one per custom column in header order. Only
+the built-in `Title` column kept its normal internal name. This is not about
+spaces or special characters in the header — every one of these headers was a
+single word, exactly the kind of name normally guaranteed to keep display name =
+internal name when a column is created through the ordinary "add column" UI. The
+Excel-import path is a genuinely different code path with this quirk.
+
+**Confirmed live, no error at save time** — the flow imported and saved cleanly.
+It failed at *run* time, on the very first SharePoint call, with a plausible-sounding
+but misleading error: `The field or property 'ManagerPostID' does not exist.` (naming
+the *display* name, which very much does exist as a column — just not as that
+internal name).
+
+**Fix: never assume single-word-no-spaces guarantees internal name = display name
+for a list created this way.** Confirm the real internal names directly before
+writing any REST call against a list built via Create List > From Excel:
+
+```
+https://<site>/_api/web/lists/getbytitle('<ListName>')/fields?$filter=Hidden eq false and ReadOnlyField eq false&$select=Title,InternalName,TypeAsString&$top=100
+```
+
+Paste directly into an authenticated browser tab — no flow needed for a one-off
+check. This is the exact same query this Bible's own `TT - Discover Source List
+Fields` flow already automated for Training Tracker's own legacy-migration source
+list; the general lesson generalises past that one project. Every REST `$select`,
+`$filter`, and `ValidateUpdateListItem`'s `FieldName` must use the real internal
+name, not the display name shown in the list UI.
+
+### Hand-Authoring A New Import-Package `definition.json`
+
+Confirmed 2026-09-12, Cadets Org Chart Phase 5 — the first time a `definition.json`
+was *written from scratch* (not just inspected from an export) for this reference
+pack, cross-checked structurally against `TT_Discover_Source_Fields.zip` and
+`CreateLibraryApp_flow_import.zip` (the latter explicitly confirmed to import
+successfully by the user) before packaging:
+
+- **`parameters/body` on an `OpenApiConnection`/`HttpRequest` action must be a JSON
+  string, never a nested JSON object.** Both reference files consistently encode it
+  as `"parameters/body": "{\"Key\":\"value\"}"`, a string containing JSON text — not
+  `"parameters/body": {"Key": "value"}`, an actual object. A first draft used a real
+  object here; caught by a script comparing `type()` of that field against both
+  reference files before the package was ever handed over. This is an easy, silent
+  mistake to make since JSON objects are the more "natural" way to write a request
+  body by hand.
+- **Neither confirmed reference file uses `Initialize variable`, `Set variable`, or
+  `Until` at all.** Every value is threaded through directly via expressions
+  (`triggerBody()?['X']`, `body('ActionName')?['Y']`, `items('LoopName')?['Z']`)
+  rather than stored in a variable first. Until a variable/`Until`-based package is
+  itself confirmed to import successfully, prefer this direct-expression style for
+  new hand-authored packages — it's the only style with real precedent via this
+  import mechanism (the `Initialize variable` payloads noted above as "confirmed
+  copy buttons" are a *designer clipboard paste* pattern, a different mechanism from
+  ZIP import, and should not be assumed to carry over).
+- **Both confirmed reference files call SharePoint exclusively via
+  `OpenApiConnection` + `operationId: "HttpRequest"`**, hitting SharePoint's classic
+  REST API directly (`_api/web/lists/getbytitle('X')/items`, `/ValidateUpdateListItem`,
+  etc.) rather than the connector's higher-level named actions (`GetItems`,
+  `PatchItem`, `PostItem`). This sidesteps the exact gap already logged above ("Not
+  yet captured from the user's tenant" for those named actions' *designer clipboard*
+  payloads) — the raw-REST-via-HttpRequest style has real, confirmed precedent for
+  package import specifically, even though the named-action clipboard templates do
+  not yet.
+- **Validation performed before delivery, and worth repeating for any future
+  hand-authored package:** every JSON file parses; every action's top-level key set
+  (e.g. `OpenApiConnection` → `{inputs, runAfter, type}`) matches a key set actually
+  seen in a confirmed reference action of the same type; every `runAfter` reference
+  resolves to an actual sibling action; the finished ZIP's own JSON re-parses
+  correctly read back out of the archive. This is structural validation only — it
+  proves internal consistency and conformance to a known-working shape, **not** that
+  the package imports or runs correctly in a live tenant. That distinction must stay
+  explicit in any guide shipping a not-yet-tenant-tested package.
 
 ## Training Tracker Certificate Architecture
 
