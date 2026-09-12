@@ -1,6 +1,6 @@
 # Power Automate Bible
 
-Last checked: 2026-09-12
+Last checked: 2026-09-12 (SetVariable self-reference finding added)
 
 ## Purpose
 
@@ -238,6 +238,54 @@ successfully by the user) before packaging:
   proves internal consistency and conformance to a known-working shape, **not** that
   the package imports or runs correctly in a live tenant. That distinction must stay
   explicit in any guide shipping a not-yet-tenant-tested package.
+
+### `SetVariable` Cannot Reference The Variable It's Setting
+
+Confirmed 2026-09-12, Cadets Org Chart Phase 6a — the first hand-authored package
+to use variables at all, and the first real tenant import attempt of one. Import
+failed at flow-save time (not at JSON-parse time — the ZIP imported and the flow
+was created, but saving it failed) with:
+
+```
+Flow save failed with code 'WorkflowRunActionInputsInvalidProperty' and message
+'The inputs of workflow run action '<name>' of type 'SetVariable' are not valid.
+Self reference is not supported when updating the value of variable '<varname>'.'
+```
+
+The original design used `SetVariable` with an expression referencing the same
+variable to accumulate a running total, e.g.:
+
+```json
+"inputs": { "name": "varSum", "value": "@add(variables('varSum'), items('Loop')?['Field'])" }
+```
+
+This is valid per the raw Azure Logic Apps workflow-definition JSON schema (Microsoft's
+own docs show exactly this pattern for Logic Apps), but **Power Automate's flow-save
+validation specifically rejects it** for `SetVariable` — a self-reference to the
+variable being set is disallowed, even though the JSON itself parses fine and the
+package imports without error. This gap between "confirmed via official Logic Apps
+docs" and "actually accepted by Power Automate's save-time validation" wasn't
+visible from documentation alone; it only surfaced on a real import.
+
+**Fix:** use `IncrementVariable` (or `DecrementVariable`) instead, whenever the
+operation is genuinely "add/subtract this value" — it's built for exactly this and
+its `value` is just the amount to add, with no self-reference in the expression:
+
+```json
+"Add_Child_SortOrder": {
+  "type": "IncrementVariable",
+  "inputs": { "name": "varSum", "value": "@items('Apply_to_each_Child')?['field_2']" },
+  "runAfter": {}
+}
+```
+
+**Reusable rule for any future hand-authored package that accumulates a running
+total:** reach for `IncrementVariable`/`DecrementVariable` first. Only fall back to
+`SetVariable` for an assignment whose expression does not reference the variable
+being set (e.g. resetting to a literal `0`, or computing from other variables/action
+outputs entirely) — that shape is unaffected and was already confirmed working
+(Phase 6a's own `Reset_Sum` action, `SetVariable` → literal `0`, imported and saved
+fine).
 
 ## Training Tracker Certificate Architecture
 
