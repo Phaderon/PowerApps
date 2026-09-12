@@ -1577,6 +1577,23 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
 <pre id="phase5-field-discovery">https://modgovuk.sharepoint.com/teams/1598/_api/web/lists/getbytitle('OrgChartTest')/fields?$filter=Hidden eq false and ReadOnlyField eq false&amp;$select=Title,InternalName,TypeAsString&amp;$top=100</pre>
         </div>
         <p class="meta-line">Same pattern this Bible's own "TT - Discover Source List Fields" flow already uses successfully for exactly this problem &mdash; just done directly in a browser tab instead of via a flow, since it's a one-off check. Look through the results for the row where <code>Title</code> (display name) says <code>ManagerPostID</code>, and note what <code>InternalName</code> actually says. Check <code>SortOrder</code>, <code>PostLabel</code>, and <code>Depth</code> too while you're there &mdash; if one column's internal name diverged from its display name, the others may have too, and it's better to fix all of them in the flow at once than hit this same error four more times.</p>
+
+        <div class="callout ok" id="phase5-field-mapping">
+          <strong>Confirmed 2026-09-12 &mdash; every custom column got a generic internal name.</strong> Create List &gt; From Excel gave none of them the display name as the internal name, not even <code>Title</code>-adjacent single-word ones:
+        </div>
+        <table>
+          <thead><tr><th>Display name (what you see)</th><th>Real internal name (what the flow must use)</th></tr></thead>
+          <tbody>
+            <tr><td><code>ManagerPostID</code></td><td><code>field_1</code></td></tr>
+            <tr><td><code>SortOrder</code></td><td><code>field_2</code></td></tr>
+            <tr><td><code>PostLabel</code></td><td><code>field_3</code></td></tr>
+            <tr><td><code>Depth</code></td><td><code>field_4</code></td></tr>
+          </tbody>
+        </table>
+        <p class="meta-line"><code>Title</code> (the built-in column) is unaffected &mdash; only the four custom ones created by the Excel import got renamed like this.</p>
+        <div class="callout ok">
+          <strong>The package below has already been corrected to match &mdash; you don't need to hand-edit the 10 places this touches.</strong> Delete the flow you already imported (or just leave it, doesn't matter) and re-import this one fresh, exactly the same way as before: Power Automate &rarr; <strong>My flows</strong> &rarr; <strong>Import</strong> &rarr; <strong>Import Package (Legacy)</strong> &rarr; upload &rarr; select your SharePoint connection &rarr; Import. Same download link as Phase 5's step 2 above &mdash; <a href="downloads/OrgChart_ComputeDepth_Phase5.zip" download><strong>OrgChart_ComputeDepth_Phase5.zip</strong></a>, updated in place, still <code>Response</code>-free, still the real site URL baked in.
+        </div>
         <div class="callout warn">
           <strong>What NOT to conclude from this phase:</strong> passing it proves a flow <em>can</em> do bounded iterative computation over SharePoint list data &mdash; the walking, looping, and writing-back mechanics work. It does not yet prove the harder thing: comparing two branches' full reach at every shared depth (the actual contour/collision-avoidance algorithm, already proven correct in principle against Python, including your real Safeguarding shape) can be built the same way. That's the next phase, once this one passes.
         </div>
