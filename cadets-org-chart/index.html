@@ -1621,7 +1621,7 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
           <strong>A real gotcha this test is specifically built to avoid:</strong> Power Automate's <code>For each</code> loops run their iterations <strong>in parallel by default</strong>. Microsoft's own docs warn that mutating a shared variable across parallel iterations can give unpredictable results. A <em>nested</em> <code>For each</code> is automatically sequential &mdash; but the <strong>outer</strong> loop here isn't nested inside anything, so it needs <code>"operationOptions": "Sequential"</code> set explicitly. This package has that set on the outer loop; if this test ever gets rebuilt by hand in the designer instead of imported, that setting lives under the outer <strong>Apply to each</strong>'s <strong>Settings</strong> (⚙) &rarr; <strong>Concurrency Control</strong> &rarr; turn off, degree of parallelism 1.
         </div>
         <div class="callout ok">
-          <strong>Structurally validated, not yet confirmed by a real tenant import.</strong> Every action's shape that also appears in the already-confirmed Phase 5 package (<code>OpenApiConnection</code>/<code>HttpRequest</code>, the outer <code>Foreach</code>, <code>runAfter</code> wiring) matches it exactly. The three action types new to this test &mdash; <code>InitializeVariable</code>, <code>SetVariable</code>, and the sequential-loop setting &mdash; were built from Microsoft's own Logic Apps/Power Automate documentation (exact JSON shapes), since there's no prior confirmed package to cross-check those specific shapes against. Every JSON file in the package parses, and re-parses correctly straight out of the finished zip.
+          <strong>Update 2026-09-12: CONFIRMED PASSED</strong> (see the confirmation callout further down) &mdash; every row's <code>TestSum</code> matched, after one real error was found and fixed on the first import attempt (see the error/fix callout below). Structural validation held up as far as it could: every action's shape shared with the already-confirmed Phase 5 package (<code>OpenApiConnection</code>/<code>HttpRequest</code>, the outer <code>Foreach</code>, <code>runAfter</code> wiring) matched it exactly, and every JSON file parsed and re-parsed correctly out of the finished zip &mdash; but the one genuinely new mechanism (a <code>SetVariable</code> self-referencing its own variable) turned out to be rejected by Power Automate's flow-<em>save</em> validation, a constraint that isn't visible from the official JSON schema docs alone and only surfaced on a real tenant import. Fixed with <code>IncrementVariable</code> instead.
         </div>
 
         <ol>
@@ -1656,13 +1656,16 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
           <tbody>
             <tr><td>P1</td><td>P2 (1) + P3 (2) + P4 (3)</td><td><code>6</code></td></tr>
             <tr><td>P2</td><td>none</td><td><code>0</code></td></tr>
-            <tr><td>P3</td><td>P5 (1) + P6 (2) + P7 (3) + P8 (4) + P9 (5)</td><td><code>15</code></td></tr>
+            <tr><td>P3</td><td>P5 (1) + P6 (2) + P7 (3) + P8 (4) + P9 (5) + P11 (6)</td><td><code>21</code></td></tr>
             <tr><td>P4</td><td>none</td><td><code>0</code></td></tr>
             <tr><td>P5</td><td>P10 (1)</td><td><code>1</code></td></tr>
-            <tr><td>P6&ndash;P11</td><td>none</td><td><code>0</code></td></tr>
+            <tr><td>P6, P7, P8, P9, P10, P11</td><td>none</td><td><code>0</code></td></tr>
           </tbody>
         </table>
-        <p class="meta-line">If every row matches, that confirms variables accumulate correctly across a nested loop, and the sequential setting on the outer loop is doing its job (no cross-post bleed in <code>varSum</code>). That's the green light to build the full width/position flow on the same pattern.</p>
+        <p class="meta-line">Corrected 2026-09-12: the first version of this table said P3&nbsp;=&nbsp;15, forgetting that P11 (added directly in the list back in Phase 5's reflow test, reporting to P3, <code>SortOrder</code>&nbsp;6) is now also one of P3's children &mdash; 1+2+3+4+5+6&nbsp;=&nbsp;21. The flow's own arithmetic was right the whole time; the table predicting it was stale.</p>
+        <div class="callout ok" id="phase6a-confirmed-passed">
+          <strong>CONFIRMED PASSED, 2026-09-12.</strong> Every row matched exactly against the real (P11-inclusive) list data: P1&nbsp;=&nbsp;6, P2&nbsp;=&nbsp;0, P3&nbsp;=&nbsp;21, P4&nbsp;=&nbsp;0, P5&nbsp;=&nbsp;1, all of P6&ndash;P11&nbsp;=&nbsp;0. This confirms three things the full width/position flow depends on: a variable can accumulate correctly across a <em>nested</em> loop (via <code>IncrementVariable</code>, once the earlier self-reference error was fixed), the outer loop's explicit <code>Sequential</code> setting stopped any cross-post bleed (P3's sum contains exactly its own 6 children's values, nothing from any other post's iteration), and the whole reset-loop-write pattern repeats cleanly across 11 independent outer iterations with no leftover state. <strong>Green light to build the full subtree-width-reservation X/Y layout flow on this same pattern.</strong>
+        </div>
       </section>
 
       <section id="next-steps">
