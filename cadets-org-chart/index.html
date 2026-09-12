@@ -1531,7 +1531,7 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
 
       <section id="phase-5">
         <h2>Phase 5 &mdash; Power Automate Proves Iterative Computation (Depth from Manager Chain)</h2>
-        <p class="meta-line">A SharePoint list + a Power Automate flow, both new to this project &middot; ~30-45 minutes &middot; tests the single riskiest new assumption in this pivot away from Power Fx doing the hard maths</p>
+        <p class="meta-line">A SharePoint list (from an Excel upload) + an importable Power Automate flow package, both new to this project &middot; ~10-15 minutes &middot; tests the single riskiest new assumption in this pivot away from Power Fx doing the hard maths</p>
         <div class="fix-controls">
           <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
           <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this phase">&#9660;</button>
@@ -1543,67 +1543,30 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
           <strong>SharePoint calculated columns cannot do any of this.</strong> A calculated column only ever sees fields on its own row &mdash; no way to look up a manager's row, let alone walk a chain of them. The computation has to live in a flow, not the list. The list's job stays simple: store the roster and a <code>ShowOnOrgChart</code> tick-box.
         </div>
         <div class="callout warn">
-          <strong>This is genuinely unverified &mdash; reasoned through carefully from Power Automate's documented behaviour and this Bible's own confirmed flow gotchas (its Power Automate reference notes &mdash; the <code>Initialize variable</code> placement rule in particular is load-bearing for this design), but none of it has run in Studio yet.</strong> Same reason Phase 0 tested "can an Image control show a computed SVG at all" in isolation before anything was built on top of it.
+          <strong>This is genuinely unverified &mdash; reasoned through carefully from Power Automate's documented behaviour and this Bible's own confirmed flow gotchas, and validated structurally against two flow-import packages already confirmed to import successfully in this tenant &mdash; but this specific package has not itself been imported or run yet.</strong> Same reason Phase 0 tested "can an Image control show a computed SVG at all" in isolation before anything was built on top of it.
+        </div>
+        <div class="callout ok">
+          <strong>Both files below are ready to use as-is &mdash; no manual list-building or action-by-action flow assembly needed.</strong>
         </div>
 
         <ol>
-          <li>Create a new SharePoint list &mdash; e.g. <code>OrgChartTest</code> &mdash; with these columns, beyond the built-in <code>Title</code> (used here as the PostID):</li>
-        </ol>
-        <table>
-          <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
-          <tbody>
-            <tr><td><code>Title</code></td><td>Single line of text (built-in)</td><td>The PostID, e.g. <code>P1</code></td></tr>
-            <tr><td><code>ManagerPostID</code></td><td>Single line of text</td><td>Another item's <code>Title</code>, blank for the root</td></tr>
-            <tr><td><code>SortOrder</code></td><td>Number</td><td>Sibling order</td></tr>
-            <tr><td><code>PostLabel</code></td><td>Single line of text</td><td>Display role/name, e.g. "Root", "Branch A (leaf)"</td></tr>
-            <tr><td><code>Depth</code></td><td>Number</td><td>Blank for now &mdash; this phase's flow fills it in</td></tr>
-          </tbody>
-        </table>
-        <ol start="2">
-          <li>Enter the same 10-post shape Phase 4 already used, so the result can be checked against numbers already known to be right:</li>
-        </ol>
-        <table>
-          <thead><tr><th>Title</th><th>ManagerPostID</th><th>SortOrder</th><th>PostLabel</th></tr></thead>
-          <tbody>
-            <tr><td>P1</td><td><em>(blank)</em></td><td>1</td><td>Root</td></tr>
-            <tr><td>P2</td><td>P1</td><td>1</td><td>Branch A (leaf)</td></tr>
-            <tr><td>P3</td><td>P1</td><td>2</td><td>Branch B (bushy)</td></tr>
-            <tr><td>P4</td><td>P1</td><td>3</td><td>Branch C (leaf)</td></tr>
-            <tr><td>P5</td><td>P3</td><td>1</td><td>B - report 1</td></tr>
-            <tr><td>P6</td><td>P3</td><td>2</td><td>B - report 2</td></tr>
-            <tr><td>P7</td><td>P3</td><td>3</td><td>B - report 3</td></tr>
-            <tr><td>P8</td><td>P3</td><td>4</td><td>B - report 4</td></tr>
-            <tr><td>P9</td><td>P3</td><td>5</td><td>B - report 5</td></tr>
-            <tr><td>P10</td><td>P5</td><td>1</td><td>B1's own report</td></tr>
-          </tbody>
-        </table>
-        <p class="meta-line">Expected <code>Depth</code> once this phase passes: P1=0, P2/P3/P4=1, P5-P9=2, P10=3 &mdash; exactly what Phase 4's own Depth computation already confirmed live.</p>
-
-        <ol start="3">
-          <li>Create an <strong>Instant cloud flow</strong>, trigger <strong>Manually trigger a flow</strong> (a button &mdash; throwaway test, not yet tied to list changes). Build these actions, in order:</li>
-        </ol>
-        <ol type="a">
-          <li><strong>Get items</strong> &mdash; your SharePoint site, list <code>OrgChartTest</code>. Rename this action to <code>Get_all_posts</code> (Power Automate's own rename control, not the display label) so later expressions can refer to it by a stable name.</li>
-          <li><strong>Initialize variable</strong> <code>varWalkID</code> &mdash; type <strong>String</strong>, no initial value. Must sit here, directly after the trigger/first action, at the very top level of the flow &mdash; <strong>not</strong> inside the loop below. This is the documented placement rule: <code>Initialize variable</code> cannot run inside a loop at all.</li>
-          <li><strong>Initialize variable</strong> <code>varDepth</code> &mdash; type <strong>Integer</strong>, initial value <code>0</code>. Same placement rule applies.</li>
-          <li><strong>Apply to each</strong> &mdash; input: <code>value</code> from <code>Get_all_posts</code>. Everything below is inside this loop, once per post:
-            <ol type="i">
-              <li><strong>Set variable</strong> <code>varWalkID</code> = current item's <code>ManagerPostID</code> (<code>items('Apply_to_each')?['ManagerPostID']</code>).</li>
-              <li><strong>Set variable</strong> <code>varDepth</code> = <code>0</code>.</li>
-              <li><strong>Do until</strong> <code>varWalkID</code> is empty &mdash; condition expression <code>empty(variables('varWalkID'))</code>. Inside this inner loop:
-                <ol type="1">
-                  <li><strong>Set variable</strong> <code>varDepth</code> = <code>add(variables('varDepth'), 1)</code>.</li>
-                  <li><strong>Get items</strong> &mdash; same list, filter query <code>Title eq '@{variables('varWalkID')}'</code>, Top Count <code>1</code>. Rename to <code>Get_manager_item</code> &mdash; a <em>second</em>, separately-named <code>Get items</code> action.</li>
-                  <li><strong>Set variable</strong> <code>varWalkID</code> = <code>if(equals(length(body('Get_manager_item')?['value']), 0), '', first(body('Get_manager_item')?['value'])?['ManagerPostID'])</code> &mdash; reads the found manager's own <code>ManagerPostID</code>; blank once that manager turns out to be the root, which ends the <code>Do until</code> on its next check.</li>
-                </ol>
-              </li>
-              <li><strong>Update item</strong> &mdash; same list, <code>Id</code>: <code>items('Apply_to_each')?['ID']</code> (SharePoint's own internal ID, not the PostID), <code>Depth</code>: <code>variables('varDepth')</code>.</li>
+          <li><p style="margin:0 0 8px;"><a href="downloads/OrgChartTest_ListSchema.xlsx" download><strong>OrgChartTest_ListSchema.xlsx</strong></a> &mdash; the same 10-post shape Phase 4 already used (so the result can be checked against numbers already known to be right), with the exact column names the flow package expects. In SharePoint: <strong>Create</strong> &rarr; <strong>List</strong> &rarr; <strong>From Excel</strong> &rarr; upload this file &rarr; name the list <code>OrgChartTest</code>. Every column in the file is a single word with no spaces (<code>ManagerPostID</code>, <code>SortOrder</code>, <code>PostLabel</code>, <code>Depth</code>) specifically so SharePoint's internal field name matches the display name exactly &mdash; don't rename any of them after creation, or the flow's field references below stop matching.</p>
+          <p class="meta-line" style="margin:0 0 8px;"><code>Depth</code> is seeded at <code>0</code> for every row (a plain number, not blank, so SharePoint reliably creates it as a Number column) &mdash; expected once the flow runs: P1 stays <code>0</code>, P2/P3/P4 become <code>1</code>, P5-P9 become <code>2</code>, P10 becomes <code>3</code>, exactly what Phase 4's own Depth computation already confirmed live.</p></li>
+          <li><p style="margin:0 0 8px;"><a href="downloads/OrgChart_ComputeDepth_Phase5.zip" download><strong>OrgChart_ComputeDepth_Phase5.zip</strong></a> &mdash; a ready-to-import flow package (non-solution, <code>Import Package (Legacy)</code> format &mdash; the same kind already confirmed to import successfully in this tenant for Library Manager). Power Automate &rarr; <strong>My flows</strong> &rarr; <strong>Import</strong> &rarr; <strong>Import Package (Legacy)</strong> &rarr; upload the zip &rarr; for the SharePoint connection resource, select your existing SharePoint connection &rarr; Import.</p></li>
+          <li>After import, open the flow in edit mode and fix the two things a package genuinely can't carry for you:
+            <ol type="a">
+              <li>Every action's <strong>Site Address</strong> (shown in the designer as <code>https://YOURTENANT.sharepoint.com/sites/YOURSITE</code>) needs changing to your real SharePoint site &mdash; there are 7 actions using it; Code View's Find/Replace is quicker than editing each one individually.</li>
+              <li>Confirm the SharePoint connection reference resolved to your own connection (it should already, from the import step above) &mdash; if any action shows a connection warning, reselect it there.</li>
             </ol>
           </li>
         </ol>
 
+        <div class="callout warn">
+          <strong>How the flow actually works, so a review makes sense before running it:</strong> rather than <code>Do until</code> and variables (which would need real recursion to walk an unknown number of ancestor levels), it's built as a <strong>fixed, unrolled chain of three nested conditions</strong> per post &mdash; check "is my manager blank" (depth 0), else look up my manager and check "is <em>their</em> manager blank" (depth 1), else look up the grandmanager and check the same (depth 2), else depth 3. This only works because the test tree is known to be at most 4 levels deep &mdash; exactly the same "bounded depth, unrolled instead of recursive" trick Phase 4's Power Fx formula already used, just expressed as nested conditions instead of <code>AddColumns</code> passes. Every SharePoint call is a direct REST request through the SharePoint connector (<code>_api/web/lists/getbytitle(...)</code>), matching exactly how both previously-confirmed packages (Training Tracker, Library Manager) are built &mdash; not the higher-level named connector actions (<code>Get items</code>, <code>Update item</code>), which this Bible's own Power Automate notes flag as not yet captured/confirmed from a real designer session. The one piece that's genuinely new and not yet tenant-confirmed: writing the result back via <code>ValidateUpdateListItem</code> (a standard, long-documented SharePoint REST endpoint for updating fields without needing to know the exact list item type name) &mdash; chosen specifically to avoid guessing that type name, but not yet proven in this tenant the way the rest of the pattern is.
+        </div>
+
         <div class="callout ok">
-          <strong>What to check:</strong> does it save at all &mdash; do the <code>Initialize variable</code> actions actually need to sit where steps b/c say, or does Power Automate allow more flexibility than the Bible's existing note suggests? Does the nested <code>Do until</code> inside <code>Apply to each</code> run without error &mdash; any nesting restriction here, similar to the confirmed <code>Respond to a PowerApp or flow</code> nesting block already logged? After running once: open the list and check <code>Depth</code> against the expected values above &mdash; all 10 correct, especially P10&nbsp;=&nbsp;3 (the only post 3 levels deep, most likely to expose a chain-walking mistake). <strong>Then the actual point of this phase:</strong> add a <code>P11</code> under <code>P3</code> directly in the list (a plain new row, not touching the flow), re-run the flow, and confirm P11 gets <code>Depth = 2</code> correctly, and every other row's <code>Depth</code> stays exactly what it was &mdash; no coordinate, no formula, nothing touched by hand except adding one row of data.
+          <strong>What to check:</strong> does the package import cleanly at all &mdash; if it doesn't, the exact error matters more than anything else here. Once the site address is fixed and it runs: open the list and check <code>Depth</code> against the expected values above &mdash; all 10 correct, especially P10&nbsp;=&nbsp;3 (the only post 3 levels deep, most likely to expose a chain-walking mistake). <strong>Then the actual point of this phase:</strong> add a <code>P11</code> under <code>P3</code> directly in the list (a plain new row, not touching the flow), re-run the flow, and confirm P11 gets <code>Depth = 2</code> correctly, and every other row's <code>Depth</code> stays exactly what it was &mdash; no coordinate, no formula, nothing touched by hand except adding one row of data.
         </div>
         <div class="callout warn">
           <strong>What NOT to conclude from this phase:</strong> passing it proves a flow <em>can</em> do bounded iterative computation over SharePoint list data &mdash; the walking, looping, and writing-back mechanics work. It does not yet prove the harder thing: comparing two branches' full reach at every shared depth (the actual contour/collision-avoidance algorithm, already proven correct in principle against Python, including your real Safeguarding shape) can be built the same way. That's the next phase, once this one passes.
