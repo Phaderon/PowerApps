@@ -279,6 +279,7 @@
         <a href="#clear-all-pictures">Testing Aid - Clear All Pictures</a>
         <a href="#phase-4">Phase 4 - Automated Tree Layout Proof</a>
         <a href="#phase-5">Phase 5 - Power Automate Depth Proof</a>
+        <a href="#phase-6a">Phase 6a - Variables &amp; Nested Loop Isolation Test</a>
         <a href="#next-steps">Next Steps</a>
         <a href="#open-questions">Known Limitations / Open Questions</a>
       </nav>
@@ -286,7 +287,7 @@
 
     <main>
       <div class="topline">
-        <span class="pill">Updated 11 Sep 2026</span>
+        <span class="pill">Updated 12 Sep 2026</span>
         <span class="pill">Cadets Org Chart only</span>
         <span class="pill">Rendering proof stage</span>
       </div>
@@ -1604,6 +1605,61 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
         <div class="callout warn">
           <strong>What NOT to conclude from this phase:</strong> passing it proves a flow <em>can</em> do bounded iterative computation over SharePoint list data &mdash; the walking, looping, and writing-back mechanics work. It does not yet prove the harder thing: comparing two branches' full reach at every shared depth (the actual contour/collision-avoidance algorithm, already proven correct in principle against Python, including your real Safeguarding shape) can be built the same way. That's the next phase, once this one passes.
         </div>
+      </section>
+
+      <section id="phase-6a">
+        <h2>Phase 6a &mdash; Variables &amp; Nested Loop Isolation Test (Sum Children's SortOrder)</h2>
+        <p class="meta-line">One new column on the existing <code>OrgChartTest</code> list + a new importable flow package &middot; ~5-10 minutes &middot; de-risks the two mechanisms the full width/position flow needs that Phase 5 didn't touch, before that much bigger flow gets built</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this phase">&#9660;</button>
+        </div>
+        <div class="callout warn">
+          <strong>Why this exists:</strong> Phase 5 proved a flow can walk a manager chain and write back a result &mdash; but it never used a <strong>variable</strong>, and its only loop was a single, non-nested <code>Apply to each</code>. The full subtree-width/position algorithm (the actual "big test") needs both at once: for every post, loop over its direct children and <strong>accumulate</strong> a running total in a variable, inside an outer loop over every post. That's a materially different, riskier shape &mdash; worth proving in isolation, on data you already have, before it's buried inside a 25-30+ action flow.
+        </div>
+        <div class="callout warn">
+          <strong>A real gotcha this test is specifically built to avoid:</strong> Power Automate's <code>For each</code> loops run their iterations <strong>in parallel by default</strong>. Microsoft's own docs warn that mutating a shared variable across parallel iterations can give unpredictable results. A <em>nested</em> <code>For each</code> is automatically sequential &mdash; but the <strong>outer</strong> loop here isn't nested inside anything, so it needs <code>"operationOptions": "Sequential"</code> set explicitly. This package has that set on the outer loop; if this test ever gets rebuilt by hand in the designer instead of imported, that setting lives under the outer <strong>Apply to each</strong>'s <strong>Settings</strong> (⚙) &rarr; <strong>Concurrency Control</strong> &rarr; turn off, degree of parallelism 1.
+        </div>
+        <div class="callout ok">
+          <strong>Structurally validated, not yet confirmed by a real tenant import.</strong> Every action's shape that also appears in the already-confirmed Phase 5 package (<code>OpenApiConnection</code>/<code>HttpRequest</code>, the outer <code>Foreach</code>, <code>runAfter</code> wiring) matches it exactly. The three action types new to this test &mdash; <code>InitializeVariable</code>, <code>SetVariable</code>, and the sequential-loop setting &mdash; were built from Microsoft's own Logic Apps/Power Automate documentation (exact JSON shapes), since there's no prior confirmed package to cross-check those specific shapes against. Every JSON file in the package parses, and re-parses correctly straight out of the finished zip.
+        </div>
+
+        <ol>
+          <li>In the existing <code>OrgChartTest</code> list, add one new column: <strong>+ Add column</strong> &rarr; <strong>Number</strong> &rarr; name it <code>TestSum</code>. Use the normal <strong>+ Add column</strong> button, not another Excel import &mdash; that's specifically what avoided the <code>field_1</code>-style internal-name mangling Phase 5 hit (see the callout in Phase 5 above). A column added this way should keep <code>TestSum</code> as its own internal name, but check to be sure&nbsp;&mdash;&nbsp;see the next step.</li>
+          <li>Paste this into a browser tab (same check Phase 5 used) and confirm <code>TestSum</code>'s <code>InternalName</code> really is <code>TestSum</code>:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Paste into a new browser tab (you're already signed into SharePoint)</span>
+              <span class="code-stamp" data-updated="2026-09-12T09:05:00Z">v1 &middot; 2026-09-12 10:05 BST</span>
+            </div>
+            <button data-copy="phase6a-field-discovery" type="button">Copy</button>
+          </div>
+<pre id="phase6a-field-discovery">https://modgovuk.sharepoint.com/teams/1598/_api/web/lists/getbytitle('OrgChartTest')/fields?$filter=Hidden eq false and ReadOnlyField eq false&amp;$select=Title,InternalName,TypeAsString&amp;$top=100</pre>
+        </div>
+        <p class="meta-line">If <code>InternalName</code> comes back as something other than <code>TestSum</code> (e.g. another <code>field_5</code>-style name), that's the one string to change &mdash; in the package's <code>Write_TestSum</code> action, the <code>FieldName</code> value in its request body.</p>
+        <ol start="3">
+          <li><p style="margin:0 0 8px;"><a href="downloads/OrgChart_SumChildrenTest_Phase6a.zip" download><strong>OrgChart_SumChildrenTest_Phase6a.zip</strong></a> &mdash; ready-to-import flow package, same format as Phase 5. Power Automate &rarr; <strong>My flows</strong> &rarr; <strong>Import</strong> &rarr; <strong>Import Package (Legacy)</strong> &rarr; upload the zip &rarr; for the SharePoint connection resource, select your existing SharePoint connection &rarr; Import. Site address is pre-filled as the confirmed Cadets tenant site (<code>https://modgovuk.sharepoint.com/teams/1598</code>).</p></li>
+          <li>Run the flow, then open the list and check <code>TestSum</code> against the expected values below.</li>
+        </ol>
+
+        <div class="callout warn">
+          <strong>How the flow works:</strong> <code>Get_All_Items</code> reads every post, then an outer <code>Apply_to_each_Post</code> (sequential, per above) does, for each post: reset a <code>varSum</code> variable to 0, fetch that post's direct children (<code>field_1 eq &lt;this post's Title&gt;</code>), loop over them in a nested <code>Apply_to_each_Child</code> adding each child's <code>SortOrder</code> (<code>field_2</code>) into <code>varSum</code>, then write <code>varSum</code> to <code>TestSum</code> via <code>ValidateUpdateListItem</code> &mdash; the same write-back endpoint Phase 5 already proved works. A post with no children simply runs an empty loop and writes back <code>0</code>.
+        </div>
+
+        <table>
+          <thead><tr><th>Post</th><th>Children (by SortOrder)</th><th>Expected <code>TestSum</code></th></tr></thead>
+          <tbody>
+            <tr><td>P1</td><td>P2 (1) + P3 (2) + P4 (3)</td><td><code>6</code></td></tr>
+            <tr><td>P2</td><td>none</td><td><code>0</code></td></tr>
+            <tr><td>P3</td><td>P5 (1) + P6 (2) + P7 (3) + P8 (4) + P9 (5)</td><td><code>15</code></td></tr>
+            <tr><td>P4</td><td>none</td><td><code>0</code></td></tr>
+            <tr><td>P5</td><td>P10 (1)</td><td><code>1</code></td></tr>
+            <tr><td>P6&ndash;P11</td><td>none</td><td><code>0</code></td></tr>
+          </tbody>
+        </table>
+        <p class="meta-line">If every row matches, that confirms variables accumulate correctly across a nested loop, and the sequential setting on the outer loop is doing its job (no cross-post bleed in <code>varSum</code>). That's the green light to build the full width/position flow on the same pattern.</p>
       </section>
 
       <section id="next-steps">
