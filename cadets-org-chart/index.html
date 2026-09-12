@@ -281,6 +281,7 @@
         <a href="#phase-5">Phase 5 - Power Automate Depth Proof</a>
         <a href="#phase-6a">Phase 6a - Variables &amp; Nested Loop Isolation Test</a>
         <a href="#phase-6b">Phase 6b - Full Width &amp; Position Computation</a>
+        <a href="#phase-7">Phase 7 - Live Render From Real Data</a>
         <a href="#next-steps">Next Steps</a>
         <a href="#open-questions">Known Limitations / Open Questions</a>
       </nav>
@@ -1731,6 +1732,134 @@ Concat(colFinal, PostID &amp; "@(" &amp; FinalX &amp; "," &amp; FinalY &amp; ") 
         </div>
         <div class="callout warn">
           <strong>What this phase does NOT yet prove:</strong> multiple independent department trees sharing one page (each currently assumes a single root centred on <code>CANVAS_CENTER&nbsp;=&nbsp;625</code>) &mdash; real per-department placement across a full A3 sheet is still Phase 3's job, done separately, with each department's local layout offset onto its own panel position. Also not yet exercised: performance/action-count behaviour at real department scale (up to ~24 posts) rather than this 11-post test tree &mdash; expect this to still be well within Power Automate's limits, but it hasn't been run at that size yet. And a real production version should <strong>merge Phase 5's Depth computation and this flow into one single flow</strong> that recomputes everything in one run &mdash; right now they're two separate manually-triggered flows, and Phase 5's flow must still be run first (or kept in place) any time <code>ManagerPostID</code> changes, since this flow only reads <code>Depth</code>, it doesn't compute it.
+        </div>
+      </section>
+
+      <section id="phase-7">
+        <h2>Phase 7 &mdash; Render The Real Data, Live, With A Recalculate Button</h2>
+        <p class="meta-line">A new throwaway test app (same role as Phase 0 and Phase 4) &middot; ~15-20 minutes &middot; the first time anything actually draws the tree from the real <code>OrgChartTest</code> list, not local test collections</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this phase">&#9660;</button>
+        </div>
+        <div class="callout warn">
+          <strong>What this closes:</strong> Phases 4 through 6b proved the algorithm &mdash; <code>Depth</code>, <code>Width</code>, <code>FinalX</code>, <code>FinalY</code> all now compute correctly in Power Automate/SharePoint &mdash; but nothing has actually been <em>seen</em> rendered from that real data yet. The Image-control/SVG technique from Phases 0-4 was only ever proven against local, hard-coded collections. This phase connects the two: a screen that reads the real list and renders it with the same proven technique, plus a button that reruns both flows before refreshing.
+        </div>
+        <div class="callout warn">
+          <strong>Not an extension of the main app's Current State.</strong> Like Phase 4, this is a fresh, self-contained throwaway test app &mdash; nothing here gets appended to the cumulative <code>App.OnStart</code> that Phases 0-3 built up.
+        </div>
+        <div class="callout warn">
+          <strong>Untested assumption, check this before pasting anything:</strong> Power Automate's raw REST calls needed the mangled internal names (<code>field_1</code>-<code>field_4</code> etc.), but Power Apps' own SharePoint connector is a different mechanism and should show friendly <strong>display names</strong> instead (<code>ManagerPostID</code>, <code>SortOrder</code>, <code>PostLabel</code>, <code>Depth</code>, <code>Width</code>, <code>FinalX</code>, <code>FinalY</code>). This has never been checked in this project. Open the Data pane after adding <code>OrgChartTest</code> and look at the column names &mdash; if they show as <code>field_1</code> etc. instead, tell me before pasting the formulas below, since they'd need adjusting.
+        </div>
+        <div class="callout warn">
+          <strong>Card size vs. subtree width &mdash; don't mix these up.</strong> Every card is drawn at a fixed <code>150&times;54</code> box, matching <code>CARD_W</code> from the layout algorithm. <code>Width</code> is each post's <em>subtree reservation</em> (e.g. 950 for P3), not its own visual size &mdash; drawing a card at its own <code>Width</code> would be wrong. This is the same "fixed card size, not subtree width" lesson Phase 4's space-conservation redesign already established, just confirmed to matter here too. The <code>54</code>px card height plus a <code>10</code>px gutter is also the implicit assumption behind <code>FinalY</code>'s <code>20+[Depth]*64</code> formula, made explicit here for the first time.
+        </div>
+
+        <ol>
+          <li><strong>Data</strong> pane &rarr; <strong>Add data</strong> &rarr; add <code>OrgChartTest</code>.</li>
+          <li><strong>Add data</strong> again &rarr; add both flows as data sources: <code>OrgChart - Compute Depth (Phase 5 Test)</code> and <code>OrgChart - Compute Width &amp; Position (Phase 6b)</code>.</li>
+          <li>Add an Image control and a button (call it <code>btnRecalculate</code>) to the screen.</li>
+        </ol>
+
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>App.OnStart &mdash; loads the real data and builds the SVG</span>
+              <span class="code-stamp" data-updated="2026-09-12T11:15:00Z">v1 &middot; 2026-09-12 12:15 BST</span>
+            </div>
+            <button data-copy="phase7-onstart" type="button">Copy</button>
+          </div>
+<pre id="phase7-onstart">ClearCollect(colPosts, OrgChartTest);
+Set(
+    varChartSvg,
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""-50 -20 1500 400"" font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""-50"" y=""-20"" width=""1500"" height=""400"" fill=""#F7F4F6""/&gt;" &amp;
+    Concat(
+        colPosts,
+        With(
+            {
+                _mgrTitle: ManagerPostID,
+                _x: FinalX,
+                _y: FinalY,
+                _label: Substitute(PostLabel, "&amp;", "&amp;amp;")
+            },
+            With(
+                {_mgr: LookUp(colPosts, Title = _mgrTitle)},
+                If(
+                    !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_mgr),
+                    "&lt;path d=""M " &amp; _mgr.FinalX &amp; " " &amp; (_mgr.FinalY + 54) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;",
+                    ""
+                )
+            ) &amp;
+            "&lt;rect x=""" &amp; (_x - 75) &amp; """ y=""" &amp; _y &amp; """ width=""150"" height=""54"" rx=""4"" fill=""#F0ECF0"" stroke=""#532A45"" stroke-width=""1""/&gt;" &amp;
+            "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + 31) &amp; """ text-anchor=""middle"" font-size=""9"" fill=""#323E48""&gt;" &amp; _label &amp; "&lt;/text&gt;"
+        )
+    ) &amp;
+    "&lt;/svg&gt;"
+)</pre>
+        </div>
+
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Image control's Image property</span>
+              <span class="code-stamp" data-updated="2026-09-12T11:15:00Z">v1 &middot; 2026-09-12 12:15 BST</span>
+            </div>
+            <button data-copy="phase7-image" type="button">Copy</button>
+          </div>
+<pre id="phase7-image">"data:image/svg+xml," &amp; EncodeUrl(varChartSvg)</pre>
+        </div>
+
+        <p class="meta-line"><code>btnRecalculate.OnSelect</code> &mdash; calls Phase 5's flow before Phase 6b's (Width/Position only <em>reads</em> Depth, it doesn't compute it), then refreshes and re-renders. Deliberately duplicates the same <code>Set(varChartSvg, ...)</code> formula from <code>OnStart</code> rather than introducing a new UDF/function pattern &mdash; a duplicated, fully-pasteable block is safer than an untested new mechanism for this proof.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnRecalculate.OnSelect</span>
+              <span class="code-stamp" data-updated="2026-09-12T11:15:00Z">v1 &middot; 2026-09-12 12:15 BST</span>
+            </div>
+            <button data-copy="phase7-button" type="button">Copy</button>
+          </div>
+<pre id="phase7-button">'OrgChart - Compute Depth (Phase 5 Test)'.Run();
+'OrgChart - Compute Width &amp; Position (Phase 6b)'.Run();
+ClearCollect(colPosts, OrgChartTest);
+Set(
+    varChartSvg,
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""-50 -20 1500 400"" font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""-50"" y=""-20"" width=""1500"" height=""400"" fill=""#F7F4F6""/&gt;" &amp;
+    Concat(
+        colPosts,
+        With(
+            {
+                _mgrTitle: ManagerPostID,
+                _x: FinalX,
+                _y: FinalY,
+                _label: Substitute(PostLabel, "&amp;", "&amp;amp;")
+            },
+            With(
+                {_mgr: LookUp(colPosts, Title = _mgrTitle)},
+                If(
+                    !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_mgr),
+                    "&lt;path d=""M " &amp; _mgr.FinalX &amp; " " &amp; (_mgr.FinalY + 54) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;",
+                    ""
+                )
+            ) &amp;
+            "&lt;rect x=""" &amp; (_x - 75) &amp; """ y=""" &amp; _y &amp; """ width=""150"" height=""54"" rx=""4"" fill=""#F0ECF0"" stroke=""#532A45"" stroke-width=""1""/&gt;" &amp;
+            "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + 31) &amp; """ text-anchor=""middle"" font-size=""9"" fill=""#323E48""&gt;" &amp; _label &amp; "&lt;/text&gt;"
+        )
+    ) &amp;
+    "&lt;/svg&gt;"
+)</pre>
+        </div>
+
+        <div class="callout warn">
+          <strong>Self-join safety, applied preemptively:</strong> <code>_mgrTitle</code>/<code>_x</code>/<code>_y</code>/<code>_label</code> are captured from plain field access on the current <code>Concat</code> record (not itself a self-join, so unambiguous), and the nested <code>LookUp</code> uses only that captured plain value, never <code>ThisRecord.field</code> directly inside the lookup. This is exactly Phase 4's confirmed fix for the self-join <code>ThisRecord</code> scoping bug, applied here from the start instead of waiting to hit it again.
+        </div>
+
+        <div class="callout ok">
+          <strong>What to check once pasted:</strong> the rendered tree should visually match the shape already confirmed numerically in Phase 6b &mdash; P1 at the top centre, P2/P3/P4 below it (P3 much wider, its own 6 children below), P10 hanging directly under P5 with no horizontal offset. This is the first time this shape has ever actually been <em>drawn</em> from real list data rather than just confirmed as numbers in a SharePoint grid &mdash; report back what you see.
+        </div>
+        <div class="callout warn">
+          <strong>Deliberately not solved in this phase:</strong> vacancy styling, category colours, multiple departments on one sheet, an automatic (non-button) trigger, and print/A3 export &mdash; all previously-solved or still-pending problems from earlier phases, not being re-solved here.
         </div>
       </section>
 
