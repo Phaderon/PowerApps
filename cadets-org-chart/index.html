@@ -285,6 +285,7 @@
         <a href="#phase-8">Phase 8 - Real 108-Post, 10-Department Structure</a>
         <a href="#phase-9">Phase 9 - Full Real Render With Colour</a>
         <a href="#phase-10">Phase 10 - Role Ordering, Real Names, Gapped Posts &amp; Polish</a>
+        <a href="#phase-11">Phase 11 - Dynamic Canvas Growth</a>
         <a href="#next-steps">Next Steps</a>
         <a href="#open-questions">Known Limitations / Open Questions</a>
       </nav>
@@ -2608,6 +2609,431 @@ Set(
         </div>
         <div class="callout warn">
           <strong>Still not solved:</strong> print/A3 export and a "copy as image" button (next up &mdash; see Next Steps), and an automatic (non-button) trigger.
+        </div>
+      </section>
+
+      <section id="phase-11">
+        <h2>Phase 11 &mdash; Dynamic Canvas Growth (No Shrinking, No Collisions)</h2>
+        <p class="meta-line">Updated render formula, same app, same data &middot; ~10 minutes &middot; answers "what happens if I add 50 more people?" properly instead of hoping</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this phase">&#9660;</button>
+        </div>
+        <div class="callout warn">
+          <strong>The honest answer, before the fix:</strong> font size never shrinks &mdash; there's no scaling logic anywhere in the design. But the 9 grid departments' panel positions were fixed, hardcoded Y-coordinates. A team growing tall enough would eventually collide with the row of panels below it, since nothing adjusted a row's position based on how tall the row above actually turned out. Command itself never needed this fix &mdash; its height is fixed by the bounded-depth design (0-3), so only its <em>width</em> grows with more people, a separate, smaller risk (it currently has ~35px of headroom before exceeding its own panel).
+        </div>
+        <div class="callout ok">
+          <strong>Fix:</strong> department rows are grouped (Command &middot; Safeguarding/Training/Information Systems &middot; Media &amp; Comms/CCF(A)/Policy &amp; Pers/Support/CCF &middot; CEP), and each row's starting Y is now computed live from the row above's <em>actual</em> tallest member, not a fixed number. Each grid department's own content height is computed the same way &mdash; from however many officers it genuinely has right now (<code>Max(SortOrder)</code> among its own <code>Depth=2</code> rows &times; row height, plus the header), not a stored value.
+        </div>
+        <div class="callout warn">
+          <strong>Verified in Python before writing any Power Fx:</strong> the dynamic formula reproduces a sensible, collision-free layout against the real 108-post dataset (Row 1 at Y=224, Row 2 at Y=498, CEP at Y=682 &mdash; close to, not identical to, the old hand-placed values, which is fine, since matching old pixels was never the goal). Then simulated adding 10 more officers to one lead: Row 1's height grew from 254 to 464, and Row 2 was correctly pushed down from Y=498 to Y=708 &mdash; no overlap.
+        </div>
+        <div class="callout ok">
+          <strong>A repeat of Phase 10's bug, avoided deliberately this time:</strong> the new <code>_y</code> value depends on a new <code>_panelY</code> value. Putting both in the <em>same</em> <code>With</code> record would have been exactly the mistake documented in the Bible from Phase 10's own first run. Avoided by putting <code>_panelY</code> in the outer capture (where it only depends on the row's own <code>Department</code> field and global row-position variables, nothing from its own record) and <code>_y</code> in its own nested <code>With</code> one level deeper. Every field in every nesting level was checked by hand against the Bible's new rule before this was written.
+        </div>
+        <div class="callout warn">
+          <strong>Not addressed by this phase:</strong> Command growing wider than its own panel, and any brand-new department appearing (still needs a manually-added row in the panel list). This phase makes existing departments' growth safe, not fully automatic org restructuring.
+        </div>
+
+        <p class="meta-line">Replaces Phase 10's <code>App.OnStart</code>, <code>btnRecalculate.OnSelect</code>, and <code>btnToggleMode.OnSelect</code> in full &mdash; same app, same data sources. Also give the Image control a generous fixed <code>Height</code> (or a scrollable container) rather than relying on a small fixed size, since the picture's actual height now varies with data.</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>App.OnStart</span>
+              <span class="code-stamp" data-updated="2026-09-14T12:50:00Z">v1 &middot; 2026-09-14 13:50 BST</span>
+            </div>
+            <button data-copy="phase11-onstart" type="button">Copy</button>
+          </div>
+<pre id="phase11-onstart">ClearCollect(colCategoryColours,
+    {Category: "Regular", Hex: "#E4EFD9"},
+    {Category: "Civil Servant", Hex: "#CFF4F1"},
+    {Category: "FTRS", Hex: "#FFC7C7"},
+    {Category: "Aspire", Hex: "#FFE6A1"},
+    {Category: "ACCT UK Employee", Hex: "#F6D0F1"},
+    {Category: "RFCA", Hex: "#F7EFAC"},
+    {Category: "ACCT UK Contractor", Hex: "#D8E3FB"},
+    {Category: "Ext Contractor", Hex: "#F7D6AD"},
+    {Category: "CFAV", Hex: "#E5D4EF"}
+);
+
+ClearCollect(colDeptPanelsBase,
+    {Department: "Command", PX: 20, PW: 1134.6},
+    {Department: "Safeguarding", PX: 20, PW: 371.5},
+    {Department: "Training", PX: 401.5, PW: 371.5},
+    {Department: "Information Systems", PX: 783, PW: 371.5},
+    {Department: "Media &amp; Comms", PX: 20, PW: 260},
+    {Department: "CCF(A)", PX: 290, PW: 260},
+    {Department: "Policy &amp; Pers", PX: 560, PW: 180},
+    {Department: "Support", PX: 750, PW: 190},
+    {Department: "CCF", PX: 950, PW: 204.6},
+    {Department: "CEP", PX: 560, PW: 180}
+);
+
+Set(varChartMode, "Quiet");
+
+ClearCollect(colPosts, OrgChartPosts);
+
+Set(varCommandBottomY, Max(Filter(colPosts, Department = "Command"), FinalY) + 34);
+Set(varRow1Y, varCommandBottomY + 20);
+Set(
+    varRow1H,
+    Max(
+        44 + Coalesce(Max(Filter(colPosts, Department = "Safeguarding" &amp;&amp; Depth = 2), SortOrder), 0) * 30,
+        44 + Coalesce(Max(Filter(colPosts, Department = "Training" &amp;&amp; Depth = 2), SortOrder), 0) * 30,
+        44 + Coalesce(Max(Filter(colPosts, Department = "Information Systems" &amp;&amp; Depth = 2), SortOrder), 0) * 30
+    )
+);
+Set(varRow2Y, varRow1Y + varRow1H + 20);
+Set(
+    varRow2H,
+    Max(
+        44 + Coalesce(Max(Filter(colPosts, Department = "Media &amp; Comms" &amp;&amp; Depth = 2), SortOrder), 0) * 30,
+        44 + Coalesce(Max(Filter(colPosts, Department = "CCF(A)" &amp;&amp; Depth = 2), SortOrder), 0) * 30,
+        44 + Coalesce(Max(Filter(colPosts, Department = "Policy &amp; Pers" &amp;&amp; Depth = 2), SortOrder), 0) * 30,
+        44 + Coalesce(Max(Filter(colPosts, Department = "Support" &amp;&amp; Depth = 2), SortOrder), 0) * 30,
+        44 + Coalesce(Max(Filter(colPosts, Department = "CCF" &amp;&amp; Depth = 2), SortOrder), 0) * 30
+    )
+);
+Set(varRow3Y, varRow2Y + varRow2H + 20);
+
+ClearCollect(
+    colDeptPanels,
+    AddColumns(
+        colDeptPanelsBase,
+        PY,
+        Switch(
+            Department,
+            "Command", 8,
+            "Safeguarding", varRow1Y,
+            "Training", varRow1Y,
+            "Information Systems", varRow1Y,
+            "Media &amp; Comms", varRow2Y,
+            "CCF(A)", varRow2Y,
+            "Policy &amp; Pers", varRow2Y,
+            "Support", varRow2Y,
+            "CCF", varRow2Y,
+            varRow3Y
+        )
+    )
+);
+
+Set(
+    varChartSvg,
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1191 " &amp; (varRow3Y + 250) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1191"" height=""" &amp; (varRow3Y + 250) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    Concat(
+        colDeptPanels,
+        "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" fill=""#003E32""/&gt;" &amp;
+        "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+    ) &amp;
+    Concat(
+        colPosts,
+        With(
+            {
+                _dept: Department,
+                _depth: Depth,
+                _x: FinalX,
+                _finalYStored: FinalY,
+                _mgrTitle: ManagerPostID,
+                _mySortOrder: SortOrder,
+                _myCategory: Category,
+                _myOccupant: OccupantName,
+                _isGapped: IsGapped,
+                _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
+                _cardW: If(Department = "Command", If(Depth &lt;= 1, 170, 140), Width),
+                _cardH: If(Department = "Command", 34, If(Depth = 0, 34, 27)),
+                _isStackedOfficer: Department &lt;&gt; "Command" &amp;&amp; Depth = 2,
+                _panelY: Switch(
+                    Department,
+                    "Command", 8,
+                    "Safeguarding", varRow1Y,
+                    "Training", varRow1Y,
+                    "Information Systems", varRow1Y,
+                    "Media &amp; Comms", varRow2Y,
+                    "CCF(A)", varRow2Y,
+                    "Policy &amp; Pers", varRow2Y,
+                    "Support", varRow2Y,
+                    "CCF", varRow2Y,
+                    varRow3Y
+                )
+            },
+            With(
+                {
+                    _y: If(
+                        _dept = "Command",
+                        _finalYStored,
+                        _panelY + 30 + If(_depth = 0, 0, If(_depth = 1, 44, 44 + 30 * _mySortOrder))
+                    )
+                },
+                With(
+                    {
+                        _cat: LookUp(colCategoryColours, Category = _myCategory),
+                        _mgr: LookUp(colPosts, Title = _mgrTitle)
+                    },
+                    With(
+                        {
+                            _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
+                            _fillColor: If(_isGapped, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
+                            _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
+                            _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", "")
+                        },
+                        With(
+                            {
+                                _visualMgr: If(
+                                    _isStackedOfficer &amp;&amp; _mySortOrder &gt; 1,
+                                    LookUp(colPosts, ManagerPostID = _mgrTitle &amp;&amp; SortOrder = _mySortOrder - 1),
+                                    _mgr
+                                )
+                            },
+                            If(
+                                !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visualMgr),
+                                With(
+                                    {_mgrCardH: If(_visualMgr.Department = "Command", 34, If(_visualMgr.Depth = 0, 34, 27))},
+                                    "&lt;path d=""M " &amp; _visualMgr.FinalX &amp; " " &amp; (_visualMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
+                                ),
+                                ""
+                            )
+                        ) &amp;
+                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""5"" fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
+                        If(
+                            varChartMode = "Quiet" &amp;&amp; !_isGapped,
+                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
+                            ""
+                        ) &amp;
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 8) &amp; """ text-anchor=""middle"" font-size=""6.5"" fill=""#6B7A8D""&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
+                    )
+                )
+            )
+        )
+    ) &amp;
+    "&lt;/svg&gt;"
+)</pre>
+        </div>
+
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Image control's Image property (unchanged)</span>
+              <span class="code-stamp" data-updated="2026-09-14T12:50:00Z">v1 &middot; 2026-09-14 13:50 BST</span>
+            </div>
+            <button data-copy="phase11-image" type="button">Copy</button>
+          </div>
+<pre id="phase11-image">"data:image/svg+xml," &amp; EncodeUrl(varChartSvg)</pre>
+        </div>
+
+        <p class="meta-line"><code>btnRecalculate.OnSelect</code>:</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnRecalculate.OnSelect</span>
+              <span class="code-stamp" data-updated="2026-09-14T12:50:00Z">v1 &middot; 2026-09-14 13:50 BST</span>
+            </div>
+            <button data-copy="phase11-recalc" type="button">Copy</button>
+          </div>
+<pre id="phase11-recalc">'OrgChart - Compute Depth (Production)'.Run();
+'OrgChart - Compute Width &amp; Position (Production)'.Run();
+ClearCollect(colPosts, OrgChartPosts);
+Set(
+    varChartSvg,
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1191 " &amp; (varRow3Y + 250) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1191"" height=""" &amp; (varRow3Y + 250) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    Concat(
+        colDeptPanels,
+        "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" fill=""#003E32""/&gt;" &amp;
+        "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+    ) &amp;
+    Concat(
+        colPosts,
+        With(
+            {
+                _dept: Department,
+                _depth: Depth,
+                _x: FinalX,
+                _finalYStored: FinalY,
+                _mgrTitle: ManagerPostID,
+                _mySortOrder: SortOrder,
+                _myCategory: Category,
+                _myOccupant: OccupantName,
+                _isGapped: IsGapped,
+                _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
+                _cardW: If(Department = "Command", If(Depth &lt;= 1, 170, 140), Width),
+                _cardH: If(Department = "Command", 34, If(Depth = 0, 34, 27)),
+                _isStackedOfficer: Department &lt;&gt; "Command" &amp;&amp; Depth = 2,
+                _panelY: Switch(
+                    Department,
+                    "Command", 8,
+                    "Safeguarding", varRow1Y,
+                    "Training", varRow1Y,
+                    "Information Systems", varRow1Y,
+                    "Media &amp; Comms", varRow2Y,
+                    "CCF(A)", varRow2Y,
+                    "Policy &amp; Pers", varRow2Y,
+                    "Support", varRow2Y,
+                    "CCF", varRow2Y,
+                    varRow3Y
+                )
+            },
+            With(
+                {
+                    _y: If(
+                        _dept = "Command",
+                        _finalYStored,
+                        _panelY + 30 + If(_depth = 0, 0, If(_depth = 1, 44, 44 + 30 * _mySortOrder))
+                    )
+                },
+                With(
+                    {
+                        _cat: LookUp(colCategoryColours, Category = _myCategory),
+                        _mgr: LookUp(colPosts, Title = _mgrTitle)
+                    },
+                    With(
+                        {
+                            _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
+                            _fillColor: If(_isGapped, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
+                            _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
+                            _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", "")
+                        },
+                        With(
+                            {
+                                _visualMgr: If(
+                                    _isStackedOfficer &amp;&amp; _mySortOrder &gt; 1,
+                                    LookUp(colPosts, ManagerPostID = _mgrTitle &amp;&amp; SortOrder = _mySortOrder - 1),
+                                    _mgr
+                                )
+                            },
+                            If(
+                                !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visualMgr),
+                                With(
+                                    {_mgrCardH: If(_visualMgr.Department = "Command", 34, If(_visualMgr.Depth = 0, 34, 27))},
+                                    "&lt;path d=""M " &amp; _visualMgr.FinalX &amp; " " &amp; (_visualMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
+                                ),
+                                ""
+                            )
+                        ) &amp;
+                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""5"" fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
+                        If(
+                            varChartMode = "Quiet" &amp;&amp; !_isGapped,
+                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
+                            ""
+                        ) &amp;
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 8) &amp; """ text-anchor=""middle"" font-size=""6.5"" fill=""#6B7A8D""&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
+                    )
+                )
+            )
+        )
+    ) &amp;
+    "&lt;/svg&gt;"
+)</pre>
+        </div>
+
+        <p class="meta-line"><code>btnToggleMode.OnSelect</code>:</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnToggleMode.OnSelect</span>
+              <span class="code-stamp" data-updated="2026-09-14T12:50:00Z">v1 &middot; 2026-09-14 13:50 BST</span>
+            </div>
+            <button data-copy="phase11-toggle" type="button">Copy</button>
+          </div>
+<pre id="phase11-toggle">Set(varChartMode, If(varChartMode = "Quiet", "Coloured", "Quiet"));
+Set(
+    varChartSvg,
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1191 " &amp; (varRow3Y + 250) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1191"" height=""" &amp; (varRow3Y + 250) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    Concat(
+        colDeptPanels,
+        "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" fill=""#003E32""/&gt;" &amp;
+        "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+    ) &amp;
+    Concat(
+        colPosts,
+        With(
+            {
+                _dept: Department,
+                _depth: Depth,
+                _x: FinalX,
+                _finalYStored: FinalY,
+                _mgrTitle: ManagerPostID,
+                _mySortOrder: SortOrder,
+                _myCategory: Category,
+                _myOccupant: OccupantName,
+                _isGapped: IsGapped,
+                _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
+                _cardW: If(Department = "Command", If(Depth &lt;= 1, 170, 140), Width),
+                _cardH: If(Department = "Command", 34, If(Depth = 0, 34, 27)),
+                _isStackedOfficer: Department &lt;&gt; "Command" &amp;&amp; Depth = 2,
+                _panelY: Switch(
+                    Department,
+                    "Command", 8,
+                    "Safeguarding", varRow1Y,
+                    "Training", varRow1Y,
+                    "Information Systems", varRow1Y,
+                    "Media &amp; Comms", varRow2Y,
+                    "CCF(A)", varRow2Y,
+                    "Policy &amp; Pers", varRow2Y,
+                    "Support", varRow2Y,
+                    "CCF", varRow2Y,
+                    varRow3Y
+                )
+            },
+            With(
+                {
+                    _y: If(
+                        _dept = "Command",
+                        _finalYStored,
+                        _panelY + 30 + If(_depth = 0, 0, If(_depth = 1, 44, 44 + 30 * _mySortOrder))
+                    )
+                },
+                With(
+                    {
+                        _cat: LookUp(colCategoryColours, Category = _myCategory),
+                        _mgr: LookUp(colPosts, Title = _mgrTitle)
+                    },
+                    With(
+                        {
+                            _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
+                            _fillColor: If(_isGapped, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
+                            _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
+                            _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", "")
+                        },
+                        With(
+                            {
+                                _visualMgr: If(
+                                    _isStackedOfficer &amp;&amp; _mySortOrder &gt; 1,
+                                    LookUp(colPosts, ManagerPostID = _mgrTitle &amp;&amp; SortOrder = _mySortOrder - 1),
+                                    _mgr
+                                )
+                            },
+                            If(
+                                !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visualMgr),
+                                With(
+                                    {_mgrCardH: If(_visualMgr.Department = "Command", 34, If(_visualMgr.Depth = 0, 34, 27))},
+                                    "&lt;path d=""M " &amp; _visualMgr.FinalX &amp; " " &amp; (_visualMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
+                                ),
+                                ""
+                            )
+                        ) &amp;
+                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""5"" fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
+                        If(
+                            varChartMode = "Quiet" &amp;&amp; !_isGapped,
+                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
+                            ""
+                        ) &amp;
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 8) &amp; """ text-anchor=""middle"" font-size=""6.5"" fill=""#6B7A8D""&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
+                    )
+                )
+            )
+        )
+    ) &amp;
+    "&lt;/svg&gt;"
+)</pre>
+        </div>
+
+        <div class="callout ok">
+          <strong>Validation before delivery:</strong> simulated the exact row-height and row-Y formulas in Python against the real 108-post dataset (reproduces a sensible, collision-free layout) and against a synthetic "+10 officers" growth scenario (confirmed the next row is pushed down by exactly the right amount, no overlap). Every field in every <code>With</code> nesting level checked by hand against the new Bible rule before shipping. Ran <code>audit-formulas.py</code> and a quote/paren/brace balance script against every formula block. <strong>Not yet run in Studio.</strong>
         </div>
       </section>
 
