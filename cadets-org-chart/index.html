@@ -283,6 +283,7 @@
         <a href="#phase-6b">Phase 6b - Full Width &amp; Position Computation</a>
         <a href="#phase-7">Phase 7 - Live Render From Real Data</a>
         <a href="#phase-8">Phase 8 - Real 108-Post, 10-Department Structure</a>
+        <a href="#phase-9">Phase 9 - Full Real Render With Colour</a>
         <a href="#next-steps">Next Steps</a>
         <a href="#open-questions">Known Limitations / Open Questions</a>
       </nav>
@@ -1939,6 +1940,10 @@ Set(
           <li><p style="margin:0 0 8px;"><a href="downloads/OrgChart_ComputeWidthPosition_Production.zip" download><strong>OrgChart_ComputeWidthPosition_Production.zip</strong></a> &mdash; same algorithm as Phase 6b, every query scoped to <code>Department eq 'Command'</code>. Import and run the same way, after the Depth flow has completed.</p></li>
         </ol>
 
+        <div class="callout warn" id="phase8-cardwidth-error">
+          <strong>First real run, 2026-09-14 &mdash; hit a real error, fixed.</strong> Allan uploaded his results and <code>CMD-DCOMD</code> came back <code>Width&nbsp;=&nbsp;1110</code>, <code>CMD-COS&nbsp;=&nbsp;790</code> &mdash; not the <code>1100</code>/<code>740</code> predicted below. Root cause: the flow's leaf-width fallback was still the generic <code>150</code> left over from the 11-post <code>OrgChartTest</code> tree, not Command's real card sizes (170 for the DCOMD/PS/Colonel Cadets/COS row, 140 below) that Phase 9's render formula already correctly uses. Fixed by making each width pass use the correct real leaf width for its own depth (<code>170</code> for depth&nbsp;0-1, <code>140</code> for depth&nbsp;2-3), wrapped in <code>max()</code> so a node's own card width is always a floor even if its packed children would be narrower &mdash; verified via official Microsoft docs that <code>max()</code>/<code>min()</code> are real WDL functions before shipping, not guessed. Recomputing by hand with the fix confirms it reproduces the <code>1100</code>/<code>740</code> table below exactly. The package below has this fix applied &mdash; delete the flow you already imported and re-import this one. Your other 97 rows (the 9 grid departments) are untouched either way, since this flow never queries them.
+        </div>
+
         <h3>Spot-check these once both flows have run</h3>
         <table>
           <thead><tr><th>PostID</th><th>Department</th><th>Depth</th><th>Width</th><th>FinalX</th><th>FinalY</th></tr></thead>
@@ -1968,6 +1973,250 @@ Set(
         </div>
         <div class="callout warn">
           <strong>What this does NOT yet solve:</strong> the 9 grid departments' <code>FinalX</code> is a seeded literal, not flow-computed &mdash; a new officer's <code>FinalY</code> updates itself automatically, but a new lead's own column position would need a small extension not built yet. Real occupant names and the <code>ShowOnOrgChart</code> tick-box from the original vision aren't part of this list at all &mdash; this phase is structure only.
+        </div>
+      </section>
+
+      <section id="phase-9">
+        <h2>Phase 9 &mdash; The Full Real Render, With Department Headers And Colour</h2>
+        <p class="meta-line">Springboards directly off Phase 7's app once both Phase 8 flows are confirmed run &middot; ~15-20 minutes &middot; the first time the whole 108-post, 10-department structure is drawn in one picture from live data</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this phase">&#9660;</button>
+        </div>
+        <div class="callout warn">
+          <strong>Not a new throwaway app &mdash; reuses Phase 7's.</strong> Add <code>OrgChartPosts</code> and both production flows (<code>OrgChart - Compute Depth (Production)</code>, <code>OrgChart - Compute Width &amp; Position (Production)</code>) as data sources alongside whatever Phase 7 already has.
+        </div>
+        <div class="callout warn">
+          <strong>What's different from Phase 7, and why:</strong> card size is no longer one fixed constant. Command's <code>Width</code> column is <em>subtree reservation</em> width (e.g. 1100 for DCOMD), not a card size &mdash; its real card width is a fixed 170 for the DCOMD/PS/Colonel Cadets/COS row (Depth 0-1) and 140 below that (Depth 2-3), matching Phase 3's real dimensions. The 9 grid departments are the opposite: their own <code>Width</code> column genuinely <em>is</em> their card's real width (stored that way deliberately in Phase 8). Card height is similarly branched: Command is always 34; the grid departments are 34 for the head row, 27 below it. Department header bars are drawn from a small hardcoded collection of the real panel positions (fixed layout chrome, not SharePoint data &mdash; the same 10 coordinates Phase 3 already used and you already confirmed look right). Category colour + the Quiet/Coloured toggle return, reusing <code>colCategoryColours</code> from Phases 0-3 unchanged. <strong>Connector lines reuse Phase 7's exact algorithm unchanged</strong> &mdash; the same vertical-stub/horizontal-bus/vertical-drop elbow correctly draws Command's branching bus <em>and</em> degrades to a plain straight line for the grid departments' stacked officers (whose manager shares their own X), with no separate logic needed for the two shapes.
+        </div>
+        <div class="callout warn">
+          <strong>No vacancy styling this phase</strong> &mdash; <code>IsVacant</code> isn't part of <code>OrgChartPosts</code>' schema (deliberately out of scope in Phase 8). Every card renders as filled/occupied. A known gap, not silently dropped.
+        </div>
+        <div class="callout ok">
+          <strong>Caught before shipping, not by trial and error:</strong> the first draft of the category-colour lookup was written as <code>LookUp(colCategoryColours, Category = Category)</code> &mdash; ambiguous on both sides, since <code>colPosts</code> and <code>colCategoryColours</code> both have a field called <code>Category</code>. This is exactly the class of bug Phase 1 already hit and fixed with <code>ThisRecord.Category</code> for this same lookup, and Phase 4 hit again as a true self-join. Caught on review before this ever reached Studio, fixed to <code>Category = ThisRecord.Category</code> &mdash; matching Phase 1's already-proven pattern exactly. Every other bare field reference in the formula below was checked and has no colliding field name in scope at its point of use, so needs no <code>ThisRecord</code> prefix, matching Phase 7's own already-confirmed-working pattern for those same fields. Formula also run through this project's own <code>audit-formulas.py</code> tool (clean) and a script-checked quote/paren/brace balance across every block (all balanced) before being handed over.
+        </div>
+
+        <ol>
+          <li><strong>Data</strong> pane &rarr; <strong>Add data</strong> &rarr; add <code>OrgChartPosts</code>, plus both production flows as data sources (same steps as Phase 7).</li>
+          <li>Add a second button (call it <code>btnToggleMode</code>) alongside <code>btnRecalculate</code> for the Quiet/Coloured toggle.</li>
+        </ol>
+
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>App.OnStart &mdash; full replacement of Phase 7's OnStart, brings in department headers, category colour and the real data source</span>
+              <span class="code-stamp" data-updated="2026-09-14T10:30:00Z">v1 &middot; 2026-09-14 11:30 BST</span>
+            </div>
+            <button data-copy="phase9-onstart" type="button">Copy</button>
+          </div>
+<pre id="phase9-onstart">ClearCollect(colCategoryColours,
+    {Category: "Regular", Hex: "#E4EFD9"},
+    {Category: "Civil Servant", Hex: "#CFF4F1"},
+    {Category: "FTRS", Hex: "#FFC7C7"},
+    {Category: "Aspire", Hex: "#FFE6A1"},
+    {Category: "ACCT UK Employee", Hex: "#F6D0F1"},
+    {Category: "RFCA", Hex: "#F7EFAC"},
+    {Category: "ACCT UK Contractor", Hex: "#D8E3FB"},
+    {Category: "Ext Contractor", Hex: "#F7D6AD"},
+    {Category: "CFAV", Hex: "#E5D4EF"}
+);
+
+ClearCollect(colDeptPanels,
+    {Department: "Command", PX: 20, PY: 8, PW: 1134.6},
+    {Department: "Safeguarding", PX: 20, PY: 228, PW: 371.5},
+    {Department: "Training", PX: 401.5, PY: 228, PW: 371.5},
+    {Department: "Information Systems", PX: 783, PY: 228, PW: 371.5},
+    {Department: "Media &amp; Comms", PX: 20, PY: 563, PW: 260},
+    {Department: "CCF(A)", PX: 290, PY: 563, PW: 260},
+    {Department: "Policy &amp; Pers", PX: 560, PY: 563, PW: 180},
+    {Department: "Support", PX: 750, PY: 563, PW: 190},
+    {Department: "CCF", PX: 950, PY: 563, PW: 204.6},
+    {Department: "CEP", PX: 560, PY: 710, PW: 180}
+);
+
+Set(varChartMode, "Quiet");
+
+ClearCollect(colPosts, OrgChartPosts);
+
+Set(
+    varChartSvg,
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1191 810"" font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1191"" height=""810"" fill=""#FFFFFF""/&gt;" &amp;
+    Concat(
+        colDeptPanels,
+        "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" fill=""#003E32""/&gt;" &amp;
+        "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+    ) &amp;
+    Concat(
+        colPosts,
+        With(
+            {
+                _dept: Department,
+                _depth: Depth,
+                _x: FinalX,
+                _y: FinalY,
+                _mgrTitle: ManagerPostID,
+                _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
+                _cardW: If(Department = "Command", If(Depth &lt;= 1, 170, 140), Width),
+                _cardH: If(Department = "Command", 34, If(Depth = 0, 34, 27)),
+                _cat: LookUp(colCategoryColours, Category = ThisRecord.Category)
+            },
+            With(
+                {_mgr: LookUp(colPosts, Title = _mgrTitle)},
+                If(
+                    !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_mgr),
+                    With(
+                        {_mgrCardH: If(_mgr.Department = "Command", 34, If(_mgr.Depth = 0, 34, 27))},
+                        "&lt;path d=""M " &amp; _mgr.FinalX &amp; " " &amp; (_mgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
+                    ),
+                    ""
+                )
+            ) &amp;
+            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""3"" fill=""" &amp; If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF")) &amp; """ stroke=""#CBD5D1"" stroke-width=""0.6""/&gt;" &amp;
+            If(
+                varChartMode = "Quiet",
+                "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
+                ""
+            ) &amp;
+            "&lt;text x=""" &amp; (_x - _cardW / 2 + 6) &amp; """ y=""" &amp; (_y + _cardH / 2 + 3) &amp; """ font-size=""7"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;"
+        )
+    ) &amp;
+    "&lt;/svg&gt;"
+)</pre>
+        </div>
+
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>Image control's Image property (unchanged from Phase 7)</span>
+              <span class="code-stamp" data-updated="2026-09-14T10:30:00Z">v1 &middot; 2026-09-14 11:30 BST</span>
+            </div>
+            <button data-copy="phase9-image" type="button">Copy</button>
+          </div>
+<pre id="phase9-image">"data:image/svg+xml," &amp; EncodeUrl(varChartSvg)</pre>
+        </div>
+
+        <p class="meta-line"><code>btnRecalculate.OnSelect</code> &mdash; reruns both production flows in order, refreshes, re-renders (duplicates the OnStart render block, same reasoning as Phase 7):</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnRecalculate.OnSelect</span>
+              <span class="code-stamp" data-updated="2026-09-14T10:30:00Z">v1 &middot; 2026-09-14 11:30 BST</span>
+            </div>
+            <button data-copy="phase9-recalc" type="button">Copy</button>
+          </div>
+<pre id="phase9-recalc">'OrgChart - Compute Depth (Production)'.Run();
+'OrgChart - Compute Width &amp; Position (Production)'.Run();
+ClearCollect(colPosts, OrgChartPosts);
+Set(
+    varChartSvg,
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1191 810"" font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1191"" height=""810"" fill=""#FFFFFF""/&gt;" &amp;
+    Concat(
+        colDeptPanels,
+        "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" fill=""#003E32""/&gt;" &amp;
+        "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+    ) &amp;
+    Concat(
+        colPosts,
+        With(
+            {
+                _dept: Department,
+                _depth: Depth,
+                _x: FinalX,
+                _y: FinalY,
+                _mgrTitle: ManagerPostID,
+                _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
+                _cardW: If(Department = "Command", If(Depth &lt;= 1, 170, 140), Width),
+                _cardH: If(Department = "Command", 34, If(Depth = 0, 34, 27)),
+                _cat: LookUp(colCategoryColours, Category = ThisRecord.Category)
+            },
+            With(
+                {_mgr: LookUp(colPosts, Title = _mgrTitle)},
+                If(
+                    !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_mgr),
+                    With(
+                        {_mgrCardH: If(_mgr.Department = "Command", 34, If(_mgr.Depth = 0, 34, 27))},
+                        "&lt;path d=""M " &amp; _mgr.FinalX &amp; " " &amp; (_mgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
+                    ),
+                    ""
+                )
+            ) &amp;
+            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""3"" fill=""" &amp; If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF")) &amp; """ stroke=""#CBD5D1"" stroke-width=""0.6""/&gt;" &amp;
+            If(
+                varChartMode = "Quiet",
+                "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
+                ""
+            ) &amp;
+            "&lt;text x=""" &amp; (_x - _cardW / 2 + 6) &amp; """ y=""" &amp; (_y + _cardH / 2 + 3) &amp; """ font-size=""7"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;"
+        )
+    ) &amp;
+    "&lt;/svg&gt;"
+)</pre>
+        </div>
+
+        <p class="meta-line"><code>btnToggleMode.OnSelect</code> &mdash; brings back the Quiet/Coloured toggle from Phases 0-3:</p>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnToggleMode.OnSelect</span>
+              <span class="code-stamp" data-updated="2026-09-14T10:30:00Z">v1 &middot; 2026-09-14 11:30 BST</span>
+            </div>
+            <button data-copy="phase9-toggle" type="button">Copy</button>
+          </div>
+<pre id="phase9-toggle">Set(varChartMode, If(varChartMode = "Quiet", "Coloured", "Quiet"));
+Set(
+    varChartSvg,
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1191 810"" font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1191"" height=""810"" fill=""#FFFFFF""/&gt;" &amp;
+    Concat(
+        colDeptPanels,
+        "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" fill=""#003E32""/&gt;" &amp;
+        "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+    ) &amp;
+    Concat(
+        colPosts,
+        With(
+            {
+                _dept: Department,
+                _depth: Depth,
+                _x: FinalX,
+                _y: FinalY,
+                _mgrTitle: ManagerPostID,
+                _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
+                _cardW: If(Department = "Command", If(Depth &lt;= 1, 170, 140), Width),
+                _cardH: If(Department = "Command", 34, If(Depth = 0, 34, 27)),
+                _cat: LookUp(colCategoryColours, Category = ThisRecord.Category)
+            },
+            With(
+                {_mgr: LookUp(colPosts, Title = _mgrTitle)},
+                If(
+                    !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_mgr),
+                    With(
+                        {_mgrCardH: If(_mgr.Department = "Command", 34, If(_mgr.Depth = 0, 34, 27))},
+                        "&lt;path d=""M " &amp; _mgr.FinalX &amp; " " &amp; (_mgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
+                    ),
+                    ""
+                )
+            ) &amp;
+            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""3"" fill=""" &amp; If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF")) &amp; """ stroke=""#CBD5D1"" stroke-width=""0.6""/&gt;" &amp;
+            If(
+                varChartMode = "Quiet",
+                "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
+                ""
+            ) &amp;
+            "&lt;text x=""" &amp; (_x - _cardW / 2 + 6) &amp; """ y=""" &amp; (_y + _cardH / 2 + 3) &amp; """ font-size=""7"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;"
+        )
+    ) &amp;
+    "&lt;/svg&gt;"
+)</pre>
+        </div>
+
+        <div class="callout ok">
+          <strong>What to expect:</strong> all 10 department header bars in their real positions, Command's branching tree exactly as Phases 6b/7 already confirmed numerically, and the 9 grid departments as tidy lead-columns with officers stacked underneath &mdash; the first time the whole 108-post structure has ever been drawn in one picture from live SharePoint data. Toggle Quiet/Coloured to confirm both card styles still work with real category data.
+        </div>
+        <div class="callout warn">
+          <strong>Deliberately not solved here:</strong> vacancy styling (no <code>IsVacant</code> in this schema yet), real occupant names (still a separate concern), print/A3 export, and an automatic (non-button) trigger &mdash; all previously-scoped-out problems, not re-solved in this phase either.
         </div>
       </section>
 
