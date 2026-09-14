@@ -2381,37 +2381,41 @@ Set(
             With(
                 {
                     _cat: LookUp(colCategoryColours, Category = _myCategory),
-                    _mgr: LookUp(colPosts, Title = _mgrTitle),
-                    _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
-                    _fillColor: If(_isGapped, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
-                    _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
-                    _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", "")
+                    _mgr: LookUp(colPosts, Title = _mgrTitle)
                 },
                 With(
                     {
-                        _visualMgr: If(
-                            _isStackedOfficer &amp;&amp; _mySortOrder &gt; 1,
-                            LookUp(colPosts, ManagerPostID = _mgrTitle &amp;&amp; SortOrder = _mySortOrder - 1),
-                            _mgr
-                        )
+                        _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
+                        _fillColor: If(_isGapped, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
+                        _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
+                        _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", "")
                     },
+                    With(
+                        {
+                            _visualMgr: If(
+                                _isStackedOfficer &amp;&amp; _mySortOrder &gt; 1,
+                                LookUp(colPosts, ManagerPostID = _mgrTitle &amp;&amp; SortOrder = _mySortOrder - 1),
+                                _mgr
+                            )
+                        },
+                        If(
+                            !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visualMgr),
+                            With(
+                                {_mgrCardH: If(_visualMgr.Department = "Command", 34, If(_visualMgr.Depth = 0, 34, 27))},
+                                "&lt;path d=""M " &amp; _visualMgr.FinalX &amp; " " &amp; (_visualMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
+                            ),
+                            ""
+                        )
+                    ) &amp;
+                    "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""5"" fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
                     If(
-                        !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visualMgr),
-                        With(
-                            {_mgrCardH: If(_visualMgr.Department = "Command", 34, If(_visualMgr.Depth = 0, 34, 27))},
-                            "&lt;path d=""M " &amp; _visualMgr.FinalX &amp; " " &amp; (_visualMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
-                        ),
+                        varChartMode = "Quiet" &amp;&amp; !_isGapped,
+                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
                         ""
-                    )
-                ) &amp;
-                "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""5"" fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
-                If(
-                    varChartMode = "Quiet" &amp;&amp; !_isGapped,
-                    "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
-                    ""
-                ) &amp;
-                "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
-                "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 8) &amp; """ text-anchor=""middle"" font-size=""6.5"" fill=""#6B7A8D""&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
+                    ) &amp;
+                    "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
+                    "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 8) &amp; """ text-anchor=""middle"" font-size=""6.5"" fill=""#6B7A8D""&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
+                )
             )
         )
     ) &amp;
@@ -2472,37 +2476,41 @@ Set(
             With(
                 {
                     _cat: LookUp(colCategoryColours, Category = _myCategory),
-                    _mgr: LookUp(colPosts, Title = _mgrTitle),
-                    _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
-                    _fillColor: If(_isGapped, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
-                    _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
-                    _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", "")
+                    _mgr: LookUp(colPosts, Title = _mgrTitle)
                 },
                 With(
                     {
-                        _visualMgr: If(
-                            _isStackedOfficer &amp;&amp; _mySortOrder &gt; 1,
-                            LookUp(colPosts, ManagerPostID = _mgrTitle &amp;&amp; SortOrder = _mySortOrder - 1),
-                            _mgr
-                        )
+                        _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
+                        _fillColor: If(_isGapped, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
+                        _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
+                        _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", "")
                     },
+                    With(
+                        {
+                            _visualMgr: If(
+                                _isStackedOfficer &amp;&amp; _mySortOrder &gt; 1,
+                                LookUp(colPosts, ManagerPostID = _mgrTitle &amp;&amp; SortOrder = _mySortOrder - 1),
+                                _mgr
+                            )
+                        },
+                        If(
+                            !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visualMgr),
+                            With(
+                                {_mgrCardH: If(_visualMgr.Department = "Command", 34, If(_visualMgr.Depth = 0, 34, 27))},
+                                "&lt;path d=""M " &amp; _visualMgr.FinalX &amp; " " &amp; (_visualMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
+                            ),
+                            ""
+                        )
+                    ) &amp;
+                    "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""5"" fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
                     If(
-                        !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visualMgr),
-                        With(
-                            {_mgrCardH: If(_visualMgr.Department = "Command", 34, If(_visualMgr.Depth = 0, 34, 27))},
-                            "&lt;path d=""M " &amp; _visualMgr.FinalX &amp; " " &amp; (_visualMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
-                        ),
+                        varChartMode = "Quiet" &amp;&amp; !_isGapped,
+                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
                         ""
-                    )
-                ) &amp;
-                "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""5"" fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
-                If(
-                    varChartMode = "Quiet" &amp;&amp; !_isGapped,
-                    "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
-                    ""
-                ) &amp;
-                "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
-                "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 8) &amp; """ text-anchor=""middle"" font-size=""6.5"" fill=""#6B7A8D""&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
+                    ) &amp;
+                    "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
+                    "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 8) &amp; """ text-anchor=""middle"" font-size=""6.5"" fill=""#6B7A8D""&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
+                )
             )
         )
     ) &amp;
@@ -2550,37 +2558,41 @@ Set(
             With(
                 {
                     _cat: LookUp(colCategoryColours, Category = _myCategory),
-                    _mgr: LookUp(colPosts, Title = _mgrTitle),
-                    _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
-                    _fillColor: If(_isGapped, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
-                    _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
-                    _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", "")
+                    _mgr: LookUp(colPosts, Title = _mgrTitle)
                 },
                 With(
                     {
-                        _visualMgr: If(
-                            _isStackedOfficer &amp;&amp; _mySortOrder &gt; 1,
-                            LookUp(colPosts, ManagerPostID = _mgrTitle &amp;&amp; SortOrder = _mySortOrder - 1),
-                            _mgr
-                        )
+                        _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
+                        _fillColor: If(_isGapped, "#F0F1F0", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
+                        _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
+                        _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", "")
                     },
+                    With(
+                        {
+                            _visualMgr: If(
+                                _isStackedOfficer &amp;&amp; _mySortOrder &gt; 1,
+                                LookUp(colPosts, ManagerPostID = _mgrTitle &amp;&amp; SortOrder = _mySortOrder - 1),
+                                _mgr
+                            )
+                        },
+                        If(
+                            !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visualMgr),
+                            With(
+                                {_mgrCardH: If(_visualMgr.Department = "Command", 34, If(_visualMgr.Depth = 0, 34, 27))},
+                                "&lt;path d=""M " &amp; _visualMgr.FinalX &amp; " " &amp; (_visualMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
+                            ),
+                            ""
+                        )
+                    ) &amp;
+                    "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""5"" fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
                     If(
-                        !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visualMgr),
-                        With(
-                            {_mgrCardH: If(_visualMgr.Department = "Command", 34, If(_visualMgr.Depth = 0, 34, 27))},
-                            "&lt;path d=""M " &amp; _visualMgr.FinalX &amp; " " &amp; (_visualMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
-                        ),
+                        varChartMode = "Quiet" &amp;&amp; !_isGapped,
+                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
                         ""
-                    )
-                ) &amp;
-                "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""5"" fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
-                If(
-                    varChartMode = "Quiet" &amp;&amp; !_isGapped,
-                    "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
-                    ""
-                ) &amp;
-                "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
-                "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 8) &amp; """ text-anchor=""middle"" font-size=""6.5"" fill=""#6B7A8D""&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
+                    ) &amp;
+                    "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
+                    "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 8) &amp; """ text-anchor=""middle"" font-size=""6.5"" fill=""#6B7A8D""&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
+                )
             )
         )
     ) &amp;
@@ -2588,6 +2600,9 @@ Set(
 )</pre>
         </div>
 
+        <div class="callout warn" id="phase10-withscope-error">
+          <strong>First real run, 2026-09-14 &mdash; hit the same-sounding Studio error as Phase 9, but a genuinely different bug this time.</strong> <code>Name isn't valid. '_cat' isn't recognized.</code> at <code>Coalesce(_cat.Hex, "#FFFFFF")</code> inside <code>_fillColor</code>'s definition. Cause: <strong>fields inside a single <code>With({...}, body)</code> record cannot reference each other</strong> &mdash; each field in that <code>{...}</code> literal is evaluated independently against the OUTER scope, not against its sibling fields in the same record, no matter how deeply that <code>With</code> is itself nested. The formula had <code>_cat</code> and <code>_fillColor</code> defined in the <em>same</em> record, with <code>_fillColor</code> trying to use <code>_cat</code> &mdash; that's simply not visible, regardless of bracket placement. <strong>Fixed by giving <code>_fillColor</code> (and <code>_nameLine</code>/<code>_strokeColor</code>/<code>_dashAttr</code>, which don't strictly need it but are grouped together for clarity) their own nested <code>With</code>, one level deeper than <code>_cat</code>/<code>_mgr</code>'s own <code>With</code></strong> &mdash; a nested <code>With</code>'s body can see every enclosing <code>With</code>'s bindings just fine; the restriction only ever applies within one single <code>{...}</code> literal referencing itself. Added as a new, general rule in <code>power-apps-bible/reference/known-bad-patterns.md</code> since this applies to any multi-field <code>With</code> record, not just this formula. The formula below already has this fix &mdash; re-paste it if you pasted the earlier version.
+        </div>
         <div class="callout ok">
           <strong>Validation before delivery:</strong> re-ran the full Phase 8 validation suite (department counts, dangling-reference check, depth-walk cross-check, real 2D box-overlap check) against the re-sorted dataset &mdash; all still pass. Ran <code>audit-formulas.py</code> against this file and the published guide (clean). Verified quote/paren/brace balance across every formula block with a script before handing over. <strong>Not yet run in Studio.</strong>
         </div>
