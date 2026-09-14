@@ -2056,20 +2056,34 @@ Set(
                 _x: FinalX,
                 _y: FinalY,
                 _mgrTitle: ManagerPostID,
+                _mySortOrder: SortOrder,
+                _myCategory: Category,
                 _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
                 _cardW: If(Department = "Command", If(Depth &lt;= 1, 170, 140), Width),
                 _cardH: If(Department = "Command", 34, If(Depth = 0, 34, 27)),
-                _cat: LookUp(colCategoryColours, Category = ThisRecord.Category)
+                _isStackedOfficer: Department &lt;&gt; "Command" &amp;&amp; Depth = 2
             },
             With(
-                {_mgr: LookUp(colPosts, Title = _mgrTitle)},
-                If(
-                    !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_mgr),
-                    With(
-                        {_mgrCardH: If(_mgr.Department = "Command", 34, If(_mgr.Depth = 0, 34, 27))},
-                        "&lt;path d=""M " &amp; _mgr.FinalX &amp; " " &amp; (_mgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
-                    ),
-                    ""
+                {
+                    _cat: LookUp(colCategoryColours, Category = _myCategory),
+                    _mgr: LookUp(colPosts, Title = _mgrTitle)
+                },
+                With(
+                    {
+                        _visualMgr: If(
+                            _isStackedOfficer &amp;&amp; _mySortOrder &gt; 1,
+                            LookUp(colPosts, ManagerPostID = _mgrTitle &amp;&amp; SortOrder = _mySortOrder - 1),
+                            _mgr
+                        )
+                    },
+                    If(
+                        !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visualMgr),
+                        With(
+                            {_mgrCardH: If(_visualMgr.Department = "Command", 34, If(_visualMgr.Depth = 0, 34, 27))},
+                            "&lt;path d=""M " &amp; _visualMgr.FinalX &amp; " " &amp; (_visualMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
+                        ),
+                        ""
+                    )
                 )
             ) &amp;
             "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""3"" fill=""" &amp; If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF")) &amp; """ stroke=""#CBD5D1"" stroke-width=""0.6""/&gt;" &amp;
@@ -2126,20 +2140,34 @@ Set(
                 _x: FinalX,
                 _y: FinalY,
                 _mgrTitle: ManagerPostID,
+                _mySortOrder: SortOrder,
+                _myCategory: Category,
                 _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
                 _cardW: If(Department = "Command", If(Depth &lt;= 1, 170, 140), Width),
                 _cardH: If(Department = "Command", 34, If(Depth = 0, 34, 27)),
-                _cat: LookUp(colCategoryColours, Category = ThisRecord.Category)
+                _isStackedOfficer: Department &lt;&gt; "Command" &amp;&amp; Depth = 2
             },
             With(
-                {_mgr: LookUp(colPosts, Title = _mgrTitle)},
-                If(
-                    !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_mgr),
-                    With(
-                        {_mgrCardH: If(_mgr.Department = "Command", 34, If(_mgr.Depth = 0, 34, 27))},
-                        "&lt;path d=""M " &amp; _mgr.FinalX &amp; " " &amp; (_mgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
-                    ),
-                    ""
+                {
+                    _cat: LookUp(colCategoryColours, Category = _myCategory),
+                    _mgr: LookUp(colPosts, Title = _mgrTitle)
+                },
+                With(
+                    {
+                        _visualMgr: If(
+                            _isStackedOfficer &amp;&amp; _mySortOrder &gt; 1,
+                            LookUp(colPosts, ManagerPostID = _mgrTitle &amp;&amp; SortOrder = _mySortOrder - 1),
+                            _mgr
+                        )
+                    },
+                    If(
+                        !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visualMgr),
+                        With(
+                            {_mgrCardH: If(_visualMgr.Department = "Command", 34, If(_visualMgr.Depth = 0, 34, 27))},
+                            "&lt;path d=""M " &amp; _visualMgr.FinalX &amp; " " &amp; (_visualMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
+                        ),
+                        ""
+                    )
                 )
             ) &amp;
             "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""3"" fill=""" &amp; If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF")) &amp; """ stroke=""#CBD5D1"" stroke-width=""0.6""/&gt;" &amp;
@@ -2183,20 +2211,34 @@ Set(
                 _x: FinalX,
                 _y: FinalY,
                 _mgrTitle: ManagerPostID,
+                _mySortOrder: SortOrder,
+                _myCategory: Category,
                 _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
                 _cardW: If(Department = "Command", If(Depth &lt;= 1, 170, 140), Width),
                 _cardH: If(Department = "Command", 34, If(Depth = 0, 34, 27)),
-                _cat: LookUp(colCategoryColours, Category = ThisRecord.Category)
+                _isStackedOfficer: Department &lt;&gt; "Command" &amp;&amp; Depth = 2
             },
             With(
-                {_mgr: LookUp(colPosts, Title = _mgrTitle)},
-                If(
-                    !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_mgr),
-                    With(
-                        {_mgrCardH: If(_mgr.Department = "Command", 34, If(_mgr.Depth = 0, 34, 27))},
-                        "&lt;path d=""M " &amp; _mgr.FinalX &amp; " " &amp; (_mgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
-                    ),
-                    ""
+                {
+                    _cat: LookUp(colCategoryColours, Category = _myCategory),
+                    _mgr: LookUp(colPosts, Title = _mgrTitle)
+                },
+                With(
+                    {
+                        _visualMgr: If(
+                            _isStackedOfficer &amp;&amp; _mySortOrder &gt; 1,
+                            LookUp(colPosts, ManagerPostID = _mgrTitle &amp;&amp; SortOrder = _mySortOrder - 1),
+                            _mgr
+                        )
+                    },
+                    If(
+                        !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visualMgr),
+                        With(
+                            {_mgrCardH: If(_visualMgr.Department = "Command", 34, If(_visualMgr.Depth = 0, 34, 27))},
+                            "&lt;path d=""M " &amp; _visualMgr.FinalX &amp; " " &amp; (_visualMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5"" fill=""none""/&gt;"
+                        ),
+                        ""
+                    )
                 )
             ) &amp;
             "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""3"" fill=""" &amp; If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF")) &amp; """ stroke=""#CBD5D1"" stroke-width=""0.6""/&gt;" &amp;
@@ -2212,6 +2254,14 @@ Set(
 )</pre>
         </div>
 
+        <div class="callout warn" id="phase9-firstrun-errors">
+          <strong>First real run, 2026-09-14 &mdash; hit two real bugs, both fixed.</strong>
+          <ol style="margin:6px 0 0;">
+            <li><strong>Every card rendered the same green, regardless of category.</strong> Root cause: <code>ThisRecord</code> inside a <code>LookUp(colCategoryColours, Category = ThisRecord.Category)</code> binds to whichever table <code>LookUp</code> is searching (<code>colCategoryColours</code> itself), not to the outer post &mdash; not the outer <code>colPosts</code> row the earlier fix assumed. That made the condition trivially <code>Category = Category</code> against <code>colCategoryColours</code>'s own field, always true, always returning the first row ("Regular", a pale green) for every single post. Fixed by capturing the post's own category into a plain variable (<code>_myCategory: Category</code>) <em>before</em> the lookup, then comparing against that captured value instead of <code>ThisRecord</code> &mdash; the same capture-first pattern already used elsewhere in this formula for the manager self-join, just applied here too.</li>
+            <li><strong>Connector lines cut straight through cards.</strong> In the 9 grid departments, every officer's <code>ManagerPostID</code> is the lead, so each officer's line was drawn from the lead all the way down to that officer &mdash; meaning a 4th officer's line visually crossed straight through officers 1-3's cards on the way past them. Fixed by chaining stacked officers to each other: an officer past the first in its column now draws its connector from the <em>previous</em> officer in the same lead's list, not from the lead directly &mdash; only the first officer under each lead still connects to the lead itself. Command's own connectors are unaffected (its children genuinely fan out side by side, never stacked, so the original rule was already correct there).</li>
+          </ol>
+          <p style="margin:8px 0 0;">Both fixes verified against the real 108-row dataset in Python before being written into the formula below: 7 distinct category colours confirmed present across the real data, and the stacked-officer chain confirmed to link each officer to its immediate predecessor (e.g. <code>SG-101&rarr;SG-100</code>, <code>SG-102&rarr;SG-101</code>, <code>SG-103&rarr;SG-102</code>). The formulas below already have both fixes &mdash; re-paste them if you pasted the earlier version.</p>
+        </div>
         <div class="callout ok">
           <strong>What to expect:</strong> all 10 department header bars in their real positions, Command's branching tree exactly as Phases 6b/7 already confirmed numerically, and the 9 grid departments as tidy lead-columns with officers stacked underneath &mdash; the first time the whole 108-post structure has ever been drawn in one picture from live SharePoint data. Toggle Quiet/Coloured to confirm both card styles still work with real category data.
         </div>
