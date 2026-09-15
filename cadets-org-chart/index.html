@@ -341,7 +341,7 @@
           <tr><td>Command</td><td>11</td><td>Grid: DCOMD (head) &rarr; Colonel Cadets / COS / DCOMD PS (3 columns); COS's column has 5 further reports, 2 of whom each have their own single report nested below.</td></tr>
           <tr><td>Safeguarding</td><td>16</td><td>Grid: head &rarr; 2 leads of 6 caseworkers each, plus 1 standalone leaf.</td></tr>
           <tr><td>Training</td><td>20</td><td>Flat: head &rarr; 19 direct reports, no lead level at all, arranged in 4 visual columns.</td></tr>
-          <tr><td>Information Systems</td><td>24</td><td>Head + an attached "Solutions Architect" post + 3 delivery leads (7/5/4 reports) &mdash; one lead's 7th report has its own 2 further reports &mdash; + 1 post on a dotted (functional, not managerial) line.</td></tr>
+          <tr><td>Information Systems</td><td>24</td><td>Head + a genuinely detached "Solutions Architect" post (no connector line at all, confirmed from the PDF) + 3 delivery leads (7/5/4 reports) &mdash; one lead's 7th report has its own 2 further reports &mdash; + 1 post on a dotted (functional, not managerial) line.</td></tr>
           <tr><td>Media &amp; Comms</td><td>11</td><td>Two co-equal Comms Leads joined by a peer line, each running their own small team.</td></tr>
           <tr><td>CCF(A)</td><td>11</td><td>Flat: SO1 CCFA &rarr; 10 direct reports, no lead level, 2 columns of 5.</td></tr>
           <tr><td>Policy &amp; Pers</td><td>5</td><td>Grid: head &rarr; 3 direct reports, 1 of whom has their own report.</td></tr>
@@ -380,7 +380,7 @@
           <li>Add three new columns via <strong>+Add column</strong> (never "Create list from Excel" &mdash; it mangles internal field names, a confirmed, repeated finding in this project): <code>RelationshipType</code> (Text), <code>PeerPostID</code> (Text), <code>VisualParentPostID</code> (Text).</li>
           <li>If <code>FinalY</code> exists as a <strong>Calculated</strong> column from an earlier build, delete it and re-add it as a plain <strong>Number</strong> column &mdash; it's a literal seeded value now, the same as <code>FinalX</code> and <code>Width</code> already are.</li>
           <li>Confirm <code>OccupantName</code> (Text) and <code>IsGapped</code> (Yes/No) already exist &mdash; add them the same way if this is a fresh list.</li>
-          <li>Download <code>OrgChartPosts_Data_v5.xlsx</code> (see <a href="#downloads">Downloads</a>) and bulk-paste all 108 rows into the list's <strong>Quick Edit</strong> grid view, matching the sheet's own column order exactly. Quick Edit only inserts values into already-existing columns, so it can't trigger the same field-mangling problem "Create list from Excel" does.</li>
+          <li>Download <code>OrgChartPosts_Data_v7.xlsx</code> (see <a href="#downloads">Downloads</a>) and bulk-paste all 108 rows into the list's <strong>Quick Edit</strong> grid view, matching the sheet's own column order exactly. Quick Edit only inserts values into already-existing columns, so it can't trigger the same field-mangling problem "Create list from Excel" does.</li>
           <li>If the two old flows are still imported in your environment &mdash; <code>OrgChart - Compute Depth (Production)</code> and <code>OrgChart - Compute Width &amp; Position (Production)</code> &mdash; delete or turn them off. Nothing in the current design calls either one any more.</li>
         </ol>
       </section>
@@ -403,7 +403,7 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-15T12:16:32Z">v2 &middot; 2026-09-15 13:16 BST &mdash; fixed a With-scoping bug: _panelY referenced sibling field _dept instead of the real Department field, hit live in Studio (&quot;Name isn&apos;t valid. &apos;_dept&apos; isn&apos;t recognized&quot;)</span>
+                <span class="code-stamp" data-updated="2026-09-15T12:45:15Z">v3 &middot; 2026-09-15 13:45 BST &mdash; verbatim PDF titles, corrected Command (SO3 IX), IS-ATTACH now genuinely detached, two-pass render (connectors behind all cards), rounding dropped, real widths, banner+print date</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
@@ -422,21 +422,21 @@ ClearCollect(colCategoryColours,
 );
 
 ClearCollect(colDeptPanelsBase,
-    {Department: "Command", PX: 20, PW: 371.5},
-    {Department: "Safeguarding", PX: 411.5, PW: 371.5},
-    {Department: "Training", PX: 803, PW: 371.5},
-    {Department: "Information Systems", PX: 20, PW: 371.5},
-    {Department: "Media &amp; Comms", PX: 411.5, PW: 260},
-    {Department: "CCF(A)", PX: 691.5, PW: 260},
-    {Department: "Policy &amp; Pers", PX: 20, PW: 180},
-    {Department: "Support", PX: 220, PW: 190},
-    {Department: "CCF", PX: 430, PW: 204.6},
-    {Department: "CEP", PX: 654.6, PW: 140}
+    {Department: "Command", PX: 20, PW: 350},
+    {Department: "Safeguarding", PX: 390, PW: 350},
+    {Department: "Training", PX: 760, PW: 470},
+    {Department: "Information Systems", PX: 20, PW: 710},
+    {Department: "Media &amp; Comms", PX: 750, PW: 230},
+    {Department: "CCF(A)", PX: 1000, PW: 230},
+    {Department: "Policy &amp; Pers", PX: 20, PW: 350},
+    {Department: "Support", PX: 390, PW: 470},
+    {Department: "CCF", PX: 880, PW: 230},
+    {Department: "CEP", PX: 1130, PW: 140}
 );
 
 ClearCollect(colPosts, OrgChartPosts);
 
-Set(varRowAY, 20);
+Set(varRowAY, 56);
 Set(
     varRowAH,
     Max(
@@ -490,8 +490,11 @@ ClearCollect(
 
 Set(
     varChartSvg,
-    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1200 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1200"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1300 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1300"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1300"" height=""36"" fill=""#172A27""/&gt;" &amp;
+    "&lt;text x=""16"" y=""23"" font-weight=""700"" font-size=""15"" fill=""#FFFFFF""&gt;Cadets Branch Structure&lt;/text&gt;" &amp;
+    "&lt;text x=""1284"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
     Concat(
         colDeptPanels,
         With(
@@ -503,8 +506,8 @@ Set(
             },
             If(
                 Department = "Command",
-                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ rx=""4"" fill=""#EEF1F4"" stroke=""#2C3E50"" stroke-width=""2""/&gt;",
-                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ rx=""4"" fill=""none"" stroke=""#B9C2C8"" stroke-width=""1""/&gt;"
+                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ fill=""#EEF1F4"" stroke=""#2C3E50"" stroke-width=""2""/&gt;",
+                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ fill=""none"" stroke=""#B9C2C8"" stroke-width=""1""/&gt;"
             )
         ) &amp;
         "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" fill=""#003E32""/&gt;" &amp;
@@ -540,37 +543,70 @@ Set(
                 {_y: _panelY + 30 + FinalY},
                 With(
                     {
-                        _cat: LookUp(colCategoryColours, Category = _myCategory),
                         _visMgr: LookUp(colPosts, Title = _visParentTitle),
-                        _peerPost: LookUp(colPosts, Title = _peerTitle)
+                        _peerPost: LookUp(colPosts, Title = _peerTitle),
+                        _connDashAttr: If(_relType = "Dotted", " stroke-dasharray=""4,3""", "")
                     },
+                    (
+                        If(
+                            !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visMgr),
+                            With(
+                                {_mgrCardH: If(_visMgr.Depth = 0, 34, 27)},
+                                "&lt;path d=""M " &amp; _visMgr.FinalX &amp; " " &amp; (_panelY + 30 + _visMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
+                            ),
+                            ""
+                        )
+                    ) &amp;
+                    (
+                        If(
+                            !IsBlank(_peerTitle) &amp;&amp; !IsBlank(_peerPost),
+                            "&lt;path d=""M " &amp; _peerPost.FinalX &amp; " " &amp; (_y + _cardH / 2) &amp; " H " &amp; _x &amp; """ stroke=""#4A4A4A"" stroke-width=""1.5"" stroke-dasharray=""1,3""/&gt;",
+                            ""
+                        )
+                    )
+                )
+            )
+        )
+    ) &amp;
+    Concat(
+        colPosts,
+        With(
+            {
+                _x: FinalX,
+                _mgrTitle: ManagerPostID,
+                _visParentTitle: VisualParentPostID,
+                _peerTitle: PeerPostID,
+                _relType: RelationshipType,
+                _myCategory: Category,
+                _myOccupant: OccupantName,
+                _isGapped: IsGapped,
+                _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
+                _cardW: Width,
+                _cardH: If(Depth = 0, 34, 27),
+                _panelY: Switch(
+                    Department,
+                    "Command", varRowAY,
+                    "Safeguarding", varRowAY,
+                    "Training", varRowAY,
+                    "Information Systems", varRowBY,
+                    "Media &amp; Comms", varRowBY,
+                    "CCF(A)", varRowBY,
+                    varRowCY
+                )
+            },
+            With(
+                {_y: _panelY + 30 + FinalY},
+                With(
+                    {_cat: LookUp(colCategoryColours, Category = _myCategory)},
                     With(
                         {
                             _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
                             _fillColor: If(_isGapped, "#D8D8D8", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
                             _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
                             _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", ""),
-                            _connDashAttr: If(_relType = "Dotted", " stroke-dasharray=""4,3""", ""),
                             _useWhiteText: varChartMode = "Coloured" &amp;&amp; !_isGapped &amp;&amp; _myCategory = "ACCT UK Contractor"
                         },
-                        (
-                            If(
-                                !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visMgr),
-                                With(
-                                    {_mgrCardH: If(_visMgr.Depth = 0, 34, 27)},
-                                    "&lt;path d=""M " &amp; _visMgr.FinalX &amp; " " &amp; (_panelY + 30 + _visMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
-                                ),
-                                ""
-                            )
-                        ) &amp;
-                        (
-                            If(
-                                !IsBlank(_peerTitle) &amp;&amp; !IsBlank(_peerPost),
-                                "&lt;path d=""M " &amp; _peerPost.FinalX &amp; " " &amp; (_y + _cardH / 2) &amp; " H " &amp; _x &amp; """ stroke=""#4A4A4A"" stroke-width=""1.5"" stroke-dasharray=""1,3""/&gt;",
-                                ""
-                            )
-                        ) &amp;
-                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""5"" fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
+                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
                         If(
                             varChartMode = "Quiet" &amp;&amp; !_isGapped,
                             "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
@@ -594,7 +630,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnRecalculate &middot; OnSelect &mdash; same as OnStart, minus the mode reset, no flow calls</span>
-                <span class="code-stamp" data-updated="2026-09-15T12:16:32Z">v2 &middot; 2026-09-15 13:16 BST &mdash; same With-scoping fix as OnStart</span>
+                <span class="code-stamp" data-updated="2026-09-15T12:45:15Z">v3 &middot; 2026-09-15 13:45 BST &mdash; same v3 fixes as OnStart</span>
               </div>
               <button data-copy="current-recalc" type="button">Copy</button>
             </div>
@@ -611,21 +647,21 @@ Set(
 );
 
 ClearCollect(colDeptPanelsBase,
-    {Department: "Command", PX: 20, PW: 371.5},
-    {Department: "Safeguarding", PX: 411.5, PW: 371.5},
-    {Department: "Training", PX: 803, PW: 371.5},
-    {Department: "Information Systems", PX: 20, PW: 371.5},
-    {Department: "Media &amp; Comms", PX: 411.5, PW: 260},
-    {Department: "CCF(A)", PX: 691.5, PW: 260},
-    {Department: "Policy &amp; Pers", PX: 20, PW: 180},
-    {Department: "Support", PX: 220, PW: 190},
-    {Department: "CCF", PX: 430, PW: 204.6},
-    {Department: "CEP", PX: 654.6, PW: 140}
+    {Department: "Command", PX: 20, PW: 350},
+    {Department: "Safeguarding", PX: 390, PW: 350},
+    {Department: "Training", PX: 760, PW: 470},
+    {Department: "Information Systems", PX: 20, PW: 710},
+    {Department: "Media &amp; Comms", PX: 750, PW: 230},
+    {Department: "CCF(A)", PX: 1000, PW: 230},
+    {Department: "Policy &amp; Pers", PX: 20, PW: 350},
+    {Department: "Support", PX: 390, PW: 470},
+    {Department: "CCF", PX: 880, PW: 230},
+    {Department: "CEP", PX: 1130, PW: 140}
 );
 
 ClearCollect(colPosts, OrgChartPosts);
 
-Set(varRowAY, 20);
+Set(varRowAY, 56);
 Set(
     varRowAH,
     Max(
@@ -679,8 +715,11 @@ ClearCollect(
 
 Set(
     varChartSvg,
-    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1200 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1200"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1300 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1300"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1300"" height=""36"" fill=""#172A27""/&gt;" &amp;
+    "&lt;text x=""16"" y=""23"" font-weight=""700"" font-size=""15"" fill=""#FFFFFF""&gt;Cadets Branch Structure&lt;/text&gt;" &amp;
+    "&lt;text x=""1284"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
     Concat(
         colDeptPanels,
         With(
@@ -692,8 +731,8 @@ Set(
             },
             If(
                 Department = "Command",
-                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ rx=""4"" fill=""#EEF1F4"" stroke=""#2C3E50"" stroke-width=""2""/&gt;",
-                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ rx=""4"" fill=""none"" stroke=""#B9C2C8"" stroke-width=""1""/&gt;"
+                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ fill=""#EEF1F4"" stroke=""#2C3E50"" stroke-width=""2""/&gt;",
+                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ fill=""none"" stroke=""#B9C2C8"" stroke-width=""1""/&gt;"
             )
         ) &amp;
         "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" fill=""#003E32""/&gt;" &amp;
@@ -729,37 +768,70 @@ Set(
                 {_y: _panelY + 30 + FinalY},
                 With(
                     {
-                        _cat: LookUp(colCategoryColours, Category = _myCategory),
                         _visMgr: LookUp(colPosts, Title = _visParentTitle),
-                        _peerPost: LookUp(colPosts, Title = _peerTitle)
+                        _peerPost: LookUp(colPosts, Title = _peerTitle),
+                        _connDashAttr: If(_relType = "Dotted", " stroke-dasharray=""4,3""", "")
                     },
+                    (
+                        If(
+                            !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visMgr),
+                            With(
+                                {_mgrCardH: If(_visMgr.Depth = 0, 34, 27)},
+                                "&lt;path d=""M " &amp; _visMgr.FinalX &amp; " " &amp; (_panelY + 30 + _visMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
+                            ),
+                            ""
+                        )
+                    ) &amp;
+                    (
+                        If(
+                            !IsBlank(_peerTitle) &amp;&amp; !IsBlank(_peerPost),
+                            "&lt;path d=""M " &amp; _peerPost.FinalX &amp; " " &amp; (_y + _cardH / 2) &amp; " H " &amp; _x &amp; """ stroke=""#4A4A4A"" stroke-width=""1.5"" stroke-dasharray=""1,3""/&gt;",
+                            ""
+                        )
+                    )
+                )
+            )
+        )
+    ) &amp;
+    Concat(
+        colPosts,
+        With(
+            {
+                _x: FinalX,
+                _mgrTitle: ManagerPostID,
+                _visParentTitle: VisualParentPostID,
+                _peerTitle: PeerPostID,
+                _relType: RelationshipType,
+                _myCategory: Category,
+                _myOccupant: OccupantName,
+                _isGapped: IsGapped,
+                _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
+                _cardW: Width,
+                _cardH: If(Depth = 0, 34, 27),
+                _panelY: Switch(
+                    Department,
+                    "Command", varRowAY,
+                    "Safeguarding", varRowAY,
+                    "Training", varRowAY,
+                    "Information Systems", varRowBY,
+                    "Media &amp; Comms", varRowBY,
+                    "CCF(A)", varRowBY,
+                    varRowCY
+                )
+            },
+            With(
+                {_y: _panelY + 30 + FinalY},
+                With(
+                    {_cat: LookUp(colCategoryColours, Category = _myCategory)},
                     With(
                         {
                             _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
                             _fillColor: If(_isGapped, "#D8D8D8", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
                             _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
                             _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", ""),
-                            _connDashAttr: If(_relType = "Dotted", " stroke-dasharray=""4,3""", ""),
                             _useWhiteText: varChartMode = "Coloured" &amp;&amp; !_isGapped &amp;&amp; _myCategory = "ACCT UK Contractor"
                         },
-                        (
-                            If(
-                                !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visMgr),
-                                With(
-                                    {_mgrCardH: If(_visMgr.Depth = 0, 34, 27)},
-                                    "&lt;path d=""M " &amp; _visMgr.FinalX &amp; " " &amp; (_panelY + 30 + _visMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
-                                ),
-                                ""
-                            )
-                        ) &amp;
-                        (
-                            If(
-                                !IsBlank(_peerTitle) &amp;&amp; !IsBlank(_peerPost),
-                                "&lt;path d=""M " &amp; _peerPost.FinalX &amp; " " &amp; (_y + _cardH / 2) &amp; " H " &amp; _x &amp; """ stroke=""#4A4A4A"" stroke-width=""1.5"" stroke-dasharray=""1,3""/&gt;",
-                                ""
-                            )
-                        ) &amp;
-                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""5"" fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
+                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
                         If(
                             varChartMode = "Quiet" &amp;&amp; !_isGapped,
                             "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
@@ -783,7 +855,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnToggleMode &middot; OnSelect</span>
-                <span class="code-stamp" data-updated="2026-09-15T12:16:32Z">v2 &middot; 2026-09-15 13:16 BST &mdash; same With-scoping fix as OnStart</span>
+                <span class="code-stamp" data-updated="2026-09-15T12:45:15Z">v3 &middot; 2026-09-15 13:45 BST &mdash; same v3 fixes as OnStart</span>
               </div>
               <button data-copy="current-toggle" type="button">Copy</button>
             </div>
@@ -802,21 +874,21 @@ ClearCollect(colCategoryColours,
 );
 
 ClearCollect(colDeptPanelsBase,
-    {Department: "Command", PX: 20, PW: 371.5},
-    {Department: "Safeguarding", PX: 411.5, PW: 371.5},
-    {Department: "Training", PX: 803, PW: 371.5},
-    {Department: "Information Systems", PX: 20, PW: 371.5},
-    {Department: "Media &amp; Comms", PX: 411.5, PW: 260},
-    {Department: "CCF(A)", PX: 691.5, PW: 260},
-    {Department: "Policy &amp; Pers", PX: 20, PW: 180},
-    {Department: "Support", PX: 220, PW: 190},
-    {Department: "CCF", PX: 430, PW: 204.6},
-    {Department: "CEP", PX: 654.6, PW: 140}
+    {Department: "Command", PX: 20, PW: 350},
+    {Department: "Safeguarding", PX: 390, PW: 350},
+    {Department: "Training", PX: 760, PW: 470},
+    {Department: "Information Systems", PX: 20, PW: 710},
+    {Department: "Media &amp; Comms", PX: 750, PW: 230},
+    {Department: "CCF(A)", PX: 1000, PW: 230},
+    {Department: "Policy &amp; Pers", PX: 20, PW: 350},
+    {Department: "Support", PX: 390, PW: 470},
+    {Department: "CCF", PX: 880, PW: 230},
+    {Department: "CEP", PX: 1130, PW: 140}
 );
 
 ClearCollect(colPosts, OrgChartPosts);
 
-Set(varRowAY, 20);
+Set(varRowAY, 56);
 Set(
     varRowAH,
     Max(
@@ -870,8 +942,11 @@ ClearCollect(
 
 Set(
     varChartSvg,
-    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1200 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1200"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1300 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1300"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1300"" height=""36"" fill=""#172A27""/&gt;" &amp;
+    "&lt;text x=""16"" y=""23"" font-weight=""700"" font-size=""15"" fill=""#FFFFFF""&gt;Cadets Branch Structure&lt;/text&gt;" &amp;
+    "&lt;text x=""1284"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
     Concat(
         colDeptPanels,
         With(
@@ -883,8 +958,8 @@ Set(
             },
             If(
                 Department = "Command",
-                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ rx=""4"" fill=""#EEF1F4"" stroke=""#2C3E50"" stroke-width=""2""/&gt;",
-                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ rx=""4"" fill=""none"" stroke=""#B9C2C8"" stroke-width=""1""/&gt;"
+                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ fill=""#EEF1F4"" stroke=""#2C3E50"" stroke-width=""2""/&gt;",
+                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ fill=""none"" stroke=""#B9C2C8"" stroke-width=""1""/&gt;"
             )
         ) &amp;
         "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" fill=""#003E32""/&gt;" &amp;
@@ -920,37 +995,70 @@ Set(
                 {_y: _panelY + 30 + FinalY},
                 With(
                     {
-                        _cat: LookUp(colCategoryColours, Category = _myCategory),
                         _visMgr: LookUp(colPosts, Title = _visParentTitle),
-                        _peerPost: LookUp(colPosts, Title = _peerTitle)
+                        _peerPost: LookUp(colPosts, Title = _peerTitle),
+                        _connDashAttr: If(_relType = "Dotted", " stroke-dasharray=""4,3""", "")
                     },
+                    (
+                        If(
+                            !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visMgr),
+                            With(
+                                {_mgrCardH: If(_visMgr.Depth = 0, 34, 27)},
+                                "&lt;path d=""M " &amp; _visMgr.FinalX &amp; " " &amp; (_panelY + 30 + _visMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
+                            ),
+                            ""
+                        )
+                    ) &amp;
+                    (
+                        If(
+                            !IsBlank(_peerTitle) &amp;&amp; !IsBlank(_peerPost),
+                            "&lt;path d=""M " &amp; _peerPost.FinalX &amp; " " &amp; (_y + _cardH / 2) &amp; " H " &amp; _x &amp; """ stroke=""#4A4A4A"" stroke-width=""1.5"" stroke-dasharray=""1,3""/&gt;",
+                            ""
+                        )
+                    )
+                )
+            )
+        )
+    ) &amp;
+    Concat(
+        colPosts,
+        With(
+            {
+                _x: FinalX,
+                _mgrTitle: ManagerPostID,
+                _visParentTitle: VisualParentPostID,
+                _peerTitle: PeerPostID,
+                _relType: RelationshipType,
+                _myCategory: Category,
+                _myOccupant: OccupantName,
+                _isGapped: IsGapped,
+                _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
+                _cardW: Width,
+                _cardH: If(Depth = 0, 34, 27),
+                _panelY: Switch(
+                    Department,
+                    "Command", varRowAY,
+                    "Safeguarding", varRowAY,
+                    "Training", varRowAY,
+                    "Information Systems", varRowBY,
+                    "Media &amp; Comms", varRowBY,
+                    "CCF(A)", varRowBY,
+                    varRowCY
+                )
+            },
+            With(
+                {_y: _panelY + 30 + FinalY},
+                With(
+                    {_cat: LookUp(colCategoryColours, Category = _myCategory)},
                     With(
                         {
                             _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
                             _fillColor: If(_isGapped, "#D8D8D8", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
                             _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
                             _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", ""),
-                            _connDashAttr: If(_relType = "Dotted", " stroke-dasharray=""4,3""", ""),
                             _useWhiteText: varChartMode = "Coloured" &amp;&amp; !_isGapped &amp;&amp; _myCategory = "ACCT UK Contractor"
                         },
-                        (
-                            If(
-                                !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visMgr),
-                                With(
-                                    {_mgrCardH: If(_visMgr.Depth = 0, 34, 27)},
-                                    "&lt;path d=""M " &amp; _visMgr.FinalX &amp; " " &amp; (_panelY + 30 + _visMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
-                                ),
-                                ""
-                            )
-                        ) &amp;
-                        (
-                            If(
-                                !IsBlank(_peerTitle) &amp;&amp; !IsBlank(_peerPost),
-                                "&lt;path d=""M " &amp; _peerPost.FinalX &amp; " " &amp; (_y + _cardH / 2) &amp; " H " &amp; _x &amp; """ stroke=""#4A4A4A"" stroke-width=""1.5"" stroke-dasharray=""1,3""/&gt;",
-                                ""
-                            )
-                        ) &amp;
-                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""5"" fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
+                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
                         If(
                             varChartMode = "Quiet" &amp;&amp; !_isGapped,
                             "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
@@ -1021,7 +1129,7 @@ Notify(
       <section id="downloads">
         <h2>Downloads</h2>
         <ul>
-          <li><a href="downloads/OrgChartPosts_Data_v5.xlsx">OrgChartPosts_Data_v5.xlsx</a> &mdash; all 108 rows, real structure/colours, fictional placeholder occupant names. Paste into Quick Edit per <a href="#sharepoint-setup">SharePoint Setup</a> above.</li>
+          <li><a href="downloads/OrgChartPosts_Data_v7.xlsx">OrgChartPosts_Data_v7.xlsx</a> &mdash; all 108 rows, verbatim PDF titles/structure/colours, fictional placeholder occupant names. Paste into Quick Edit per <a href="#sharepoint-setup">SharePoint Setup</a> above.</li>
         </ul>
       </section>
 
