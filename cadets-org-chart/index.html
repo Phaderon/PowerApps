@@ -380,7 +380,7 @@
           <li>Add three new columns via <strong>+Add column</strong> (never "Create list from Excel" &mdash; it mangles internal field names, a confirmed, repeated finding in this project): <code>RelationshipType</code> (Text), <code>PeerPostID</code> (Text), <code>VisualParentPostID</code> (Text).</li>
           <li>If <code>FinalY</code> exists as a <strong>Calculated</strong> column from an earlier build, delete it and re-add it as a plain <strong>Number</strong> column &mdash; it's a literal seeded value now, the same as <code>FinalX</code> and <code>Width</code> already are.</li>
           <li>Confirm <code>OccupantName</code> (Text) and <code>IsGapped</code> (Yes/No) already exist &mdash; add them the same way if this is a fresh list.</li>
-          <li>Download <code>OrgChartPosts_Data_v11.xlsx</code> (see <a href="#downloads">Downloads</a>) and bulk-paste all 108 rows into the list's <strong>Quick Edit</strong> grid view, matching the sheet's own column order exactly. Quick Edit only inserts values into already-existing columns, so it can't trigger the same field-mangling problem "Create list from Excel" does.</li>
+          <li>Download <code>OrgChartPosts_Data_v13.xlsx</code> (see <a href="#downloads">Downloads</a>) and bulk-paste all 108 rows into the list's <strong>Quick Edit</strong> grid view, matching the sheet's own column order exactly. Quick Edit only inserts values into already-existing columns, so it can't trigger the same field-mangling problem "Create list from Excel" does.</li>
           <li>If the two old flows are still imported in your environment &mdash; <code>OrgChart - Compute Depth (Production)</code> and <code>OrgChart - Compute Width &amp; Position (Production)</code> &mdash; delete or turn them off. Nothing in the current design calls either one any more.</li>
         </ol>
       </section>
@@ -403,7 +403,7 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-15T13:16:06Z">v4 &middot; 2026-09-15 14:16 BST &mdash; fixed a column-gutter-count bug that overflowed Support; peer siblings under one manager (Command's COS especially) no longer draw a false chained-looking connector; Media &amp; Comms resized to 4 real columns</span>
+                <span class="code-stamp" data-updated="2026-09-15T22:56:54Z">v5 &middot; 2026-09-15 23:56 BST &mdash; wider gap between department panels (was ~2px, now a clear ~22px), Media &amp; Comms' two leads resized to the standard 140px head width every other department uses, footer key added (category colours, styled to match the top banner)</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
@@ -421,17 +421,30 @@ ClearCollect(colCategoryColours,
     {Category: "CFAV", Hex: "#DAC1EC"}
 );
 
+ClearCollect(colLegendItems,
+    {Idx: 1, Label: "Regular", Hex: "#E2EFD9"},
+    {Idx: 2, Label: "Civil Servant", Hex: "#CBFFFF"},
+    {Idx: 3, Label: "FTRS", Hex: "#FB9797"},
+    {Idx: 4, Label: "Aspire", Hex: "#FFE699"},
+    {Idx: 5, Label: "ACCT UK Employee", Hex: "#FD80F3"},
+    {Idx: 6, Label: "RFCA", Hex: "#FFFF00"},
+    {Idx: 7, Label: "ACCT UK Contractor", Hex: "#002060"},
+    {Idx: 8, Label: "Ext Contractor", Hex: "#E69C13"},
+    {Idx: 9, Label: "CFAV", Hex: "#DAC1EC"},
+    {Idx: 10, Label: "Gapped (vacant)", Hex: "#D8D8D8"}
+);
+
 ClearCollect(colDeptPanelsBase,
     {Department: "Command", PX: 20, PW: 350},
-    {Department: "Safeguarding", PX: 380, PW: 398},
-    {Department: "Training", PX: 788, PW: 470},
+    {Department: "Safeguarding", PX: 400, PW: 398},
+    {Department: "Training", PX: 828, PW: 470},
     {Department: "Information Systems", PX: 20, PW: 630},
-    {Department: "Media &amp; Comms", PX: 660, PW: 470},
-    {Department: "CCF(A)", PX: 1140, PW: 230},
+    {Department: "Media &amp; Comms", PX: 680, PW: 470},
+    {Department: "CCF(A)", PX: 1180, PW: 230},
     {Department: "Policy &amp; Pers", PX: 20, PW: 350},
-    {Department: "Support", PX: 380, PW: 470},
-    {Department: "CCF", PX: 860, PW: 230},
-    {Department: "CEP", PX: 1100, PW: 140}
+    {Department: "Support", PX: 400, PW: 470},
+    {Department: "CCF", PX: 900, PW: 230},
+    {Department: "CEP", PX: 1160, PW: 140}
 );
 
 ClearCollect(colPosts, OrgChartPosts);
@@ -490,8 +503,8 @@ ClearCollect(
 
 Set(
     varChartSvg,
-    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1450 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1450 " &amp; (varRowCY + 30 + varRowCH + 10 + 36 + 10) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""" &amp; (varRowCY + 30 + varRowCH + 10 + 36 + 10) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
     "&lt;rect x=""0"" y=""0"" width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
     "&lt;text x=""16"" y=""23"" font-weight=""700"" font-size=""15"" fill=""#FFFFFF""&gt;Cadets Branch Structure&lt;/text&gt;" &amp;
     "&lt;text x=""1434"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
@@ -619,6 +632,18 @@ Set(
             )
         )
     ) &amp;
+    "&lt;rect x=""0"" y=""" &amp; (varRowCY + 30 + varRowCH + 10) &amp; """ width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
+    Concat(
+        colLegendItems,
+        With(
+            {
+                _lx: 20 + (Idx - 1) * 141.0,
+                _ly: (varRowCY + 30 + varRowCH + 10) + 18.0
+            },
+            "&lt;rect x=""" &amp; _lx &amp; """ y=""" &amp; (_ly - 7) &amp; """ width=""14"" height=""14"" fill=""" &amp; Hex &amp; """ stroke=""#FFFFFF"" stroke-width=""0.6""" &amp; If(Label = "Gapped (vacant)", " stroke-dasharray=""2,2""", "") &amp; "/&gt;" &amp;
+            "&lt;text x=""" &amp; (_lx + 20) &amp; """ y=""" &amp; (_ly + 4) &amp; """ font-size=""8"" fill=""#FFFFFF""&gt;" &amp; Substitute(Label, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+        )
+    ) &amp;
     "&lt;/svg&gt;"
 )</pre>
           </div>
@@ -630,7 +655,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnRecalculate &middot; OnSelect &mdash; same as OnStart, minus the mode reset, no flow calls</span>
-                <span class="code-stamp" data-updated="2026-09-15T13:16:06Z">v4 &middot; 2026-09-15 14:16 BST &mdash; same v4 fixes as OnStart</span>
+                <span class="code-stamp" data-updated="2026-09-15T22:56:54Z">v5 &middot; 2026-09-15 23:56 BST &mdash; same v5 fixes as OnStart</span>
               </div>
               <button data-copy="current-recalc" type="button">Copy</button>
             </div>
@@ -646,17 +671,30 @@ Set(
     {Category: "CFAV", Hex: "#DAC1EC"}
 );
 
+ClearCollect(colLegendItems,
+    {Idx: 1, Label: "Regular", Hex: "#E2EFD9"},
+    {Idx: 2, Label: "Civil Servant", Hex: "#CBFFFF"},
+    {Idx: 3, Label: "FTRS", Hex: "#FB9797"},
+    {Idx: 4, Label: "Aspire", Hex: "#FFE699"},
+    {Idx: 5, Label: "ACCT UK Employee", Hex: "#FD80F3"},
+    {Idx: 6, Label: "RFCA", Hex: "#FFFF00"},
+    {Idx: 7, Label: "ACCT UK Contractor", Hex: "#002060"},
+    {Idx: 8, Label: "Ext Contractor", Hex: "#E69C13"},
+    {Idx: 9, Label: "CFAV", Hex: "#DAC1EC"},
+    {Idx: 10, Label: "Gapped (vacant)", Hex: "#D8D8D8"}
+);
+
 ClearCollect(colDeptPanelsBase,
     {Department: "Command", PX: 20, PW: 350},
-    {Department: "Safeguarding", PX: 380, PW: 398},
-    {Department: "Training", PX: 788, PW: 470},
+    {Department: "Safeguarding", PX: 400, PW: 398},
+    {Department: "Training", PX: 828, PW: 470},
     {Department: "Information Systems", PX: 20, PW: 630},
-    {Department: "Media &amp; Comms", PX: 660, PW: 470},
-    {Department: "CCF(A)", PX: 1140, PW: 230},
+    {Department: "Media &amp; Comms", PX: 680, PW: 470},
+    {Department: "CCF(A)", PX: 1180, PW: 230},
     {Department: "Policy &amp; Pers", PX: 20, PW: 350},
-    {Department: "Support", PX: 380, PW: 470},
-    {Department: "CCF", PX: 860, PW: 230},
-    {Department: "CEP", PX: 1100, PW: 140}
+    {Department: "Support", PX: 400, PW: 470},
+    {Department: "CCF", PX: 900, PW: 230},
+    {Department: "CEP", PX: 1160, PW: 140}
 );
 
 ClearCollect(colPosts, OrgChartPosts);
@@ -715,8 +753,8 @@ ClearCollect(
 
 Set(
     varChartSvg,
-    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1450 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1450 " &amp; (varRowCY + 30 + varRowCH + 10 + 36 + 10) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""" &amp; (varRowCY + 30 + varRowCH + 10 + 36 + 10) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
     "&lt;rect x=""0"" y=""0"" width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
     "&lt;text x=""16"" y=""23"" font-weight=""700"" font-size=""15"" fill=""#FFFFFF""&gt;Cadets Branch Structure&lt;/text&gt;" &amp;
     "&lt;text x=""1434"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
@@ -844,6 +882,18 @@ Set(
             )
         )
     ) &amp;
+    "&lt;rect x=""0"" y=""" &amp; (varRowCY + 30 + varRowCH + 10) &amp; """ width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
+    Concat(
+        colLegendItems,
+        With(
+            {
+                _lx: 20 + (Idx - 1) * 141.0,
+                _ly: (varRowCY + 30 + varRowCH + 10) + 18.0
+            },
+            "&lt;rect x=""" &amp; _lx &amp; """ y=""" &amp; (_ly - 7) &amp; """ width=""14"" height=""14"" fill=""" &amp; Hex &amp; """ stroke=""#FFFFFF"" stroke-width=""0.6""" &amp; If(Label = "Gapped (vacant)", " stroke-dasharray=""2,2""", "") &amp; "/&gt;" &amp;
+            "&lt;text x=""" &amp; (_lx + 20) &amp; """ y=""" &amp; (_ly + 4) &amp; """ font-size=""8"" fill=""#FFFFFF""&gt;" &amp; Substitute(Label, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+        )
+    ) &amp;
     "&lt;/svg&gt;"
 )</pre>
           </div>
@@ -855,7 +905,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnToggleMode &middot; OnSelect</span>
-                <span class="code-stamp" data-updated="2026-09-15T13:16:06Z">v4 &middot; 2026-09-15 14:16 BST &mdash; same v4 fixes as OnStart</span>
+                <span class="code-stamp" data-updated="2026-09-15T22:56:54Z">v5 &middot; 2026-09-15 23:56 BST &mdash; same v5 fixes as OnStart</span>
               </div>
               <button data-copy="current-toggle" type="button">Copy</button>
             </div>
@@ -873,17 +923,30 @@ ClearCollect(colCategoryColours,
     {Category: "CFAV", Hex: "#DAC1EC"}
 );
 
+ClearCollect(colLegendItems,
+    {Idx: 1, Label: "Regular", Hex: "#E2EFD9"},
+    {Idx: 2, Label: "Civil Servant", Hex: "#CBFFFF"},
+    {Idx: 3, Label: "FTRS", Hex: "#FB9797"},
+    {Idx: 4, Label: "Aspire", Hex: "#FFE699"},
+    {Idx: 5, Label: "ACCT UK Employee", Hex: "#FD80F3"},
+    {Idx: 6, Label: "RFCA", Hex: "#FFFF00"},
+    {Idx: 7, Label: "ACCT UK Contractor", Hex: "#002060"},
+    {Idx: 8, Label: "Ext Contractor", Hex: "#E69C13"},
+    {Idx: 9, Label: "CFAV", Hex: "#DAC1EC"},
+    {Idx: 10, Label: "Gapped (vacant)", Hex: "#D8D8D8"}
+);
+
 ClearCollect(colDeptPanelsBase,
     {Department: "Command", PX: 20, PW: 350},
-    {Department: "Safeguarding", PX: 380, PW: 398},
-    {Department: "Training", PX: 788, PW: 470},
+    {Department: "Safeguarding", PX: 400, PW: 398},
+    {Department: "Training", PX: 828, PW: 470},
     {Department: "Information Systems", PX: 20, PW: 630},
-    {Department: "Media &amp; Comms", PX: 660, PW: 470},
-    {Department: "CCF(A)", PX: 1140, PW: 230},
+    {Department: "Media &amp; Comms", PX: 680, PW: 470},
+    {Department: "CCF(A)", PX: 1180, PW: 230},
     {Department: "Policy &amp; Pers", PX: 20, PW: 350},
-    {Department: "Support", PX: 380, PW: 470},
-    {Department: "CCF", PX: 860, PW: 230},
-    {Department: "CEP", PX: 1100, PW: 140}
+    {Department: "Support", PX: 400, PW: 470},
+    {Department: "CCF", PX: 900, PW: 230},
+    {Department: "CEP", PX: 1160, PW: 140}
 );
 
 ClearCollect(colPosts, OrgChartPosts);
@@ -942,8 +1005,8 @@ ClearCollect(
 
 Set(
     varChartSvg,
-    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1450 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1450 " &amp; (varRowCY + 30 + varRowCH + 10 + 36 + 10) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""" &amp; (varRowCY + 30 + varRowCH + 10 + 36 + 10) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
     "&lt;rect x=""0"" y=""0"" width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
     "&lt;text x=""16"" y=""23"" font-weight=""700"" font-size=""15"" fill=""#FFFFFF""&gt;Cadets Branch Structure&lt;/text&gt;" &amp;
     "&lt;text x=""1434"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
@@ -1069,6 +1132,18 @@ Set(
                     )
                 )
             )
+        )
+    ) &amp;
+    "&lt;rect x=""0"" y=""" &amp; (varRowCY + 30 + varRowCH + 10) &amp; """ width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
+    Concat(
+        colLegendItems,
+        With(
+            {
+                _lx: 20 + (Idx - 1) * 141.0,
+                _ly: (varRowCY + 30 + varRowCH + 10) + 18.0
+            },
+            "&lt;rect x=""" &amp; _lx &amp; """ y=""" &amp; (_ly - 7) &amp; """ width=""14"" height=""14"" fill=""" &amp; Hex &amp; """ stroke=""#FFFFFF"" stroke-width=""0.6""" &amp; If(Label = "Gapped (vacant)", " stroke-dasharray=""2,2""", "") &amp; "/&gt;" &amp;
+            "&lt;text x=""" &amp; (_lx + 20) &amp; """ y=""" &amp; (_ly + 4) &amp; """ font-size=""8"" fill=""#FFFFFF""&gt;" &amp; Substitute(Label, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
         )
     ) &amp;
     "&lt;/svg&gt;"
@@ -1129,7 +1204,7 @@ Notify(
       <section id="downloads">
         <h2>Downloads</h2>
         <ul>
-          <li><a href="downloads/OrgChartPosts_Data_v11.xlsx">OrgChartPosts_Data_v11.xlsx</a> &mdash; all 108 rows, verbatim PDF titles/structure/colours, fictional placeholder occupant names. Paste into Quick Edit per <a href="#sharepoint-setup">SharePoint Setup</a> above.</li>
+          <li><a href="downloads/OrgChartPosts_Data_v13.xlsx">OrgChartPosts_Data_v13.xlsx</a> &mdash; all 108 rows, verbatim PDF titles/structure/colours, fictional placeholder occupant names. Paste into Quick Edit per <a href="#sharepoint-setup">SharePoint Setup</a> above.</li>
         </ul>
       </section>
 
