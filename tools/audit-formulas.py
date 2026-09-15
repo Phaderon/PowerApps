@@ -23,6 +23,16 @@ import re
 import sys
 from pathlib import Path
 
+# Windows consoles default stdout to cp1252, which can't encode every character
+# a finding message might contain (e.g. a bullet copied from formula text).
+# Confirmed live, 2026-09-15: a UnicodeEncodeError here crashed the tool entirely
+# instead of just printing the finding - fixed by forcing UTF-8 with lossy
+# replacement rather than letting print() raise.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except AttributeError:
+    pass  # older Python without TextIOWrapper.reconfigure - not expected here, but don't crash over it
+
 
 def extract_md_blocks(text: str) -> list[tuple[int, str]]:
     """Returns (line_number, code) for every ```-fenced block."""
@@ -97,7 +107,7 @@ def check_unescaped_ampersand_in_markup_strings(code: str) -> list[str]:
     &amp;). Only flags string literals that look like markup (contain '<' or a
     common tag), to avoid false positives on ordinary data/business logic strings."""
     findings = []
-    entity_ok = re.compile(r"&(amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);")
+    entity_ok = re.compile(r"&(amp|lt|gt|quot|apos|nbsp|mdash|ndash|hellip|rarr|larr|middot|times|#\d+|#x[0-9a-fA-F]+);")
     for sm in re.finditer(r'"((?:[^"\\]|\\.)*)"', code):
         literal = sm.group(1)
         if "<" not in literal and not re.search(r"\b(rect|text|svg|line|path|g)\b", literal):
@@ -107,6 +117,115 @@ def check_unescaped_ampersand_in_markup_strings(code: str) -> list[str]:
             if not entity_ok.match(tail):
                 snippet = literal[max(0, am.start() - 20):am.start() + 20]
                 findings.append(f"Bare '&' inside a markup-shaped string literal (not a valid XML entity) - will break XML parsing: ...{snippet}...")
+    return findings
+
+
+def _find_matching_brace(code: str, open_pos: int) -> int | None:
+    """code[open_pos] must be '{'. Returns the index of its matching '}',
+    respecting Power Fx's ""-doubled-quote string literals so braces inside
+    strings never affect the count."""
+    depth = 0
+    i = open_pos
+    in_str = False
+    while i < len(code):
+        c = code[i]
+        if in_str:
+            if c == '"':
+                if i + 1 < len(code) and code[i + 1] == '"':
+                    i += 2
+                    continue
+                in_str = False
+        else:
+            if c == '"':
+                in_str = True
+            elif c == "{":
+                depth += 1
+            elif c == "}":
+                depth -= 1
+                if depth == 0:
+                    return i
+        i += 1
+    return None
+
+
+def _split_top_level(text: str, sep: str) -> list[str]:
+    """Splits text on sep only at nesting depth 0 - tracks (), {}, [] and ""
+    strings so a separator inside any of those is never treated as a split
+    point."""
+    parts = []
+    depth = 0
+    in_str = False
+    start = 0
+    i = 0
+    while i < len(text):
+        c = text[i]
+        if in_str:
+            if c == '"':
+                if i + 1 < len(text) and text[i + 1] == '"':
+                    i += 2
+                    continue
+                in_str = False
+        else:
+            if c == '"':
+                in_str = True
+            elif c in "({[":
+                depth += 1
+            elif c in ")}]":
+                depth -= 1
+            elif depth == 0 and text.startswith(sep, i):
+                parts.append(text[start:i])
+                i += len(sep)
+                start = i
+                continue
+        i += 1
+    parts.append(text[start:])
+    return parts
+
+
+def check_with_record_self_reference(code: str) -> list[str]:
+    """A field inside a single With({...}, body) record can only see the
+    ENCLOSING scope in its own definition, never a sibling field defined in
+    that same record - regardless of nesting depth or bracket placement.
+    Confirmed broken live twice in this Bible under two different guises:
+    Phase 10's first run (_fillColor referencing sibling _cat, 2026-09-14)
+    and Cadets Org Chart Phase 12's first run (_panelY referencing sibling
+    _dept, 2026-09-15 - 'Name isn't valid. \'_dept\' isn't recognized.').
+    Both were regressions of an already-known rule, not new discoveries -
+    this check exists so a third occurrence gets caught before Studio, not
+    after."""
+    findings = []
+    for m in re.finditer(r"\bWith\s*\(", code):
+        # find the record literal - the first non-whitespace char after '(' must be '{'
+        j = m.end()
+        while j < len(code) and code[j] in " \t\r\n":
+            j += 1
+        if j >= len(code) or code[j] != "{":
+            continue
+        close = _find_matching_brace(code, j)
+        if close is None:
+            continue
+        record_text = code[j + 1:close]
+        fields = {}
+        for field in _split_top_level(record_text, ","):
+            parts = _split_top_level(field, ":")
+            if len(parts) < 2:
+                continue
+            name = parts[0].strip()
+            expr = ":".join(parts[1:])
+            if re.fullmatch(r"[A-Za-z_]\w*", name):
+                fields[name] = expr
+        if len(fields) < 2:
+            continue
+        for name, expr in fields.items():
+            for other in fields:
+                if other == name:
+                    continue
+                if re.search(rf"\b{re.escape(other)}\b", expr):
+                    findings.append(
+                        f"With({{...}}) field '{name}' appears to reference sibling field '{other}' defined in the "
+                        f"same record - only the enclosing scope is visible here, never another field in this record "
+                        f"(confirmed live twice: Phase 10's _fillColor/_cat, Cadets Org Chart Phase 12's _panelY/_dept)"
+                    )
     return findings
 
 
@@ -125,6 +244,7 @@ CHECKS = [
     check_udf_table_param,
     check_udf_definition_shape,
     check_unescaped_ampersand_in_markup_strings,
+    check_with_record_self_reference,
     check_balance,
 ]
 
