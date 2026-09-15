@@ -341,7 +341,7 @@
           <tr><td>Command</td><td>11</td><td>Grid: DCOMD (head) &rarr; Colonel Cadets / COS / DCOMD PS (3 columns); COS's column has 5 further reports, 2 of whom each have their own single report nested below.</td></tr>
           <tr><td>Safeguarding</td><td>16</td><td>Grid: head &rarr; 2 leads of 6 caseworkers each, plus 1 standalone leaf.</td></tr>
           <tr><td>Training</td><td>20</td><td>Flat: head &rarr; 19 direct reports, no lead level at all, arranged in 4 visual columns.</td></tr>
-          <tr><td>Information Systems</td><td>24</td><td>Head + a genuinely detached "Solutions Architect" post (no connector line at all, confirmed from the PDF) + 3 delivery leads (7/5/4 reports) &mdash; one lead's 7th report has its own 2 further reports &mdash; + 1 post on a dotted (functional, not managerial) line.</td></tr>
+          <tr><td>Information Systems</td><td>24</td><td>Head + a "Solutions Architect" post (a direct report like the other 4, confirmed by Allan) + 3 delivery leads (7/5/4 reports) &mdash; one lead's 7th report has its own 2 further reports &mdash; + 1 post on a dotted (functional, not managerial) line.</td></tr>
           <tr><td>Media &amp; Comms</td><td>11</td><td>Two co-equal Comms Leads joined by a peer line, each running their own small team.</td></tr>
           <tr><td>CCF(A)</td><td>11</td><td>Flat: SO1 CCFA &rarr; 10 direct reports, no lead level, 2 columns of 5.</td></tr>
           <tr><td>Policy &amp; Pers</td><td>5</td><td>Grid: head &rarr; 3 direct reports, 1 of whom has their own report.</td></tr>
@@ -380,7 +380,7 @@
           <li>Add three new columns via <strong>+Add column</strong> (never "Create list from Excel" &mdash; it mangles internal field names, a confirmed, repeated finding in this project): <code>RelationshipType</code> (Text), <code>PeerPostID</code> (Text), <code>VisualParentPostID</code> (Text).</li>
           <li>If <code>FinalY</code> exists as a <strong>Calculated</strong> column from an earlier build, delete it and re-add it as a plain <strong>Number</strong> column &mdash; it's a literal seeded value now, the same as <code>FinalX</code> and <code>Width</code> already are.</li>
           <li>Confirm <code>OccupantName</code> (Text) and <code>IsGapped</code> (Yes/No) already exist &mdash; add them the same way if this is a fresh list.</li>
-          <li>Download <code>OrgChartPosts_Data_v9.xlsx</code> (see <a href="#downloads">Downloads</a>) and bulk-paste all 108 rows into the list's <strong>Quick Edit</strong> grid view, matching the sheet's own column order exactly. Quick Edit only inserts values into already-existing columns, so it can't trigger the same field-mangling problem "Create list from Excel" does.</li>
+          <li>Download <code>OrgChartPosts_Data_v11.xlsx</code> (see <a href="#downloads">Downloads</a>) and bulk-paste all 108 rows into the list's <strong>Quick Edit</strong> grid view, matching the sheet's own column order exactly. Quick Edit only inserts values into already-existing columns, so it can't trigger the same field-mangling problem "Create list from Excel" does.</li>
           <li>If the two old flows are still imported in your environment &mdash; <code>OrgChart - Compute Depth (Production)</code> and <code>OrgChart - Compute Width &amp; Position (Production)</code> &mdash; delete or turn them off. Nothing in the current design calls either one any more.</li>
         </ol>
       </section>
@@ -1129,7 +1129,7 @@ Notify(
       <section id="downloads">
         <h2>Downloads</h2>
         <ul>
-          <li><a href="downloads/OrgChartPosts_Data_v9.xlsx">OrgChartPosts_Data_v9.xlsx</a> &mdash; all 108 rows, verbatim PDF titles/structure/colours, fictional placeholder occupant names. Paste into Quick Edit per <a href="#sharepoint-setup">SharePoint Setup</a> above.</li>
+          <li><a href="downloads/OrgChartPosts_Data_v11.xlsx">OrgChartPosts_Data_v11.xlsx</a> &mdash; all 108 rows, verbatim PDF titles/structure/colours, fictional placeholder occupant names. Paste into Quick Edit per <a href="#sharepoint-setup">SharePoint Setup</a> above.</li>
         </ul>
       </section>
 
