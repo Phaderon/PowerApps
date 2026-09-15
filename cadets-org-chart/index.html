@@ -327,7 +327,7 @@
           <tr><td><code>FinalY</code></td><td><strong>Number</strong> (plain, not Calculated)</td><td>Vertical offset from this post's own department panel top (0-based). The render formula adds the live row-start Y on top. Seeded, literal.</td></tr>
           <tr><td><code>RelationshipType</code></td><td>Text</td><td><code>Solid</code> (default) or <code>Dotted</code> &mdash; describes the connector line's own style. Only one post uses <code>Dotted</code> so far.</td></tr>
           <tr><td><code>PeerPostID</code></td><td>Text</td><td>A lateral, non-hierarchical link to another post's <code>Title</code> &mdash; used once, for Media &amp; Comms' two co-equal leads.</td></tr>
-          <tr><td><code>VisualParentPostID</code></td><td>Text</td><td>Who the connector line is drawn <em>from</em>. Almost always equals <code>ManagerPostID</code>, except where several siblings stack in one visual column &mdash; there, only the first connects to the shared lead/head, and each next one chains to the sibling above it.</td></tr>
+          <tr><td><code>VisualParentPostID</code></td><td>Text</td><td>Who the connector line is drawn <em>from</em> &mdash; either exactly equal to <code>ManagerPostID</code> (a connector is drawn), or blank (no connector drawn at all). Blank specifically for any peer stacked below the first in its column: several different direct reports of one manager, stacked to save space, all genuinely report to that manager in parallel &mdash; drawing a line from each to the one physically above it would look like they report to each other, which they don't. The first card in the stack still connects to the real lead/head; being grouped in the same column conveys the rest.</td></tr>
           <tr><td><code>IsGapped</code></td><td>Yes/No</td><td>Ticked for a vacant post. The card greys out, gets a dashed border, and shows "GAPPED" instead of a name &mdash; the role title still shows. <code>Category</code> stays whatever it's set to underneath (a placeholder until filled).</td></tr>
           <tr><td><code>OccupantName</code></td><td>Text</td><td>The person's name. Blank for gapped posts. Yours to fill in or correct directly in SharePoint &mdash; the shipped data seeds fictional placeholders, never real names.</td></tr>
         </table>
@@ -380,7 +380,7 @@
           <li>Add three new columns via <strong>+Add column</strong> (never "Create list from Excel" &mdash; it mangles internal field names, a confirmed, repeated finding in this project): <code>RelationshipType</code> (Text), <code>PeerPostID</code> (Text), <code>VisualParentPostID</code> (Text).</li>
           <li>If <code>FinalY</code> exists as a <strong>Calculated</strong> column from an earlier build, delete it and re-add it as a plain <strong>Number</strong> column &mdash; it's a literal seeded value now, the same as <code>FinalX</code> and <code>Width</code> already are.</li>
           <li>Confirm <code>OccupantName</code> (Text) and <code>IsGapped</code> (Yes/No) already exist &mdash; add them the same way if this is a fresh list.</li>
-          <li>Download <code>OrgChartPosts_Data_v7.xlsx</code> (see <a href="#downloads">Downloads</a>) and bulk-paste all 108 rows into the list's <strong>Quick Edit</strong> grid view, matching the sheet's own column order exactly. Quick Edit only inserts values into already-existing columns, so it can't trigger the same field-mangling problem "Create list from Excel" does.</li>
+          <li>Download <code>OrgChartPosts_Data_v9.xlsx</code> (see <a href="#downloads">Downloads</a>) and bulk-paste all 108 rows into the list's <strong>Quick Edit</strong> grid view, matching the sheet's own column order exactly. Quick Edit only inserts values into already-existing columns, so it can't trigger the same field-mangling problem "Create list from Excel" does.</li>
           <li>If the two old flows are still imported in your environment &mdash; <code>OrgChart - Compute Depth (Production)</code> and <code>OrgChart - Compute Width &amp; Position (Production)</code> &mdash; delete or turn them off. Nothing in the current design calls either one any more.</li>
         </ol>
       </section>
@@ -403,7 +403,7 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-15T12:45:15Z">v3 &middot; 2026-09-15 13:45 BST &mdash; verbatim PDF titles, corrected Command (SO3 IX), IS-ATTACH now genuinely detached, two-pass render (connectors behind all cards), rounding dropped, real widths, banner+print date</span>
+                <span class="code-stamp" data-updated="2026-09-15T13:16:06Z">v4 &middot; 2026-09-15 14:16 BST &mdash; fixed a column-gutter-count bug that overflowed Support; peer siblings under one manager (Command's COS especially) no longer draw a false chained-looking connector; Media &amp; Comms resized to 4 real columns</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
@@ -423,15 +423,15 @@ ClearCollect(colCategoryColours,
 
 ClearCollect(colDeptPanelsBase,
     {Department: "Command", PX: 20, PW: 350},
-    {Department: "Safeguarding", PX: 390, PW: 350},
-    {Department: "Training", PX: 760, PW: 470},
-    {Department: "Information Systems", PX: 20, PW: 710},
-    {Department: "Media &amp; Comms", PX: 750, PW: 230},
-    {Department: "CCF(A)", PX: 1000, PW: 230},
+    {Department: "Safeguarding", PX: 380, PW: 398},
+    {Department: "Training", PX: 788, PW: 470},
+    {Department: "Information Systems", PX: 20, PW: 630},
+    {Department: "Media &amp; Comms", PX: 660, PW: 470},
+    {Department: "CCF(A)", PX: 1140, PW: 230},
     {Department: "Policy &amp; Pers", PX: 20, PW: 350},
-    {Department: "Support", PX: 390, PW: 470},
-    {Department: "CCF", PX: 880, PW: 230},
-    {Department: "CEP", PX: 1130, PW: 140}
+    {Department: "Support", PX: 380, PW: 470},
+    {Department: "CCF", PX: 860, PW: 230},
+    {Department: "CEP", PX: 1100, PW: 140}
 );
 
 ClearCollect(colPosts, OrgChartPosts);
@@ -490,11 +490,11 @@ ClearCollect(
 
 Set(
     varChartSvg,
-    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1300 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1300"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1300"" height=""36"" fill=""#172A27""/&gt;" &amp;
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1450 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
     "&lt;text x=""16"" y=""23"" font-weight=""700"" font-size=""15"" fill=""#FFFFFF""&gt;Cadets Branch Structure&lt;/text&gt;" &amp;
-    "&lt;text x=""1284"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
+    "&lt;text x=""1434"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
     Concat(
         colDeptPanels,
         With(
@@ -630,7 +630,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnRecalculate &middot; OnSelect &mdash; same as OnStart, minus the mode reset, no flow calls</span>
-                <span class="code-stamp" data-updated="2026-09-15T12:45:15Z">v3 &middot; 2026-09-15 13:45 BST &mdash; same v3 fixes as OnStart</span>
+                <span class="code-stamp" data-updated="2026-09-15T13:16:06Z">v4 &middot; 2026-09-15 14:16 BST &mdash; same v4 fixes as OnStart</span>
               </div>
               <button data-copy="current-recalc" type="button">Copy</button>
             </div>
@@ -648,15 +648,15 @@ Set(
 
 ClearCollect(colDeptPanelsBase,
     {Department: "Command", PX: 20, PW: 350},
-    {Department: "Safeguarding", PX: 390, PW: 350},
-    {Department: "Training", PX: 760, PW: 470},
-    {Department: "Information Systems", PX: 20, PW: 710},
-    {Department: "Media &amp; Comms", PX: 750, PW: 230},
-    {Department: "CCF(A)", PX: 1000, PW: 230},
+    {Department: "Safeguarding", PX: 380, PW: 398},
+    {Department: "Training", PX: 788, PW: 470},
+    {Department: "Information Systems", PX: 20, PW: 630},
+    {Department: "Media &amp; Comms", PX: 660, PW: 470},
+    {Department: "CCF(A)", PX: 1140, PW: 230},
     {Department: "Policy &amp; Pers", PX: 20, PW: 350},
-    {Department: "Support", PX: 390, PW: 470},
-    {Department: "CCF", PX: 880, PW: 230},
-    {Department: "CEP", PX: 1130, PW: 140}
+    {Department: "Support", PX: 380, PW: 470},
+    {Department: "CCF", PX: 860, PW: 230},
+    {Department: "CEP", PX: 1100, PW: 140}
 );
 
 ClearCollect(colPosts, OrgChartPosts);
@@ -715,11 +715,11 @@ ClearCollect(
 
 Set(
     varChartSvg,
-    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1300 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1300"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1300"" height=""36"" fill=""#172A27""/&gt;" &amp;
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1450 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
     "&lt;text x=""16"" y=""23"" font-weight=""700"" font-size=""15"" fill=""#FFFFFF""&gt;Cadets Branch Structure&lt;/text&gt;" &amp;
-    "&lt;text x=""1284"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
+    "&lt;text x=""1434"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
     Concat(
         colDeptPanels,
         With(
@@ -855,7 +855,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnToggleMode &middot; OnSelect</span>
-                <span class="code-stamp" data-updated="2026-09-15T12:45:15Z">v3 &middot; 2026-09-15 13:45 BST &mdash; same v3 fixes as OnStart</span>
+                <span class="code-stamp" data-updated="2026-09-15T13:16:06Z">v4 &middot; 2026-09-15 14:16 BST &mdash; same v4 fixes as OnStart</span>
               </div>
               <button data-copy="current-toggle" type="button">Copy</button>
             </div>
@@ -875,15 +875,15 @@ ClearCollect(colCategoryColours,
 
 ClearCollect(colDeptPanelsBase,
     {Department: "Command", PX: 20, PW: 350},
-    {Department: "Safeguarding", PX: 390, PW: 350},
-    {Department: "Training", PX: 760, PW: 470},
-    {Department: "Information Systems", PX: 20, PW: 710},
-    {Department: "Media &amp; Comms", PX: 750, PW: 230},
-    {Department: "CCF(A)", PX: 1000, PW: 230},
+    {Department: "Safeguarding", PX: 380, PW: 398},
+    {Department: "Training", PX: 788, PW: 470},
+    {Department: "Information Systems", PX: 20, PW: 630},
+    {Department: "Media &amp; Comms", PX: 660, PW: 470},
+    {Department: "CCF(A)", PX: 1140, PW: 230},
     {Department: "Policy &amp; Pers", PX: 20, PW: 350},
-    {Department: "Support", PX: 390, PW: 470},
-    {Department: "CCF", PX: 880, PW: 230},
-    {Department: "CEP", PX: 1130, PW: 140}
+    {Department: "Support", PX: 380, PW: 470},
+    {Department: "CCF", PX: 860, PW: 230},
+    {Department: "CEP", PX: 1100, PW: 140}
 );
 
 ClearCollect(colPosts, OrgChartPosts);
@@ -942,11 +942,11 @@ ClearCollect(
 
 Set(
     varChartSvg,
-    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1300 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1300"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1300"" height=""36"" fill=""#172A27""/&gt;" &amp;
+    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1450 " &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""" &amp; (varRowCY + 30 + varRowCH + 40) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
     "&lt;text x=""16"" y=""23"" font-weight=""700"" font-size=""15"" fill=""#FFFFFF""&gt;Cadets Branch Structure&lt;/text&gt;" &amp;
-    "&lt;text x=""1284"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
+    "&lt;text x=""1434"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
     Concat(
         colDeptPanels,
         With(
@@ -1129,7 +1129,7 @@ Notify(
       <section id="downloads">
         <h2>Downloads</h2>
         <ul>
-          <li><a href="downloads/OrgChartPosts_Data_v7.xlsx">OrgChartPosts_Data_v7.xlsx</a> &mdash; all 108 rows, verbatim PDF titles/structure/colours, fictional placeholder occupant names. Paste into Quick Edit per <a href="#sharepoint-setup">SharePoint Setup</a> above.</li>
+          <li><a href="downloads/OrgChartPosts_Data_v9.xlsx">OrgChartPosts_Data_v9.xlsx</a> &mdash; all 108 rows, verbatim PDF titles/structure/colours, fictional placeholder occupant names. Paste into Quick Edit per <a href="#sharepoint-setup">SharePoint Setup</a> above.</li>
         </ul>
       </section>
 
