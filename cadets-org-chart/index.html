@@ -403,7 +403,7 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-15T14:00:00Z">v1 &middot; 2026-09-15 15:00 BST &mdash; real structure/colours, Command as a grid dept, universal panel borders, flows retired</span>
+                <span class="code-stamp" data-updated="2026-09-15T12:16:32Z">v2 &middot; 2026-09-15 13:16 BST &mdash; fixed a With-scoping bug: _panelY referenced sibling field _dept instead of the real Department field, hit live in Studio (&quot;Name isn&apos;t valid. &apos;_dept&apos; isn&apos;t recognized&quot;)</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
@@ -514,8 +514,6 @@ Set(
         colPosts,
         With(
             {
-                _dept: Department,
-                _depth: Depth,
                 _x: FinalX,
                 _mgrTitle: ManagerPostID,
                 _visParentTitle: VisualParentPostID,
@@ -528,7 +526,7 @@ Set(
                 _cardW: Width,
                 _cardH: If(Depth = 0, 34, 27),
                 _panelY: Switch(
-                    _dept,
+                    Department,
                     "Command", varRowAY,
                     "Safeguarding", varRowAY,
                     "Training", varRowAY,
@@ -596,7 +594,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnRecalculate &middot; OnSelect &mdash; same as OnStart, minus the mode reset, no flow calls</span>
-                <span class="code-stamp" data-updated="2026-09-15T14:00:00Z">v1 &middot; 2026-09-15 15:00 BST</span>
+                <span class="code-stamp" data-updated="2026-09-15T12:16:32Z">v2 &middot; 2026-09-15 13:16 BST &mdash; same With-scoping fix as OnStart</span>
               </div>
               <button data-copy="current-recalc" type="button">Copy</button>
             </div>
@@ -705,8 +703,6 @@ Set(
         colPosts,
         With(
             {
-                _dept: Department,
-                _depth: Depth,
                 _x: FinalX,
                 _mgrTitle: ManagerPostID,
                 _visParentTitle: VisualParentPostID,
@@ -719,7 +715,7 @@ Set(
                 _cardW: Width,
                 _cardH: If(Depth = 0, 34, 27),
                 _panelY: Switch(
-                    _dept,
+                    Department,
                     "Command", varRowAY,
                     "Safeguarding", varRowAY,
                     "Training", varRowAY,
@@ -787,7 +783,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnToggleMode &middot; OnSelect</span>
-                <span class="code-stamp" data-updated="2026-09-15T14:00:00Z">v1 &middot; 2026-09-15 15:00 BST</span>
+                <span class="code-stamp" data-updated="2026-09-15T12:16:32Z">v2 &middot; 2026-09-15 13:16 BST &mdash; same With-scoping fix as OnStart</span>
               </div>
               <button data-copy="current-toggle" type="button">Copy</button>
             </div>
@@ -898,8 +894,6 @@ Set(
         colPosts,
         With(
             {
-                _dept: Department,
-                _depth: Depth,
                 _x: FinalX,
                 _mgrTitle: ManagerPostID,
                 _visParentTitle: VisualParentPostID,
@@ -912,7 +906,7 @@ Set(
                 _cardW: Width,
                 _cardH: If(Depth = 0, 34, 27),
                 _panelY: Switch(
-                    _dept,
+                    Department,
                     "Command", varRowAY,
                     "Safeguarding", varRowAY,
                     "Training", varRowAY,
