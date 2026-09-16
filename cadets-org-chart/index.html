@@ -403,7 +403,7 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-16T12:23:00Z">v6 &middot; 2026-09-16 13:23 BST &mdash; card border now redraws on top of the category-colour rail so the outline wraps fully around every card, including over the rail (found via the real print/PDF export -- the rail was previously painted over the border's left edge)</span>
+                <span class="code-stamp" data-updated="2026-09-16T13:55:00Z">v7 &middot; 2026-09-16 14:55 BST &mdash; card text enlarged and weighted (role 7&rarr;8px, name 6.5&rarr;7.5px, both now font-weight 600) so hairline stems clear one device pixel on the printed page; fixes lowercase l/i rendering as hard black bars in PDF viewers. Also v6: card border redraws on top of the category-colour rail so the outline wraps fully around every card.</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
@@ -626,8 +626,8 @@ Set(
                             "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""none"" stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;",
                             ""
                         ) &amp;
-                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""" &amp; If(_useWhiteText, "#FFFFFF", "#172A27") &amp; """&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
-                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 8) &amp; """ text-anchor=""middle"" font-size=""6.5"" fill=""" &amp; If(_useWhiteText, "#F0F0F0", "#6B7A8D") &amp; """&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""8"" font-weight=""600"" fill=""" &amp; If(_useWhiteText, "#FFFFFF", "#172A27") &amp; """&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 9) &amp; """ text-anchor=""middle"" font-size=""7.5"" font-weight=""600"" fill=""" &amp; If(_useWhiteText, "#F0F0F0", "#6B7A8D") &amp; """&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
                     )
                 )
             )
@@ -642,7 +642,7 @@ Set(
                 _ly: (varRowCY + 30 + varRowCH + 10) + 18.0
             },
             "&lt;rect x=""" &amp; _lx &amp; """ y=""" &amp; (_ly - 7) &amp; """ width=""14"" height=""14"" fill=""" &amp; Hex &amp; """ stroke=""#FFFFFF"" stroke-width=""0.6""" &amp; If(Label = "Gapped (vacant)", " stroke-dasharray=""2,2""", "") &amp; "/&gt;" &amp;
-            "&lt;text x=""" &amp; (_lx + 20) &amp; """ y=""" &amp; (_ly + 4) &amp; """ font-size=""8"" fill=""#FFFFFF""&gt;" &amp; Substitute(Label, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+            "&lt;text x=""" &amp; (_lx + 20) &amp; """ y=""" &amp; (_ly + 4) &amp; """ font-size=""8"" font-weight=""600"" fill=""#FFFFFF""&gt;" &amp; Substitute(Label, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
         )
     ) &amp;
     "&lt;/svg&gt;"
@@ -656,7 +656,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnRecalculate &middot; OnSelect &mdash; same as OnStart, minus the mode reset, no flow calls</span>
-                <span class="code-stamp" data-updated="2026-09-16T12:23:00Z">v6 &middot; 2026-09-16 13:23 BST &mdash; same v6 fix as OnStart</span>
+                <span class="code-stamp" data-updated="2026-09-16T13:55:00Z">v7 &middot; 2026-09-16 14:55 BST &mdash; same v7 fixes as OnStart</span>
               </div>
               <button data-copy="current-recalc" type="button">Copy</button>
             </div>
@@ -877,8 +877,8 @@ Set(
                             "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""none"" stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;",
                             ""
                         ) &amp;
-                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""" &amp; If(_useWhiteText, "#FFFFFF", "#172A27") &amp; """&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
-                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 8) &amp; """ text-anchor=""middle"" font-size=""6.5"" fill=""" &amp; If(_useWhiteText, "#F0F0F0", "#6B7A8D") &amp; """&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""8"" font-weight=""600"" fill=""" &amp; If(_useWhiteText, "#FFFFFF", "#172A27") &amp; """&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 9) &amp; """ text-anchor=""middle"" font-size=""7.5"" font-weight=""600"" fill=""" &amp; If(_useWhiteText, "#F0F0F0", "#6B7A8D") &amp; """&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
                     )
                 )
             )
@@ -893,7 +893,7 @@ Set(
                 _ly: (varRowCY + 30 + varRowCH + 10) + 18.0
             },
             "&lt;rect x=""" &amp; _lx &amp; """ y=""" &amp; (_ly - 7) &amp; """ width=""14"" height=""14"" fill=""" &amp; Hex &amp; """ stroke=""#FFFFFF"" stroke-width=""0.6""" &amp; If(Label = "Gapped (vacant)", " stroke-dasharray=""2,2""", "") &amp; "/&gt;" &amp;
-            "&lt;text x=""" &amp; (_lx + 20) &amp; """ y=""" &amp; (_ly + 4) &amp; """ font-size=""8"" fill=""#FFFFFF""&gt;" &amp; Substitute(Label, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+            "&lt;text x=""" &amp; (_lx + 20) &amp; """ y=""" &amp; (_ly + 4) &amp; """ font-size=""8"" font-weight=""600"" fill=""#FFFFFF""&gt;" &amp; Substitute(Label, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
         )
     ) &amp;
     "&lt;/svg&gt;"
@@ -907,7 +907,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnToggleMode &middot; OnSelect</span>
-                <span class="code-stamp" data-updated="2026-09-16T12:23:00Z">v6 &middot; 2026-09-16 13:23 BST &mdash; same v6 fix as OnStart</span>
+                <span class="code-stamp" data-updated="2026-09-16T13:55:00Z">v7 &middot; 2026-09-16 14:55 BST &mdash; same v7 fixes as OnStart</span>
               </div>
               <button data-copy="current-toggle" type="button">Copy</button>
             </div>
@@ -1130,8 +1130,8 @@ Set(
                             "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""none"" stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;",
                             ""
                         ) &amp;
-                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""" &amp; If(_useWhiteText, "#FFFFFF", "#172A27") &amp; """&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
-                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 8) &amp; """ text-anchor=""middle"" font-size=""6.5"" fill=""" &amp; If(_useWhiteText, "#F0F0F0", "#6B7A8D") &amp; """&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""8"" font-weight=""600"" fill=""" &amp; If(_useWhiteText, "#FFFFFF", "#172A27") &amp; """&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 9) &amp; """ text-anchor=""middle"" font-size=""7.5"" font-weight=""600"" fill=""" &amp; If(_useWhiteText, "#F0F0F0", "#6B7A8D") &amp; """&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
                     )
                 )
             )
@@ -1146,7 +1146,7 @@ Set(
                 _ly: (varRowCY + 30 + varRowCH + 10) + 18.0
             },
             "&lt;rect x=""" &amp; _lx &amp; """ y=""" &amp; (_ly - 7) &amp; """ width=""14"" height=""14"" fill=""" &amp; Hex &amp; """ stroke=""#FFFFFF"" stroke-width=""0.6""" &amp; If(Label = "Gapped (vacant)", " stroke-dasharray=""2,2""", "") &amp; "/&gt;" &amp;
-            "&lt;text x=""" &amp; (_lx + 20) &amp; """ y=""" &amp; (_ly + 4) &amp; """ font-size=""8"" fill=""#FFFFFF""&gt;" &amp; Substitute(Label, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+            "&lt;text x=""" &amp; (_lx + 20) &amp; """ y=""" &amp; (_ly + 4) &amp; """ font-size=""8"" font-weight=""600"" fill=""#FFFFFF""&gt;" &amp; Substitute(Label, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
         )
     ) &amp;
     "&lt;/svg&gt;"
