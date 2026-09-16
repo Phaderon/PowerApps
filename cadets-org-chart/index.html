@@ -1181,7 +1181,10 @@ Set(
 <pre id="pdf-button">Set(
     varPdfResult,
     'OrgChart - Export PDF'.Run(
-        PDF(imgChart, {Size: PDFSize.A3, ExpandContainers: true})
+        {
+            name: "Cadets Branch Structure.pdf",
+            contentBytes: PDF(imgChart, {Size: PDFSize.A3, ExpandContainers: true})
+        }
     )
 );
 Notify(
@@ -1195,6 +1198,9 @@ Notify(
 )</pre>
         </div>
         <p><code>imgChart</code> above is the existing Image control showing <code>varChartSvg</code> &mdash; use its real control name.</p>
+        <div class="callout warn">
+          <strong>Fixed in Studio, 2026-09-16:</strong> the flow's file-type trigger input isn't a plain Blob to Power Apps &mdash; it's a Record with <code>name</code>/<code>contentBytes</code> fields (matching the trigger's own schema), so <code>PDF()</code>'s Blob has to be wrapped in a record, not passed directly. Allan hit "Invalid argument type (Blob). Expecting a Record value instead." on the first real Studio run; fixed as above. <code>name</code>'s value is never actually read (the flow's <code>Update file</code> action only uses <code>contentBytes</code>) &mdash; any string is fine there.
+        </div>
         <div class="callout warn">
           <strong>Why "Update file", not "Create file":</strong> research turned up a workaround for making SharePoint's "Create file" action overwrite an existing file (disable chunking in its settings, which then reveals an overwrite toggle) &mdash; but that isn't documented on any official Microsoft Learn page, only in community sources. This design uses "Update file" instead, a plain, fully-documented action that always overwrites by design, trading a one-time manual file-creation step for certainty rather than relying on an unverified trick.
         </div>
