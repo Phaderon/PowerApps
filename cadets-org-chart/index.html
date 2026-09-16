@@ -1163,7 +1163,7 @@ Set(
         </div>
         <p>Answers the original ask: a single in-app button that exports the chart as a PDF and overwrites a designated SharePoint library file, no save dialog, with a completion notification.</p>
         <div class="callout warn">
-          <strong><code>PDF()</code> is still experimental</strong> &mdash; turn it on under <strong>Settings &rarr; Upcoming features &rarr; Experimental</strong> before this can work at all. Confirmed real, returns a Blob, supports <code>Size: PDFSize.A3</code> and <code>ExpandContainers</code>. Not supported inside the export: nested Galleries, charts, the Power BI tile, the Map control &mdash; none of which this app uses, but this specific "one Image control showing an SVG data URI" shape hasn't been tested against <code>PDF()</code> yet, only confirmed compatible on paper.
+          <strong><code>PDF()</code> is still experimental</strong> &mdash; turn it on under <strong>Settings &rarr; Upcoming features &rarr; Experimental</strong> before this can work at all. Confirmed real, returns a Blob, supports <code>Size</code> (a plain string, e.g. <code>"A3"</code> &mdash; there is no <code>PDFSize</code> enum) and <code>ExpandContainers</code>. Not supported inside the export: nested Galleries, charts, the Power BI tile, the Map control. <strong>Its only supported targets are Screen, Container, Vertical/Horizontal Layout Container, and Vertical Gallery &mdash; an Image control is not a valid target</strong>, confirmed directly against Microsoft's own syntax reference (<a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-pdf">learn.microsoft.com/en-us/power-platform/power-fx/reference/function-pdf</a>). This chart lives in an Image control, so it must be wrapped in a plain Container first and the Container targeted instead &mdash; see the corrected button code below.
         </div>
         <ol>
           <li><strong>One-time setup:</strong> create the destination PDF file once, by hand, in the designated SharePoint library (any placeholder content, the real file name and location). The flow below only ever updates this file's content from then on.</li>
@@ -1183,7 +1183,7 @@ Set(
     'OrgChart-ExportPDF'.Run(
         {
             name: "Cadets Branch Structure.pdf",
-            contentBytes: PDF(imgChart, {Size: PDFSize.A3, ExpandContainers: true})
+            contentBytes: PDF(conChartExport, {Size: "A3", ExpandContainers: true})
         }
     )
 );
@@ -1197,9 +1197,12 @@ Notify(
     5000
 )</pre>
         </div>
-        <p><code>imgChart</code> above is the existing Image control showing <code>varChartSvg</code> &mdash; use its real control name.</p>
+        <p><code>conChartExport</code> above is a plain <strong>Container</strong> control wrapping the existing Image control that shows <code>varChartSvg</code> &mdash; use its real control name. The Image control itself cannot be the target (see the callout above); it must sit inside a Container and the Container gets passed to <code>PDF()</code>.</p>
         <div class="callout warn">
           <strong>Fixed in Studio, 2026-09-16:</strong> the flow's file-type trigger input isn't a plain Blob to Power Apps &mdash; it's a Record with <code>name</code>/<code>contentBytes</code> fields (matching the trigger's own schema), so <code>PDF()</code>'s Blob has to be wrapped in a record, not passed directly. Allan hit "Invalid argument type (Blob). Expecting a Record value instead." on the first real Studio run; fixed as above. <code>name</code>'s value is never actually read (the flow's <code>Update file</code> action only uses <code>contentBytes</code>) &mdash; any string is fine there. Also note the flow identifier in the call above &mdash; Power Apps strips spaces out of a flow's display name when generating the identifier you actually call: it's <code>'OrgChart-ExportPDF'</code>, not <code>'OrgChart - Export PDF'</code>, even though the latter is what Studio shows as the flow's display name everywhere else. Always check your own Data panel for the exact identifier rather than trusting this (or any) guide's quoted flow name verbatim.
+        </div>
+        <div class="callout warn">
+          <strong>Corrected against Microsoft's own docs, 2026-09-16:</strong> the original draft used <code>{Size: PDFSize.A3}</code> and targeted the Image control directly &mdash; both wrong. Checked directly against <a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-pdf">Microsoft's PDF function syntax reference</a>: <code>Size</code> is a plain string (<code>"A3"</code>, no enum exists), and the function's only supported targets are Screen, Container, Vertical/Horizontal Layout Container, and Vertical Gallery &mdash; Image is not on that list. Allan flagged that his own reading of the docs page showed nothing about a Size enum, which is what prompted checking the reference page directly rather than trusting the original (unverified) design draft.
         </div>
         <div class="callout warn">
           <strong>Why "Update file", not "Create file":</strong> research turned up a workaround for making SharePoint's "Create file" action overwrite an existing file (disable chunking in its settings, which then reveals an overwrite toggle) &mdash; but that isn't documented on any official Microsoft Learn page, only in community sources. This design uses "Update file" instead, a plain, fully-documented action that always overwrites by design, trading a one-time manual file-creation step for certainty rather than relying on an unverified trick.
