@@ -403,7 +403,7 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-15T22:56:54Z">v5 &middot; 2026-09-15 23:56 BST &mdash; wider gap between department panels (was ~2px, now a clear ~22px), Media &amp; Comms' two leads resized to the standard 140px head width every other department uses, footer key added (category colours, styled to match the top banner)</span>
+                <span class="code-stamp" data-updated="2026-09-16T12:23:00Z">v6 &middot; 2026-09-16 13:23 BST &mdash; card border now redraws on top of the category-colour rail so the outline wraps fully around every card, including over the rail (found via the real print/PDF export -- the rail was previously painted over the border's left edge)</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
@@ -622,7 +622,8 @@ Set(
                         "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
                         If(
                             varChartMode = "Quiet" &amp;&amp; !_isGapped,
-                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
+                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;" &amp;
+                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""none"" stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;",
                             ""
                         ) &amp;
                         "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""" &amp; If(_useWhiteText, "#FFFFFF", "#172A27") &amp; """&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
@@ -655,7 +656,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnRecalculate &middot; OnSelect &mdash; same as OnStart, minus the mode reset, no flow calls</span>
-                <span class="code-stamp" data-updated="2026-09-15T22:56:54Z">v5 &middot; 2026-09-15 23:56 BST &mdash; same v5 fixes as OnStart</span>
+                <span class="code-stamp" data-updated="2026-09-16T12:23:00Z">v6 &middot; 2026-09-16 13:23 BST &mdash; same v6 fix as OnStart</span>
               </div>
               <button data-copy="current-recalc" type="button">Copy</button>
             </div>
@@ -872,7 +873,8 @@ Set(
                         "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
                         If(
                             varChartMode = "Quiet" &amp;&amp; !_isGapped,
-                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
+                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;" &amp;
+                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""none"" stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;",
                             ""
                         ) &amp;
                         "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""" &amp; If(_useWhiteText, "#FFFFFF", "#172A27") &amp; """&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
@@ -905,7 +907,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnToggleMode &middot; OnSelect</span>
-                <span class="code-stamp" data-updated="2026-09-15T22:56:54Z">v5 &middot; 2026-09-15 23:56 BST &mdash; same v5 fixes as OnStart</span>
+                <span class="code-stamp" data-updated="2026-09-16T12:23:00Z">v6 &middot; 2026-09-16 13:23 BST &mdash; same v6 fix as OnStart</span>
               </div>
               <button data-copy="current-toggle" type="button">Copy</button>
             </div>
@@ -1124,7 +1126,8 @@ Set(
                         "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
                         If(
                             varChartMode = "Quiet" &amp;&amp; !_isGapped,
-                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;",
+                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;" &amp;
+                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""none"" stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;",
                             ""
                         ) &amp;
                         "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""7"" fill=""" &amp; If(_useWhiteText, "#FFFFFF", "#172A27") &amp; """&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
@@ -1155,59 +1158,30 @@ Set(
       </section>
 
       <section id="pdf-export">
-        <h2>PDF Export (Designed, Not Built)</h2>
-        <p class="meta-line">One button, one flow &mdash; researched against current official Microsoft docs, not guessed</p>
+        <h2>PDF Export &mdash; via Print(), not PDF()</h2>
+        <p class="meta-line">Superseded design, 2026-09-16 &mdash; the original PDF()+flow approach is abandoned; see why below</p>
         <div class="fix-controls">
           <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
           <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this section">&#9660;</button>
         </div>
-        <p>Answers the original ask: a single in-app button that exports the chart as a PDF and overwrites a designated SharePoint library file, no save dialog, with a completion notification.</p>
         <div class="callout warn">
-          <strong><code>PDF()</code> is still experimental</strong> &mdash; turn it on under <strong>Settings &rarr; Upcoming features &rarr; Experimental</strong> before this can work at all. Confirmed real, returns a Blob, supports <code>Size</code> (a plain string, e.g. <code>"A3"</code> &mdash; there is no <code>PDFSize</code> enum) and <code>ExpandContainers</code>. Not supported inside the export: nested Galleries, charts, the Power BI tile, the Map control. <strong>Its only supported targets are Screen, Container, Vertical/Horizontal Layout Container, and Vertical Gallery &mdash; an Image control is not a valid target</strong>, confirmed directly against Microsoft's own syntax reference (<a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-pdf">learn.microsoft.com/en-us/power-platform/power-fx/reference/function-pdf</a>). This chart lives in an Image control, so it must be wrapped in a plain Container first and the Container targeted instead &mdash; see the corrected button code below.
+          <strong>Why this changed:</strong> the original design used the experimental <code>PDF()</code> function to build a Blob and pass it to a flow that saved it into SharePoint automatically, no save dialog. In real Studio testing, every export came out visibly blurred &mdash; and crucially, the blur was completely insensitive to <code>DPI</code>, <code>Size</code>, or making the source control 2&ndash;3&times; larger. That ruling-out is what proved the problem: real vector/SVG content stays sharp when displayed bigger (confirmed &mdash; the on-screen chart at any zoom was "beautifully crisp"), so a fixed blur regardless of source size means the rasterization is happening inside <code>PDF()</code>'s own internal capture step, before your <code>Size</code>/<code>DPI</code> values are ever applied. This matches how screenshot-style/headless PDF generators generally behave (confirmed against real technical writeups on SVG-to-PDF rasterization) &mdash; only a genuine browser print pipeline reliably preserves vector quality, because it renders content through the same engine as on-screen display rather than capturing a bitmap first. <strong>Conclusion: <code>PDF()</code> is not fit for this chart while it remains an experimental, screenshot-style function.</strong> Switched to Power Apps' <code>Print()</code> function instead &mdash; older, non-experimental, and confirmed to use the real browser print pipeline. Real trade-off: <code>Print()</code> can't hand the app a file to pass to a flow, so the one-click "auto-saved to SharePoint" flow is gone &mdash; the person exporting saves the PDF themselves from the print dialog and uploads it to SharePoint by hand, the same way they would without any of this.
         </div>
+        <p>The <code>OrgChart - Export PDF</code> flow and its importable zip (see <a href="#downloads">Downloads</a>) are no longer used by this design &mdash; harmless to leave imported and unused if you already did.</p>
+        <h3>Design</h3>
         <ol>
-          <li><strong>One-time setup:</strong> create the destination PDF file once, by hand, in the designated SharePoint library (any placeholder content, the real file name and location). The flow below only ever updates this file's content from then on.</li>
-          <li>New flow, <strong>OrgChart - Export PDF</strong>: trigger <strong>PowerApps (V2)</strong> with one <code>File</code> input parameter, <code>pdfFile</code>; then SharePoint's <strong>Update file</strong> action (site address, file identifier = the known path to the placeholder file, file content = the trigger's file parameter); then <strong>Respond to a PowerApp or flow</strong> with one output field, <code>Status</code> (Text).</li>
-          <li>Button <code>OnSelect</code>:</li>
+          <li>Build a dedicated screen, e.g. <strong><code>scrChartPrint</code></strong>, used only for printing &mdash; nothing else on it. Set that screen's own <code>Width</code> to <code>1450</code> and its own <code>Height</code> to <code>varRowCY + 30 + varRowCH + 10 + 36 + 10</code> (the exact same total-height formula the chart's own SVG viewBox uses). This is what fixes the large blank space at the bottom of the export: <code>Print()</code> prints the whole screen, blank space included, so the screen's own size has to match the chart's real content size rather than the app's general-purpose screen resolution.</li>
+          <li>Put one Image control on <code>scrChartPrint</code> (Image property: <code>"data:image/svg+xml," &amp; EncodeUrl(varChartSvg)</code>, same as the main chart), with <code>Width</code>/<code>Height</code> both set to <code>Parent.Width</code>/<code>Parent.Height</code> so it fills the screen exactly &mdash; no letterboxing, no leftover blank space.</li>
+          <li>On your main screen, a button (e.g. <code>btnPreviewAndPrint</code>) that navigates there: <code>Navigate(scrChartPrint, ScreenTransition.None)</code>.</li>
+          <li>On <code>scrChartPrint</code> itself, a small "Print" button: <code>Print()</code>. Deliberately two steps, not one &mdash; calling <code>Navigate()</code> immediately followed by <code>Print()</code> in the same formula chain is a known bad pattern in this family of guides (statement order after <code>Navigate()</code> is not a reliable visual-completion guarantee), so the person lands on the print screen first, sees it's correct, then prints from a separate button once actually there.</li>
         </ol>
-        <div class="code-card">
-          <div class="code-toolbar">
-            <div class="code-meta">
-              <span>btnExportPdf &middot; OnSelect</span>
-              <span class="code-stamp" data-updated="2026-09-15T14:00:00Z">v1 &middot; 2026-09-15 15:00 BST &mdash; design only, not yet run in Studio</span>
-            </div>
-            <button data-copy="pdf-button" type="button">Copy</button>
-          </div>
-<pre id="pdf-button">Set(
-    varPdfResult,
-    'OrgChart-ExportPDF'.Run(
-        {
-            name: "Cadets Branch Structure.pdf",
-            contentBytes: PDF(conChartExport, {Size: "A3", ExpandContainers: true})
-        }
-    )
-);
-Notify(
-    If(
-        varPdfResult.Status = "Success",
-        "Chart exported to SharePoint.",
-        "Export failed — please try again."
-    ),
-    If(varPdfResult.Status = "Success", NotificationType.Success, NotificationType.Error),
-    5000
-)</pre>
-        </div>
-        <p><code>conChartExport</code> above is a plain <strong>Container</strong> control wrapping the existing Image control that shows <code>varChartSvg</code> &mdash; use its real control name. The Image control itself cannot be the target (see the callout above); it must sit inside a Container and the Container gets passed to <code>PDF()</code>.</p>
         <div class="callout warn">
-          <strong>Fixed in Studio, 2026-09-16:</strong> the flow's file-type trigger input isn't a plain Blob to Power Apps &mdash; it's a Record with <code>name</code>/<code>contentBytes</code> fields (matching the trigger's own schema), so <code>PDF()</code>'s Blob has to be wrapped in a record, not passed directly. Allan hit "Invalid argument type (Blob). Expecting a Record value instead." on the first real Studio run; fixed as above. <code>name</code>'s value is never actually read (the flow's <code>Update file</code> action only uses <code>contentBytes</code>) &mdash; any string is fine there. Also note the flow identifier in the call above &mdash; Power Apps strips spaces out of a flow's display name when generating the identifier you actually call: it's <code>'OrgChart-ExportPDF'</code>, not <code>'OrgChart - Export PDF'</code>, even though the latter is what Studio shows as the flow's display name everywhere else. Always check your own Data panel for the exact identifier rather than trusting this (or any) guide's quoted flow name verbatim.
+          <strong>Two things confirmed directly against Microsoft's own <code>Print()</code> reference</strong> (<a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-print">learn.microsoft.com/en-us/power-platform/power-fx/reference/function-print</a>), not guessed: <code>Print()</code> takes no arguments at all &mdash; it always prints whichever screen the calling button lives on, not a specific control, which is why the design above uses a dedicated screen rather than trying to target the chart directly. And in the browser's print dialog, <strong>"Background graphics" must be ticked</strong> (Chrome: "More settings") or the coloured department headers/panels print as plain white &mdash; a real, documented gotcha, not a guess.
         </div>
         <div class="callout warn">
-          <strong>Corrected against Microsoft's own docs, 2026-09-16:</strong> the original draft used <code>{Size: PDFSize.A3}</code> and targeted the Image control directly &mdash; both wrong. Checked directly against <a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-pdf">Microsoft's PDF function syntax reference</a>: <code>Size</code> is a plain string (<code>"A3"</code>, no enum exists), and the function's only supported targets are Screen, Container, Vertical/Horizontal Layout Container, and Vertical Gallery &mdash; Image is not on that list. Allan flagged that his own reading of the docs page showed nothing about a Size enum, which is what prompted checking the reference page directly rather than trusting the original (unverified) design draft.
+          <strong>Known limitation, not yet solved:</strong> the browser print dialog does not reliably remember paper size ("A3") or the "Fit to printable area" scale option between exports &mdash; there is no Power Fx property that controls this, it's entirely the browser's own print-dialog behaviour. If it's not sticking for you, that's not something this design can currently force. One partial mitigation: set your Windows default printer to "Microsoft Print to PDF" so at least the destination doesn't need reselecting each time, even if paper size/scale still do.
         </div>
-        <div class="callout warn">
-          <strong>Why "Update file", not "Create file":</strong> research turned up a workaround for making SharePoint's "Create file" action overwrite an existing file (disable chunking in its settings, which then reveals an overwrite toggle) &mdash; but that isn't documented on any official Microsoft Learn page, only in community sources. This design uses "Update file" instead, a plain, fully-documented action that always overwrites by design, trading a one-time manual file-creation step for certainty rather than relying on an unverified trick.
-        </div>
-        <p>Still needs a real Studio test before this ships: whether <code>PDF()</code> genuinely captures this exact Image-control-showing-an-SVG design cleanly; whether the flow's file-size limit matters at this chart's scale; the synchronous flow call's execution-time ceiling; and whether the experimental flag can actually be turned on in this specific tenant (a tenant admin setting can restrict it even when the maker's own toggle allows it).</p>
+        <p>Not yet confirmed: whether sizing the dedicated screen exactly to content removes the "nothing shows until Fit to printable area" symptom Allan saw on the first real test (expected to help significantly, since the mismatch between screen size and paper size was likely a big part of it, but not independently re-tested since this redesign).</p>
       </section>
 
       <section id="downloads">
