@@ -1205,6 +1205,7 @@ Notify(
         <h2>Downloads</h2>
         <ul>
           <li><a href="downloads/OrgChartPosts_Data_v13.xlsx">OrgChartPosts_Data_v13.xlsx</a> &mdash; all 108 rows, verbatim PDF titles/structure/colours, fictional placeholder occupant names. Paste into Quick Edit per <a href="#sharepoint-setup">SharePoint Setup</a> above.</li>
+          <li><a href="downloads/OrgChart_ExportPdf_Production.zip">OrgChart_ExportPdf_Production.zip</a> &mdash; importable Power Automate package for the <code>OrgChart - Export PDF</code> flow described in <a href="#pdf-export">PDF Export</a> above. Import via <strong>Power Automate &rarr; My flows &rarr; Import &rarr; Import Package (Legacy)</strong>, pick/create your SharePoint connection when prompted. <strong>Before running it</strong>: create the destination PDF file once, manually, in SharePoint (any placeholder content, correct name/location); then open the imported flow's <code>Update file</code> action and replace its file identifier &mdash; currently the placeholder <code>/Shared Documents/REPLACE-ME-Cadets-Branch-Structure.pdf</code> &mdash; with that real file's own site-relative path. Not yet run in Studio; see the caveats in <a href="#pdf-export">PDF Export</a>.</li>
         </ul>
       </section>
 
