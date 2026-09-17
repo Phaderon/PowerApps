@@ -384,7 +384,7 @@
           <li>Add three new columns via <strong>+Add column</strong> (never "Create list from Excel" &mdash; it mangles internal field names, a confirmed, repeated finding in this project): <code>RelationshipType</code> (Text), <code>PeerPostID</code> (Text), <code>VisualParentPostID</code> (Text).</li>
           <li>If <code>FinalY</code> exists as a <strong>Calculated</strong> column from an earlier build, delete it and re-add it as a plain <strong>Number</strong> column &mdash; it's a literal seeded value now, the same as <code>FinalX</code> and <code>Width</code> already are.</li>
           <li>Confirm <code>OccupantName</code> (Text) and <code>IsGapped</code> (Yes/No) already exist &mdash; add them the same way if this is a fresh list.</li>
-          <li>Download <code>OrgChartPosts_Data_v15.xlsx</code> (see <a href="#downloads">Downloads</a>) and bulk-paste all 108 rows into the list's <strong>Quick Edit</strong> grid view, matching the sheet's own column order exactly. Quick Edit only inserts values into already-existing columns, so it can't trigger the same field-mangling problem "Create list from Excel" does.</li>
+          <li>Download <code>OrgChartPosts_Data_v16.xlsx</code> (see <a href="#downloads">Downloads</a>) and bulk-paste all 108 rows into the list's <strong>Quick Edit</strong> grid view, matching the sheet's own column order exactly. Quick Edit only inserts values into already-existing columns, so it can't trigger the same field-mangling problem "Create list from Excel" does.</li>
           <li>If the two old flows are still imported in your environment &mdash; <code>OrgChart - Compute Depth (Production)</code> and <code>OrgChart - Compute Width &amp; Position (Production)</code> &mdash; delete or turn them off. Nothing in the current design calls either one any more.</li>
         </ol>
       </section>
@@ -410,7 +410,7 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-17T08:41:27Z">v15 &middot; 2026-09-17 09:41 BST &mdash; branch connectors now hang from a centred bus with a taller drop, so a head with two symmetrically-placed reports reads as a bracket rather than a link between the two reports. Plus v14\'s rounded, recoloured banner and footer</span>
+                <span class="code-stamp" data-updated="2026-09-17T08:48:51Z">v16 &middot; 2026-09-17 09:48 BST &mdash; one connector rule everywhere: a line is drawn only where a child is offset sideways from its manager, never where it sits directly below. Needs the new data file</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
@@ -741,7 +741,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnRecalculate &middot; OnSelect &mdash; same as OnStart, minus the mode reset, no flow calls</span>
-                <span class="code-stamp" data-updated="2026-09-17T08:41:27Z">v15 &middot; 2026-09-17 09:41 BST &mdash; branch connectors now hang from a centred bus with a taller drop, so a head with two symmetrically-placed reports reads as a bracket rather than a link between the two reports. Plus v14\'s rounded, recoloured banner and footer</span>
+                <span class="code-stamp" data-updated="2026-09-17T08:48:51Z">v16 &middot; 2026-09-17 09:48 BST &mdash; one connector rule everywhere: a line is drawn only where a child is offset sideways from its manager, never where it sits directly below. Needs the new data file</span>
               </div>
               <button data-copy="current-recalc" type="button">Copy</button>
             </div>
@@ -1113,7 +1113,7 @@ Set(
       <section id="downloads">
         <h2>Downloads</h2>
         <ul>
-          <li><a href="downloads/OrgChartPosts_Data_v15.xlsx">OrgChartPosts_Data_v15.xlsx</a> &mdash; all 108 rows, verbatim PDF titles/structure, fictional placeholder occupant names, and the 2026-09-17 layout (five-wide Command, repacked departments, three-tier card sizes). <strong>Supersedes v13 &mdash; delete every row and re-paste</strong>, since card widths, positions and the Command layout all changed. Paste into Quick Edit per <a href="#sharepoint-setup">SharePoint Setup</a> above.</li>
+          <li><a href="downloads/OrgChartPosts_Data_v16.xlsx">OrgChartPosts_Data_v16.xlsx</a> &mdash; all 108 rows, verbatim PDF titles/structure, fictional placeholder occupant names, and the 2026-09-17 layout (five-wide Command, repacked departments, three-tier card sizes). <strong>Supersedes v13 &mdash; delete every row and re-paste</strong>, since card widths, positions and the Command layout all changed. Paste into Quick Edit per <a href="#sharepoint-setup">SharePoint Setup</a> above.</li>
           <li><a href="downloads/OrgChart_ExportPdf_Production.zip">OrgChart_ExportPdf_Production.zip</a> &mdash; importable Power Automate package for the <code>OrgChart - Export PDF</code> flow described in <a href="#pdf-export">PDF Export</a> above. Import via <strong>Power Automate &rarr; My flows &rarr; Import &rarr; Import Package (Legacy)</strong>, pick/create your SharePoint connection when prompted. <strong>Before running it</strong>: create the destination PDF file once, manually, in SharePoint (any placeholder content, correct name/location); then open the imported flow's <code>Update file</code> action and replace its file identifier &mdash; currently the placeholder <code>/Shared Documents/REPLACE-ME-Cadets-Branch-Structure.pdf</code> &mdash; with that real file's own site-relative path. Not yet run in Studio; see the caveats in <a href="#pdf-export">PDF Export</a>. <strong>If you already imported an earlier copy of this zip:</strong> re-import this one and re-set the file path again &mdash; the first version had two separate "Respond to a PowerApp or flow" actions (one per success/failure branch), a documented Power Automate defect that silently breaks the app's ability to read some response fields even though the flow itself saves and runs with no visible error. This version uses a single Respond action fed by a status variable instead.</li>
         </ul>
       </section>
