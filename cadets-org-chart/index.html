@@ -410,7 +410,7 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-17T04:25:58Z">v11 &middot; 2026-09-17 05:25 BST &mdash; footer bar was sitting 20px higher in Studio than in the preview, overlapping the bottom panel borders by 2px; the two now agree. Plus v10's panel bottom padding, v9's department post counts and vacancy flags</span>
+                <span class="code-stamp" data-updated="2026-09-17T04:33:07Z">v12 &middot; 2026-09-17 05:33 BST &mdash; rounded panel borders (8px) and header bars (4px), and rounded connector elbows. Plus v11\'s footer position fix and v9\'s department post counts with vacancy flags</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
@@ -569,11 +569,11 @@ Set(
             },
             If(
                 Department = "Command",
-                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ fill=""#EEF1F4"" stroke=""#2C3E50"" stroke-width=""2""/&gt;",
-                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ fill=""none"" stroke=""#B9C2C8"" stroke-width=""1""/&gt;"
+                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ rx=""8"" fill=""#EEF1F4"" stroke=""#2C3E50"" stroke-width=""2""/&gt;",
+                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ rx=""8"" fill=""none"" stroke=""#B9C2C8"" stroke-width=""1""/&gt;"
             )
         ) &amp;
-        "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" fill=""#003E32""/&gt;" &amp;
+        "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" rx=""4"" fill=""#003E32""/&gt;" &amp;
         "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;" &amp;
         "&lt;text x=""" &amp; (PX + PW - 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ text-anchor=""end"" font-size=""8"" font-weight=""600"" fill=""" &amp; If(VacantCount &gt; 0, "#F2C879", "#A8C3BB") &amp; """&gt;" &amp; PostCount &amp; If(PostCount = 1, " post", " posts") &amp; If(VacantCount &gt; 0, ", " &amp; VacantCount &amp; " vacant", "") &amp; "&lt;/text&gt;"
     ) &amp;
@@ -617,7 +617,26 @@ Set(
                             !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visMgr),
                             With(
                                 {_mgrCardH: If(_visMgr.Depth = 0, 34, If(_visMgr.Depth = 1, 30, 25))},
-                                "&lt;path d=""M " &amp; _visMgr.FinalX &amp; " " &amp; (_panelY + 30 + _visMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#B9AFB6"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
+                                With(
+                                    {
+                                        _mx: _visMgr.FinalX,
+                                        _my: (_panelY + 30 + _visMgr.FinalY + _mgrCardH),
+                                        _cy: (_y - 5)
+                                    },
+                                    With(
+                                        {
+                                            _r: Min(4, _cy - _my, Abs(_x - _mx) / 2),
+                                            _sgn: If(_x &gt; _mx, 1, -1)
+                                        },
+                                        "&lt;path d=""" &amp;
+                                        If(
+                                            Abs(_x - _mx) &lt; 0.5 || _r &lt; 1,
+                                            "M " &amp; _mx &amp; " " &amp; _my &amp; " V " &amp; _cy &amp; " H " &amp; _x &amp; " V " &amp; _y,
+                                            "M " &amp; _mx &amp; " " &amp; _my &amp; " V " &amp; (_cy - _r) &amp; " Q " &amp; _mx &amp; " " &amp; _cy &amp; " " &amp; (_mx + _sgn * _r) &amp; " " &amp; _cy &amp; " H " &amp; (_x - _sgn * _r) &amp; " Q " &amp; _x &amp; " " &amp; _cy &amp; " " &amp; _x &amp; " " &amp; (_cy + _r) &amp; " V " &amp; _y
+                                        ) &amp;
+                                        """ stroke=""#B9AFB6"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
+                                    )
+                                )
                             ),
                             ""
                         )
@@ -712,7 +731,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnRecalculate &middot; OnSelect &mdash; same as OnStart, minus the mode reset, no flow calls</span>
-                <span class="code-stamp" data-updated="2026-09-17T04:25:58Z">v11 &middot; 2026-09-17 05:25 BST &mdash; footer bar was sitting 20px higher in Studio than in the preview, overlapping the bottom panel borders by 2px; the two now agree. Plus v10's panel bottom padding, v9's department post counts and vacancy flags</span>
+                <span class="code-stamp" data-updated="2026-09-17T04:33:07Z">v12 &middot; 2026-09-17 05:33 BST &mdash; rounded panel borders (8px) and header bars (4px), and rounded connector elbows. Plus v11\'s footer position fix and v9\'s department post counts with vacancy flags</span>
               </div>
               <button data-copy="current-recalc" type="button">Copy</button>
             </div>
@@ -871,11 +890,11 @@ Set(
             },
             If(
                 Department = "Command",
-                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ fill=""#EEF1F4"" stroke=""#2C3E50"" stroke-width=""2""/&gt;",
-                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ fill=""none"" stroke=""#B9C2C8"" stroke-width=""1""/&gt;"
+                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ rx=""8"" fill=""#EEF1F4"" stroke=""#2C3E50"" stroke-width=""2""/&gt;",
+                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ rx=""8"" fill=""none"" stroke=""#B9C2C8"" stroke-width=""1""/&gt;"
             )
         ) &amp;
-        "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" fill=""#003E32""/&gt;" &amp;
+        "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" rx=""4"" fill=""#003E32""/&gt;" &amp;
         "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;" &amp;
         "&lt;text x=""" &amp; (PX + PW - 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ text-anchor=""end"" font-size=""8"" font-weight=""600"" fill=""" &amp; If(VacantCount &gt; 0, "#F2C879", "#A8C3BB") &amp; """&gt;" &amp; PostCount &amp; If(PostCount = 1, " post", " posts") &amp; If(VacantCount &gt; 0, ", " &amp; VacantCount &amp; " vacant", "") &amp; "&lt;/text&gt;"
     ) &amp;
@@ -919,7 +938,26 @@ Set(
                             !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visMgr),
                             With(
                                 {_mgrCardH: If(_visMgr.Depth = 0, 34, If(_visMgr.Depth = 1, 30, 25))},
-                                "&lt;path d=""M " &amp; _visMgr.FinalX &amp; " " &amp; (_panelY + 30 + _visMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#B9AFB6"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
+                                With(
+                                    {
+                                        _mx: _visMgr.FinalX,
+                                        _my: (_panelY + 30 + _visMgr.FinalY + _mgrCardH),
+                                        _cy: (_y - 5)
+                                    },
+                                    With(
+                                        {
+                                            _r: Min(4, _cy - _my, Abs(_x - _mx) / 2),
+                                            _sgn: If(_x &gt; _mx, 1, -1)
+                                        },
+                                        "&lt;path d=""" &amp;
+                                        If(
+                                            Abs(_x - _mx) &lt; 0.5 || _r &lt; 1,
+                                            "M " &amp; _mx &amp; " " &amp; _my &amp; " V " &amp; _cy &amp; " H " &amp; _x &amp; " V " &amp; _y,
+                                            "M " &amp; _mx &amp; " " &amp; _my &amp; " V " &amp; (_cy - _r) &amp; " Q " &amp; _mx &amp; " " &amp; _cy &amp; " " &amp; (_mx + _sgn * _r) &amp; " " &amp; _cy &amp; " H " &amp; (_x - _sgn * _r) &amp; " Q " &amp; _x &amp; " " &amp; _cy &amp; " " &amp; _x &amp; " " &amp; (_cy + _r) &amp; " V " &amp; _y
+                                        ) &amp;
+                                        """ stroke=""#B9AFB6"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
+                                    )
+                                )
                             ),
                             ""
                         )
