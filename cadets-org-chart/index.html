@@ -410,7 +410,7 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-17T04:33:07Z">v12 &middot; 2026-09-17 05:33 BST &mdash; rounded panel borders (8px) and header bars (4px), and rounded connector elbows. Plus v11\'s footer position fix and v9\'s department post counts with vacancy flags</span>
+                <span class="code-stamp" data-updated="2026-09-17T07:29:05Z">v13 &middot; 2026-09-17 08:29 BST &mdash; department post count promoted to a white pill (amber where there are vacancies), bigger and easier to pick out. Plus v12\'s rounded panels and connector elbows</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
@@ -575,7 +575,17 @@ Set(
         ) &amp;
         "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" rx=""4"" fill=""#003E32""/&gt;" &amp;
         "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;" &amp;
-        "&lt;text x=""" &amp; (PX + PW - 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ text-anchor=""end"" font-size=""8"" font-weight=""600"" fill=""" &amp; If(VacantCount &gt; 0, "#F2C879", "#A8C3BB") &amp; """&gt;" &amp; PostCount &amp; If(PostCount = 1, " post", " posts") &amp; If(VacantCount &gt; 0, ", " &amp; VacantCount &amp; " vacant", "") &amp; "&lt;/text&gt;"
+        With(
+            {_stat: PostCount &amp; If(PostCount = 1, " post", " posts") &amp; If(VacantCount &gt; 0, ", " &amp; VacantCount &amp; " vacant", "")},
+            With(
+                {_statW: Len(_stat) * 4.5 + 14},
+                With(
+                    {_statX: PX + PW - 8 - _statW},
+                    "&lt;rect x=""" &amp; _statX &amp; """ y=""" &amp; (PY + 3.5) &amp; """ width=""" &amp; _statW &amp; """ height=""15"" rx=""7.5"" fill=""" &amp; If(VacantCount &gt; 0, "#F2C879", "#FFFFFF") &amp; """/&gt;" &amp;
+                    "&lt;text x=""" &amp; (_statX + _statW / 2) &amp; """ y=""" &amp; (PY + 14.5) &amp; """ text-anchor=""middle"" font-size=""9"" font-weight=""700"" fill=""#003E32""&gt;" &amp; _stat &amp; "&lt;/text&gt;"
+                )
+            )
+        )
     ) &amp;
     Concat(
         colPosts,
@@ -731,7 +741,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnRecalculate &middot; OnSelect &mdash; same as OnStart, minus the mode reset, no flow calls</span>
-                <span class="code-stamp" data-updated="2026-09-17T04:33:07Z">v12 &middot; 2026-09-17 05:33 BST &mdash; rounded panel borders (8px) and header bars (4px), and rounded connector elbows. Plus v11\'s footer position fix and v9\'s department post counts with vacancy flags</span>
+                <span class="code-stamp" data-updated="2026-09-17T07:29:05Z">v13 &middot; 2026-09-17 08:29 BST &mdash; department post count promoted to a white pill (amber where there are vacancies), bigger and easier to pick out. Plus v12\'s rounded panels and connector elbows</span>
               </div>
               <button data-copy="current-recalc" type="button">Copy</button>
             </div>
@@ -896,7 +906,17 @@ Set(
         ) &amp;
         "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" rx=""4"" fill=""#003E32""/&gt;" &amp;
         "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;" &amp;
-        "&lt;text x=""" &amp; (PX + PW - 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ text-anchor=""end"" font-size=""8"" font-weight=""600"" fill=""" &amp; If(VacantCount &gt; 0, "#F2C879", "#A8C3BB") &amp; """&gt;" &amp; PostCount &amp; If(PostCount = 1, " post", " posts") &amp; If(VacantCount &gt; 0, ", " &amp; VacantCount &amp; " vacant", "") &amp; "&lt;/text&gt;"
+        With(
+            {_stat: PostCount &amp; If(PostCount = 1, " post", " posts") &amp; If(VacantCount &gt; 0, ", " &amp; VacantCount &amp; " vacant", "")},
+            With(
+                {_statW: Len(_stat) * 4.5 + 14},
+                With(
+                    {_statX: PX + PW - 8 - _statW},
+                    "&lt;rect x=""" &amp; _statX &amp; """ y=""" &amp; (PY + 3.5) &amp; """ width=""" &amp; _statW &amp; """ height=""15"" rx=""7.5"" fill=""" &amp; If(VacantCount &gt; 0, "#F2C879", "#FFFFFF") &amp; """/&gt;" &amp;
+                    "&lt;text x=""" &amp; (_statX + _statW / 2) &amp; """ y=""" &amp; (PY + 14.5) &amp; """ text-anchor=""middle"" font-size=""9"" font-weight=""700"" fill=""#003E32""&gt;" &amp; _stat &amp; "&lt;/text&gt;"
+                )
+            )
+        )
     ) &amp;
     Concat(
         colPosts,
@@ -1080,6 +1100,9 @@ Set(
         </div>
         <div class="callout warn">
           <strong>Two things confirmed directly against Microsoft's own <code>Print()</code> reference</strong> (<a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-print">learn.microsoft.com/en-us/power-platform/power-fx/reference/function-print</a>), not guessed: <code>Print()</code> takes no arguments at all &mdash; it always prints whichever screen the calling button lives on, not a specific control, which is why the design above uses a dedicated screen rather than trying to target the chart directly. And in the browser's print dialog, <strong>"Background graphics" must be ticked</strong> (Chrome: "More settings") or the coloured department headers/panels print as plain white &mdash; a real, documented gotcha, not a guess.
+        </div>
+        <div class="callout warn">
+          <strong>Set margins to None in the print dialog.</strong> The chart is width-bound on A3, so it always fills the full <em>printable</em> width &mdash; any white band down the sides is the browser's page margin, not the chart falling short. Chrome: <strong>More settings &rarr; Margins &rarr; None</strong>. Besides removing the band this prints everything about 5% larger (scale 0.782 &rarr; 0.821 against Chrome's default ~10mm margins), which is free legibility.
         </div>
         <div class="callout warn">
           <strong>Known limitation, not yet solved:</strong> the browser print dialog does not reliably remember paper size ("A3") or the "Fit to printable area" scale option between exports &mdash; there is no Power Fx property that controls this, it's entirely the browser's own print-dialog behaviour. If it's not sticking for you, that's not something this design can currently force. One partial mitigation: set your Windows default printer to "Microsoft Print to PDF" so at least the destination doesn't need reselecting each time, even if paper size/scale still do.
