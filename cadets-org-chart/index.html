@@ -410,7 +410,7 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-17T09:00:00Z">v8 &middot; 2026-09-17 10:00 BST &mdash; Command branches five across; departments repacked (75% of the canvas filled, up from ~57%); three-tier card sizing; spine connectors for flat teams; accessible pastel palette; Quiet mode retired</span>
+                <span class="code-stamp" data-updated="2026-09-17T14:00:00Z">v9 &middot; 2026-09-17 15:00 BST &mdash; department headers now carry a post count, turning amber and adding a vacancy count where a department has gaps; cards gain a 4px corner radius. Plus v8: five-wide Command, repacked departments, three-tier sizing, spine connectors, accessible palette, Quiet mode retired</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
@@ -543,7 +543,11 @@ ClearCollect(
         With(
             {_d: Department},
             Max(AddColumns(Filter(colPosts, Department = _d), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b)
-        )
+        ),
+        PostCount,
+        With({_d: Department}, CountRows(Filter(colPosts, Department = _d))),
+        VacantCount,
+        With({_d: Department}, CountRows(Filter(colPosts, Department = _d &amp;&amp; IsGapped)))
     )
 );
 
@@ -570,7 +574,8 @@ Set(
             )
         ) &amp;
         "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" fill=""#003E32""/&gt;" &amp;
-        "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+        "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;" &amp;
+        "&lt;text x=""" &amp; (PX + PW - 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ text-anchor=""end"" font-size=""8"" font-weight=""600"" fill=""" &amp; If(VacantCount &gt; 0, "#F2C879", "#A8C3BB") &amp; """&gt;" &amp; PostCount &amp; If(PostCount = 1, " post", " posts") &amp; If(VacantCount &gt; 0, ", " &amp; VacantCount &amp; " vacant", "") &amp; "&lt;/text&gt;"
     ) &amp;
     Concat(
         colPosts,
@@ -676,7 +681,7 @@ Set(
                             _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
                             _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", "")
                         },
-                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
+                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""4"" fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
                         "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""8"" font-weight=""600"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
                         "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 9) &amp; """ text-anchor=""middle"" font-size=""7.5"" font-weight=""600"" fill=""#46545E""&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
                     )
@@ -707,7 +712,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnRecalculate &middot; OnSelect &mdash; same as OnStart, minus the mode reset, no flow calls</span>
-                <span class="code-stamp" data-updated="2026-09-17T09:00:00Z">v8 &middot; 2026-09-17 10:00 BST &mdash; Command branches five across; departments repacked (75% of the canvas filled, up from ~57%); three-tier card sizing; spine connectors for flat teams; accessible pastel palette; Quiet mode retired</span>
+                <span class="code-stamp" data-updated="2026-09-17T14:00:00Z">v9 &middot; 2026-09-17 15:00 BST &mdash; department headers now carry a post count, turning amber and adding a vacancy count where a department has gaps; cards gain a 4px corner radius. Plus v8: five-wide Command, repacked departments, three-tier sizing, spine connectors, accessible palette, Quiet mode retired</span>
               </div>
               <button data-copy="current-recalc" type="button">Copy</button>
             </div>
@@ -840,7 +845,11 @@ ClearCollect(
         With(
             {_d: Department},
             Max(AddColumns(Filter(colPosts, Department = _d), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b)
-        )
+        ),
+        PostCount,
+        With({_d: Department}, CountRows(Filter(colPosts, Department = _d))),
+        VacantCount,
+        With({_d: Department}, CountRows(Filter(colPosts, Department = _d &amp;&amp; IsGapped)))
     )
 );
 
@@ -867,7 +876,8 @@ Set(
             )
         ) &amp;
         "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" fill=""#003E32""/&gt;" &amp;
-        "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+        "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;" &amp;
+        "&lt;text x=""" &amp; (PX + PW - 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ text-anchor=""end"" font-size=""8"" font-weight=""600"" fill=""" &amp; If(VacantCount &gt; 0, "#F2C879", "#A8C3BB") &amp; """&gt;" &amp; PostCount &amp; If(PostCount = 1, " post", " posts") &amp; If(VacantCount &gt; 0, ", " &amp; VacantCount &amp; " vacant", "") &amp; "&lt;/text&gt;"
     ) &amp;
     Concat(
         colPosts,
@@ -973,7 +983,7 @@ Set(
                             _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
                             _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", "")
                         },
-                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
+                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ rx=""4"" fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
                         "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""8"" font-weight=""600"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
                         "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 9) &amp; """ text-anchor=""middle"" font-size=""7.5"" font-weight=""600"" fill=""#46545E""&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
                     )
