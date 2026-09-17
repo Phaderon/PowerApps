@@ -410,7 +410,7 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-17T07:29:05Z">v13 &middot; 2026-09-17 08:29 BST &mdash; department post count promoted to a white pill (amber where there are vacancies), bigger and easier to pick out. Plus v12\'s rounded panels and connector elbows</span>
+                <span class="code-stamp" data-updated="2026-09-17T07:43:01Z">v14 &middot; 2026-09-17 08:43 BST &mdash; banner and footer rounded (same size, corners only) and recoloured to #003E32 so they match the department headers. Plus v13\'s count pill and v12\'s rounded panels and elbows</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
@@ -555,7 +555,7 @@ Set(
     varChartSvg,
     "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1450 " &amp; (varRowCY + 30 + varRowCH + 30 + 36 + 10) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
     "&lt;rect x=""0"" y=""0"" width=""1450"" height=""" &amp; (varRowCY + 30 + varRowCH + 30 + 36 + 10) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""36"" rx=""8"" fill=""#003E32""/&gt;" &amp;
     "&lt;text x=""16"" y=""23"" font-weight=""700"" font-size=""15"" fill=""#FFFFFF""&gt;Cadets Branch Structure&lt;/text&gt;" &amp;
     "&lt;text x=""1434"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
     Concat(
@@ -718,7 +718,7 @@ Set(
             )
         )
     ) &amp;
-    "&lt;rect x=""0"" y=""" &amp; (varRowCY + 30 + varRowCH + 30) &amp; """ width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
+    "&lt;rect x=""0"" y=""" &amp; (varRowCY + 30 + varRowCH + 30) &amp; """ width=""1450"" height=""36"" rx=""8"" fill=""#003E32""/&gt;" &amp;
     Concat(
         colLegendItems,
         With(
@@ -741,7 +741,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnRecalculate &middot; OnSelect &mdash; same as OnStart, minus the mode reset, no flow calls</span>
-                <span class="code-stamp" data-updated="2026-09-17T07:29:05Z">v13 &middot; 2026-09-17 08:29 BST &mdash; department post count promoted to a white pill (amber where there are vacancies), bigger and easier to pick out. Plus v12\'s rounded panels and connector elbows</span>
+                <span class="code-stamp" data-updated="2026-09-17T07:43:01Z">v14 &middot; 2026-09-17 08:43 BST &mdash; banner and footer rounded (same size, corners only) and recoloured to #003E32 so they match the department headers. Plus v13\'s count pill and v12\'s rounded panels and elbows</span>
               </div>
               <button data-copy="current-recalc" type="button">Copy</button>
             </div>
@@ -886,7 +886,7 @@ Set(
     varChartSvg,
     "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1450 " &amp; (varRowCY + 30 + varRowCH + 30 + 36 + 10) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
     "&lt;rect x=""0"" y=""0"" width=""1450"" height=""" &amp; (varRowCY + 30 + varRowCH + 30 + 36 + 10) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
+    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""36"" rx=""8"" fill=""#003E32""/&gt;" &amp;
     "&lt;text x=""16"" y=""23"" font-weight=""700"" font-size=""15"" fill=""#FFFFFF""&gt;Cadets Branch Structure&lt;/text&gt;" &amp;
     "&lt;text x=""1434"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
     Concat(
@@ -1049,7 +1049,7 @@ Set(
             )
         )
     ) &amp;
-    "&lt;rect x=""0"" y=""" &amp; (varRowCY + 30 + varRowCH + 30) &amp; """ width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
+    "&lt;rect x=""0"" y=""" &amp; (varRowCY + 30 + varRowCH + 30) &amp; """ width=""1450"" height=""36"" rx=""8"" fill=""#003E32""/&gt;" &amp;
     Concat(
         colLegendItems,
         With(
@@ -1102,7 +1102,7 @@ Set(
           <strong>Two things confirmed directly against Microsoft's own <code>Print()</code> reference</strong> (<a href="https://learn.microsoft.com/en-us/power-platform/power-fx/reference/function-print">learn.microsoft.com/en-us/power-platform/power-fx/reference/function-print</a>), not guessed: <code>Print()</code> takes no arguments at all &mdash; it always prints whichever screen the calling button lives on, not a specific control, which is why the design above uses a dedicated screen rather than trying to target the chart directly. And in the browser's print dialog, <strong>"Background graphics" must be ticked</strong> (Chrome: "More settings") or the coloured department headers/panels print as plain white &mdash; a real, documented gotcha, not a guess.
         </div>
         <div class="callout warn">
-          <strong>Set margins to None in the print dialog.</strong> The chart is width-bound on A3, so it always fills the full <em>printable</em> width &mdash; any white band down the sides is the browser's page margin, not the chart falling short. Chrome: <strong>More settings &rarr; Margins &rarr; None</strong>. Besides removing the band this prints everything about 5% larger (scale 0.782 &rarr; 0.821 against Chrome's default ~10mm margins), which is free legibility.
+          <strong>Margins in the print dialog.</strong> The chart is width-bound on A3, so it always fills the full <em>printable</em> width &mdash; any white band down the sides is the page margin, not the chart falling short. Chrome: <strong>More settings &rarr; Margins &rarr; None</strong> widens the printable area from 1134pt to 1191pt and prints everything about 5% larger (scale 0.782 &rarr; 0.821). <strong>Note:</strong> Allan tried this and still got a margin, so the setting does not appear to fully take effect in every browser or PDF driver &mdash; worth trying, but do not count on edge-to-edge output. The banner and footer are rounded partly so that a bar which stops short of the paper edge still reads as deliberate.
         </div>
         <div class="callout warn">
           <strong>Known limitation, not yet solved:</strong> the browser print dialog does not reliably remember paper size ("A3") or the "Fit to printable area" scale option between exports &mdash; there is no Power Fx property that controls this, it's entirely the browser's own print-dialog behaviour. If it's not sticking for you, that's not something this design can currently force. One partial mitigation: set your Windows default printer to "Microsoft Print to PDF" so at least the destination doesn't need reselecting each time, even if paper size/scale still do.
