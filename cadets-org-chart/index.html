@@ -349,20 +349,24 @@
           <tr><td>CCF</td><td>3</td><td>Grid: head &rarr; 2 leaf officers.</td></tr>
           <tr><td>CEP</td><td>1</td><td>A single post, no reports.</td></tr>
         </table>
-        <h3>Category colours (real palette, extracted from the PDF's own legend)</h3>
+        <h3>Category colours</h3>
+        <p>Rebuilt 2026-09-17 for legibility. The PDF's own legend colours included a hot pink, a pure yellow and a saturated orange that were genuinely unreadable behind the grey occupant-name text &mdash; the worst pairing measured <strong>3.1:1</strong>, a WCAG 2.2 AA failure. Every fill is now a pastel of roughly even lightness, the occupant-name grey is darkened from <code>#6B7A8D</code> to <code>#46545E</code>, and no two fills sit closer than 11.4&nbsp;&Delta;E so they stay tellable apart.</p>
         <table>
-          <tr><th>Category</th><th>Colour</th></tr>
-          <tr><td>Regular</td><td><span class="swatch" style="background:#E2EFD9"></span><code>#E2EFD9</code></td></tr>
-          <tr><td>Civil Servant</td><td><span class="swatch" style="background:#CBFFFF"></span><code>#CBFFFF</code></td></tr>
-          <tr><td>FTRS</td><td><span class="swatch" style="background:#FB9797"></span><code>#FB9797</code></td></tr>
-          <tr><td>Aspire</td><td><span class="swatch" style="background:#FFE699"></span><code>#FFE699</code></td></tr>
-          <tr><td>ACCT UK Employee</td><td><span class="swatch" style="background:#FD80F3"></span><code>#FD80F3</code></td></tr>
-          <tr><td>RFCA</td><td><span class="swatch" style="background:#FFFF00"></span><code>#FFFF00</code></td></tr>
-          <tr><td>ACCT UK Contractor</td><td><span class="swatch" style="background:#002060"></span><code>#002060</code> &mdash; dark enough that the render formula switches to white card text specifically for this one category in Coloured mode</td></tr>
-          <tr><td>Ext Contractor</td><td><span class="swatch" style="background:#E69C13"></span><code>#E69C13</code></td></tr>
-          <tr><td>CFAV</td><td><span class="swatch" style="background:#DAC1EC"></span><code>#DAC1EC</code></td></tr>
-          <tr><td>Gapped (vacant)</td><td><span class="swatch" style="background:#D8D8D8;border-style:dashed"></span><code>#D8D8D8</code>, dashed border</td></tr>
+          <tr><th>Category</th><th>PDF legend</th><th>In use</th><th>Name contrast</th></tr>
+          <tr><td>Regular</td><td><span class="swatch" style="background:#E2EFD9"></span><code>#E2EFD9</code></td><td><span class="swatch" style="background:#D6EAC6"></span><code>#D6EAC6</code></td><td>6.1:1</td></tr>
+          <tr><td>Civil Servant</td><td><span class="swatch" style="background:#CBFFFF"></span><code>#CBFFFF</code></td><td><span class="swatch" style="background:#C2E7E3"></span><code>#C2E7E3</code></td><td>5.9:1</td></tr>
+          <tr><td>FTRS</td><td><span class="swatch" style="background:#FB9797"></span><code>#FB9797</code></td><td><span class="swatch" style="background:#F5CFC8"></span><code>#F5CFC8</code></td><td>5.4:1</td></tr>
+          <tr><td>Aspire</td><td><span class="swatch" style="background:#FFE699"></span><code>#FFE699</code></td><td><span class="swatch" style="background:#FAE7B0"></span><code>#FAE7B0</code></td><td>6.4:1</td></tr>
+          <tr><td>ACCT UK Employee</td><td><span class="swatch" style="background:#FD80F3"></span><code>#FD80F3</code></td><td><span class="swatch" style="background:#F6CCE0"></span><code>#F6CCE0</code></td><td>5.4:1</td></tr>
+          <tr><td>RFCA</td><td><span class="swatch" style="background:#FFFF00"></span><code>#FFFF00</code></td><td><span class="swatch" style="background:#E4EDAE"></span><code>#E4EDAE</code></td><td>6.3:1</td></tr>
+          <tr><td>ACCT UK Contractor</td><td><span class="swatch" style="background:#002060"></span><code>#002060</code></td><td><span class="swatch" style="background:#C8D8F5"></span><code>#C8D8F5</code></td><td>5.4:1</td></tr>
+          <tr><td>Ext Contractor</td><td><span class="swatch" style="background:#E69C13"></span><code>#E69C13</code></td><td><span class="swatch" style="background:#F3D2AC"></span><code>#F3D2AC</code></td><td>5.4:1</td></tr>
+          <tr><td>CFAV</td><td><span class="swatch" style="background:#DAC1EC"></span><code>#DAC1EC</code></td><td><span class="swatch" style="background:#E0CCF3"></span><code>#E0CCF3</code></td><td>5.2:1</td></tr>
+          <tr><td>Gapped (vacant)</td><td><span class="swatch" style="background:#D8D8D8;border-style:dashed"></span><code>#D8D8D8</code></td><td><span class="swatch" style="background:#DEDEDE;border-style:dashed"></span><code>#DEDEDE</code>, dashed border</td><td>5.8:1</td></tr>
         </table>
+        <div class="callout warn">
+          <strong>This diverges from the source PDF deliberately.</strong> If the printed chart is ever expected to match the original document's legend colour-for-colour, that is a conversation to have first &mdash; the trade was made for accessibility, on the basis that an unreadable name is worse than a colour that has shifted.
+        </div>
         <div class="callout warn">
           <strong>Gapped posts' <code>Category</code> is a best guess</strong> (the most common category in that post's own column), not a real fact &mdash; the PDF's grey/dashed styling tells us a post is vacant, not what category it should be once filled. Treat every <code>IsGapped = Yes</code> row's <code>Category</code> as provisional until someone real is assigned.
         </div>
@@ -380,14 +384,14 @@
           <li>Add three new columns via <strong>+Add column</strong> (never "Create list from Excel" &mdash; it mangles internal field names, a confirmed, repeated finding in this project): <code>RelationshipType</code> (Text), <code>PeerPostID</code> (Text), <code>VisualParentPostID</code> (Text).</li>
           <li>If <code>FinalY</code> exists as a <strong>Calculated</strong> column from an earlier build, delete it and re-add it as a plain <strong>Number</strong> column &mdash; it's a literal seeded value now, the same as <code>FinalX</code> and <code>Width</code> already are.</li>
           <li>Confirm <code>OccupantName</code> (Text) and <code>IsGapped</code> (Yes/No) already exist &mdash; add them the same way if this is a fresh list.</li>
-          <li>Download <code>OrgChartPosts_Data_v13.xlsx</code> (see <a href="#downloads">Downloads</a>) and bulk-paste all 108 rows into the list's <strong>Quick Edit</strong> grid view, matching the sheet's own column order exactly. Quick Edit only inserts values into already-existing columns, so it can't trigger the same field-mangling problem "Create list from Excel" does.</li>
+          <li>Download <code>OrgChartPosts_Data_v15.xlsx</code> (see <a href="#downloads">Downloads</a>) and bulk-paste all 108 rows into the list's <strong>Quick Edit</strong> grid view, matching the sheet's own column order exactly. Quick Edit only inserts values into already-existing columns, so it can't trigger the same field-mangling problem "Create list from Excel" does.</li>
           <li>If the two old flows are still imported in your environment &mdash; <code>OrgChart - Compute Depth (Production)</code> and <code>OrgChart - Compute Width &amp; Position (Production)</code> &mdash; delete or turn them off. Nothing in the current design calls either one any more.</li>
         </ol>
       </section>
 
       <section id="current-state">
         <h2>Current State - Full Render Formula</h2>
-        <p class="meta-line">App.OnStart, btnRecalculate.OnSelect, btnToggleMode.OnSelect &mdash; the one place to copy from</p>
+        <p class="meta-line">App.OnStart and btnRecalculate.OnSelect &mdash; the one place to copy from</p>
         <div class="fix-controls">
           <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
           <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this section">&#9660;</button>
@@ -395,7 +399,10 @@
         <div class="callout warn">
           <strong>Standing rule:</strong> whenever this formula changes, this whole section gets replaced with the new complete content and republished in full &mdash; never a diff, never "just add this bit." You should never have to work out what to keep and what to replace.
         </div>
-        <p><code>btnRecalculate</code> no longer calls any flow (both retired) &mdash; it just reloads from SharePoint and re-renders, for whenever you've edited a post directly in the list. <code>btnToggleMode</code> switches between the plain "Quiet" card style and the fully category-coloured "Coloured" style.</p>
+        <p><code>btnRecalculate</code> no longer calls any flow (both retired) &mdash; it just reloads from SharePoint and re-renders, for whenever you've edited a post directly in the list.</p>
+        <div class="callout warn">
+          <strong>Quiet mode is retired (2026-09-16).</strong> Coloured cards are now the only rendering, so <code>varChartMode</code>, the whole <code>btnToggleMode</code> formula and the category-colour rail down each card's left edge are all gone. <strong>Delete the Toggle Mode button from the app</strong> &mdash; nothing calls it any more.
+        </div>
 
         <details class="cs-accordion" open>
           <summary>App.OnStart (click to collapse)</summary>
@@ -403,48 +410,86 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-16T13:55:00Z">v7 &middot; 2026-09-16 14:55 BST &mdash; card text enlarged and weighted (role 7&rarr;8px, name 6.5&rarr;7.5px, both now font-weight 600) so hairline stems clear one device pixel on the printed page; fixes lowercase l/i rendering as hard black bars in PDF viewers. Also v6: card border redraws on top of the category-colour rail so the outline wraps fully around every card.</span>
+                <span class="code-stamp" data-updated="2026-09-17T09:00:00Z">v8 &middot; 2026-09-17 10:00 BST &mdash; Command branches five across; departments repacked (75% of the canvas filled, up from ~57%); three-tier card sizing; spine connectors for flat teams; accessible pastel palette; Quiet mode retired</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
-<pre id="current-onstart">Set(varChartMode, "Quiet");
-
-ClearCollect(colCategoryColours,
-    {Category: "Regular", Hex: "#E2EFD9"},
-    {Category: "Civil Servant", Hex: "#CBFFFF"},
-    {Category: "FTRS", Hex: "#FB9797"},
-    {Category: "Aspire", Hex: "#FFE699"},
-    {Category: "ACCT UK Employee", Hex: "#FD80F3"},
-    {Category: "RFCA", Hex: "#FFFF00"},
-    {Category: "ACCT UK Contractor", Hex: "#002060"},
-    {Category: "Ext Contractor", Hex: "#E69C13"},
-    {Category: "CFAV", Hex: "#DAC1EC"}
+<pre id="current-onstart">ClearCollect(colCategoryColours,
+    {Category: "Regular", Hex: "#D6EAC6"},
+    {Category: "Civil Servant", Hex: "#C2E7E3"},
+    {Category: "FTRS", Hex: "#F5CFC8"},
+    {Category: "Aspire", Hex: "#FAE7B0"},
+    {Category: "ACCT UK Employee", Hex: "#F6CCE0"},
+    {Category: "RFCA", Hex: "#E4EDAE"},
+    {Category: "ACCT UK Contractor", Hex: "#C8D8F5"},
+    {Category: "Ext Contractor", Hex: "#F3D2AC"},
+    {Category: "CFAV", Hex: "#E0CCF3"}
 );
 
 ClearCollect(colLegendItems,
-    {Idx: 1, Label: "Regular", Hex: "#E2EFD9"},
-    {Idx: 2, Label: "Civil Servant", Hex: "#CBFFFF"},
-    {Idx: 3, Label: "FTRS", Hex: "#FB9797"},
-    {Idx: 4, Label: "Aspire", Hex: "#FFE699"},
-    {Idx: 5, Label: "ACCT UK Employee", Hex: "#FD80F3"},
-    {Idx: 6, Label: "RFCA", Hex: "#FFFF00"},
-    {Idx: 7, Label: "ACCT UK Contractor", Hex: "#002060"},
-    {Idx: 8, Label: "Ext Contractor", Hex: "#E69C13"},
-    {Idx: 9, Label: "CFAV", Hex: "#DAC1EC"},
-    {Idx: 10, Label: "Gapped (vacant)", Hex: "#D8D8D8"}
+    {Idx: 1, Label: "Regular", Hex: "#D6EAC6"},
+    {Idx: 2, Label: "Civil Servant", Hex: "#C2E7E3"},
+    {Idx: 3, Label: "FTRS", Hex: "#F5CFC8"},
+    {Idx: 4, Label: "Aspire", Hex: "#FAE7B0"},
+    {Idx: 5, Label: "ACCT UK Employee", Hex: "#F6CCE0"},
+    {Idx: 6, Label: "RFCA", Hex: "#E4EDAE"},
+    {Idx: 7, Label: "ACCT UK Contractor", Hex: "#C8D8F5"},
+    {Idx: 8, Label: "Ext Contractor", Hex: "#F3D2AC"},
+    {Idx: 9, Label: "CFAV", Hex: "#E0CCF3"},
+    {Idx: 10, Label: "Gapped (vacant)", Hex: "#DEDEDE"}
 );
 
 ClearCollect(colDeptPanelsBase,
-    {Department: "Command", PX: 20, PW: 350},
-    {Department: "Safeguarding", PX: 400, PW: 398},
-    {Department: "Training", PX: 828, PW: 470},
-    {Department: "Information Systems", PX: 20, PW: 630},
-    {Department: "Media &amp; Comms", PX: 680, PW: 470},
-    {Department: "CCF(A)", PX: 1180, PW: 230},
-    {Department: "Policy &amp; Pers", PX: 20, PW: 350},
-    {Department: "Support", PX: 400, PW: 470},
-    {Department: "CCF", PX: 900, PW: 230},
-    {Department: "CEP", PX: 1160, PW: 140}
+    {Department: "Command", PX: 20, PW: 600},
+    {Department: "Support", PX: 650, PW: 470},
+    {Department: "CCF", PX: 1150, PW: 230},
+    {Department: "Safeguarding", PX: 20, PW: 398},
+    {Department: "Media &amp; Comms", PX: 448, PW: 470},
+    {Department: "Policy &amp; Pers", PX: 948, PW: 350},
+    {Department: "CEP", PX: 20, PW: 230},
+    {Department: "CCF(A)", PX: 20, PW: 230},
+    {Department: "Training", PX: 280, PW: 470},
+    {Department: "Information Systems", PX: 780, PW: 630}
+);
+
+ClearCollect(colSpines,
+    {Dept: "CCF", X1: 1265, Y1: 34, X2: 1265, Y2: 59},
+    {Dept: "CCF", X1: 1265, Y1: 59, X2: 1260, Y2: 59},
+    {Dept: "CCF", X1: 1265, Y1: 59, X2: 1270, Y2: 59},
+    {Dept: "CCF(A)", X1: 135, Y1: 34, X2: 135, Y2: 191},
+    {Dept: "CCF(A)", X1: 135, Y1: 59, X2: 130, Y2: 59},
+    {Dept: "CCF(A)", X1: 135, Y1: 92, X2: 130, Y2: 92},
+    {Dept: "CCF(A)", X1: 135, Y1: 125, X2: 130, Y2: 125},
+    {Dept: "CCF(A)", X1: 135, Y1: 158, X2: 130, Y2: 158},
+    {Dept: "CCF(A)", X1: 135, Y1: 191, X2: 130, Y2: 191},
+    {Dept: "CCF(A)", X1: 135, Y1: 59, X2: 140, Y2: 59},
+    {Dept: "CCF(A)", X1: 135, Y1: 92, X2: 140, Y2: 92},
+    {Dept: "CCF(A)", X1: 135, Y1: 125, X2: 140, Y2: 125},
+    {Dept: "CCF(A)", X1: 135, Y1: 158, X2: 140, Y2: 158},
+    {Dept: "CCF(A)", X1: 135, Y1: 191, X2: 140, Y2: 191},
+    {Dept: "Training", X1: 515, Y1: 34, X2: 515, Y2: 41},
+    {Dept: "Training", X1: 395, Y1: 41, X2: 635, Y2: 41},
+    {Dept: "Training", X1: 395, Y1: 41, X2: 395, Y2: 191},
+    {Dept: "Training", X1: 395, Y1: 59, X2: 390, Y2: 59},
+    {Dept: "Training", X1: 395, Y1: 92, X2: 390, Y2: 92},
+    {Dept: "Training", X1: 395, Y1: 125, X2: 390, Y2: 125},
+    {Dept: "Training", X1: 395, Y1: 59, X2: 400, Y2: 59},
+    {Dept: "Training", X1: 395, Y1: 92, X2: 400, Y2: 92},
+    {Dept: "Training", X1: 395, Y1: 125, X2: 400, Y2: 125},
+    {Dept: "Training", X1: 395, Y1: 158, X2: 400, Y2: 158},
+    {Dept: "Training", X1: 395, Y1: 191, X2: 400, Y2: 191},
+    {Dept: "Training", X1: 635, Y1: 41, X2: 635, Y2: 257},
+    {Dept: "Training", X1: 635, Y1: 59, X2: 630, Y2: 59},
+    {Dept: "Training", X1: 635, Y1: 92, X2: 630, Y2: 92},
+    {Dept: "Training", X1: 635, Y1: 125, X2: 630, Y2: 125},
+    {Dept: "Training", X1: 635, Y1: 158, X2: 630, Y2: 158},
+    {Dept: "Training", X1: 635, Y1: 191, X2: 630, Y2: 191},
+    {Dept: "Training", X1: 635, Y1: 224, X2: 630, Y2: 224},
+    {Dept: "Training", X1: 635, Y1: 257, X2: 630, Y2: 257},
+    {Dept: "Training", X1: 635, Y1: 59, X2: 640, Y2: 59},
+    {Dept: "Training", X1: 635, Y1: 92, X2: 640, Y2: 92},
+    {Dept: "Training", X1: 635, Y1: 125, X2: 640, Y2: 125},
+    {Dept: "Training", X1: 635, Y1: 158, X2: 640, Y2: 158}
 );
 
 ClearCollect(colPosts, OrgChartPosts);
@@ -453,28 +498,28 @@ Set(varRowAY, 56);
 Set(
     varRowAH,
     Max(
-        Max(AddColumns(Filter(colPosts, Department = "Command"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "Safeguarding"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "Training"), _b, FinalY + If(Depth = 0, 34, 27)), _b)
+        Max(AddColumns(Filter(colPosts, Department = "Command"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b),
+        Max(AddColumns(Filter(colPosts, Department = "Support"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b),
+        Max(AddColumns(Filter(colPosts, Department = "CCF"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b)
     )
 );
 Set(varRowBY, varRowAY + 30 + varRowAH + 20);
 Set(
     varRowBH,
     Max(
-        Max(AddColumns(Filter(colPosts, Department = "Information Systems"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "Media &amp; Comms"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "CCF(A)"), _b, FinalY + If(Depth = 0, 34, 27)), _b)
+        Max(AddColumns(Filter(colPosts, Department = "Safeguarding"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b),
+        Max(AddColumns(Filter(colPosts, Department = "Media &amp; Comms"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b),
+        Max(AddColumns(Filter(colPosts, Department = "Policy &amp; Pers"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b)
     )
 );
 Set(varRowCY, varRowBY + 30 + varRowBH + 20);
 Set(
     varRowCH,
     Max(
-        Max(AddColumns(Filter(colPosts, Department = "Policy &amp; Pers"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "Support"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "CCF"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "CEP"), _b, FinalY + If(Depth = 0, 34, 27)), _b)
+        Max(AddColumns(Filter(colPosts, Department = "CEP"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b),
+        Max(AddColumns(Filter(colPosts, Department = "CCF(A)"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b) + 96,
+        Max(AddColumns(Filter(colPosts, Department = "Training"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b),
+        Max(AddColumns(Filter(colPosts, Department = "Information Systems"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b)
     )
 );
 
@@ -486,17 +531,18 @@ ClearCollect(
         Switch(
             Department,
             "Command", varRowAY,
-            "Safeguarding", varRowAY,
-            "Training", varRowAY,
-            "Information Systems", varRowBY,
+            "Support", varRowAY,
+            "CCF", varRowAY,
+            "Safeguarding", varRowBY,
             "Media &amp; Comms", varRowBY,
-            "CCF(A)", varRowBY,
+            "Policy &amp; Pers", varRowBY,
+            "CCF(A)", varRowCY + 96,
             varRowCY
         ),
         ContentH,
         With(
             {_d: Department},
-            Max(AddColumns(Filter(colPosts, Department = _d), _b, FinalY + If(Depth = 0, 34, 27)), _b)
+            Max(AddColumns(Filter(colPosts, Department = _d), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b)
         )
     )
 );
@@ -540,15 +586,16 @@ Set(
                 _isGapped: IsGapped,
                 _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
                 _cardW: Width,
-                _cardH: If(Depth = 0, 34, 27),
+                _cardH: If(Depth = 0, 34, If(Depth = 1, 30, 25)),
                 _panelY: Switch(
                     Department,
                     "Command", varRowAY,
-                    "Safeguarding", varRowAY,
-                    "Training", varRowAY,
-                    "Information Systems", varRowBY,
+                    "Support", varRowAY,
+                    "CCF", varRowAY,
+                    "Safeguarding", varRowBY,
                     "Media &amp; Comms", varRowBY,
-                    "CCF(A)", varRowBY,
+                    "Policy &amp; Pers", varRowBY,
+                    "CCF(A)", varRowCY + 96,
                     varRowCY
                 )
             },
@@ -564,8 +611,8 @@ Set(
                         If(
                             !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visMgr),
                             With(
-                                {_mgrCardH: If(_visMgr.Depth = 0, 34, 27)},
-                                "&lt;path d=""M " &amp; _visMgr.FinalX &amp; " " &amp; (_panelY + 30 + _visMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
+                                {_mgrCardH: If(_visMgr.Depth = 0, 34, If(_visMgr.Depth = 1, 30, 25))},
+                                "&lt;path d=""M " &amp; _visMgr.FinalX &amp; " " &amp; (_panelY + 30 + _visMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#B9AFB6"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
                             ),
                             ""
                         )
@@ -578,6 +625,16 @@ Set(
                         )
                     )
                 )
+            )
+        )
+    ) &amp;
+    Concat(
+        colSpines,
+        With(
+            {_sd: Dept, _sx1: X1, _sy1: Y1, _sx2: X2, _sy2: Y2},
+            With(
+                {_spy: LookUp(colDeptPanels, Department = _sd).PY},
+                "&lt;path d=""M " &amp; _sx1 &amp; " " &amp; (_spy + 30 + _sy1) &amp; " L " &amp; _sx2 &amp; " " &amp; (_spy + 30 + _sy2) &amp; """ stroke=""#B9AFB6"" stroke-width=""1.5"" fill=""none""/&gt;"
             )
         )
     ) &amp;
@@ -595,15 +652,16 @@ Set(
                 _isGapped: IsGapped,
                 _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
                 _cardW: Width,
-                _cardH: If(Depth = 0, 34, 27),
+                _cardH: If(Depth = 0, 34, If(Depth = 1, 30, 25)),
                 _panelY: Switch(
                     Department,
                     "Command", varRowAY,
-                    "Safeguarding", varRowAY,
-                    "Training", varRowAY,
-                    "Information Systems", varRowBY,
+                    "Support", varRowAY,
+                    "CCF", varRowAY,
+                    "Safeguarding", varRowBY,
                     "Media &amp; Comms", varRowBY,
-                    "CCF(A)", varRowBY,
+                    "Policy &amp; Pers", varRowBY,
+                    "CCF(A)", varRowCY + 96,
                     varRowCY
                 )
             },
@@ -614,20 +672,13 @@ Set(
                     With(
                         {
                             _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
-                            _fillColor: If(_isGapped, "#D8D8D8", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
+                            _fillColor: If(_isGapped, "#DEDEDE", Coalesce(_cat.Hex, "#FFFFFF")),
                             _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
                             _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", ""),
-                            _useWhiteText: varChartMode = "Coloured" &amp;&amp; !_isGapped &amp;&amp; _myCategory = "ACCT UK Contractor"
                         },
                         "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
-                        If(
-                            varChartMode = "Quiet" &amp;&amp; !_isGapped,
-                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;" &amp;
-                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""none"" stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;",
-                            ""
-                        ) &amp;
-                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""8"" font-weight=""600"" fill=""" &amp; If(_useWhiteText, "#FFFFFF", "#172A27") &amp; """&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
-                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 9) &amp; """ text-anchor=""middle"" font-size=""7.5"" font-weight=""600"" fill=""" &amp; If(_useWhiteText, "#F0F0F0", "#6B7A8D") &amp; """&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""8"" font-weight=""600"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 9) &amp; """ text-anchor=""middle"" font-size=""7.5"" font-weight=""600"" fill=""#46545E""&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
                     )
                 )
             )
@@ -641,8 +692,8 @@ Set(
                 _lx: 20 + (Idx - 1) * 141.0,
                 _ly: (varRowCY + 30 + varRowCH + 10) + 18.0
             },
-            "&lt;rect x=""" &amp; _lx &amp; """ y=""" &amp; (_ly - 7) &amp; """ width=""14"" height=""14"" fill=""" &amp; Hex &amp; """ stroke=""#FFFFFF"" stroke-width=""0.6""" &amp; If(Label = "Gapped (vacant)", " stroke-dasharray=""2,2""", "") &amp; "/&gt;" &amp;
-            "&lt;text x=""" &amp; (_lx + 20) &amp; """ y=""" &amp; (_ly + 4) &amp; """ font-size=""8"" font-weight=""600"" fill=""#FFFFFF""&gt;" &amp; Substitute(Label, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+            "&lt;rect x=""" &amp; _lx &amp; """ y=""" &amp; (_ly - 9) &amp; """ width=""18"" height=""18"" rx=""4"" fill=""" &amp; Hex &amp; """ stroke=""#FFFFFF"" stroke-width=""0.6""" &amp; If(Label = "Gapped (vacant)", " stroke-dasharray=""2,2""", "") &amp; "/&gt;" &amp;
+            "&lt;text x=""" &amp; (_lx + 25) &amp; """ y=""" &amp; (_ly + 4) &amp; """ font-size=""8"" font-weight=""600"" fill=""#FFFFFF""&gt;" &amp; Substitute(Label, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
         )
     ) &amp;
     "&lt;/svg&gt;"
@@ -656,46 +707,86 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnRecalculate &middot; OnSelect &mdash; same as OnStart, minus the mode reset, no flow calls</span>
-                <span class="code-stamp" data-updated="2026-09-16T13:55:00Z">v7 &middot; 2026-09-16 14:55 BST &mdash; same v7 fixes as OnStart</span>
+                <span class="code-stamp" data-updated="2026-09-17T09:00:00Z">v8 &middot; 2026-09-17 10:00 BST &mdash; Command branches five across; departments repacked (75% of the canvas filled, up from ~57%); three-tier card sizing; spine connectors for flat teams; accessible pastel palette; Quiet mode retired</span>
               </div>
               <button data-copy="current-recalc" type="button">Copy</button>
             </div>
 <pre id="current-recalc">ClearCollect(colCategoryColours,
-    {Category: "Regular", Hex: "#E2EFD9"},
-    {Category: "Civil Servant", Hex: "#CBFFFF"},
-    {Category: "FTRS", Hex: "#FB9797"},
-    {Category: "Aspire", Hex: "#FFE699"},
-    {Category: "ACCT UK Employee", Hex: "#FD80F3"},
-    {Category: "RFCA", Hex: "#FFFF00"},
-    {Category: "ACCT UK Contractor", Hex: "#002060"},
-    {Category: "Ext Contractor", Hex: "#E69C13"},
-    {Category: "CFAV", Hex: "#DAC1EC"}
+    {Category: "Regular", Hex: "#D6EAC6"},
+    {Category: "Civil Servant", Hex: "#C2E7E3"},
+    {Category: "FTRS", Hex: "#F5CFC8"},
+    {Category: "Aspire", Hex: "#FAE7B0"},
+    {Category: "ACCT UK Employee", Hex: "#F6CCE0"},
+    {Category: "RFCA", Hex: "#E4EDAE"},
+    {Category: "ACCT UK Contractor", Hex: "#C8D8F5"},
+    {Category: "Ext Contractor", Hex: "#F3D2AC"},
+    {Category: "CFAV", Hex: "#E0CCF3"}
 );
 
 ClearCollect(colLegendItems,
-    {Idx: 1, Label: "Regular", Hex: "#E2EFD9"},
-    {Idx: 2, Label: "Civil Servant", Hex: "#CBFFFF"},
-    {Idx: 3, Label: "FTRS", Hex: "#FB9797"},
-    {Idx: 4, Label: "Aspire", Hex: "#FFE699"},
-    {Idx: 5, Label: "ACCT UK Employee", Hex: "#FD80F3"},
-    {Idx: 6, Label: "RFCA", Hex: "#FFFF00"},
-    {Idx: 7, Label: "ACCT UK Contractor", Hex: "#002060"},
-    {Idx: 8, Label: "Ext Contractor", Hex: "#E69C13"},
-    {Idx: 9, Label: "CFAV", Hex: "#DAC1EC"},
-    {Idx: 10, Label: "Gapped (vacant)", Hex: "#D8D8D8"}
+    {Idx: 1, Label: "Regular", Hex: "#D6EAC6"},
+    {Idx: 2, Label: "Civil Servant", Hex: "#C2E7E3"},
+    {Idx: 3, Label: "FTRS", Hex: "#F5CFC8"},
+    {Idx: 4, Label: "Aspire", Hex: "#FAE7B0"},
+    {Idx: 5, Label: "ACCT UK Employee", Hex: "#F6CCE0"},
+    {Idx: 6, Label: "RFCA", Hex: "#E4EDAE"},
+    {Idx: 7, Label: "ACCT UK Contractor", Hex: "#C8D8F5"},
+    {Idx: 8, Label: "Ext Contractor", Hex: "#F3D2AC"},
+    {Idx: 9, Label: "CFAV", Hex: "#E0CCF3"},
+    {Idx: 10, Label: "Gapped (vacant)", Hex: "#DEDEDE"}
 );
 
 ClearCollect(colDeptPanelsBase,
-    {Department: "Command", PX: 20, PW: 350},
-    {Department: "Safeguarding", PX: 400, PW: 398},
-    {Department: "Training", PX: 828, PW: 470},
-    {Department: "Information Systems", PX: 20, PW: 630},
-    {Department: "Media &amp; Comms", PX: 680, PW: 470},
-    {Department: "CCF(A)", PX: 1180, PW: 230},
-    {Department: "Policy &amp; Pers", PX: 20, PW: 350},
-    {Department: "Support", PX: 400, PW: 470},
-    {Department: "CCF", PX: 900, PW: 230},
-    {Department: "CEP", PX: 1160, PW: 140}
+    {Department: "Command", PX: 20, PW: 600},
+    {Department: "Support", PX: 650, PW: 470},
+    {Department: "CCF", PX: 1150, PW: 230},
+    {Department: "Safeguarding", PX: 20, PW: 398},
+    {Department: "Media &amp; Comms", PX: 448, PW: 470},
+    {Department: "Policy &amp; Pers", PX: 948, PW: 350},
+    {Department: "CEP", PX: 20, PW: 230},
+    {Department: "CCF(A)", PX: 20, PW: 230},
+    {Department: "Training", PX: 280, PW: 470},
+    {Department: "Information Systems", PX: 780, PW: 630}
+);
+
+ClearCollect(colSpines,
+    {Dept: "CCF", X1: 1265, Y1: 34, X2: 1265, Y2: 59},
+    {Dept: "CCF", X1: 1265, Y1: 59, X2: 1260, Y2: 59},
+    {Dept: "CCF", X1: 1265, Y1: 59, X2: 1270, Y2: 59},
+    {Dept: "CCF(A)", X1: 135, Y1: 34, X2: 135, Y2: 191},
+    {Dept: "CCF(A)", X1: 135, Y1: 59, X2: 130, Y2: 59},
+    {Dept: "CCF(A)", X1: 135, Y1: 92, X2: 130, Y2: 92},
+    {Dept: "CCF(A)", X1: 135, Y1: 125, X2: 130, Y2: 125},
+    {Dept: "CCF(A)", X1: 135, Y1: 158, X2: 130, Y2: 158},
+    {Dept: "CCF(A)", X1: 135, Y1: 191, X2: 130, Y2: 191},
+    {Dept: "CCF(A)", X1: 135, Y1: 59, X2: 140, Y2: 59},
+    {Dept: "CCF(A)", X1: 135, Y1: 92, X2: 140, Y2: 92},
+    {Dept: "CCF(A)", X1: 135, Y1: 125, X2: 140, Y2: 125},
+    {Dept: "CCF(A)", X1: 135, Y1: 158, X2: 140, Y2: 158},
+    {Dept: "CCF(A)", X1: 135, Y1: 191, X2: 140, Y2: 191},
+    {Dept: "Training", X1: 515, Y1: 34, X2: 515, Y2: 41},
+    {Dept: "Training", X1: 395, Y1: 41, X2: 635, Y2: 41},
+    {Dept: "Training", X1: 395, Y1: 41, X2: 395, Y2: 191},
+    {Dept: "Training", X1: 395, Y1: 59, X2: 390, Y2: 59},
+    {Dept: "Training", X1: 395, Y1: 92, X2: 390, Y2: 92},
+    {Dept: "Training", X1: 395, Y1: 125, X2: 390, Y2: 125},
+    {Dept: "Training", X1: 395, Y1: 59, X2: 400, Y2: 59},
+    {Dept: "Training", X1: 395, Y1: 92, X2: 400, Y2: 92},
+    {Dept: "Training", X1: 395, Y1: 125, X2: 400, Y2: 125},
+    {Dept: "Training", X1: 395, Y1: 158, X2: 400, Y2: 158},
+    {Dept: "Training", X1: 395, Y1: 191, X2: 400, Y2: 191},
+    {Dept: "Training", X1: 635, Y1: 41, X2: 635, Y2: 257},
+    {Dept: "Training", X1: 635, Y1: 59, X2: 630, Y2: 59},
+    {Dept: "Training", X1: 635, Y1: 92, X2: 630, Y2: 92},
+    {Dept: "Training", X1: 635, Y1: 125, X2: 630, Y2: 125},
+    {Dept: "Training", X1: 635, Y1: 158, X2: 630, Y2: 158},
+    {Dept: "Training", X1: 635, Y1: 191, X2: 630, Y2: 191},
+    {Dept: "Training", X1: 635, Y1: 224, X2: 630, Y2: 224},
+    {Dept: "Training", X1: 635, Y1: 257, X2: 630, Y2: 257},
+    {Dept: "Training", X1: 635, Y1: 59, X2: 640, Y2: 59},
+    {Dept: "Training", X1: 635, Y1: 92, X2: 640, Y2: 92},
+    {Dept: "Training", X1: 635, Y1: 125, X2: 640, Y2: 125},
+    {Dept: "Training", X1: 635, Y1: 158, X2: 640, Y2: 158}
 );
 
 ClearCollect(colPosts, OrgChartPosts);
@@ -704,28 +795,28 @@ Set(varRowAY, 56);
 Set(
     varRowAH,
     Max(
-        Max(AddColumns(Filter(colPosts, Department = "Command"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "Safeguarding"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "Training"), _b, FinalY + If(Depth = 0, 34, 27)), _b)
+        Max(AddColumns(Filter(colPosts, Department = "Command"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b),
+        Max(AddColumns(Filter(colPosts, Department = "Support"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b),
+        Max(AddColumns(Filter(colPosts, Department = "CCF"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b)
     )
 );
 Set(varRowBY, varRowAY + 30 + varRowAH + 20);
 Set(
     varRowBH,
     Max(
-        Max(AddColumns(Filter(colPosts, Department = "Information Systems"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "Media &amp; Comms"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "CCF(A)"), _b, FinalY + If(Depth = 0, 34, 27)), _b)
+        Max(AddColumns(Filter(colPosts, Department = "Safeguarding"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b),
+        Max(AddColumns(Filter(colPosts, Department = "Media &amp; Comms"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b),
+        Max(AddColumns(Filter(colPosts, Department = "Policy &amp; Pers"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b)
     )
 );
 Set(varRowCY, varRowBY + 30 + varRowBH + 20);
 Set(
     varRowCH,
     Max(
-        Max(AddColumns(Filter(colPosts, Department = "Policy &amp; Pers"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "Support"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "CCF"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "CEP"), _b, FinalY + If(Depth = 0, 34, 27)), _b)
+        Max(AddColumns(Filter(colPosts, Department = "CEP"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b),
+        Max(AddColumns(Filter(colPosts, Department = "CCF(A)"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b) + 96,
+        Max(AddColumns(Filter(colPosts, Department = "Training"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b),
+        Max(AddColumns(Filter(colPosts, Department = "Information Systems"), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b)
     )
 );
 
@@ -737,17 +828,18 @@ ClearCollect(
         Switch(
             Department,
             "Command", varRowAY,
-            "Safeguarding", varRowAY,
-            "Training", varRowAY,
-            "Information Systems", varRowBY,
+            "Support", varRowAY,
+            "CCF", varRowAY,
+            "Safeguarding", varRowBY,
             "Media &amp; Comms", varRowBY,
-            "CCF(A)", varRowBY,
+            "Policy &amp; Pers", varRowBY,
+            "CCF(A)", varRowCY + 96,
             varRowCY
         ),
         ContentH,
         With(
             {_d: Department},
-            Max(AddColumns(Filter(colPosts, Department = _d), _b, FinalY + If(Depth = 0, 34, 27)), _b)
+            Max(AddColumns(Filter(colPosts, Department = _d), _b, FinalY + If(Depth = 0, 34, If(Depth = 1, 30, 25))), _b)
         )
     )
 );
@@ -791,15 +883,16 @@ Set(
                 _isGapped: IsGapped,
                 _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
                 _cardW: Width,
-                _cardH: If(Depth = 0, 34, 27),
+                _cardH: If(Depth = 0, 34, If(Depth = 1, 30, 25)),
                 _panelY: Switch(
                     Department,
                     "Command", varRowAY,
-                    "Safeguarding", varRowAY,
-                    "Training", varRowAY,
-                    "Information Systems", varRowBY,
+                    "Support", varRowAY,
+                    "CCF", varRowAY,
+                    "Safeguarding", varRowBY,
                     "Media &amp; Comms", varRowBY,
-                    "CCF(A)", varRowBY,
+                    "Policy &amp; Pers", varRowBY,
+                    "CCF(A)", varRowCY + 96,
                     varRowCY
                 )
             },
@@ -815,8 +908,8 @@ Set(
                         If(
                             !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visMgr),
                             With(
-                                {_mgrCardH: If(_visMgr.Depth = 0, 34, 27)},
-                                "&lt;path d=""M " &amp; _visMgr.FinalX &amp; " " &amp; (_panelY + 30 + _visMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
+                                {_mgrCardH: If(_visMgr.Depth = 0, 34, If(_visMgr.Depth = 1, 30, 25))},
+                                "&lt;path d=""M " &amp; _visMgr.FinalX &amp; " " &amp; (_panelY + 30 + _visMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#B9AFB6"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
                             ),
                             ""
                         )
@@ -833,6 +926,16 @@ Set(
         )
     ) &amp;
     Concat(
+        colSpines,
+        With(
+            {_sd: Dept, _sx1: X1, _sy1: Y1, _sx2: X2, _sy2: Y2},
+            With(
+                {_spy: LookUp(colDeptPanels, Department = _sd).PY},
+                "&lt;path d=""M " &amp; _sx1 &amp; " " &amp; (_spy + 30 + _sy1) &amp; " L " &amp; _sx2 &amp; " " &amp; (_spy + 30 + _sy2) &amp; """ stroke=""#B9AFB6"" stroke-width=""1.5"" fill=""none""/&gt;"
+            )
+        )
+    ) &amp;
+    Concat(
         colPosts,
         With(
             {
@@ -846,15 +949,16 @@ Set(
                 _isGapped: IsGapped,
                 _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
                 _cardW: Width,
-                _cardH: If(Depth = 0, 34, 27),
+                _cardH: If(Depth = 0, 34, If(Depth = 1, 30, 25)),
                 _panelY: Switch(
                     Department,
                     "Command", varRowAY,
-                    "Safeguarding", varRowAY,
-                    "Training", varRowAY,
-                    "Information Systems", varRowBY,
+                    "Support", varRowAY,
+                    "CCF", varRowAY,
+                    "Safeguarding", varRowBY,
                     "Media &amp; Comms", varRowBY,
-                    "CCF(A)", varRowBY,
+                    "Policy &amp; Pers", varRowBY,
+                    "CCF(A)", varRowCY + 96,
                     varRowCY
                 )
             },
@@ -865,20 +969,13 @@ Set(
                     With(
                         {
                             _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
-                            _fillColor: If(_isGapped, "#D8D8D8", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
+                            _fillColor: If(_isGapped, "#DEDEDE", Coalesce(_cat.Hex, "#FFFFFF")),
                             _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
                             _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", ""),
-                            _useWhiteText: varChartMode = "Coloured" &amp;&amp; !_isGapped &amp;&amp; _myCategory = "ACCT UK Contractor"
                         },
                         "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
-                        If(
-                            varChartMode = "Quiet" &amp;&amp; !_isGapped,
-                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;" &amp;
-                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""none"" stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;",
-                            ""
-                        ) &amp;
-                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""8"" font-weight=""600"" fill=""" &amp; If(_useWhiteText, "#FFFFFF", "#172A27") &amp; """&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
-                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 9) &amp; """ text-anchor=""middle"" font-size=""7.5"" font-weight=""600"" fill=""" &amp; If(_useWhiteText, "#F0F0F0", "#6B7A8D") &amp; """&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""8"" font-weight=""600"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
+                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 9) &amp; """ text-anchor=""middle"" font-size=""7.5"" font-weight=""600"" fill=""#46545E""&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
                     )
                 )
             )
@@ -892,8 +989,8 @@ Set(
                 _lx: 20 + (Idx - 1) * 141.0,
                 _ly: (varRowCY + 30 + varRowCH + 10) + 18.0
             },
-            "&lt;rect x=""" &amp; _lx &amp; """ y=""" &amp; (_ly - 7) &amp; """ width=""14"" height=""14"" fill=""" &amp; Hex &amp; """ stroke=""#FFFFFF"" stroke-width=""0.6""" &amp; If(Label = "Gapped (vacant)", " stroke-dasharray=""2,2""", "") &amp; "/&gt;" &amp;
-            "&lt;text x=""" &amp; (_lx + 20) &amp; """ y=""" &amp; (_ly + 4) &amp; """ font-size=""8"" font-weight=""600"" fill=""#FFFFFF""&gt;" &amp; Substitute(Label, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
+            "&lt;rect x=""" &amp; _lx &amp; """ y=""" &amp; (_ly - 9) &amp; """ width=""18"" height=""18"" rx=""4"" fill=""" &amp; Hex &amp; """ stroke=""#FFFFFF"" stroke-width=""0.6""" &amp; If(Label = "Gapped (vacant)", " stroke-dasharray=""2,2""", "") &amp; "/&gt;" &amp;
+            "&lt;text x=""" &amp; (_lx + 25) &amp; """ y=""" &amp; (_ly + 4) &amp; """ font-size=""8"" font-weight=""600"" fill=""#FFFFFF""&gt;" &amp; Substitute(Label, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
         )
     ) &amp;
     "&lt;/svg&gt;"
@@ -901,258 +998,6 @@ Set(
           </div>
         </details>
 
-        <details class="cs-accordion">
-          <summary>btnToggleMode.OnSelect (click to expand)</summary>
-          <div class="code-card" style="margin-top:10px;">
-            <div class="code-toolbar">
-              <div class="code-meta">
-                <span>btnToggleMode &middot; OnSelect</span>
-                <span class="code-stamp" data-updated="2026-09-16T13:55:00Z">v7 &middot; 2026-09-16 14:55 BST &mdash; same v7 fixes as OnStart</span>
-              </div>
-              <button data-copy="current-toggle" type="button">Copy</button>
-            </div>
-<pre id="current-toggle">Set(varChartMode, If(varChartMode = "Quiet", "Coloured", "Quiet"));
-
-ClearCollect(colCategoryColours,
-    {Category: "Regular", Hex: "#E2EFD9"},
-    {Category: "Civil Servant", Hex: "#CBFFFF"},
-    {Category: "FTRS", Hex: "#FB9797"},
-    {Category: "Aspire", Hex: "#FFE699"},
-    {Category: "ACCT UK Employee", Hex: "#FD80F3"},
-    {Category: "RFCA", Hex: "#FFFF00"},
-    {Category: "ACCT UK Contractor", Hex: "#002060"},
-    {Category: "Ext Contractor", Hex: "#E69C13"},
-    {Category: "CFAV", Hex: "#DAC1EC"}
-);
-
-ClearCollect(colLegendItems,
-    {Idx: 1, Label: "Regular", Hex: "#E2EFD9"},
-    {Idx: 2, Label: "Civil Servant", Hex: "#CBFFFF"},
-    {Idx: 3, Label: "FTRS", Hex: "#FB9797"},
-    {Idx: 4, Label: "Aspire", Hex: "#FFE699"},
-    {Idx: 5, Label: "ACCT UK Employee", Hex: "#FD80F3"},
-    {Idx: 6, Label: "RFCA", Hex: "#FFFF00"},
-    {Idx: 7, Label: "ACCT UK Contractor", Hex: "#002060"},
-    {Idx: 8, Label: "Ext Contractor", Hex: "#E69C13"},
-    {Idx: 9, Label: "CFAV", Hex: "#DAC1EC"},
-    {Idx: 10, Label: "Gapped (vacant)", Hex: "#D8D8D8"}
-);
-
-ClearCollect(colDeptPanelsBase,
-    {Department: "Command", PX: 20, PW: 350},
-    {Department: "Safeguarding", PX: 400, PW: 398},
-    {Department: "Training", PX: 828, PW: 470},
-    {Department: "Information Systems", PX: 20, PW: 630},
-    {Department: "Media &amp; Comms", PX: 680, PW: 470},
-    {Department: "CCF(A)", PX: 1180, PW: 230},
-    {Department: "Policy &amp; Pers", PX: 20, PW: 350},
-    {Department: "Support", PX: 400, PW: 470},
-    {Department: "CCF", PX: 900, PW: 230},
-    {Department: "CEP", PX: 1160, PW: 140}
-);
-
-ClearCollect(colPosts, OrgChartPosts);
-
-Set(varRowAY, 56);
-Set(
-    varRowAH,
-    Max(
-        Max(AddColumns(Filter(colPosts, Department = "Command"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "Safeguarding"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "Training"), _b, FinalY + If(Depth = 0, 34, 27)), _b)
-    )
-);
-Set(varRowBY, varRowAY + 30 + varRowAH + 20);
-Set(
-    varRowBH,
-    Max(
-        Max(AddColumns(Filter(colPosts, Department = "Information Systems"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "Media &amp; Comms"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "CCF(A)"), _b, FinalY + If(Depth = 0, 34, 27)), _b)
-    )
-);
-Set(varRowCY, varRowBY + 30 + varRowBH + 20);
-Set(
-    varRowCH,
-    Max(
-        Max(AddColumns(Filter(colPosts, Department = "Policy &amp; Pers"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "Support"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "CCF"), _b, FinalY + If(Depth = 0, 34, 27)), _b),
-        Max(AddColumns(Filter(colPosts, Department = "CEP"), _b, FinalY + If(Depth = 0, 34, 27)), _b)
-    )
-);
-
-ClearCollect(
-    colDeptPanels,
-    AddColumns(
-        colDeptPanelsBase,
-        PY,
-        Switch(
-            Department,
-            "Command", varRowAY,
-            "Safeguarding", varRowAY,
-            "Training", varRowAY,
-            "Information Systems", varRowBY,
-            "Media &amp; Comms", varRowBY,
-            "CCF(A)", varRowBY,
-            varRowCY
-        ),
-        ContentH,
-        With(
-            {_d: Department},
-            Max(AddColumns(Filter(colPosts, Department = _d), _b, FinalY + If(Depth = 0, 34, 27)), _b)
-        )
-    )
-);
-
-Set(
-    varChartSvg,
-    "&lt;svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 1450 " &amp; (varRowCY + 30 + varRowCH + 10 + 36 + 10) &amp; """ font-family=""Segoe UI, Arial, sans-serif""&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""" &amp; (varRowCY + 30 + varRowCH + 10 + 36 + 10) &amp; """ fill=""#FFFFFF""/&gt;" &amp;
-    "&lt;rect x=""0"" y=""0"" width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
-    "&lt;text x=""16"" y=""23"" font-weight=""700"" font-size=""15"" fill=""#FFFFFF""&gt;Cadets Branch Structure&lt;/text&gt;" &amp;
-    "&lt;text x=""1434"" y=""23"" text-anchor=""end"" font-size=""9.5"" fill=""#C9D3D0""&gt;Printed " &amp; Text(Now(), "dd/mm/yyyy") &amp; "&lt;/text&gt;" &amp;
-    Concat(
-        colDeptPanels,
-        With(
-            {
-                _boxX: PX - 4,
-                _boxY: PY - 4,
-                _boxW: PW + 8,
-                _boxH: 30 + ContentH + 8
-            },
-            If(
-                Department = "Command",
-                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ fill=""#EEF1F4"" stroke=""#2C3E50"" stroke-width=""2""/&gt;",
-                "&lt;rect x=""" &amp; _boxX &amp; """ y=""" &amp; _boxY &amp; """ width=""" &amp; _boxW &amp; """ height=""" &amp; _boxH &amp; """ fill=""none"" stroke=""#B9C2C8"" stroke-width=""1""/&gt;"
-            )
-        ) &amp;
-        "&lt;rect x=""" &amp; PX &amp; """ y=""" &amp; PY &amp; """ width=""" &amp; PW &amp; """ height=""22"" fill=""#003E32""/&gt;" &amp;
-        "&lt;text x=""" &amp; (PX + 10) &amp; """ y=""" &amp; (PY + 15) &amp; """ font-weight=""700"" font-size=""10.5"" fill=""#FFFFFF""&gt;" &amp; Substitute(Department, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
-    ) &amp;
-    Concat(
-        colPosts,
-        With(
-            {
-                _x: FinalX,
-                _mgrTitle: ManagerPostID,
-                _visParentTitle: VisualParentPostID,
-                _peerTitle: PeerPostID,
-                _relType: RelationshipType,
-                _myCategory: Category,
-                _myOccupant: OccupantName,
-                _isGapped: IsGapped,
-                _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
-                _cardW: Width,
-                _cardH: If(Depth = 0, 34, 27),
-                _panelY: Switch(
-                    Department,
-                    "Command", varRowAY,
-                    "Safeguarding", varRowAY,
-                    "Training", varRowAY,
-                    "Information Systems", varRowBY,
-                    "Media &amp; Comms", varRowBY,
-                    "CCF(A)", varRowBY,
-                    varRowCY
-                )
-            },
-            With(
-                {_y: _panelY + 30 + FinalY},
-                With(
-                    {
-                        _visMgr: LookUp(colPosts, Title = _visParentTitle),
-                        _peerPost: LookUp(colPosts, Title = _peerTitle),
-                        _connDashAttr: If(_relType = "Dotted", " stroke-dasharray=""4,3""", "")
-                    },
-                    (
-                        If(
-                            !IsBlank(_mgrTitle) &amp;&amp; !IsBlank(_visMgr),
-                            With(
-                                {_mgrCardH: If(_visMgr.Depth = 0, 34, 27)},
-                                "&lt;path d=""M " &amp; _visMgr.FinalX &amp; " " &amp; (_panelY + 30 + _visMgr.FinalY + _mgrCardH) &amp; " V " &amp; (_y - 5) &amp; " H " &amp; _x &amp; " V " &amp; _y &amp; """ stroke=""#D0C4CC"" stroke-width=""1.5""" &amp; _connDashAttr &amp; " fill=""none""/&gt;"
-                            ),
-                            ""
-                        )
-                    ) &amp;
-                    (
-                        If(
-                            !IsBlank(_peerTitle) &amp;&amp; !IsBlank(_peerPost),
-                            "&lt;path d=""M " &amp; _peerPost.FinalX &amp; " " &amp; (_y + _cardH / 2) &amp; " H " &amp; _x &amp; """ stroke=""#4A4A4A"" stroke-width=""1.5"" stroke-dasharray=""1,3""/&gt;",
-                            ""
-                        )
-                    )
-                )
-            )
-        )
-    ) &amp;
-    Concat(
-        colPosts,
-        With(
-            {
-                _x: FinalX,
-                _mgrTitle: ManagerPostID,
-                _visParentTitle: VisualParentPostID,
-                _peerTitle: PeerPostID,
-                _relType: RelationshipType,
-                _myCategory: Category,
-                _myOccupant: OccupantName,
-                _isGapped: IsGapped,
-                _label: Substitute(PostLabel, "&amp;", "&amp;amp;"),
-                _cardW: Width,
-                _cardH: If(Depth = 0, 34, 27),
-                _panelY: Switch(
-                    Department,
-                    "Command", varRowAY,
-                    "Safeguarding", varRowAY,
-                    "Training", varRowAY,
-                    "Information Systems", varRowBY,
-                    "Media &amp; Comms", varRowBY,
-                    "CCF(A)", varRowBY,
-                    varRowCY
-                )
-            },
-            With(
-                {_y: _panelY + 30 + FinalY},
-                With(
-                    {_cat: LookUp(colCategoryColours, Category = _myCategory)},
-                    With(
-                        {
-                            _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
-                            _fillColor: If(_isGapped, "#D8D8D8", If(varChartMode = "Quiet", "#FFFFFF", Coalesce(_cat.Hex, "#FFFFFF"))),
-                            _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
-                            _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", ""),
-                            _useWhiteText: varChartMode = "Coloured" &amp;&amp; !_isGapped &amp;&amp; _myCategory = "ACCT UK Contractor"
-                        },
-                        "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
-                        If(
-                            varChartMode = "Quiet" &amp;&amp; !_isGapped,
-                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""4"" height=""" &amp; _cardH &amp; """ fill=""" &amp; Coalesce(_cat.Hex, "#FFFFFF") &amp; """/&gt;" &amp;
-                            "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""none"" stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;",
-                            ""
-                        ) &amp;
-                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""8"" font-weight=""600"" fill=""" &amp; If(_useWhiteText, "#FFFFFF", "#172A27") &amp; """&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
-                        "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 + 9) &amp; """ text-anchor=""middle"" font-size=""7.5"" font-weight=""600"" fill=""" &amp; If(_useWhiteText, "#F0F0F0", "#6B7A8D") &amp; """&gt;" &amp; _nameLine &amp; "&lt;/text&gt;"
-                    )
-                )
-            )
-        )
-    ) &amp;
-    "&lt;rect x=""0"" y=""" &amp; (varRowCY + 30 + varRowCH + 10) &amp; """ width=""1450"" height=""36"" fill=""#172A27""/&gt;" &amp;
-    Concat(
-        colLegendItems,
-        With(
-            {
-                _lx: 20 + (Idx - 1) * 141.0,
-                _ly: (varRowCY + 30 + varRowCH + 10) + 18.0
-            },
-            "&lt;rect x=""" &amp; _lx &amp; """ y=""" &amp; (_ly - 7) &amp; """ width=""14"" height=""14"" fill=""" &amp; Hex &amp; """ stroke=""#FFFFFF"" stroke-width=""0.6""" &amp; If(Label = "Gapped (vacant)", " stroke-dasharray=""2,2""", "") &amp; "/&gt;" &amp;
-            "&lt;text x=""" &amp; (_lx + 20) &amp; """ y=""" &amp; (_ly + 4) &amp; """ font-size=""8"" font-weight=""600"" fill=""#FFFFFF""&gt;" &amp; Substitute(Label, "&amp;", "&amp;amp;") &amp; "&lt;/text&gt;"
-        )
-    ) &amp;
-    "&lt;/svg&gt;"
-)</pre>
-          </div>
-        </details>
 
         <p>Image control's <code>Image</code> property (unchanged): <code>"data:image/svg+xml," &amp; EncodeUrl(varChartSvg)</code>. Set its own <code>Width</code>/<code>Height</code> generously (or use a scroll container) &mdash; the picture's real height varies with data, a fixed small control would crop a tall render.</p>
       </section>
@@ -1197,7 +1042,7 @@ Set(
       <section id="downloads">
         <h2>Downloads</h2>
         <ul>
-          <li><a href="downloads/OrgChartPosts_Data_v13.xlsx">OrgChartPosts_Data_v13.xlsx</a> &mdash; all 108 rows, verbatim PDF titles/structure/colours, fictional placeholder occupant names. Paste into Quick Edit per <a href="#sharepoint-setup">SharePoint Setup</a> above.</li>
+          <li><a href="downloads/OrgChartPosts_Data_v15.xlsx">OrgChartPosts_Data_v15.xlsx</a> &mdash; all 108 rows, verbatim PDF titles/structure, fictional placeholder occupant names, and the 2026-09-17 layout (five-wide Command, repacked departments, three-tier card sizes). <strong>Supersedes v13 &mdash; delete every row and re-paste</strong>, since card widths, positions and the Command layout all changed. Paste into Quick Edit per <a href="#sharepoint-setup">SharePoint Setup</a> above.</li>
           <li><a href="downloads/OrgChart_ExportPdf_Production.zip">OrgChart_ExportPdf_Production.zip</a> &mdash; importable Power Automate package for the <code>OrgChart - Export PDF</code> flow described in <a href="#pdf-export">PDF Export</a> above. Import via <strong>Power Automate &rarr; My flows &rarr; Import &rarr; Import Package (Legacy)</strong>, pick/create your SharePoint connection when prompted. <strong>Before running it</strong>: create the destination PDF file once, manually, in SharePoint (any placeholder content, correct name/location); then open the imported flow's <code>Update file</code> action and replace its file identifier &mdash; currently the placeholder <code>/Shared Documents/REPLACE-ME-Cadets-Branch-Structure.pdf</code> &mdash; with that real file's own site-relative path. Not yet run in Studio; see the caveats in <a href="#pdf-export">PDF Export</a>. <strong>If you already imported an earlier copy of this zip:</strong> re-import this one and re-set the file path again &mdash; the first version had two separate "Respond to a PowerApp or flow" actions (one per success/failure branch), a documented Power Automate defect that silently breaks the app's ability to read some response fields even though the flow itself saves and runs with no visible error. This version uses a single Respond action fed by a status variable instead.</li>
         </ul>
       </section>
