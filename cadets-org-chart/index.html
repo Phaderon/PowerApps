@@ -674,7 +674,7 @@ Set(
                             _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
                             _fillColor: If(_isGapped, "#DEDEDE", Coalesce(_cat.Hex, "#FFFFFF")),
                             _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
-                            _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", ""),
+                            _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", "")
                         },
                         "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
                         "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""8"" font-weight=""600"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
@@ -971,7 +971,7 @@ Set(
                             _nameLine: If(_isGapped, "GAPPED", Substitute(_myOccupant, "&amp;", "&amp;amp;")),
                             _fillColor: If(_isGapped, "#DEDEDE", Coalesce(_cat.Hex, "#FFFFFF")),
                             _strokeColor: If(_isGapped, "#6B7570", "#CBD5D1"),
-                            _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", ""),
+                            _dashAttr: If(_isGapped, " stroke-dasharray=""2,2""", "")
                         },
                         "&lt;rect x=""" &amp; (_x - _cardW / 2) &amp; """ y=""" &amp; _y &amp; """ width=""" &amp; _cardW &amp; """ height=""" &amp; _cardH &amp; """ fill=""" &amp; _fillColor &amp; """ stroke=""" &amp; _strokeColor &amp; """ stroke-width=""0.6""" &amp; _dashAttr &amp; "/&gt;" &amp;
                         "&lt;text x=""" &amp; _x &amp; """ y=""" &amp; (_y + _cardH / 2 - 1) &amp; """ text-anchor=""middle"" font-size=""8"" font-weight=""600"" fill=""#172A27""&gt;" &amp; _label &amp; "&lt;/text&gt;" &amp;
