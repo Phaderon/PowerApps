@@ -410,7 +410,7 @@
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>App &middot; OnStart &mdash; complete replacement</span>
-                <span class="code-stamp" data-updated="2026-09-17T07:43:01Z">v14 &middot; 2026-09-17 08:43 BST &mdash; banner and footer rounded (same size, corners only) and recoloured to #003E32 so they match the department headers. Plus v13\'s count pill and v12\'s rounded panels and elbows</span>
+                <span class="code-stamp" data-updated="2026-09-17T08:41:27Z">v15 &middot; 2026-09-17 09:41 BST &mdash; branch connectors now hang from a centred bus with a taller drop, so a head with two symmetrically-placed reports reads as a bracket rather than a link between the two reports. Plus v14\'s rounded, recoloured banner and footer</span>
               </div>
               <button data-copy="current-onstart" type="button">Copy</button>
             </div>
@@ -631,7 +631,7 @@ Set(
                                     {
                                         _mx: _visMgr.FinalX,
                                         _my: (_panelY + 30 + _visMgr.FinalY + _mgrCardH),
-                                        _cy: (_y - 5)
+                                        _cy: ((_panelY + 30 + _visMgr.FinalY + _mgrCardH + _y) / 2)
                                     },
                                     With(
                                         {
@@ -741,7 +741,7 @@ Set(
             <div class="code-toolbar">
               <div class="code-meta">
                 <span>btnRecalculate &middot; OnSelect &mdash; same as OnStart, minus the mode reset, no flow calls</span>
-                <span class="code-stamp" data-updated="2026-09-17T07:43:01Z">v14 &middot; 2026-09-17 08:43 BST &mdash; banner and footer rounded (same size, corners only) and recoloured to #003E32 so they match the department headers. Plus v13\'s count pill and v12\'s rounded panels and elbows</span>
+                <span class="code-stamp" data-updated="2026-09-17T08:41:27Z">v15 &middot; 2026-09-17 09:41 BST &mdash; branch connectors now hang from a centred bus with a taller drop, so a head with two symmetrically-placed reports reads as a bracket rather than a link between the two reports. Plus v14\'s rounded, recoloured banner and footer</span>
               </div>
               <button data-copy="current-recalc" type="button">Copy</button>
             </div>
@@ -962,7 +962,7 @@ Set(
                                     {
                                         _mx: _visMgr.FinalX,
                                         _my: (_panelY + 30 + _visMgr.FinalY + _mgrCardH),
-                                        _cy: (_y - 5)
+                                        _cy: ((_panelY + 30 + _visMgr.FinalY + _mgrCardH + _y) / 2)
                                     },
                                     With(
                                         {
