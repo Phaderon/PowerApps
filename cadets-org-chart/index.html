@@ -287,6 +287,7 @@
         <span class="pill">Updated 15 Sep 2026</span>
         <span class="pill">108 posts, 10 departments</span>
         <span class="pill">Real structure &amp; colours, from the PDF</span>
+        <a class="pill" href="yaml.html" style="text-decoration:none;">📋 Screen YAML Vault →</a>
       </div>
       <h1>Cadets Org Chart - Build Guide</h1>
       <p class="lead">A single SharePoint list drives a Power Fx-rendered org chart for all 108 posts across 10 departments &mdash; real structure and colours extracted directly from the source PDF's own geometry, never from reading names. This page was rebuilt from scratch to reflect that finished design, rather than the exploratory phase-by-phase proof that got here: earlier drafts had Command running its own bespoke tree-layout algorithm and five departments in the wrong shape entirely, both since corrected. Command is now a plain grid department like the other nine, and the two Power Automate flows that used to compute its layout live have been retired &mdash; every post's position is now a literal, Python-seeded value, self-healing per department the same way it always has for the other nine.</p>
