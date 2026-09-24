@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sandpit — scrDashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 32px 16px;
+    }
+    .kicker { font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #64748b; }
+    h1 { font-size: 1.8rem; font-weight: 700; color: #bfe8d2; letter-spacing: -.02em; }
+    .meta { font-size: .85rem; color: #475569; }
+    .btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    button {
+      padding: 13px 32px;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+    }
+    button:hover { opacity: .88; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    .btn-copy { background: #004e42; color: #fff; }
+    .btn-back { background: #17352d; color: #9fb8ad; border: 1px solid #2f5147; }
+    #status {
+      font-size: .85rem;
+      color: #475569;
+      min-height: 1.2em;
+      transition: color .2s;
+    }
+    #status.ok { color: #22c55e; }
+    #status.err { color: #ef4444; }
+    .instructions {
+      max-width: 480px;
+      text-align: center;
+      font-size: .82rem;
+      color: #475569;
+      line-height: 1.7;
+      border: 1px solid #17352d;
+      border-radius: 12px;
+      padding: 16px 20px;
+      background: #0d1117;
+    }
+    .instructions strong { color: #9fb8ad; }
+    .instructions.warn { border-color: #4a2f1f; }
+    .instructions.warn strong { color: #e0a86b; }
+  </style>
+</head>
+<body>
+  <p class="kicker">Sandpit · Design Pass · Screen 1</p>
+  <h1>scrDashboard</h1>
+  <p class="meta">v0.1 &mdash; first design-pass draft, not yet Studio-tested &middot; 24 Sep 2026</p>
+  <div class="btn-row">
+    <button class="btn-copy" onclick="copyYAML()">Copy YAML to clipboard</button>
+    <a href="../"><button class="btn-back" type="button">← Sandpit index</button></a>
+  </div>
+  <p id="status">Ready to copy</p>
+  <div class="instructions warn">
+    <strong>Read-only design pass — not wired to any data source</strong><br>
+    Every field is a literal, pre-filled value. No SharePoint lists, no Patch(), no OnSelect
+    logic beyond a placeholder. This is purely to check how it renders in Studio before any
+    real build work starts.
+  </div>
+  <div class="instructions">
+    <strong>How to paste into Power Apps Studio</strong><br>
+    Create a fresh test app (not a real one). Add a new blank screen &rarr; in the Tree View,
+    click it &rarr; press <strong>Ctrl+A</strong> to select all controls &rarr;
+    <strong>Delete</strong> &rarr; then <strong>Ctrl+V</strong> to paste. Or right-click the
+    screen name &rarr; <em>Paste</em>.
+  </div>
+
+  <script>
+const yaml = `Screens:
+  scrDashboard:
+    Properties:
+      Fill: =RGBA(244,248,246,1)
+    Children:
+      - recHeader:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderThickness: =0
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(0,78,66,1)
+            Font: =Font.'Segoe UI'
+            Height: =78
+            Text: =""
+            Width: =Parent.Width
+            X: =0
+            Y: =0
+      - lblAppTitle:
+          Control: Label@2.5.1
+          Properties:
+            Color: =RGBA(243,248,246,1)
+            Font: =Font.'Segoe UI'
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =17
+            Text: ="Cadets Branch HR"
+            Width: =360
+            X: =24
+            Y: =16
+      - lblAppSubtitle:
+          Control: Label@2.5.1
+          Properties:
+            Color: =RGBA(243,248,246,0.72)
+            Font: =Font.'Segoe UI'
+            Height: =18
+            Size: =11
+            Text: ="Design pass — read only, nothing wired to data yet"
+            Width: =420
+            X: =24
+            Y: =44
+      - conNotice:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            BorderColor: =RGBA(208,196,204,1)
+            BorderStyle: =BorderStyle.Dashed
+            BorderThickness: =1
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(255,255,255,1)
+            Height: =50
+            RadiusBottomLeft: =12
+            RadiusBottomRight: =12
+            RadiusTopLeft: =12
+            RadiusTopRight: =12
+            Width: =Parent.Width - 48
+            X: =24
+            Y: =94
+          Children:
+            - lblNotice:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =RGBA(92,107,102,1)
+                  Font: =Font.'Segoe UI'
+                  Height: =Parent.Height - 16
+                  Size: =11
+                  Text: ="This is a design pass — a look-and-feel check only. Fields are pre-filled, nothing here reads or writes real data yet."
+                  Width: =Parent.Width - 32
+                  X: =16
+                  Y: =8
+      - lblSectionTitle:
+          Control: Label@2.5.1
+          Properties:
+            Color: =RGBA(24,36,32,1)
+            Font: =Font.'Segoe UI'
+            FontWeight: =FontWeight.Bold
+            Height: =26
+            Size: =16
+            Text: ="Branch overview"
+            Width: =400
+            X: =24
+            Y: =160
+      - cntKPIRow:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(244,248,246,1)
+            Height: =92
+            LayoutDirection: =LayoutDirection.Horizontal
+            LayoutGap: =12
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width - 48
+            X: =24
+            Y: =196
+          Children:
+            - conTileTotal:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  BorderColor: =RGBA(232,238,236,1)
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255,255,255,1)
+                  Height: =Parent.Height
+                  RadiusBottomLeft: =14
+                  RadiusBottomRight: =14
+                  RadiusTopLeft: =14
+                  RadiusTopRight: =14
+                  Width: =148
+                Children:
+                  - recTileTotalAccent:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderThickness: =0
+                        DisplayMode: =DisplayMode.View
+                        Fill: =RGBA(0,78,66,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =Parent.Height
+                        Text: =""
+                        Width: =4
+                        X: =0
+                        Y: =0
+                  - lblTileTotalNum:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(24,36,32,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =32
+                        Size: =24
+                        Text: ="7"
+                        Width: =Parent.Width - 32
+                        X: =16
+                        Y: =16
+                  - lblTileTotalLabel:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(92,107,102,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =18
+                        Size: =11
+                        Text: ="On the system"
+                        Width: =Parent.Width - 32
+                        X: =16
+                        Y: =52
+            - conTileOnboarding:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  BorderColor: =RGBA(232,238,236,1)
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255,255,255,1)
+                  Height: =Parent.Height
+                  RadiusBottomLeft: =14
+                  RadiusBottomRight: =14
+                  RadiusTopLeft: =14
+                  RadiusTopRight: =14
+                  Width: =148
+                Children:
+                  - recTileOnboardingAccent:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderThickness: =0
+                        DisplayMode: =DisplayMode.View
+                        Fill: =RGBA(29,95,168,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =Parent.Height
+                        Text: =""
+                        Width: =4
+                        X: =0
+                        Y: =0
+                  - lblTileOnboardingNum:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(24,36,32,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =32
+                        Size: =24
+                        Text: ="2"
+                        Width: =Parent.Width - 32
+                        X: =16
+                        Y: =16
+                  - lblTileOnboardingLabel:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(92,107,102,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =18
+                        Size: =11
+                        Text: ="Onboarding"
+                        Width: =Parent.Width - 32
+                        X: =16
+                        Y: =52
+            - conTileActive:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  BorderColor: =RGBA(232,238,236,1)
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255,255,255,1)
+                  Height: =Parent.Height
+                  RadiusBottomLeft: =14
+                  RadiusBottomRight: =14
+                  RadiusTopLeft: =14
+                  RadiusTopRight: =14
+                  Width: =148
+                Children:
+                  - recTileActiveAccent:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderThickness: =0
+                        DisplayMode: =DisplayMode.View
+                        Fill: =RGBA(11,122,60,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =Parent.Height
+                        Text: =""
+                        Width: =4
+                        X: =0
+                        Y: =0
+                  - lblTileActiveNum:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(24,36,32,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =32
+                        Size: =24
+                        Text: ="4"
+                        Width: =Parent.Width - 32
+                        X: =16
+                        Y: =16
+                  - lblTileActiveLabel:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(92,107,102,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =18
+                        Size: =11
+                        Text: ="Active"
+                        Width: =Parent.Width - 32
+                        X: =16
+                        Y: =52
+            - conTileAbsent:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  BorderColor: =RGBA(232,238,236,1)
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255,255,255,1)
+                  Height: =Parent.Height
+                  RadiusBottomLeft: =14
+                  RadiusBottomRight: =14
+                  RadiusTopLeft: =14
+                  RadiusTopRight: =14
+                  Width: =148
+                Children:
+                  - recTileAbsentAccent:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderThickness: =0
+                        DisplayMode: =DisplayMode.View
+                        Fill: =RGBA(179,114,11,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =Parent.Height
+                        Text: =""
+                        Width: =4
+                        X: =0
+                        Y: =0
+                  - lblTileAbsentNum:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(24,36,32,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =32
+                        Size: =24
+                        Text: ="1"
+                        Width: =Parent.Width - 32
+                        X: =16
+                        Y: =16
+                  - lblTileAbsentLabel:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(92,107,102,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =18
+                        Size: =11
+                        Text: ="Temporarily absent"
+                        Width: =Parent.Width - 32
+                        X: =16
+                        Y: =52
+            - conTileLeft:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  BorderColor: =RGBA(232,238,236,1)
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255,255,255,1)
+                  Height: =Parent.Height
+                  RadiusBottomLeft: =14
+                  RadiusBottomRight: =14
+                  RadiusTopLeft: =14
+                  RadiusTopRight: =14
+                  Width: =148
+                Children:
+                  - recTileLeftAccent:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderThickness: =0
+                        DisplayMode: =DisplayMode.View
+                        Fill: =RGBA(122,63,134,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =Parent.Height
+                        Text: =""
+                        Width: =4
+                        X: =0
+                        Y: =0
+                  - lblTileLeftNum:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(24,36,32,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Bold
+                        Height: =32
+                        Size: =24
+                        Text: ="1"
+                        Width: =Parent.Width - 32
+                        X: =16
+                        Y: =16
+                  - lblTileLeftLabel:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(92,107,102,1)
+                        Font: =Font.'Segoe UI'
+                        Height: =18
+                        Size: =11
+                        Text: ="Left"
+                        Width: =Parent.Width - 32
+                        X: =16
+                        Y: =52
+      - conStatusCard:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            BorderColor: =RGBA(232,238,236,1)
+            BorderThickness: =1
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(255,255,255,1)
+            Height: =104
+            RadiusBottomLeft: =14
+            RadiusBottomRight: =14
+            RadiusTopLeft: =14
+            RadiusTopRight: =14
+            Width: =Parent.Width - 48
+            X: =24
+            Y: =304
+          Children:
+            - lblStatusTitle:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =RGBA(24,36,32,1)
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =18
+                  Size: =11
+                  Text: ="STATUS BREAKDOWN"
+                  Width: =Parent.Width - 32
+                  X: =16
+                  Y: =14
+            - cntDistBar:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(232,238,236,1)
+                  Height: =14
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =2
+                  RadiusBottomLeft: =7
+                  RadiusBottomRight: =7
+                  RadiusTopLeft: =7
+                  RadiusTopRight: =7
+                  Width: =Parent.Width - 32
+                  X: =16
+                  Y: =40
+                Children:
+                  - recDistActive:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderThickness: =0
+                        DisplayMode: =DisplayMode.View
+                        Fill: =RGBA(11,122,60,1)
+                        FillPortions: =50
+                        Font: =Font.'Segoe UI'
+                        Height: =Parent.Height
+                        Text: =""
+                  - recDistOnboarding:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderThickness: =0
+                        DisplayMode: =DisplayMode.View
+                        Fill: =RGBA(29,95,168,1)
+                        FillPortions: =25
+                        Font: =Font.'Segoe UI'
+                        Height: =Parent.Height
+                        Text: =""
+                  - recDistAbsent:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderThickness: =0
+                        DisplayMode: =DisplayMode.View
+                        Fill: =RGBA(179,114,11,1)
+                        FillPortions: =13
+                        Font: =Font.'Segoe UI'
+                        Height: =Parent.Height
+                        Text: =""
+                  - recDistLeft:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderThickness: =0
+                        DisplayMode: =DisplayMode.View
+                        Fill: =RGBA(122,63,134,1)
+                        FillPortions: =12
+                        Font: =Font.'Segoe UI'
+                        Height: =Parent.Height
+                        Text: =""
+            - cntDistLegend:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255,255,255,1)
+                  Height: =18
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =20
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =Parent.Width - 32
+                  X: =16
+                  Y: =66
+                Children:
+                  - lblLegendActive:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(11,122,60,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =Parent.Height
+                        Size: =11
+                        Text: ="● Active — 4 (50%)"
+                        Width: =160
+                  - lblLegendOnboarding:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(29,95,168,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =Parent.Height
+                        Size: =11
+                        Text: ="● Onboarding — 2 (25%)"
+                        Width: =160
+                  - lblLegendAbsent:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(179,114,11,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =Parent.Height
+                        Size: =11
+                        Text: ="● Temp. Absent — 1 (13%)"
+                        Width: =180
+                  - lblLegendLeft:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =RGBA(122,63,134,1)
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =Parent.Height
+                        Size: =11
+                        Text: ="● Left — 1 (12%)"
+                        Width: =140
+      - conOnboardingCard:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            BorderColor: =RGBA(232,238,236,1)
+            BorderThickness: =1
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(255,255,255,1)
+            Height: =148
+            RadiusBottomLeft: =14
+            RadiusBottomRight: =14
+            RadiusTopLeft: =14
+            RadiusTopRight: =14
+            Width: =Parent.Width - 48
+            X: =24
+            Y: =424
+          Children:
+            - lblOnboardingTitle:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =RGBA(24,36,32,1)
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =18
+                  Size: =11
+                  Text: ="CURRENTLY ONBOARDING"
+                  Width: =Parent.Width - 32
+                  X: =16
+                  Y: =14
+            - recOnboardingDivider1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderThickness: =0
+                  DisplayMode: =DisplayMode.View
+                  Fill: =RGBA(232,238,236,1)
+                  Font: =Font.'Segoe UI'
+                  Height: =1
+                  Text: =""
+                  Width: =Parent.Width - 32
+                  X: =16
+                  Y: =44
+            - lblOnboardingRow1Name:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =RGBA(24,36,32,1)
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =13
+                  Text: ="Tom Whitfield"
+                  Width: =240
+                  X: =16
+                  Y: =54
+            - lblOnboardingRow1Meta:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =RGBA(138,151,147,1)
+                  Font: =Font.'Segoe UI'
+                  Height: =20
+                  Size: =11
+                  Text: ="Executive Officer · started 21 Sep 2026"
+                  Width: =360
+                  X: =Parent.Width - 376
+                  Y: =56
+            - recOnboardingDivider2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderThickness: =0
+                  DisplayMode: =DisplayMode.View
+                  Fill: =RGBA(232,238,236,1)
+                  Font: =Font.'Segoe UI'
+                  Height: =1
+                  Text: =""
+                  Width: =Parent.Width - 32
+                  X: =16
+                  Y: =88
+            - lblOnboardingRow2Name:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =RGBA(24,36,32,1)
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =13
+                  Text: ="Marcus Reid"
+                  Width: =240
+                  X: =16
+                  Y: =98
+            - lblOnboardingRow2Meta:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =RGBA(138,151,147,1)
+                  Font: =Font.'Segoe UI'
+                  Height: =20
+                  Size: =11
+                  Text: ="SO2 Caseworker 4 · started 01 Oct 2026"
+                  Width: =360
+                  X: =Parent.Width - 376
+                  Y: =100
+      - btnNewStarter:
+          Control: ModernButton@1.0.0
+          Properties:
+            BasePaletteColor: =RGBA(0,78,66,1)
+            Height: =40
+            OnSelect: =false
+            Text: ="+ New Starter"
+            Width: =150
+            X: =Parent.Width - 174
+            Y: =160
+`;
+
+function copyYAML() {
+  const crlf = yaml.replace(/\r?\n/g, '\r\n');
+  const s = document.getElementById('status');
+  const ok = () => { s.textContent = 'Copied! Paste into Power Apps Studio with Ctrl+V.'; s.className = 'ok'; setTimeout(() => { s.textContent = 'Ready to copy'; s.className = ''; }, 3000); };
+  const fail = () => { s.textContent = 'Copy failed — select the text manually.'; s.className = 'err'; };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(crlf).then(ok).catch(() => execCommandFallback(crlf, ok, fail));
+  } else {
+    execCommandFallback(crlf, ok, fail);
+  }
+}
+
+function execCommandFallback(text, ok, fail) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const success = document.execCommand('copy');
+    document.body.removeChild(ta);
+    success ? ok() : fail();
+  } catch (e) {
+    fail();
+  }
+}
+  </script>
+</body>
+</html>

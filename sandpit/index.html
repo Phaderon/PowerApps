@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Sandpit — Design Pass</title>
+<style>
+:root {
+  --bg: #f7f8fb;
+  --panel: #ffffff;
+  --panel-2: #f1f5f9;
+  --ink: #18212f;
+  --muted: #5d6b7d;
+  --faint: #7f8da0;
+  --line: #d8e0ea;
+  --blue: #004e42;
+  --blue-soft: #e7f3ef;
+  --amber: #b3720b;
+  --amber-soft: #fbf0dc;
+  --sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: hidden; }
+body { min-height: 100vh; background: var(--bg); color: var(--ink); font-family: var(--sans); line-height: 1.5; }
+a { color: inherit; }
+.page { width: min(880px, 100%); margin: 0 auto; padding: 22px; }
+.masthead { padding: 10px 2px 18px; border-bottom: 1px solid var(--line); }
+.kicker { margin: 0 0 5px; color: var(--blue); font-size: .76rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+h1 { margin: 0 0 6px; font-size: 1.7rem; }
+.sub { margin: 0; color: var(--muted); font-size: .92rem; max-width: 640px; }
+.back { display: inline-block; margin-top: 14px; font-size: .85rem; color: var(--blue); font-weight: 700; text-decoration: none; }
+.warn {
+  margin: 20px 0; padding: 14px 18px; border: 1px solid var(--amber); background: var(--amber-soft);
+  border-radius: 12px; font-size: .88rem; color: #5c4406;
+}
+.warn strong { color: #3a2c00; }
+h2 { font-size: 1.05rem; margin: 28px 0 12px; }
+.screen-list { display: flex; flex-direction: column; gap: 10px; }
+.screen-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 14px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+}
+.screen-row.todo { background: var(--panel-2); opacity: .75; }
+.screen-name { font-weight: 700; font-size: .95rem; }
+.screen-desc { color: var(--muted); font-size: .82rem; margin-top: 2px; }
+.pill { font-size: .72rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.pill.ready { background: var(--blue-soft); color: var(--blue); }
+.pill.todo { background: var(--line); color: var(--faint); }
+.open { color: var(--blue); font-weight: 800; font-size: .85rem; text-decoration: none; }
+footer { margin-top: 40px; padding: 18px 2px; border-top: 1px solid var(--line); color: var(--faint); font-size: .8rem; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="masthead">
+    <p class="kicker">Power Apps Bible · General Purpose</p>
+    <h1>Sandpit</h1>
+    <p class="sub">A design-only testing ground. Screens here are read-only look-and-feel passes — pre-filled fields, no SharePoint lists, no data wiring — pasted into a throwaway Studio app purely to validate visual design before it goes anywhere near a real build. The intent is to work out a design language once here and reuse it across new apps (Training Tracker, Org Chart, and others), rather than re-deriving it each time.</p>
+    <a class="back" href="../">← Guide library</a>
+  </div>
+
+  <div class="warn">
+    <strong>Never paste these into a real, live app.</strong> Create a fresh throwaway test app in Studio first. Nothing in this section is wired to a data source, and nothing here should be treated as build-ready YAML.
+  </div>
+
+  <h2>Cadets Branch HR — design pass</h2>
+  <div class="screen-list">
+    <div class="screen-row">
+      <div>
+        <div class="screen-name">scrDashboard</div>
+        <div class="screen-desc">KPI tiles, status breakdown, currently-onboarding list. v0.1, first draft, not yet Studio-tested.</div>
+      </div>
+      <span class="pill ready">Ready to test</span>
+      <a class="open" href="screens/scrDashboard.html">Open →</a>
+    </div>
+    <div class="screen-row todo">
+      <div>
+        <div class="screen-name">scrNewStarter</div>
+        <div class="screen-desc">The 3-stage wizard, brand-new-role branch, attachments.</div>
+      </div>
+      <span class="pill todo">Not started</span>
+    </div>
+    <div class="screen-row todo">
+      <div>
+        <div class="screen-name">scrAllEntries</div>
+        <div class="screen-desc">The table, plus the edit and leaving-process popups.</div>
+      </div>
+      <span class="pill todo">Not started</span>
+    </div>
+    <div class="screen-row todo">
+      <div>
+        <div class="screen-name">scrLineManager</div>
+        <div class="screen-desc">Report cards, progress meters, read-only popup.</div>
+      </div>
+      <span class="pill todo">Not started</span>
+    </div>
+  </div>
+
+  <footer>Report anything that looks or works wrong in Studio back in chat — each round refines this same YAML rather than starting over.</footer>
+</div>
+</body>
+</html>
