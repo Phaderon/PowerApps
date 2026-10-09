@@ -256,14 +256,15 @@
         <a href="#newsletter-ready-race-condition">Fix 3 - Thursday Batch Buttons Fail If Clicked Before NewsletterPack Finishes Loading</a>
         <a href="#newsletter-release-link-field">Fix 4 - Real Release Link Field, Replacing The Google.com Placeholder</a>
         <a href="#newsletter-log-to-archive">Fix 5 - Log Newsletter Release To The Weekly Updates Archive List</a>
+        <a href="#issues-tab-blank-flags">Fix 6 - Unpublished Items Vanish From Issues When Yes/No Flags Are Blank</a>
       </nav>
     </aside>
 
     <main>
       <div class="topline">
-        <span class="pill">Updated 10 Sep 2026</span>
+        <span class="pill">Updated 9 Oct 2026</span>
         <span class="pill">Policy Tracker only</span>
-        <span class="pill">5 fixes</span>
+        <span class="pill">6 fixes</span>
       </div>
       <h1>Policy Tracker Fix Guide</h1>
       <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
@@ -1399,6 +1400,246 @@ DisplayMode: =If(Coalesce(varNewsletterReady, false), DisplayMode.Edit, DisplayM
         </div>
         <div class="callout ok">
           <strong>Test:</strong> open NewsletterPack, wait for it to finish loading (button goes from greyed-out to coloured), leave the release link blank and click the button &mdash; should warn and refuse. Paste a real link, click again &mdash; should succeed, and a new row should appear in <strong>Weekly Policy Updates Archive</strong> with this Thursday's date, your link, and one bullet per qualifying item's title.
+        </div>
+      </section>
+
+      <section id="issues-tab-blank-flags">
+        <h2>Fix 6 - Unpublished Items Vanish From Issues When Yes/No Flags Are Blank</h2>
+        <p class="meta-line">Main &middot; Issues tab, 4 properties &middot; independent of Fix 5</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
+        </div>
+        <p>Added 2026-10-09. An item that isn't marked Published on its release Thursday should drop into the <strong>Issues</strong> tab (past planned date, not published). Instead it vanishes from every Main tab and only shows on the Historic screen. <strong>Likely cause</strong> (worked out from the formulas, not yet checked against the list data): the Issues badge and list ask SharePoint for items where <code>Published = false</code> and <code>'External consultation required' = false</code>. SharePoint's own query skips any item where those Yes/No columns are blank rather than "No" - the same trap the newsletter hit on 15 Aug. The Historic screen only filters on date, which is why it still showed them.</p>
+        <div class="callout">
+          <strong>What changes:</strong> blank Yes/No flags now count as "No"; Issues looks back <strong>14 days only</strong> (so an unpublished item drops off Issues after two weeks, by design); and the document-type pill counts on the Issues tab now match the list (they used to count External consultation items that the list hides).
+        </div>
+        <div class="callout warn">
+          <strong>Each block is the COMPLETE property</strong> - select all in Studio's formula box, delete, paste. Built from your Screen YAML Vault export of Main saved 9 Oct 2026 08:20 UTC. If you've changed any of these four properties in Studio since then, skim the block before pasting. In <code>HeaderGallery.Items</code> only the <code>"UnapprovedHistoric"</code> branch is different; every other branch is exactly as in your live app.
+        </div>
+        <div class="callout">
+          <strong>Want proof first?</strong> In the SharePoint list, open an item that vanished. If <em>Published</em> or <em>External consultation required</em> shows empty instead of "No", that is the cause. The fix is harmless either way.
+        </div>
+
+        <ol>
+          <li>Open <strong>Main</strong>. In the tab bar, expand <strong>ItemIssues</strong> and select <strong>BadgeCanvas1_3</strong> (the red count badge). Set <code>Content</code> to:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>BadgeCanvas1_3.Content - complete property</span>
+              <span class="code-stamp" data-updated="2026-10-09T00:00:00Z">v1 &middot; 2026-10-09 BST</span>
+            </div>
+            <button data-copy="issues-fix-badge" type="button">Copy</button>
+          </div>
+<pre id="issues-fix-badge">CountRows(
+    Filter(
+        Filter(
+            'Policy Proof Tracker',
+            'Planned Publish Date' &lt; Today() &amp;&amp;
+            'Planned Publish Date' &gt;= DateAdd(Today(), -14, "Days")
+        ),
+        !Coalesce(Published, false) &amp;&amp;
+        !Coalesce('External consultation required', false)
+    )
+)</pre>
+        </div>
+        <ol start="2">
+          <li>Still inside <strong>ItemIssues</strong>, select <strong>Button2_2</strong> (the transparent button over the tab). Set <code>OnSelect</code> to:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>ItemIssues &gt; Button2_2.OnSelect - complete property</span>
+              <span class="code-stamp" data-updated="2026-10-09T00:00:00Z">v1 &middot; 2026-10-09 BST</span>
+            </div>
+            <button data-copy="issues-fix-onselect" type="button">Copy</button>
+          </div>
+<pre id="issues-fix-onselect">Set(varMainLoading, true);
+Refresh('Policy Proof Tracker');
+Set(varSelectedState, "UnapprovedHistoric");
+Set(
+    colTypeCounts,
+    Filter(
+        Filter(
+            'Policy Proof Tracker',
+            'Planned Publish Date' &lt; Today() &amp;&amp;
+            'Planned Publish Date' &gt;= DateAdd(Today(), -14, "Days")
+        ),
+        !Coalesce(Published, false) &amp;&amp;
+        !Coalesce('External consultation required', false) &amp;&amp;
+        (varFilterOwner = false || Owner.Email = User().Email)
+    )
+);
+Reset(HeaderGallery);
+Set(varMainLoading, false)</pre>
+        </div>
+        <ol start="3">
+          <li>Select <strong>HeaderGallery</strong> (the gallery of date groups). Set <code>Items</code> to this complete version:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>HeaderGallery.Items - complete property</span>
+              <span class="code-stamp" data-updated="2026-10-09T00:00:00Z">v1 &middot; 2026-10-09 BST</span>
+            </div>
+            <button data-copy="issues-fix-items" type="button">Copy</button>
+          </div>
+<pre id="issues-fix-items">Switch(
+    varSelectedState,
+
+    "Historic",
+    Sort(
+        AddColumns(
+            AddColumns(
+                ForAll(
+                    Sequence(4),
+                    With(
+                        {
+                            _daysSincePreviousThursday:
+                                If(
+                                    Mod(Weekday(Today()) - 5 + 7, 7) = 0,
+                                    7,
+                                    Mod(Weekday(Today()) - 5 + 7, 7)
+                                )
+                        },
+                        {PlannedDate: DateAdd(Today(), -_daysSincePreviousThursday - ((Value - 1) * 7), "Days")}
+                    )
+                ),
+                ReleaseDateText,
+                Text(PlannedDate, "dddd, dd mmmm yyyy"),
+                GroupedItems,
+                With(
+                    {_targetDate: PlannedDate},
+                    Filter(
+                        'Policy Proof Tracker',
+                        'Planned Publish Date' = _targetDate &amp;&amp;
+                        (Published = true || 'External consultation required' = true) &amp;&amp;
+                        (varFilterOwner = false || Owner.Email = User().Email) &amp;&amp;
+                        (IsBlank(varTypeFilter) || varTypeFilter = "" || 'Document Type'.Value = varTypeFilter)
+                    )
+                )
+            ),
+            ItemCount, CountRows(GroupedItems)
+        ),
+        PlannedDate,
+        SortOrder.Descending
+    ),
+
+    "Future",
+    Sort(
+        AddColumns(
+            GroupBy(
+                AddColumns(
+                    Filter(
+                        'Policy Proof Tracker',
+                        'Planned Publish Date' &gt; DateAdd(Today(), 28, "Days") &amp;&amp;
+                        (varFilterOwner = false || Owner.Email = User().Email) &amp;&amp;
+                        (IsBlank(varTypeFilter) || varTypeFilter = "" || 'Document Type'.Value = varTypeFilter)
+                    ),
+                    PlannedDate, 'Planned Publish Date',
+                    ReleaseDateText, Text('Planned Publish Date', "dddd, dd mmmm yyyy")
+                ),
+                PlannedDate,
+                GroupedItems
+            ),
+            ItemCount, CountRows(GroupedItems)
+        ),
+        PlannedDate,
+        SortOrder.Ascending
+    ),
+
+    "Current",
+    Sort(
+        AddColumns(
+            AddColumns(
+                ForAll(
+                    Sequence(4),
+                    {PlannedDate: NextThursday(Value)}
+                ),
+                ReleaseDateText,
+                Text(PlannedDate, "dddd, dd mmmm yyyy"),
+                GroupedItems,
+                With(
+                    {_targetDate: PlannedDate},
+                    Filter(
+                        colActiveItems,
+                        'Planned Publish Date' = _targetDate &amp;&amp;
+                        (varFilterOwner = false || Owner.Email = User().Email) &amp;&amp;
+                        (IsBlank(varTypeFilter) || varTypeFilter = "" || 'Document Type'.Value = varTypeFilter)
+                    )
+                )
+            ),
+            ItemCount, CountRows(GroupedItems)
+        ),
+        PlannedDate,
+        SortOrder.Ascending
+    ),
+
+    "UnapprovedHistoric",
+    Sort(
+        AddColumns(
+            GroupBy(
+                AddColumns(
+                    Filter(
+                        Filter(
+                            'Policy Proof Tracker',
+                            'Planned Publish Date' &lt; Today() &amp;&amp;
+                            'Planned Publish Date' &gt;= DateAdd(Today(), -14, "Days")
+                        ),
+                        !Coalesce(Published, false) &amp;&amp;
+                        !Coalesce('External consultation required', false) &amp;&amp;
+                        (varFilterOwner = false || Owner.Email = User().Email) &amp;&amp;
+                        (IsBlank(varTypeFilter) || varTypeFilter = "" || 'Document Type'.Value = varTypeFilter)
+                    ),
+                    PlannedDate, 'Planned Publish Date',
+                    ReleaseDateText, Text('Planned Publish Date', "dddd, dd mmmm yyyy")
+                ),
+                PlannedDate,
+                GroupedItems
+            ),
+            ItemCount, CountRows(GroupedItems)
+        ),
+        PlannedDate,
+        SortOrder.Descending
+    )
+)</pre>
+        </div>
+        <ol start="4">
+          <li>Select the <strong>MyItems</strong> toggle ("All items" / "My items only"). Set <code>OnChange</code> to:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>MyItems.OnChange - complete property</span>
+              <span class="code-stamp" data-updated="2026-10-09T00:00:00Z">v1 &middot; 2026-10-09 BST</span>
+            </div>
+            <button data-copy="issues-fix-onchange" type="button">Copy</button>
+          </div>
+<pre id="issues-fix-onchange">Set(varMainLoading, true);
+Refresh('Policy Proof Tracker');
+Set(varFilterOwner, Self.Value);
+Set(
+    colTypeCounts,
+    Filter(
+        Filter(
+            'Policy Proof Tracker',
+            (
+                (varSelectedState = "Current" &amp;&amp; 'Planned Publish Date' &gt;= Today() &amp;&amp; 'Planned Publish Date' &lt;= DateAdd(Today(), 28, "Days")) ||
+                (varSelectedState = "Future" &amp;&amp; 'Planned Publish Date' &gt; DateAdd(Today(), 28, "Days")) ||
+                (varSelectedState = "UnapprovedHistoric" &amp;&amp; 'Planned Publish Date' &lt; Today() &amp;&amp; 'Planned Publish Date' &gt;= DateAdd(Today(), -14, "Days")) ||
+                (varSelectedState = "Historic" &amp;&amp; 'Planned Publish Date' &gt;= DateAdd(Today(), -varHistoricLimit, "Days") &amp;&amp; 'Planned Publish Date' &lt; Today() &amp;&amp; Published = true)
+            ) &amp;&amp;
+            (Self.Value = false || Owner.Email = User().Email)
+        ),
+        varSelectedState &lt;&gt; "UnapprovedHistoric" ||
+        (!Coalesce(Published, false) &amp;&amp; !Coalesce('External consultation required', false))
+    )
+);
+Set(varMainLoading, false)</pre>
+        </div>
+        <div class="callout ok">
+          <strong>Test:</strong> Preview close/reopen. Find or create an item with a planned date in the last 14 days, not published, with the Yes/No flags left blank. It should appear under <strong>Issues</strong> with the badge count including it, and its type pill should show a count. Tick "My items only" and confirm counts still match the list. Mark the item Published and it should leave Issues and appear under Previous releases. An unpublished item dated more than 14 days ago should no longer appear in Issues.
         </div>
       </section>
     </main>
