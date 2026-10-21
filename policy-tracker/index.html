@@ -257,14 +257,15 @@
         <a href="#newsletter-release-link-field">Fix 4 - Real Release Link Field, Replacing The Google.com Placeholder</a>
         <a href="#newsletter-log-to-archive">Fix 5 - Log Newsletter Release To The Weekly Updates Archive List</a>
         <a href="#issues-tab-blank-flags">Fix 6 - Unpublished Items Vanish From Issues When Yes/No Flags Are Blank</a>
+        <a href="#long-document-link-save-error">Fix 7 - Long Document Links Fail To Save ("Invalid URL value")</a>
       </nav>
     </aside>
 
     <main>
       <div class="topline">
-        <span class="pill">Updated 9 Oct 2026</span>
+        <span class="pill">Updated 21 Oct 2026</span>
         <span class="pill">Policy Tracker only</span>
-        <span class="pill">6 fixes</span>
+        <span class="pill">7 fixes</span>
       </div>
       <h1>Policy Tracker Fix Guide</h1>
       <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
@@ -1640,6 +1641,119 @@ Set(varMainLoading, false)</pre>
         </div>
         <div class="callout ok">
           <strong>Test:</strong> Preview close/reopen. Find or create an item with a planned date in the last 14 days, not published, with the Yes/No flags left blank. It should appear under <strong>Issues</strong> with the badge count including it, and its type pill should show a count. Tick "My items only" and confirm counts still match the list. Mark the item Published and it should leave Issues and appear under Previous releases. An unpublished item dated more than 14 days ago should no longer appear in Issues.
+        </div>
+      </section>
+
+      <section id="long-document-link-save-error">
+        <h2>Fix 7 - Long Document Links Fail To Save ("Invalid URL value")</h2>
+        <p class="meta-line">App Formulas + ViewItem link form (3 changes) &middot; independent of Fixes 5 and 6</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
+        </div>
+        <p>Added 21/10/2026. Pasting a long browser address-bar link (the kind that looks like <code>.../Forms/AllItems.aspx?viewid=...&amp;id=...&amp;parent=...</code>) into the <strong>Direct URL to Document</strong> box throws <em>"PolicyLinks failed: Invalid URL value. A URL field contains invalid data"</em> and the save fails. <strong>Cause:</strong> that link was 289 characters and SharePoint's link column accepts a maximum of 255. The Share &gt; Copy link style (182 characters in the example) fits, which is why it saved. The form only trimmed tracking bits such as <code>&amp;action</code> and <code>&amp;CID=</code>, which these links don't have.</p>
+        <div class="callout">
+          <strong>What changes:</strong> an address-bar link that contains the file path (<code>id=...</code>) is converted to the short direct file link (the example becomes 119 characters). Share &gt; Copy link links and everything else are left exactly as before, including the existing tracking-bit trimming. If a link is still over 255 characters after that, you get a plain warning telling you to use Share &gt; Copy link, instead of the red error. OneDrive links (<code>modgovuk-my</code>) are still ignored silently, as before.
+        </div>
+        <div class="callout warn">
+          <strong>Checked by testing the logic only, not yet run in Studio.</strong> Three changes: a new App Formulas function, then two complete properties built from your Screen YAML Vault export of ViewItem saved 09/10/2026 09:21 BST. If you've changed either property since, skim the block before pasting. After the App Formulas change, do a full Preview close and reopen.
+        </div>
+
+        <ol>
+          <li>Open the <strong>App</strong> object (top of the tree) &rarr; <code>Formulas</code>. Click straight after the very last <code>}</code> (the end of <code>RefreshNewsletterPack</code>), type a <code>;</code>, press Enter, and paste:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>App &middot; Formulas &mdash; new function CleanDocumentUrl</span>
+              <span class="code-stamp" data-updated="2026-10-21T11:13:31Z">v1 &middot; 21/10/2026 12:13 BST</span>
+            </div>
+            <button data-copy="long-link-udf" type="button">Copy</button>
+          </div>
+<pre id="long-link-udf">CleanDocumentUrl(RawUrl: Text): Text = With(
+    {_trimmed: Trim(RawUrl)},
+    With(
+        {
+            _cleaned:
+                Left(
+                    _trimmed,
+                    Min(
+                        If(Find("&amp;action", _trimmed) &gt; 0, Find("&amp;action", _trimmed) - 1, Len(_trimmed)),
+                        If(Find("&amp;clickparams", _trimmed) &gt; 0, Find("&amp;clickparams", _trimmed) - 1, Len(_trimmed)),
+                        If(Find("&amp;CID=", _trimmed) &gt; 0, Find("&amp;CID=", _trimmed) - 1, Len(_trimmed)),
+                        If(Find("&amp;wdLOR", _trimmed) &gt; 0, Find("&amp;wdLOR", _trimmed) - 1, Len(_trimmed))
+                    )
+                )
+        },
+        With(
+            {_idPos: Find("id=%2F", _cleaned)},
+            If(
+                Find("/Forms/AllItems.aspx?", _cleaned) &gt; 0 &amp;&amp; _idPos &gt; 0,
+                With(
+                    {_afterId: Mid(_cleaned, _idPos + 3, Len(_cleaned))},
+                    Left(_cleaned, Find("/", _cleaned, 9) - 1) &amp;
+                    Substitute(
+                        Substitute(
+                            Substitute(
+                                Substitute(
+                                    Left(_afterId, If(Find("&amp;", _afterId) &gt; 0, Find("&amp;", _afterId) - 1, Len(_afterId))),
+                                    "%2F", "/"
+                                ),
+                                "%2E", "."
+                            ),
+                            "%2D", "-"
+                        ),
+                        "%5F", "_"
+                    )
+                ),
+                _cleaned
+            )
+        )
+    )
+);</pre>
+        </div>
+        <ol start="2">
+          <li>Open <strong>ViewItem</strong>, open the document link form (<strong>frmLink_2</strong>), and select the data card <strong>LinkUrl_DataCard2_2</strong> (the "Direct URL to Document" card). Set <code>Update</code> to:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>LinkUrl_DataCard2_2.Update &mdash; complete property</span>
+              <span class="code-stamp" data-updated="2026-10-21T11:13:31Z">v1 &middot; 21/10/2026 12:13 BST</span>
+            </div>
+            <button data-copy="long-link-update" type="button">Copy</button>
+          </div>
+<pre id="long-link-update">If(
+    IsBlank(DataCardValue29_2.Text),
+    Blank(),
+    CleanDocumentUrl(DataCardValue29_2.Text)
+)</pre>
+        </div>
+        <ol start="3">
+          <li>Select <strong>btnSaveLink_2</strong> (the Save button on that form). Set <code>OnSelect</code> to:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnSaveLink_2.OnSelect &mdash; complete property</span>
+              <span class="code-stamp" data-updated="2026-10-21T11:13:31Z">v1 &middot; 21/10/2026 12:13 BST</span>
+            </div>
+            <button data-copy="long-link-onselect" type="button">Copy</button>
+          </div>
+<pre id="long-link-onselect">If(
+    !varSubmitting &amp;&amp; !("modgovuk-my.sharepoint.com" in Lower(DataCardValue29_2.Text)),
+    If(
+        Len(CleanDocumentUrl(DataCardValue29_2.Text)) &gt; 255,
+        Notify("That link is too long for SharePoint (255 characters max). Use Share &gt; Copy link on the document instead.", NotificationType.Warning),
+        Set(varSubmitting, true);
+        SubmitForm(frmLink_2);
+        // Do NOT refresh here
+        Set(varSubmitting, false)
+    )
+)</pre>
+        </div>
+        <div class="callout ok">
+          <strong>Test:</strong> full Preview close/reopen. Paste the long address-bar link from your example and save &mdash; it should save with no red error, and the saved link should be the short <code>https://.../sites/.../Documents/....pdf</code> form with the PDF icon. Paste a Share &gt; Copy link link and save &mdash; unchanged. Paste a made-up 300-character link on another site &mdash; you should get the amber "too long" message and no save.
         </div>
       </section>
     </main>
