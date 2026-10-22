@@ -258,14 +258,15 @@
         <a href="#newsletter-log-to-archive">Fix 5 - Log Newsletter Release To The Weekly Updates Archive List</a>
         <a href="#issues-tab-blank-flags">Fix 6 - Unpublished Items Vanish From Issues When Yes/No Flags Are Blank</a>
         <a href="#long-document-link-save-error">Fix 7 - Long Document Links Fail To Save ("Invalid URL value")</a>
+        <a href="#main-refresh-button">Fix 8 - Refresh Button On Main (No More Browser Reloads)</a>
       </nav>
     </aside>
 
     <main>
       <div class="topline">
-        <span class="pill">Updated 21 Oct 2026</span>
+        <span class="pill">Updated 22 Oct 2026</span>
         <span class="pill">Policy Tracker only</span>
-        <span class="pill">7 fixes</span>
+        <span class="pill">8 fixes</span>
       </div>
       <h1>Policy Tracker Fix Guide</h1>
       <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
@@ -1754,6 +1755,91 @@ Set(varMainLoading, false)</pre>
         </div>
         <div class="callout ok">
           <strong>Test:</strong> full Preview close/reopen. Paste the long address-bar link from your example and save &mdash; it should save with no red error, and the saved link should be the short <code>https://.../sites/.../Documents/....pdf</code> form with the PDF icon. Paste a Share &gt; Copy link link and save &mdash; unchanged. Paste a made-up 300-character link on another site &mdash; you should get the amber "too long" message and no save.
+        </div>
+      </section>
+
+      <section id="main-refresh-button">
+        <h2>Fix 8 - Refresh Button On Main (No More Browser Reloads)</h2>
+        <p class="meta-line">Main &middot; one new button &middot; requires Fix 6 applied first</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
+        </div>
+        <p>Added 22/10/2026. A <strong>Refresh</strong> button next to the "Show only my items" switch. It re-reads the tracker list, rebuilds the Current-tab cache and updates the document-type counts for whichever tab you are on, so you can watch an approval land without reloading the browser. It stays on the same tab, keeps your "My items only" setting, and shows a short green "Refreshed." message.</p>
+        <div class="callout">
+          <strong>Why it needs more than one line:</strong> the Current tab reads from a stored copy of the list (the active cache) that is only rebuilt when Main opens. A plain <code>Refresh()</code> would not touch it, so the button rebuilds that copy as well. The count formula is the same one used in Fix 6, which is why Fix 6 comes first.
+        </div>
+        <div class="callout warn">
+          <strong>Position is approximate.</strong> It is placed relative to the "Show only my items" label (<code>MyItemsLBL</code>), taken from your Screen YAML Vault export of Main saved 09/10/2026 09:20 BST. If it overlaps something in the header, drag it to any clear spot; position is not functionally important. If you moved or renamed <code>MyItemsLBL</code> since, replace the X value with a plain number.
+        </div>
+
+        <ol>
+          <li>Open <strong>Main</strong>. Insert &rarr; <strong>Button</strong> (Classic). Rename it <strong>btnRefreshMain</strong> (right-click &rarr; Rename in the tree view). Make sure it sits at the top level of the screen, not inside another container, like <code>MyItems</code> does. Set these properties one at a time:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnRefreshMain &mdash; new control properties</span>
+              <span class="code-stamp" data-updated="2026-10-22T09:09:52Z">v1 &middot; 22/10/2026 10:09 BST</span>
+            </div>
+            <button data-copy="refresh-main-props" type="button">Copy</button>
+          </div>
+<pre id="refresh-main-props">Text: =If(varRefreshing, "Refreshing...", "Refresh")
+X: =MyItemsLBL.X - 96
+Y: =21
+Width: =84
+Height: =34
+Size: =11
+Font: =Font.'Open Sans'
+FontWeight: =FontWeight.Bold
+Color: =RGBA(255, 255, 255, 1)
+Fill: =RGBA(11, 74, 54, 1)
+HoverFill: =RGBA(9, 60, 44, 1)
+PressedFill: =RGBA(9, 60, 44, 1)
+BorderColor: =RGBA(11, 74, 54, 1)
+DisabledFill: =RGBA(166, 166, 166, 1)
+RadiusTopLeft: =8
+RadiusTopRight: =8
+RadiusBottomLeft: =8
+RadiusBottomRight: =8
+DisplayMode: =If(varRefreshing, DisplayMode.Disabled, DisplayMode.Edit)</pre>
+        </div>
+        <ol start="2">
+          <li>With <strong>btnRefreshMain</strong> selected, set <code>OnSelect</code> to this complete version:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnRefreshMain.OnSelect &mdash; complete property</span>
+              <span class="code-stamp" data-updated="2026-10-22T09:09:52Z">v1 &middot; 22/10/2026 10:09 BST</span>
+            </div>
+            <button data-copy="refresh-main-onselect" type="button">Copy</button>
+          </div>
+<pre id="refresh-main-onselect">Set(varRefreshing, true);
+Refresh('Policy Proof Tracker');
+RefreshActiveCache();
+Set(
+    colTypeCounts,
+    Filter(
+        Filter(
+            'Policy Proof Tracker',
+            (
+                (varSelectedState = "Current" &amp;&amp; 'Planned Publish Date' &gt;= Today() &amp;&amp; 'Planned Publish Date' &lt;= DateAdd(Today(), 28, "Days")) ||
+                (varSelectedState = "Future" &amp;&amp; 'Planned Publish Date' &gt; DateAdd(Today(), 28, "Days")) ||
+                (varSelectedState = "UnapprovedHistoric" &amp;&amp; 'Planned Publish Date' &lt; Today() &amp;&amp; 'Planned Publish Date' &gt;= DateAdd(Today(), -14, "Days")) ||
+                (varSelectedState = "Historic" &amp;&amp; 'Planned Publish Date' &gt;= DateAdd(Today(), -varHistoricLimit, "Days") &amp;&amp; 'Planned Publish Date' &lt; Today() &amp;&amp; Published = true)
+            ) &amp;&amp;
+            (varFilterOwner = false || Owner.Email = User().Email)
+        ),
+        varSelectedState &lt;&gt; "UnapprovedHistoric" ||
+        (!Coalesce(Published, false) &amp;&amp; !Coalesce('External consultation required', false))
+    )
+);
+Set(varRefreshing, false);
+Notify("Refreshed.", NotificationType.Success, 1500)</pre>
+        </div>
+        <div class="callout ok">
+          <strong>Test:</strong> Preview. Open Main, then have someone else approve or publish an item (or do it yourself in a second browser tab). Click <strong>Refresh</strong> &mdash; the item should move or update without a page reload, and the Issues badge and type counts should match the list. The button should grey out and say "Refreshing..." for a second or so. Switch to Future or Issues and click it again to confirm it stays on that tab.
         </div>
       </section>
     </main>
