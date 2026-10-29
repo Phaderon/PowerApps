@@ -259,14 +259,15 @@
         <a href="#issues-tab-blank-flags">Fix 6 - Unpublished Items Vanish From Issues When Yes/No Flags Are Blank</a>
         <a href="#long-document-link-save-error">Fix 7 - Long Document Links Fail To Save ("Invalid URL value")</a>
         <a href="#main-refresh-button">Fix 8 - Refresh Button On Main (No More Browser Reloads)</a>
+        <a href="#batch-needs-release-link">Fix 9 - Thursday Batch Buttons Locked Until A Release Link Is Pasted</a>
       </nav>
     </aside>
 
     <main>
       <div class="topline">
-        <span class="pill">Updated 22 Oct 2026</span>
+        <span class="pill">Updated 29 Oct 2026</span>
         <span class="pill">Policy Tracker only</span>
-        <span class="pill">8 fixes</span>
+        <span class="pill">9 fixes</span>
       </div>
       <h1>Policy Tracker Fix Guide</h1>
       <p class="lead">One page, every confirmed fix kept in it, oldest first. Each entry has the exact control/property, the replacement formula, and a test to confirm it worked. Superseded by nothing &mdash; this page keeps growing instead of being replaced fix-by-fix.</p>
@@ -1996,6 +1997,169 @@ Notify("Refreshed.", NotificationType.Success, 1500)</pre>
         </div>
         <div class="callout ok">
           <strong>Test:</strong> Preview. Open Main, then have someone else approve or publish an item (or do it yourself in a second browser tab). Click <strong>Refresh</strong> &mdash; the item should move or update without a page reload, and the Issues badge and type counts should match the list. The button should grey out and say "Refreshing..." for a second or so. Switch to Future or Issues and click it again to confirm it stays on that tab.
+        </div>
+      </section>
+
+      <section id="batch-needs-release-link">
+        <h2>Fix 9 - Thursday Batch Buttons Locked Until A Release Link Is Pasted</h2>
+        <p class="meta-line">NewsletterPack &middot; 6 properties on the two batch buttons &middot; requires Fix 4 applied first</p>
+        <div class="fix-controls">
+          <label class="fix-check"><input type="checkbox" class="fix-done-checkbox"><span>Mark complete</span></label>
+          <button type="button" class="fix-view-toggle" aria-label="Expand or collapse this fix">&#9660;</button>
+        </div>
+        <p>Added 29/10/2026. <strong>Thursday Batch 1 Email</strong> and <strong>Thursday Batch 2 Email</strong> are now greyed out until the release link field above them contains a link. While locked, each button changes its own label to <em>"Paste release link first"</em>, so the reminder is on the button itself. As soon as you paste a link starting with <code>http</code>, they unlock and go back to their normal names. A link is only needed when there are policy items to send: in a week with no releases the buttons stay available, so the "no policy releases this week" email still works.</p>
+        <div class="callout">
+          <strong>Why a label rather than a pop-up:</strong> a greyed-out button cannot be clicked, so it could never show a pop-up message. Putting the reminder on the button means you see it every time, with nothing to dismiss. As a back-up, the click action also refuses and shows a message if it ever gets triggered without a link.
+        </div>
+        <div class="callout warn">
+          <strong>Every block is the COMPLETE property</strong> &mdash; select all, delete, paste. Built from your Screen YAML Vault export of NewsletterPack saved 09/10/2026 09:21 BST, with the changes made to the batch buttons in Fix 4 and nothing else. If you have edited either button since, skim each block before pasting. Do Batch 1 first, then Batch 2; they are identical apart from the name.
+        </div>
+        <ol start="1">
+          <li>Select <strong>btnDraftBatch1_1</strong>. Set <code>DisplayMode</code> to:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnDraftBatch1_1.DisplayMode &mdash; complete property</span>
+              <span class="code-stamp" data-updated="2026-10-29T05:59:34Z">v1 &middot; 29/10/2026 05:59 GMT</span>
+            </div>
+            <button data-copy="batch-lock-1-dm" type="button">Copy</button>
+          </div>
+<pre id="batch-lock-1-dm">If(
+    Coalesce(varNewsletterReady, false) &amp;&amp;
+    (CountRows(colNewsletterPack) = 0 || StartsWith(Lower(Trim(txtReleaseLink.Text)), "http")),
+    DisplayMode.Edit,
+    DisplayMode.Disabled
+)</pre>
+        </div>
+        <ol start="2">
+          <li>Same button, set <code>Text</code> to:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnDraftBatch1_1.Text &mdash; complete property</span>
+              <span class="code-stamp" data-updated="2026-10-29T05:59:34Z">v1 &middot; 29/10/2026 05:59 GMT</span>
+            </div>
+            <button data-copy="batch-lock-1-text" type="button">Copy</button>
+          </div>
+<pre id="batch-lock-1-text">If(
+    CountRows(colNewsletterPack) = 0 || StartsWith(Lower(Trim(txtReleaseLink.Text)), "http"),
+    "Thursday Batch 1 Email",
+    "Paste release link first"
+)</pre>
+        </div>
+        <ol start="3">
+          <li>Same button, set <code>OnSelect</code> to this complete version:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnDraftBatch1_1.OnSelect &mdash; complete property</span>
+              <span class="code-stamp" data-updated="2026-10-29T05:59:34Z">v1 &middot; 29/10/2026 05:59 GMT</span>
+            </div>
+            <button data-copy="batch-lock-1-onselect" type="button">Copy</button>
+          </div>
+<pre id="batch-lock-1-onselect">If(
+    !Coalesce(varNewsletterReady, false) || IsBlank(varNewsletterSubject),
+    Notify("Newsletter data is still loading - wait a moment and try again.", NotificationType.Warning),
+    CountRows(colNewsletterPack) &gt; 0 &amp;&amp; !StartsWith(Lower(Trim(txtReleaseLink.Text)), "http"),
+    Notify("Paste the Cognito release link into the field above before drafting the email.", NotificationType.Warning),
+    Set(varBatch1Recipients, Distinct(Filter(colBatchMemberships As mem, CountRows(Filter(colBatchGroups As grp, Lower(Trim(grp.ThursdayBatch.Value)) = "batch 1" &amp;&amp; Lower(Trim(grp.Title)) = Lower(Trim(mem.GroupName)))) &gt; 0), Email));
+    Set(varBatch1Bcc, Concat(varBatch1Recipients, Value, "; "));
+    If(
+        CountRows(varBatch1Recipients) = 0,
+        Notify("No recipients found for Thursday Batch 1.", NotificationType.Warning),
+        Office365Outlook.DraftEmail(
+            "",
+            varNewsletterSubject,
+            "Good afternoon all,&lt;br&gt;&lt;br&gt;" &amp;
+            If(
+                CountRows(colNewsletterPack) = 0,
+                "There are no policy releases this week.&lt;br&gt;&lt;br&gt;",
+                "Please find a link to this week's releases here - &lt;a href=""" &amp; Coalesce(Trim(txtReleaseLink.Text), "#") &amp; """&gt;Cadets Branch Weekly Policy Updates - " &amp; Text(varNewsletterTargetDate, "dd mmm yyyy") &amp; "&lt;/a&gt;&lt;br&gt;Below is a summary of this week's releases from Cadets Branch:&lt;br&gt;&lt;br&gt;" &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;")
+            ) &amp;
+            varNewsletterBodyStatic,
+            {Bcc: varBatch1Bcc}
+        );
+        Notify("Thursday Batch 1 draft created - check Outlook Drafts.", NotificationType.Success)
+    )
+)</pre>
+        </div>
+        <ol start="4">
+          <li>Select <strong>btnDraftBatch2_1</strong>. Set <code>DisplayMode</code> to:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnDraftBatch2_1.DisplayMode &mdash; complete property</span>
+              <span class="code-stamp" data-updated="2026-10-29T05:59:34Z">v1 &middot; 29/10/2026 05:59 GMT</span>
+            </div>
+            <button data-copy="batch-lock-2-dm" type="button">Copy</button>
+          </div>
+<pre id="batch-lock-2-dm">If(
+    Coalesce(varNewsletterReady, false) &amp;&amp;
+    (CountRows(colNewsletterPack) = 0 || StartsWith(Lower(Trim(txtReleaseLink.Text)), "http")),
+    DisplayMode.Edit,
+    DisplayMode.Disabled
+)</pre>
+        </div>
+        <ol start="5">
+          <li>Same button, set <code>Text</code> to:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnDraftBatch2_1.Text &mdash; complete property</span>
+              <span class="code-stamp" data-updated="2026-10-29T05:59:34Z">v1 &middot; 29/10/2026 05:59 GMT</span>
+            </div>
+            <button data-copy="batch-lock-2-text" type="button">Copy</button>
+          </div>
+<pre id="batch-lock-2-text">If(
+    CountRows(colNewsletterPack) = 0 || StartsWith(Lower(Trim(txtReleaseLink.Text)), "http"),
+    "Thursday Batch 2 Email",
+    "Paste release link first"
+)</pre>
+        </div>
+        <ol start="6">
+          <li>Same button, set <code>OnSelect</code> to this complete version:</li>
+        </ol>
+        <div class="code-card">
+          <div class="code-toolbar">
+            <div class="code-meta">
+              <span>btnDraftBatch2_1.OnSelect &mdash; complete property</span>
+              <span class="code-stamp" data-updated="2026-10-29T05:59:34Z">v1 &middot; 29/10/2026 05:59 GMT</span>
+            </div>
+            <button data-copy="batch-lock-2-onselect" type="button">Copy</button>
+          </div>
+<pre id="batch-lock-2-onselect">If(
+    !Coalesce(varNewsletterReady, false) || IsBlank(varNewsletterSubject),
+    Notify("Newsletter data is still loading - wait a moment and try again.", NotificationType.Warning),
+    CountRows(colNewsletterPack) &gt; 0 &amp;&amp; !StartsWith(Lower(Trim(txtReleaseLink.Text)), "http"),
+    Notify("Paste the Cognito release link into the field above before drafting the email.", NotificationType.Warning),
+    Set(varBatch2Recipients, Distinct(Filter(colBatchMemberships As mem, CountRows(Filter(colBatchGroups As grp, Lower(Trim(grp.ThursdayBatch.Value)) = "batch 2" &amp;&amp; Lower(Trim(grp.Title)) = Lower(Trim(mem.GroupName)))) &gt; 0), Email));
+    Set(varBatch2Bcc, Concat(varBatch2Recipients, Value, "; "));
+    If(
+        CountRows(varBatch2Recipients) = 0,
+        Notify("No recipients found for Thursday Batch 2.", NotificationType.Warning),
+        Office365Outlook.DraftEmail(
+            "",
+            varNewsletterSubject,
+            "Good afternoon all,&lt;br&gt;&lt;br&gt;" &amp;
+            If(
+                CountRows(colNewsletterPack) = 0,
+                "There are no policy releases this week.&lt;br&gt;&lt;br&gt;",
+                "Please find a link to this week's releases here - &lt;a href=""" &amp; Coalesce(Trim(txtReleaseLink.Text), "#") &amp; """&gt;Cadets Branch Weekly Policy Updates - " &amp; Text(varNewsletterTargetDate, "dd mmm yyyy") &amp; "&lt;/a&gt;&lt;br&gt;Below is a summary of this week's releases from Cadets Branch:&lt;br&gt;&lt;br&gt;" &amp; Concat(colNewsletterPack, "• &lt;b&gt;" &amp; PackTitle &amp; "&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;◦ Intended audience: " &amp; PackAudience &amp; "&lt;br&gt;&lt;br&gt;")
+            ) &amp;
+            varNewsletterBodyStatic,
+            {Bcc: varBatch2Bcc}
+        );
+        Notify("Thursday Batch 2 draft created - check Outlook Drafts.", NotificationType.Success)
+    )
+)</pre>
+        </div>
+        <div class="callout ok">
+          <strong>Test:</strong> Preview close/reopen. With the link field empty, both buttons should be grey and read "Paste release link first". Paste a link starting with https and both should turn blue and read "Thursday Batch 1 Email" / "Thursday Batch 2 Email". Delete the link and they lock again. Click one with a link in place and confirm the Outlook draft is created as before.
         </div>
       </section>
     </main>
